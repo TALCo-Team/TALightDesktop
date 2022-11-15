@@ -1,8 +1,12 @@
 import { NgModule } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
 
-import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { routes } from './routes';
+import { TalCodeEditorModule } from './widgets/tal-code-editor/tal-code-editor.module';
+
 
 @NgModule({
   declarations: [
@@ -10,7 +14,9 @@ import { AppComponent } from './app.component';
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    RouterModule.forRoot(routes),
+    FormsModule,
+    TalCodeEditorModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
