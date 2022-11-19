@@ -1,6 +1,6 @@
 # TALightDesktop
 
-This app in intended to be used as Graphic client for TALight
+This app in intended to be used as Graphic client for TALight      
 https://github.com/romeorizzi/TALight
 
 
