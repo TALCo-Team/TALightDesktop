@@ -17,7 +17,7 @@ Dependencies:
 - NodeJS
 - TypeScript
 - Angular
-- CodeColosseum 
+- TALight 
 
 - NodeJS
 ```bash
@@ -37,7 +37,7 @@ Angular
   npm install -g @angular/cli
 ```
 
-CodeColosseum ( for the server ) 
+TALight ( for the server ) 
 ```bash
   source install_talight.sh
   tald
