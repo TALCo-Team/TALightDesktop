@@ -11,7 +11,7 @@ TODO: Download a binary release
 
 ## Setup Development Environment 
 The project by default is intended to be used with Visual Studio Code.      
-The app is a client and in order to be used it requires to connect to instance of CodeColosseum server (cocod).
+The app is a client and in order to be used it requires to connect to instance of TALight server (tald).
 
 Dependencies:    
 - NodeJS
