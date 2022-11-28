@@ -12,7 +12,7 @@ export class PythonCompilerService {
 }
 
 export enum PythonCompilerMessageInterfaceType {
-  PackageLoad = 'PackageLoad',
+  PackageInstall = 'PackageInstall',
   ExecuteCode = 'ExecuteCode',
   // ExecuteCodeResult = 'ExecuteCodeResult',
 }

@@ -16,12 +16,22 @@ export class HomeViewComponent implements OnInit {
     this.pythonSrv.worker.onmessage = ({ data }) => {
       console.log(`page got message: ${data}`);
     }
+
+
+    const messageInstall: PythonCompilerMessageInterface = {
+      type: PythonCompilerMessageInterfaceType.PackageInstall,
+      packages: ['fake-traffic'],
+    }
+    this.pythonSrv.worker.postMessage(messageInstall);
+
     const messageToSend: PythonCompilerMessageInterface = {
       type: PythonCompilerMessageInterfaceType.ExecuteCode,
       code: `
       import fox
-      print("HELLOWORLD")
+      import sys
+      print ("HELLOWORLD")
       print(1+2)`,
+      
     }
 
     this.pythonSrv.worker.postMessage(messageToSend);
