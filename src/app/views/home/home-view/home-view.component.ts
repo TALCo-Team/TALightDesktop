@@ -13,9 +13,11 @@ export class HomeViewComponent implements OnInit {
   ngOnInit(): void {
     let api = new ApiService();
     
+    /*
     api.gameList( (gameList)=>{
       //alert(gameList);
     });
+    */
   }
 
 }
