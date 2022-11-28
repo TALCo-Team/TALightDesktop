@@ -9,8 +9,8 @@ export class FsService {
   public idb;
   public rootDir = "root"
   public options = {
-    databaseVersion:    1,
-    objectStoreName:    'files',
+    databaseVersion:    21,
+    objectStoreName:    'FILE_DATA',
     databaseName:       'indexeddb',
     rootDirectoryName:  this.rootDir
   }
@@ -89,7 +89,7 @@ export class FsServiceTest{
     let dirContent = await this.fs.readDirectory(path);
 
     let fileNodes = Array<FsNode>();
-    dirContent.files.forEach(element => {
+    dirContent.files.forEach((element: { name: string; directory: string; }) => {
       fileNodes.push(new FsNode(
         element.name,
         element.directory,
@@ -98,7 +98,7 @@ export class FsServiceTest{
     });
 
     let dirNodes = Array<FsNode>();
-    await dirContent.directories.forEach(async (element) => {
+    await dirContent.directories.forEach(async (element:any) => {
       if (recursive){
         dirNodes.push(await this.scanDirectory(element.directory, true));
       }

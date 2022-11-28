@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { FsService, FsServiceTest } from 'src/app/services/fs.service';
 import { PythonCompilerMessageInterface, PythonCompilerMessageInterfaceType, PythonCompilerService } from 'src/app/services/python-compiler.service';
 
 @Component({
@@ -13,28 +14,34 @@ export class HomeViewComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.pythonSrv.worker.onmessage = ({ data }) => {
-      console.log(`page got message: ${data}`);
-    }
+    const test = new FsServiceTest();
+    test.createTestFiles().then(() => {
 
 
-    const messageInstall: PythonCompilerMessageInterface = {
-      type: PythonCompilerMessageInterfaceType.PackageInstall,
-      packages: ['fake-traffic'],
-    }
-    this.pythonSrv.worker.postMessage(messageInstall);
+      this.pythonSrv.worker.onmessage = ({ data }) => {
+        console.log(`page got message: ${data}`);
+      }
 
-    const messageToSend: PythonCompilerMessageInterface = {
-      type: PythonCompilerMessageInterfaceType.ExecuteCode,
-      code: `
-      import fox
-      import sys
-      print ("HELLOWORLD")
-      print(1+2)`,
-      
-    }
 
-    this.pythonSrv.worker.postMessage(messageToSend);
+      const messageInstall: PythonCompilerMessageInterface = {
+        type: PythonCompilerMessageInterfaceType.PackageInstall,
+        packages: ['fake-traffic'],
+      }
+      this.pythonSrv.worker.postMessage(messageInstall);
+
+      const messageToSend: PythonCompilerMessageInterface = {
+        type: PythonCompilerMessageInterfaceType.ExecuteCode,
+        code: `
+        import os
+        print(os.listdir('/'))
+        print(os.listdir('/mnt'))
+        import fox
+        import mainC
+`
+      }
+
+      this.pythonSrv.worker.postMessage(messageToSend);
+    });
   }
 
 }

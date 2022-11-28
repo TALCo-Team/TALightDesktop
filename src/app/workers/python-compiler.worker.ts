@@ -8,9 +8,24 @@ async function loadPyodideAndPackages() {
   self.pyodide = await loadPyodide();
   await self.pyodide.loadPackage(["micropip"]);
   self.pyodide.FS.mkdir("/mnt");
+  console.log(self.pyodide.FS)
   self.pyodide.FS.mount(self.pyodide.FS.filesystems.IDBFS, { root: "." }, "/mnt");
+  // self.pyodide.FS.writeFile("/mnt/fox.py", `print("HELLOWORLDFOX")`, { encoding: "utf8" });
+  self.pyodide.FS.syncfs(true)
+  // self.pyodide.FS.filesystems.IDBFS.getDB("indexeddb", (err: any, db: any) => {
+  //   
+  //   console.log(self.pyodide.FS)
+  //   console.log(self.pyodide.FS.mounts)
+  //   console.log(self.pyodide.FS.root)
+  //   console.log(self.pyodide.FS.root.mount)
+  //   self.pyodide.FS.writeFile("fox.py", `print("HELLOWORLDFOX")`, { encoding: "utf8" });
+  //   self.pyodide.FS.writeFile("/mnt/fox.py", `print("HELLOWORLDFOX")`, { encoding: "utf8" });
+  //   console.log(self.pyodide.FS.readdir("/mnt"));
+  //   console.log(self.pyodide.FS.readdir("/home/pyodide"));
+  // });
 
-  self.pyodide.FS.writeFile("fox.py", `print("HELLOWORLDFOX")`, { encoding: "utf8" });
+
+  // console.log(self.pyodide.FS.filesystems.IDBFS.dbs)
   // await self.pyodide.loadPackage(["numpy", "pytz"]);
 }
 let pyodideReadyPromise = loadPyodideAndPackages();
