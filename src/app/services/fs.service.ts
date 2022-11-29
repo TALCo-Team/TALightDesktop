@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { createFs } from 'indexeddb-fs';
+import { createFs, DirectoryEntry } from 'indexeddb-fs';
 
 
 @Injectable({
@@ -41,18 +41,12 @@ export class FsService {
 }
 
 
-export class FsNode {
+export interface FsNode {
   name: string;
   path: string;
+  depth: number;
   isFolder: boolean;
   children?: FsNode[];
-
-  constructor(name:string, path:string, isFolder:boolean, children?:FsNode[]){
-    this.name = name;
-    this.path = path;
-    this.isFolder = isFolder;
-    this.children = children;
-  }
 }
 
 
@@ -61,6 +55,7 @@ export class FsServiceTest{
   constructor(){
     this.fs = new FsService();
   }
+  
   
 
   async createTestFiles(){
@@ -77,43 +72,52 @@ export class FsServiceTest{
     await this.fs.writeFile('src/testclassC.py',  'class testclassC: pass');
   }
 
-  async scanDirectory(path?:string, recursive=false):Promise<FsNode>{
+  async scanDirectory(path?:string, recursive=false, parent?:FsNode):Promise<FsNode>{
     if (!path){path = this.fs.rootDir;}
-    let rootNode = new FsNode(
-      path,
-      path,
-      true,
-      Array<FsNode>()
-    );
+    let depth = (parent? parent.depth + 1 : 0);
+    let rootNode:FsNode = {
+      name: path.split("/").reverse()[0]+"/",
+      path: path,
+      depth: depth,
+      isFolder: true,
+      children: new Array<FsNode>(),
+    };
+    console.log("scanDirectory:dir: ",path);
     
-    let dirContent = await this.fs.readDirectory(path);
+    let dirContent = await this.fs.readDirectory(path)
+     
 
     let fileNodes = Array<FsNode>();
-    dirContent.files.forEach(element => {
-      fileNodes.push(new FsNode(
-        element.name,
-        element.directory,
-        false //element.type == "file"
-      ));
-    });
+    for(let key in dirContent.files){
+      let element = dirContent.files[key]
+      let childNode:FsNode = {
+        name: element.name,
+        path: element.fullPath,
+        depth: depth + 1,
+        isFolder: false,
+      }
+      fileNodes.push(childNode);
+      console.log("scanDirectory:file: ",element.fullPath);
+    }
 
     let dirNodes = Array<FsNode>();
-    await dirContent.directories.forEach(async (element) => {
+    for(let key in dirContent.directories){
+      let element = dirContent.directories[key]
       if (recursive){
-        dirNodes.push(await this.scanDirectory(element.directory, true));
+        dirNodes.push(await this.scanDirectory(element.fullPath, true, rootNode));
       }
       else{
-        dirNodes.push(new FsNode(
-          element.name,
-          element.directory,
-          false,
-          Array<FsNode>()
-        ));
+        let childNode:FsNode = {
+          name: element.name,
+          path: element.fullPath,
+          depth: depth + 1,
+          isFolder: true,
+          children: new Array<FsNode>()
+        }
+        dirNodes.push(childNode);
       }
-    });
+    }
     rootNode.children = dirNodes.concat( fileNodes );
-    
-    
 
     return rootNode;
   }

@@ -4,12 +4,13 @@
         <button class="button" (click)="setLanguage('python')">Python</button>
         <button class="button" (click)="setLanguage('javascript')">JavaScript</button>
     </div>
-
-    <ngx-codemirror
-        [(ngModel)]="code"
-        [options]="codeMirrorOptions"
-        #cmEditor
-    ></ngx-codemirror>
+    <div class="codemirror-content">
+        <ngx-codemirror
+            [(ngModel)]="code"
+            [options]="codeMirrorOptions"
+            #cmEditor
+        ></ngx-codemirror>
+    </div>
 </div>
 
 

@@ -1,4 +1,5 @@
 .editor-files-widget{
+    color: white;
     display: flex;
     flex-direction: column;
 }
@@ -14,4 +15,62 @@
     width: 100%;
     height: 100%;
      
+}
+
+.horizontal-padding{
+    height: 100%;
+    //background-color: darkgoldenrod;
+    //border: 1px solid green;
+}
+
+.editor-files-tree-nested-nodes{
+    //padding-left: 10px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.mat-tree-node:hover, .mat-nested-tree-node:hover{
+    background-color: rgb(40,40,40);
+}
+
+.editor-files-tree-nested-nodes:hover *{
+    background-color: rgb(40,40,40);
+}
+
+.editor-files-tree-flat-nodes{
+    color: white;
+}
+
+.editor-files-tree-flat-nodes{
+    color: white;
+}
+
+.editor-files-tree-node-collapsed{
+    display: none;
+}
+
+.editor-files-widget-tree .mat-tree-node , .editor-files-widget-tree .mat-nested-tree-node, .editor-files-tree-nested-nodes-label {
+    min-height: 20px !important;
+    max-height: 20px !important;
+    line-height: 100%;    
+}
+
+.editor-files-tree-nested-nodes-label{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.editor-files-widget-tree .editor-files-icon, .editor-files-widget-tree .editor-files-icon *{    
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    max-height: 20px !important;
+    margin:0;
+    padding:0;
+    border: 0;
 }

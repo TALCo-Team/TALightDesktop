@@ -8,30 +8,40 @@
     </div>
     <div class="editor-files-widget-tree">
         
-        <mat-tree  #filetree [dataSource]="dataSource" [treeControl]="treeControl" class="example-tree">
+        <mat-tree  #filetree [dataSource]="dataSource" [treeControl]="treeControl" class="filetree">
             <!-- This is the tree node template for leaf nodes -->
             <!-- There is inline padding applied to this node using styles.
               This padding value depends on the mat-icon-button width. -->
             <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
+              <div class="horizontal-padding" [style]=" 'min-width:'+[20*node.depth]+'px' "></div>
+              <div class="editor-files-tree-flat-nodes">
                 {{node.name}}
-            </mat-tree-node>
-            <!-- This is the tree node template for expandable nodes -->
-            <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
-                <div class="mat-tree-node">
-                  <button mat-icon-button matTreeNodeToggle
-                          [attr.aria-label]="'Toggle ' + node.name">
-                    <mat-icon class="mat-icon-rtl-mirror">
-                      {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
-                    </mat-icon>
-                  </button>
-                  {{node.name}}
-                </div>
-                <!-- There is inline padding applied to this div using styles.
-                    This padding value depends on the mat-icon-button width.  -->
-                <div [class.example-tree-invisible]="!treeControl.isExpanded(node)"
-                    role="group">
-                  <ng-container matTreeNodeOutlet></ng-container>
               </div>
+            </mat-tree-node>
+
+
+            <!-- This is the tree node template for expandable nodes -->
+            <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild" >
+                <div class="editor-files-tree-nested-nodes">
+                  <div class="editor-files-tree-nested-nodes-label">
+                    <div class="horizontal-padding" [style]=" 'min-width:'+[20*node.depth]+'px' "></div>
+                    <button class="editor-files-icon" mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+                      <mat-icon class="mat-icon-rtl-mirror" >
+                        {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+                      </mat-icon>
+                    </button>
+                    <div class="editor-files-tree-nested-nodes-name">{{node.name}}</div>
+                  </div>
+
+                  <!--
+                  There is inline padding applied to this div using styles.
+                  This padding value depends on the mat-icon-button width.  
+                  -->
+                </div>
+                <div [class.editor-files-tree-node-collapsed]="!treeControl.isExpanded(node)" role="group">
+                  <ng-container matTreeNodeOutlet></ng-container>
+                </div>
+                
             </mat-nested-tree-node>
           </mat-tree>
 
