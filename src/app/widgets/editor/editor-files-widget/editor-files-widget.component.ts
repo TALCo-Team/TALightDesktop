@@ -6,6 +6,7 @@ import {CollectionViewer, SelectionChange, DataSource} from '@angular/cdk/collec
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 
 import {NestedTreeControl} from '@angular/cdk/tree';
+import { Observable } from 'rxjs/internal/Observable';
 
 class FileNode implements FsNode{
   name: string;
@@ -28,6 +29,19 @@ class FileNode implements FsNode{
   }
 }
 
+class EditorTreeControl<T extends FileNode> extends NestedTreeControl<T>{
+  onSelect?:(node:T)=>boolean;
+
+  constructor( getChildren: (dataNode: T) => Observable<T[]> | T[] | undefined | null ){
+    super( getChildren )  
+  }
+
+  select(node:T){
+    if(this.onSelect){return this.onSelect(node)};
+    return true;
+  }
+}
+
 
 @Component({
   selector: 'editor-files-widget',
@@ -44,9 +58,13 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
   public fs?:FsService;
   public test:FsServiceTest;
   constructor() { 
-    this.treeControl = new NestedTreeControl<FileNode>( node => node.children );
+    this.treeControl = new EditorTreeControl<FileNode>( node => node.children );
     this.dataSource = new MatTreeNestedDataSource<FileNode>();
-    this.treeControl.isExpandable = (node)=>{return node.expanded}
+    this.treeControl.isExpandable = (node)=>{return node.children == undefined || node.children == null};
+    this.treeControl.onSelect = (node)=>{
+      alert(node.path)
+      return true;
+    };
 
     //this.fs = new FsService();
     this.test = new FsServiceTest();

@@ -30,19 +30,18 @@
     flex-direction: column;
 }
 
-.mat-tree-node:hover, .mat-nested-tree-node:hover{
-    background-color: rgb(40,40,40);
+.mat-tree-node:hover, .mat-nested-tree-node:hover, .editor-files-tree-nested-nodes:hover, .editor-files-tree-flat-nodes:hover{
+    background-color: rgb(60,60,60);
+    
 }
 
-.editor-files-tree-nested-nodes:hover *{
+.mat-tree-node, .mat-nested-tree-node, .editor-files-tree-nested-nodes{
     background-color: rgb(40,40,40);
-}
-
-.editor-files-tree-flat-nodes{
     color: white;
 }
 
 .editor-files-tree-flat-nodes{
+    background-color: transparent;
     color: white;
 }
 
@@ -54,15 +53,18 @@
     min-height: 20px !important;
     max-height: 20px !important;
     line-height: 100%;    
+    
 }
 
 .editor-files-tree-nested-nodes-label{
+    background-color: transparent;
     display: flex;
     flex-direction: row;
     align-items: center;
 }
 
 .editor-files-widget-tree .editor-files-icon, .editor-files-widget-tree .editor-files-icon *{    
+    background-color: transparent;
     width: 20px !important;
     height: 20px !important;
     min-width: 20px !important;
@@ -73,4 +75,5 @@
     margin:0;
     padding:0;
     border: 0;
+    color: white;
 }
