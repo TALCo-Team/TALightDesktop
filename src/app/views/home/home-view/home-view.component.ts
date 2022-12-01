@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ApiService } from 'src/app/services/api.service';
+import { FsService, FsServiceTest } from 'src/app/services/fs.service';
+import { PythonCompilerMessageInterface, PythonCompilerMessageInterfaceType, PythonCompilerService } from 'src/app/services/python-compiler.service';
 
 @Component({
   selector: 'tal-home-view',
@@ -8,16 +9,39 @@ import { ApiService } from 'src/app/services/api.service';
 })
 export class HomeViewComponent implements OnInit {
 
-  constructor() { }
+  constructor(
+    private pythonSrv: PythonCompilerService,
+  ) { }
 
   ngOnInit(): void {
-    let api = new ApiService();
-    
-    /*
-    api.gameList( (gameList)=>{
-      //alert(gameList);
+    const test = new FsServiceTest();
+    test.createTestFiles().then(() => {
+
+
+      this.pythonSrv.worker.onmessage = ({ data }) => {
+        console.log(`page got message: ${data}`);
+      }
+
+
+      const messageInstall: PythonCompilerMessageInterface = {
+        type: PythonCompilerMessageInterfaceType.PackageInstall,
+        packages: ['fake-traffic'],
+      }
+      this.pythonSrv.worker.postMessage(messageInstall);
+
+      const messageToSend: PythonCompilerMessageInterface = {
+        type: PythonCompilerMessageInterfaceType.ExecuteCode,
+        code: `
+        import os
+        print(os.listdir('/'))
+        print(os.listdir('/mnt'))
+        import fox
+        import mainC
+`
+      }
+
+      this.pythonSrv.worker.postMessage(messageToSend);
     });
-    */
   }
 
 }

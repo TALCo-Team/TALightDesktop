@@ -33,8 +33,8 @@ export class PyodideFsDriver implements FsServiceDriver {
   public fs;
   public rootDir = "root"
   public options = {
-    databaseVersion:    1,
-    objectStoreName:    'files',
+    databaseVersion:    21,
+    objectStoreName:    'FILE_DATA',
     databaseName:       'indexeddb',
     rootDirectoryName:  this.rootDir
   }
