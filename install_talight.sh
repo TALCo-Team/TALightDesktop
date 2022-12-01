@@ -26,6 +26,7 @@ cd rtal
 cargo build
 cargo build --release
 cd ..
+cd ..
 
 
 

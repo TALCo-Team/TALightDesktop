@@ -55,9 +55,11 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
 
   public treeControl;
   public dataSource;
-  public fs?:FsService;
+  public fs:FsService;
   public test:FsServiceTest;
-  constructor() { 
+  constructor( private _fs:FsService ) { 
+    this.fs = _fs;
+
     this.treeControl = new EditorTreeControl<FileNode>( node => node.children );
     this.dataSource = new MatTreeNestedDataSource<FileNode>();
     this.treeControl.isExpandable = (node)=>{return node.children == undefined || node.children == null};
@@ -66,8 +68,8 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
       return true;
     };
 
-    //this.fs = new FsService();
-    this.test = new FsServiceTest();
+    
+    this.test = new FsServiceTest(this.fs);
     
     this.root = new FileNode();
     this.root.name = "/"
@@ -107,7 +109,7 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
 
   async refresh(){
     //alert("asd")
-    this.test.scanDirectory(this.test.fs.rootDir, true).then((node)=>{
+    this.test.fs.driver.scanDirectory(this.test.fs.driver.rootDir, true).then((node)=>{
       this.root = node as FileNode;
       this.dataSource.data = [this.root]!;
   });

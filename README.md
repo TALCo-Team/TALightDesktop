@@ -56,8 +56,9 @@ npm install
 To run the actuall app during development ( it autoreload when files are changed )     
 Then navigate to `http://localhost:4200/`
 ```bash
-ng serve
+npm start 
 ```
+internally it does "ng serve --open"
 
 To create new components (ex: views ) 
 ```bash
