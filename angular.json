@@ -31,6 +31,17 @@
               "src/assets"
             ],
             "styles": [
+              "node_modules/primeicons/primeicons.css",
+              {
+                "input": "src/app/themes/dark.css",
+                "bundleName": "dark-theme",
+                "inject": false
+              }, {
+                "input": "src/app/themes/light.css",
+                "bundleName": "light-theme",
+                "inject": false
+              },
+              "node_modules/primeng/resources/primeng.min.css",
               "src/styles.scss"
             ],
             "scripts": []
@@ -96,6 +107,17 @@
               "src/assets"
             ],
             "styles": [
+              "node_modules/primeicons/primeicons.css",
+              {
+                "input": "src/app/themes/dark.css",
+                "bundleName": "dark-theme",
+                "inject": false
+              }, {
+                "input": "src/app/themes/light.css",
+                "bundleName": "light-theme",
+                "inject": false
+              },
+              "node_modules/primeng/resources/primeng.min.css",
               "src/styles.scss"
             ],
             "scripts": []
