@@ -1,6 +1,8 @@
 /// <reference lib="webworker" />
 
+
 importScripts("https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js");
+
 declare var pyodide: any;
 declare var loadPyodide: any;
 declare var micropip: any;

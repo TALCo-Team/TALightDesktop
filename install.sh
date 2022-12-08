@@ -1,26 +1,38 @@
 #! /bin/bash
-# EXPERIMENTAL
+sudo apt update
+
+
 sudo apt install git curl
+# Rust
+sudo apt install cargo
+sudo apt install pkg-config
+sudo apt install libwebkit2gtk-4.0-dev \
+    build-essential \
+    curl \
+    wget \
+    libssl-dev \
+    libgtk-3-dev \
+    libayatana-appindicator3-dev \
+    librsvg2-dev
 
 # NodeJS
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
-source ~/.bashrc
-# nvm list-remote
-nvm install --lts
-source ~/.bashrc
+export NVM_DIR="$HOME/.nvm"
+sh $NVM_DIR/nvm.sh install --lts
+
+# Yarn
+npm install -g yarn
 
 # TypeScript
-npm install -g typescript
-
+yarn global add typescript
 
 # Angular
-npm install -g @angular/cli
+yarn global add @angular/cli
 
 # Project dependencies
-npm install 
+yarn install
 
 # TALight ( for the server ) 
 ./install_talight.sh
-source ~/.bashrc
 
 

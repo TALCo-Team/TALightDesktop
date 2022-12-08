@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from 'node_modules/@angular/core';
 import { FlatTreeControl } from '@angular/cdk/tree';
-import { MatTreeModule, MatTreeNestedDataSource }  from 'node_modules/@angular/material/tree';
-import { FsService, FsServiceTest, FsNode } from "src/app/services/fs.service"
+import { MatTreeModule, MatTreeNestedDataSource }  from '@angular/material/tree';
+import { FsService, FsServiceTest, FsNode, FsServiceDriver } from "src/app/services/fs.service"
 import {CollectionViewer, SelectionChange, DataSource} from '@angular/cdk/collections';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 
@@ -56,9 +56,11 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
   public treeControl;
   public dataSource;
   public fs:FsService;
+  public driver:FsServiceDriver;
   public test:FsServiceTest;
   constructor( private _fs:FsService ) { 
     this.fs = _fs;
+    this.driver = this.fs.getDriver('pyodide')!;
 
     this.treeControl = new EditorTreeControl<FileNode>( node => node.children );
     this.dataSource = new MatTreeNestedDataSource<FileNode>();
@@ -109,7 +111,7 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
 
   async refresh(){
     //alert("asd")
-    this.test.fs.driver.scanDirectory(this.test.fs.driver.rootDir, true).then((node)=>{
+    this.driver.scanDirectory(this.driver.rootDir, true).then((node)=>{
       this.root = node as FileNode;
       this.dataSource.data = [this.root]!;
   });
