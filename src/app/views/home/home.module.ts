@@ -1,7 +1,7 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { NgModule } from 'node_modules/@angular/core';
+import { CommonModule } from 'node_modules/@angular/common';
 import { HomeViewComponent } from './home-view/home-view.component';
-import { RouterModule } from '@angular/router';
+import { RouterModule } from 'node_modules/@angular/router';
 import { EditorModule } from 'src/app/widgets/editor/editor.module';
 
 

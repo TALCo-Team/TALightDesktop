@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+import { Routes } from 'node_modules/@angular/router';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/home', pathMatch: 'full' },

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from 'node_modules/@angular/core';
 
 
 @Component({

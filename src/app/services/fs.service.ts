@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable } from 'node_modules/@angular/core';
 import { createFs } from 'indexeddb-fs';
 
 

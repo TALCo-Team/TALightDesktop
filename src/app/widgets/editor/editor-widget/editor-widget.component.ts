@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { DiffEditorModel } from 'ngx-monaco-editor';
+import { Component, OnInit } from 'node_modules/@angular/core';
+import { DiffEditorModel } from 'node_modules/ngx-monaco-editor';
 
 
 

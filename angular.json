@@ -111,5 +111,8 @@
       }
     }
   },
-  "defaultProject": "TALightDesktop"
+  "defaultProject": "TALightDesktop",
+  "cli": {
+    "analytics": false
+  }
 }
