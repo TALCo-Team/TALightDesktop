@@ -67,7 +67,7 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
     this.dataSource = new MatTreeNestedDataSource<FileNode>();
     this.treeControl.isExpandable = (node)=>{return node.children == undefined || node.children == null};
     this.treeControl.onSelect = (node)=>{
-      alert(node.path)
+      alert("click: "+node.path)
       return true;
     };
 

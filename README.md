@@ -78,6 +78,7 @@ TALight ( for the server )
 - Project Dependencies
 ```bash
   yarn install
+  ng add @angular/material
 ```
 
 

@@ -22,7 +22,7 @@ export class FsService {
 
   getDriver(name:string): FsServiceDriver | undefined{
     //alert(name + ' '  + this.getDriverNames() )
-    if ( this.drivers.has(name) ){return this.drivers.get(name)!;}
+    if ( this.drivers.has(name) ){return this.drivers.get(name);}
     alert(name + ' NOT found in: '  + this.getDriverNames() + " | getDriver: undefined !!!" )
     return undefined
     
@@ -165,7 +165,7 @@ export class FsServiceTest{
   async createTestFiles(){
     
     if (!this.driver){return;}
-    alert('createTestFiles: before: '+this.driver.constructor.name);
+    //alert('createTestFiles: before: '+this.driver.constructor.name);
     await this.driver.createDirectory('/src');
     await this.driver.createDirectory('/assets');
     await this.driver.createDirectory('assets/data');
