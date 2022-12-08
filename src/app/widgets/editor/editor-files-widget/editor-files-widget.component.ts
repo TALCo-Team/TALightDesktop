@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { FlatTreeControl } from '@angular/cdk/tree';
 import { MatTreeModule, MatTreeNestedDataSource }  from '@angular/material/tree';
-import { FsService, FsServiceTest, FsNode, FsServiceDriver } from "src/app/services/fs.service"
+import { FsService, FsServiceTest, FsNode, FsServiceDriver } from "src/app/services/fs-service/fs.service"
 import {CollectionViewer, SelectionChange, DataSource} from '@angular/cdk/collections';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 
