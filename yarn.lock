@@ -227,7 +227,7 @@
   dependencies:
     tslib "^2.3.0"
 
-"@angular/material@~15.0.1":
+"@angular/material@^15.0.2":
   version "15.0.2"
   resolved "https://registry.yarnpkg.com/@angular/material/-/material-15.0.2.tgz#9c64e990a95d1710cb877cd1805d01f2d068254b"
   integrity sha512-jXjgKFK09DcqShXSvKJLQ98MSqV2LuBO6ZuJj/gz96ZWoAhTTuWn0hL3xsoKp+kaF5DPdDFd24gLr8YFRibaIQ==
@@ -3201,11 +3201,6 @@ core-js-compat@^3.25.1:
   integrity sha512-622/KzTudvXCDLRw70iHW4KKs1aGpcRcowGWyYJr2DEBfRrd6hNJybxSWJFuZYD4ma86xhrwDDHxmDaIq4EA8A==
   dependencies:
     browserslist "^4.21.4"
-
-core-js@^2.5.1:
-  version "2.6.12"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-2.6.12.tgz#d9333dfa7b065e347cc5682219d6f690859cc2ec"
-  integrity sha512-Kb2wC0fvsWfQrgk8HU5lW6U/Lcs8+9aaYcy4ZFc6DDlo4nZ7n70dEgE5rtR0oG6ufKDUnrwfWL1mXR5ljDatrQ==
 
 core-js@^2.5.1:
   version "2.6.12"
@@ -6894,11 +6889,6 @@ yargs@^16.1.1:
     string-width "^4.2.0"
     y18n "^5.0.5"
     yargs-parser "^20.2.2"
-
-zone.js@^0.8.17:
-  version "0.8.29"
-  resolved "https://registry.yarnpkg.com/zone.js/-/zone.js-0.8.29.tgz#8dce92aa0dd553b50bc5bfbb90af9986ad845a12"
-  integrity sha512-mla2acNCMkWXBD+c+yeUrBUrzOxYMNFdQ6FGfigGGtEVBPJx07BQeJekjt9DmH1FtZek4E9rE1eRR9qQpxACOQ==
 
 zone.js@^0.8.17:
   version "0.8.29"
