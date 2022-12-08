@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from 'node_modules/@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { FlatTreeControl } from '@angular/cdk/tree';
 import { MatTreeModule, MatTreeNestedDataSource }  from '@angular/material/tree';
 import { FsService, FsServiceTest, FsNode, FsServiceDriver } from "src/app/services/fs.service"
@@ -60,7 +60,8 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
   public test:FsServiceTest;
   constructor( private _fs:FsService ) { 
     this.fs = _fs;
-    this.driver = this.fs.getDriver('pyodide')!;
+    //this.driver = this.fs.getDriver('pyodide')!;
+    this.driver = this.fs.getDriver('example')!;
 
     this.treeControl = new EditorTreeControl<FileNode>( node => node.children );
     this.dataSource = new MatTreeNestedDataSource<FileNode>();
@@ -112,8 +113,8 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
   async refresh(){
     //alert("asd")
     this.driver.scanDirectory(this.driver.rootDir, true).then((node)=>{
-      this.root = node as FileNode;
-      this.dataSource.data = [this.root]!;
+    this.root = node as FileNode;
+    this.dataSource.data = [this.root]!;
   });
     //alert(JSON.stringify(this.root));
   }

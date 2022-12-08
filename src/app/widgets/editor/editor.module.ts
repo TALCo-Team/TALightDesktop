@@ -1,11 +1,11 @@
-import { NgModule } from 'node_modules/@angular/core';
-import { CommonModule } from 'node_modules/@angular/common';
-import { FormsModule } from 'node_modules/@angular/forms';
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import { CodemirrorModule } from '@ctrl/ngx-codemirror';
-import { MonacoEditorModule } from 'node_modules/ngx-monaco-editor';
-import { MatTreeModule }  from 'node_modules/@angular/material/tree';
-import { MatIconModule } from 'node_modules/@angular/material/icon'
+import { MonacoEditorModule } from 'ngx-monaco-editor';
+import { MatTreeModule }  from '@angular/material/tree';
+import { MatIconModule } from '@angular/material/icon'
 
 import { EditorWidgetComponent } from './editor-widget/editor-widget.component';
 import { MonacoEditorWidgetComponent } from './monaco-editor-widget/monaco-editor-widget.component';

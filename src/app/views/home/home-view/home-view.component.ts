@@ -1,4 +1,4 @@
-import { Component, OnInit } from 'node_modules/@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FsService, FsServiceTest } from 'src/app/services/fs.service';
 import { PythonCompilerService } from 'src/app/services/python-compiler.service';
 

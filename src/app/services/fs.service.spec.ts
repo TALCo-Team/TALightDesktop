@@ -1,4 +1,4 @@
-import { TestBed } from 'node_modules/@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 
 import { FsService } from './fs.service';
 

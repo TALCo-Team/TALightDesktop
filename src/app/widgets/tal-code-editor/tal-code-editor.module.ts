@@ -1,7 +1,7 @@
-import { NgModule } from 'node_modules/@angular/core';
-import { CommonModule } from 'node_modules/@angular/common';
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { CodeEditorComponent } from './code-editor/code-editor.component';
-import { FormsModule } from 'node_modules/@angular/forms';
+import { FormsModule } from '@angular/forms';
 
 
 

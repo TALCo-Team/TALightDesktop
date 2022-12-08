@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from 'node_modules/@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { EditorFilesWidgetComponent } from './editor-files-widget.component';
 
