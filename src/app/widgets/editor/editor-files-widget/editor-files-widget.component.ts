@@ -57,8 +57,8 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
 
   constructor( private _fs:FsService ) { 
     this.fs = _fs;
-    this.driver = this.fs.getDriver('pyodide')!;
-    //this.driver = this.fs.getDriver('example')!;
+    //this.driver = this.fs.getDriver('pyodide')!;
+    this.driver = this.fs.getDriver('example')!;
 
     this.treeControl = new EditorTreeControl<FileNode>( node => node.children );
     this.dataSource = new MatTreeNestedDataSource<FileNode>();
@@ -85,7 +85,7 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
   }
 
   ngOnInit(): void {
-    this.addFile();
+    
   }
 
   
@@ -96,7 +96,7 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
   
 
   addFile(isFolder=false){
-    this.test.createTestFiles();
+    this.driver.createDirectory("added");
   }
 
   deleteFile(){
@@ -110,10 +110,10 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
   async refresh(){
     //alert("asd")
     this.driver.scanDirectory(this.driver.rootDir, true).then((node)=>{
-    this.root = node as FileNode;
-    this.dataSource.data = [this.root]!;
-  });
-    //alert(JSON.stringify(this.root));
+      this.root = node as FileNode;
+      this.dataSource.data = [this.root]!;
+    });
+      //alert(JSON.stringify(this.root));
   }
   
 }

@@ -16,12 +16,14 @@ export class HomeViewComponent implements OnInit {
     this.fs = _fs;
   }
 
-  ngOnInit(): void {
-
-    const test = new FsServiceTest(this.fs,'pyodide');
+  async ngOnInit(): Promise<void> {
+    
+  }
+  
+    /*
     test.createTestFiles().then(() => {
       //alert('done!')
-      /*
+      
       this.pythonSrv.worker.onmessage = ({ data }) => {
         console.log(`page got message: ${data}`);
       }
@@ -46,9 +48,10 @@ export class HomeViewComponent implements OnInit {
 
       this.pythonSrv.worker.postMessage(messageToSend);
 
-      */
+      
     });
+    */
     
-  }
+  
 
 }

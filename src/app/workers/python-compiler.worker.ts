@@ -10,7 +10,7 @@ async function loadPyodideAndPackages() {
   self.pyodide = await loadPyodide();
   await self.pyodide.loadPackage(["micropip"]);
   self.pyodide.FS.mkdir("/mnt");
-  console.log(self.pyodide.FS)
+  //console.log(self.pyodide.FS)
   self.pyodide.FS.mount(self.pyodide.FS.filesystems.IDBFS, { root: "." }, "/mnt");
   // self.pyodide.FS.writeFile("/mnt/fox.py", `print("HELLOWORLDFOX")`, { encoding: "utf8" });
   self.pyodide.FS.syncfs(true)
