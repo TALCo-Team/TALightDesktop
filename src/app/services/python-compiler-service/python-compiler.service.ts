@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { FsNode, FsService, FsServiceDriver } from '../fs-service/fs.service';
 
 
-let WORKER_DIR = '../../workers/';
+
 
 @Injectable({
   providedIn: 'root'
@@ -14,13 +14,13 @@ export class PythonCompilerService {
   
   public fs;
   public driver?:PyodideFsDriver;
-  public worker: Worker = new Worker(new URL(WORKER_DIR+'python-compiler.worker', import.meta.url));
+  public worker: Worker = new Worker(new URL('../../workers/python-compiler.worker', import.meta.url));
 
   constructor( private _fs:FsService ) { 
     this.fs = _fs;
     this.driver = new PyodideFsDriver();
     this.fs.registerDriver(this.driverName, this.driver); 
-    //alert('registered: '+this.driverName)
+    //alert('registered: ' + this.driverName)
   }
 
 }
@@ -75,7 +75,7 @@ export interface PyodideFsResponse {
 
 
 export class PyodideFsDriver implements FsServiceDriver {
-  public worker: Worker = new Worker(new URL(WORKER_DIR+'workers/python-compiler-fs.worker', import.meta.url));
+  public worker: Worker = new Worker(new URL('../../workers/python-compiler-fs.worker', import.meta.url));
 
   public rootDir = "root"
     

@@ -1,9 +1,6 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
-import { FlatTreeControl } from '@angular/cdk/tree';
 import { MatTreeModule, MatTreeNestedDataSource }  from '@angular/material/tree';
 import { FsService, FsServiceTest, FsNode, FsServiceDriver } from "src/app/services/fs-service/fs.service"
-import {CollectionViewer, SelectionChange, DataSource} from '@angular/cdk/collections';
-import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 
 import {NestedTreeControl} from '@angular/cdk/tree';
 import { Observable } from 'rxjs/internal/Observable';
@@ -52,16 +49,16 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
   @ViewChild(MatTreeModule) public filetree?: MatTreeModule;
   public root:FileNode;
 
-
   public treeControl;
   public dataSource;
   public fs:FsService;
   public driver:FsServiceDriver;
   public test:FsServiceTest;
+
   constructor( private _fs:FsService ) { 
     this.fs = _fs;
-    //this.driver = this.fs.getDriver('pyodide')!;
-    this.driver = this.fs.getDriver('example')!;
+    this.driver = this.fs.getDriver('pyodide')!;
+    //this.driver = this.fs.getDriver('example')!;
 
     this.treeControl = new EditorTreeControl<FileNode>( node => node.children );
     this.dataSource = new MatTreeNestedDataSource<FileNode>();
