@@ -28,7 +28,8 @@
     "ngx-monaco-editor": "^6.0.0",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.11.4"
+    "zone.js": "~0.11.4",
+    "@tauri-apps/api": "^1.2.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~15.0.1",
@@ -36,6 +37,7 @@
     "@angular/compiler-cli": "~15.0.1",
     "@types/jasmine": "~3.10.0",
     "@types/node": "^12.11.1",
+    "@tauri-apps/cli": "^1.2.1",
     "jasmine-core": "~4.0.0",
     "karma": "~6.3.0",
     "karma-chrome-launcher": "~3.1.0",

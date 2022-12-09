@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { FsService, FsServiceTest } from 'src/app/services/fs.service';
-import { PythonCompilerService } from 'src/app/services/python-compiler.service';
+import { FsService, FsServiceTest } from 'src/app/services/fs-service/fs.service';
+import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 
 @Component({
   selector: 'tal-home-view',
