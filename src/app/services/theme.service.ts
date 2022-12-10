@@ -2,8 +2,8 @@ import { DOCUMENT } from '@angular/common';
 import { Inject, Injectable } from '@angular/core';
 
 export enum AppTheme {
-  light = "src/app/themes/light.css",
-  dark = "src/app/themes/dark.css",
+  light = "light-theme.css",
+  dark = "dark-theme.css",
 }
 
 @Injectable({
@@ -11,13 +11,30 @@ export enum AppTheme {
 })
 export class ThemeService {
 
-  constructor(@Inject(DOCUMENT) private document: Document) { }
+  constructor(@Inject(DOCUMENT) private document: Document) {
+    const storedTheme: AppTheme = localStorage.getItem('theme') as AppTheme || AppTheme.light;
+    this.setTheme(storedTheme);
+  }
 
-  switchTheme(theme: AppTheme): void {
-    let themeLink = this.document.getElementById('app-theme') as HTMLLinkElement;
+  public get currentTheme(): AppTheme {
+    const storedTheme: string = localStorage.getItem('theme') || AppTheme.light;
+    return storedTheme as AppTheme;
+  }
 
-    if (themeLink) {
-      themeLink.href = theme;
+  public setTheme(theme: AppTheme): void {
+    if (theme === AppTheme.light || theme === AppTheme.dark) {
+      let themeLink = this.document.getElementById('app-theme') as HTMLLinkElement;
+
+      if (themeLink) {
+        localStorage.setItem('theme', theme);
+        themeLink.href = theme;
+      }
     }
+  }
+
+  public toggleTheme(): void {
+    const storedTheme: string = localStorage.getItem('theme') || AppTheme.light;
+    const newTheme: AppTheme = storedTheme === AppTheme.light ? AppTheme.dark : AppTheme.light;
+    this.setTheme(newTheme);
   }
 }

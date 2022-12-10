@@ -30,18 +30,15 @@
               "src/favicon.ico",
               "src/assets"
             ],
-            "styles": [
-              "node_modules/primeicons/primeicons.css",
-              {
-                "input": "src/app/themes/dark.css",
+            "styles": [{
+                "input": "src/themes/dark.scss",
                 "bundleName": "dark-theme",
                 "inject": false
               }, {
-                "input": "src/app/themes/light.css",
+                "input": "src/themes/light.scss",
                 "bundleName": "light-theme",
                 "inject": false
               },
-              "node_modules/primeng/resources/primeng.min.css",
               "src/styles.scss"
             ],
             "scripts": []
@@ -106,18 +103,15 @@
               "src/favicon.ico",
               "src/assets"
             ],
-            "styles": [
-              "node_modules/primeicons/primeicons.css",
-              {
-                "input": "src/app/themes/dark.css",
+            "styles": [{
+                "input": "src/themes/dark.scss",
                 "bundleName": "dark-theme",
                 "inject": false
               }, {
-                "input": "src/app/themes/light.css",
+                "input": "src/themes/light.scss",
                 "bundleName": "light-theme",
                 "inject": false
               },
-              "node_modules/primeng/resources/primeng.min.css",
               "src/styles.scss"
             ],
             "scripts": []
