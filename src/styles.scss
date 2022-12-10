@@ -3,6 +3,7 @@
 @import "primeicons/primeicons.css";
 
 
+
 body {
   font-family: var(--font-family);
   background-color: var(--surface-ground);
@@ -25,10 +26,23 @@ html, body{
 p-terminal {
   width:100%;
   height: 100%;
-  
+
   .p-terminal {
     width: 100%;
     height: 100%;
   }
 }
 
+ngx-monaco-editor{
+  height:100% !important;
+
+  div.editor-container{
+    height:100% !important;
+  }
+}
+
+p-splitter{
+  .p-splitter-panel{
+    width:20%;
+  }
+}

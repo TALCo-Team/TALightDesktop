@@ -2,7 +2,8 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CodeEditorWidgetComponent } from './code-editor-widget/code-editor-widget.component';
 import { EditorFilesWidgetComponent } from './editor-files-widget/editor-files-widget.component';
-
+import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
+import { FormsModule } from '@angular/forms';
 
 
 @NgModule({
@@ -11,7 +12,9 @@ import { EditorFilesWidgetComponent } from './editor-files-widget/editor-files-w
     EditorFilesWidgetComponent
   ],
   imports: [
-    CommonModule
+    CommonModule,
+    FormsModule,
+    MonacoEditorModule,
   ],
   exports: [
     CodeEditorWidgetComponent,

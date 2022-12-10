@@ -16,8 +16,9 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { SplitterModule } from 'primeng/splitter';
-import { CodeEditorModule } from './widgets/code-editor/code-editor.module';
 import { ConsoleModule } from './widgets/console/console.module';
+import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
+import { CodeEditorModule } from './widgets/code-editor/code-editor.module';
 
 @NgModule({
   declarations: [
@@ -27,6 +28,7 @@ import { ConsoleModule } from './widgets/console/console.module';
   ],
   imports: [
     BrowserModule,
+    MonacoEditorModule.forRoot(),
     RouterModule.forRoot(routes),
     FormsModule,
     InputTextModule,
@@ -38,8 +40,8 @@ import { ConsoleModule } from './widgets/console/console.module';
     ScrollPanelModule,
     SelectButtonModule,
     SplitterModule,
-    CodeEditorModule,
-    ConsoleModule
+    ConsoleModule,
+    CodeEditorModule
   ],
   providers: [],
   bootstrap: [AppComponent]

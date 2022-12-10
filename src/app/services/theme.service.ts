@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { Inject, Injectable } from '@angular/core';
+import { Subject } from 'rxjs';
 
 export enum AppTheme {
   light = "light-theme.css",
@@ -10,6 +11,8 @@ export enum AppTheme {
   providedIn: 'root'
 })
 export class ThemeService {
+
+  public themeChanged: Subject<AppTheme> = new Subject<AppTheme>();
 
   constructor(@Inject(DOCUMENT) private document: Document) {
     const storedTheme: AppTheme = localStorage.getItem('theme') as AppTheme || AppTheme.light;
@@ -28,6 +31,7 @@ export class ThemeService {
       if (themeLink) {
         localStorage.setItem('theme', theme);
         themeLink.href = theme;
+        this.themeChanged.next(theme);
       }
     }
   }

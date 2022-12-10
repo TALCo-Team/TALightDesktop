@@ -29,14 +29,13 @@
             "polyfills": "src/polyfills.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
-            "assets": [
-              "src/favicon.ico",
-              "src/assets",
-              {
+            "assets": [{
                 "glob": "**/*",
-                "input": "./node_modules/ngx-monaco-editor/assets/monaco",
-                "output": "/assets/monaco"
-              }
+                "input": "node_modules/monaco-editor",
+                "output": "/assets/monaco/"
+              },
+              "src/favicon.ico",
+              "src/assets"
             ],
             "styles": [{
                 "input": "src/themes/dark.scss",
@@ -108,7 +107,11 @@
             "tsConfig": "tsconfig.spec.json",
             "karmaConfig": "karma.conf.js",
             "inlineStyleLanguage": "scss",
-            "assets": [
+            "assets": [{
+                "glob": "**/*",
+                "input": "node_modules/monaco-editor",
+                "output": "/assets/monaco/"
+              },
               "src/favicon.ico",
               "src/assets"
             ],

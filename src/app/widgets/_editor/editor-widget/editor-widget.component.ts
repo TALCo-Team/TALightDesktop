@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DiffEditorModel } from 'ngx-monaco-editor';
+import { DiffEditorModel } from 'ngx-monaco-editor-v2';
 
 
 
@@ -9,7 +9,7 @@ import { DiffEditorModel } from 'ngx-monaco-editor';
   styleUrls: ['./editor-widget.component.scss']
 })
 export class EditorWidgetComponent implements OnInit {
-  
+
   constructor() { }
 
   ngOnInit(): void {

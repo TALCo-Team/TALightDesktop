@@ -1,1 +1,6 @@
-<p>tal-code-editor-widget works!</p>
+<div class="tal-code-editor-container">
+  <div class="tal-code-editor-header"></div>
+  <div class="tal-code-editor">
+    <ngx-monaco-editor #editor [options]="editorOptions" [(ngModel)]="code"></ngx-monaco-editor>
+  </div>
+</div>

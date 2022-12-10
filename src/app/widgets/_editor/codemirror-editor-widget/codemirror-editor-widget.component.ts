@@ -9,8 +9,8 @@ import { CodemirrorComponent } from '@ctrl/ngx-codemirror';
 
 
 
-export class CodemirrorEditorWidgetComponent implements OnInit {
-  codeMirrorOptions: any = {
+export class CodemirrorEditorWidgetComponent {
+  /* codeMirrorOptions: any = {
     //theme: 'oneDark',
     mode: 'python',
     lineNumbers: true,
@@ -49,11 +49,11 @@ export class CodemirrorEditorWidgetComponent implements OnInit {
   setEditorContent(event:any) {
     // console.log(event, typeof event);
     console.log(this.code);
-  }
-  
-      
+  } */
 
-  
-  
+
+
+
+
 }
-  
+
