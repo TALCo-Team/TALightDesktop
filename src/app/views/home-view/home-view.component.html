@@ -1,1 +1,17 @@
-
+<div class="tal-home-container">
+  <div class="tal-home-editor">
+    <div class="tal-editor-files">
+      <tal-editor-files-widget></tal-editor-files-widget>
+    </div>
+    <div class="tal-editor">
+      <p-splitter [style]="{'height': '100%'}" [panelSizes]="[60,40]" [minSizes]="[20,20]">
+        <ng-template pTemplate>
+          <tal-code-editor-widget></tal-code-editor-widget>
+        </ng-template>
+        <ng-template pTemplate>
+          <tal-console-widget></tal-console-widget>
+        </ng-template>
+      </p-splitter>
+    </div>
+  </div>
+</div>

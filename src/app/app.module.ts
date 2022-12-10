@@ -16,9 +16,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { SplitterModule } from 'primeng/splitter';
-import { EditorModule } from './widgets/editor/editor.module';
-import { TalCodeEditorModule } from './widgets/tal-code-editor/tal-code-editor.module';
-import { TalConsoleModule } from './widgets/tal-console/tal-console.module';
+import { CodeEditorModule } from './widgets/code-editor/code-editor.module';
+import { ConsoleModule } from './widgets/console/console.module';
 
 @NgModule({
   declarations: [
@@ -30,7 +29,6 @@ import { TalConsoleModule } from './widgets/tal-console/tal-console.module';
     BrowserModule,
     RouterModule.forRoot(routes),
     FormsModule,
-    EditorModule,
     InputTextModule,
     InputSwitchModule,
     DropdownModule,
@@ -40,8 +38,8 @@ import { TalConsoleModule } from './widgets/tal-console/tal-console.module';
     ScrollPanelModule,
     SelectButtonModule,
     SplitterModule,
-    TalCodeEditorModule,
-    TalConsoleModule,
+    CodeEditorModule,
+    ConsoleModule
   ],
   providers: [],
   bootstrap: [AppComponent]

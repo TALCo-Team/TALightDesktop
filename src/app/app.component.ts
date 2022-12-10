@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ThemeService } from './services/theme.service';
+import { AppTheme, ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -9,6 +9,10 @@ import { ThemeService } from './services/theme.service';
 export class AppComponent {
   constructor(public readonly themeService: ThemeService) {
 
+  }
+
+  public get changeThemIcon(): string {
+    return this.themeService.currentTheme == AppTheme.dark ? 'pi-sun' : 'pi-moon';
   }
 
   public toggleTheme(): void {

@@ -1,0 +1,13 @@
+div.tal-home-container{
+    height:100%;
+
+    div.tal-home-editor{
+        display:flex;
+        align-items: stretch;
+        height:100%;
+    
+        div.tal-editor{
+            flex:1;
+        }
+    }
+}
