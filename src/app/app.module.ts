@@ -15,8 +15,10 @@ import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { TooltipModule } from 'primeng/tooltip';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { TalCodeEditorModule } from './widgets/tal-code-editor/tal-code-editor.module';
 import { SplitterModule } from 'primeng/splitter';
+import { EditorModule } from './widgets/editor/editor.module';
+import { TalCodeEditorModule } from './widgets/tal-code-editor/tal-code-editor.module';
+import { TalConsoleModule } from './widgets/tal-console/tal-console.module';
 
 @NgModule({
   declarations: [
@@ -28,7 +30,7 @@ import { SplitterModule } from 'primeng/splitter';
     BrowserModule,
     RouterModule.forRoot(routes),
     FormsModule,
-    TalCodeEditorModule,
+    EditorModule,
     InputTextModule,
     InputSwitchModule,
     DropdownModule,
@@ -37,7 +39,9 @@ import { SplitterModule } from 'primeng/splitter';
     TooltipModule,
     ScrollPanelModule,
     SelectButtonModule,
-    SplitterModule
+    SplitterModule,
+    TalCodeEditorModule,
+    TalConsoleModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
