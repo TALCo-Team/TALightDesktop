@@ -4,9 +4,9 @@ import { CodeEditorWidgetComponent } from './code-editor-widget/code-editor-widg
 import { EditorFilesWidgetComponent } from './editor-files-widget/editor-files-widget.component';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { FormsModule } from '@angular/forms';
-import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { ConfirmationService } from 'primeng/api';
-
+import { OverlayPanelModule } from 'primeng/overlaypanel';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @NgModule({
   declarations: [
@@ -17,7 +17,8 @@ import { ConfirmationService } from 'primeng/api';
     CommonModule,
     FormsModule,
     MonacoEditorModule,
-    ConfirmPopupModule,
+    ConfirmDialogModule,
+    OverlayPanelModule
   ],
   exports: [
     CodeEditorWidgetComponent,

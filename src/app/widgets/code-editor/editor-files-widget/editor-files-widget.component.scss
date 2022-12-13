@@ -12,7 +12,8 @@ div.tal-file {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.2rem;
+  padding: 0 0.2rem;
+  margin:0.2rem 0;
   border-radius: 0.2rem;
   cursor: pointer;
 
@@ -28,6 +29,13 @@ div.tal-file {
 
 div.tal-file {
   max-width: 100%;
+  border:solid 1px transparent;
+
+  &.opened{
+    background-color:var(--surface-c);
+    border:solid 1px var(--surface-border);
+  }
+
     div.tal-file-title {
       flex: 1;
       display: flex;
@@ -128,7 +136,7 @@ div.tal-subfolder {
   border-left: solid 1px var(--surface-border);
 }
 
-input.tal-item-edit-input{
+input.tal-item-input{
     width:100%;
     border:none;
     outline:none;
@@ -137,4 +145,9 @@ input.tal-item-edit-input{
     padding:0.2rem;
     border-radius:0.2rem;
     color:var(--text-color);
+    border:1px solid transparent;
+
+    &.error{
+        border:1px solid var(--red-500);
+    }
 }

@@ -97,3 +97,32 @@ div.tal-center-page {
     }
   }
 }
+
+div.tal-contextmenu-container{
+  display:flex;
+  flex-direction:column;
+
+  div.tal-contextmenu-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding:0.8rem 1rem;
+    cursor:pointer;
+    
+    &:hover{
+      background: var(--surface-hover);
+    }
+
+    &:active{
+      background: var(--surface-active);
+    }
+
+    i{
+      margin-right:0.5rem;
+    }
+  }
+}
+
+.p-overlaypanel-content{
+  padding:0 !important;
+}
