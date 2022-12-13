@@ -1,0 +1,17 @@
+<div class="tal-center-page">
+  <h1>Seleziona un problema da risolvere</h1>
+  <div class="tal-center-form">
+    <div class="tal-problems-list">
+      <ng-container *ngFor="let problem of problems">
+        <div class="tal-problem" (click)="selectedProblem=problem.id">
+          <p-radioButton name="groupname" [value]="problem.id" [(ngModel)]="selectedProblem">
+          </p-radioButton>
+          <div class="tal-problem-details">
+            <p>{{problem.name}}</p>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+    <button pButton>Inizia</button>
+  </div>
+</div>

@@ -11,7 +11,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { DropdownModule } from 'primeng/dropdown';
 import { FileUploadModule } from 'primeng/fileupload';
-import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { TooltipModule } from 'primeng/tooltip';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -19,15 +18,20 @@ import { SplitterModule } from 'primeng/splitter';
 import { ConsoleModule } from './widgets/console/console.module';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { CodeEditorModule } from './widgets/code-editor/code-editor.module';
+import { SelectProblemViewComponent } from './views/select-problem-view/select-problem-view.component';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
     AppComponent,
     HomeViewComponent,
-    ConnectViewComponent
+    ConnectViewComponent,
+    SelectProblemViewComponent
   ],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     MonacoEditorModule.forRoot(),
     RouterModule.forRoot(routes),
     FormsModule,
@@ -35,11 +39,11 @@ import { CodeEditorModule } from './widgets/code-editor/code-editor.module';
     InputSwitchModule,
     DropdownModule,
     FileUploadModule,
-    ConfirmPopupModule,
     TooltipModule,
     ScrollPanelModule,
     SelectButtonModule,
     SplitterModule,
+    RadioButtonModule,
     ConsoleModule,
     CodeEditorModule
   ],

@@ -1,1 +1,64 @@
-<p>tal-editor-files-widget works!</p>
+<div class="tal-editor-files-tree">
+  <div class="tal-editor-files-header">
+
+  </div>
+  <div class="tal-editor-files-body">
+    <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: root }"></ng-container>
+  </div>
+</div>
+
+<p-confirmPopup></p-confirmPopup>
+
+<ng-template #TalFolder let-folder>
+  <div class="tal-folder">
+    <ng-container *ngFor="let subfolder of folder.folders">
+      <div class="tal-folder-subtree">
+        <div class="tal-folder-row">
+          <div class="tal-folder-title collapse-toggle" (dblclick)="startEditing(subfolder)">
+            <i class="pi pi-chevron-up"></i>
+            <ng-container *ngIf="editingItem!=subfolder;else ItemEditingTemplate">
+              <i class="pi pi-folder"></i>
+              <p>{{subfolder.name}}</p>
+            </ng-container>
+          </div>
+          <div class="tal-row-settings">
+            <div class="tal-row-button" (click)="deleteFolderClick($event, subfolder)">
+              <i class="pi pi-trash"></i>
+            </div>
+            <div class="tal-row-button" (click)="startEditing(subfolder)">
+              <i class="pi pi-pencil"></i>
+            </div>
+            <div class="tal-row-button">
+              <i class="pi pi-plus"></i>
+            </div>
+          </div>
+        </div>
+        <div class="tal-subfolder">
+          <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: subfolder }"></ng-container>
+        </div>
+      </div>
+    </ng-container>
+    <ng-container *ngFor="let file of folder.files">
+      <div class="tal-file">
+        <div class="tal-file-title" (dblclick)="startEditing(file)">
+          <ng-container *ngIf="editingItem!=file;else ItemEditingTemplate">
+            <p>{{file.name}}</p>
+          </ng-container>
+        </div>
+        <div class="tal-row-settings">
+          <div class="tal-row-button" (click)="deleteFileClick($event, file)">
+            <i class="pi pi-trash"></i>
+          </div>
+          <div class="tal-row-button" (click)="startEditing(file)">
+            <i class="pi pi-pencil"></i>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</ng-template>
+
+<ng-template #ItemEditingTemplate>
+  <input #nameEditing class="tal-item-edit-input" type="text" [(ngModel)]="editingValue" (blur)="saveEditing()"
+    (keyup.enter)="saveEditing()" (keyup.esc)="cancelEditing()">
+</ng-template>
