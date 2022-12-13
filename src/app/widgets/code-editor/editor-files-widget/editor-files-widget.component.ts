@@ -81,8 +81,8 @@ export class EditorFilesWidgetComponent implements OnInit {
 
   @ViewChildren(OverlayPanel) public panels?: QueryList<OverlayPanel>;
 
-  @Output("change") public change?: EventEmitter<TalFolder> = new EventEmitter<TalFolder>();
-  @Output("open") public open?: EventEmitter<TalFile> = new EventEmitter<TalFile>();
+  @Output("change") public change: EventEmitter<TalFolder> = new EventEmitter<TalFolder>();
+  @Output("open") public open: EventEmitter<TalFile> = new EventEmitter<TalFile>();
 
   constructor(private confirmationService: ConfirmationService) { }
 
@@ -296,4 +296,8 @@ export class EditorFilesWidgetComponent implements OnInit {
     }
   }
   /***************/
+
+  public export() {
+    // TODO: export
+  }
 }

@@ -4,6 +4,17 @@ div.tal-editor-files-tree {
   width: 100%;
   background: var(--surface-50);
 
+  div.tal-editor-files-header{
+    display:flex;
+    flex-direction: column;
+
+    button{
+      width:100%;
+      margin-bottom:1rem;
+      height:1.8rem;
+    }
+  }
+
   div.tal-editor-files-body {}
 }
 
