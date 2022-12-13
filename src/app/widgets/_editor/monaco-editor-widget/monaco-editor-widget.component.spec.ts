@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CodeEditorComponent } from './code-editor.component';
+import { MonacoEditorWidgetComponent } from './monaco-editor-widget.component';
 
-describe('CodeEditorComponent', () => {
-  let component: CodeEditorComponent;
-  let fixture: ComponentFixture<CodeEditorComponent>;
+describe('EditorViewComponent', () => {
+  let component: MonacoEditorWidgetComponent;
+  let fixture: ComponentFixture<MonacoEditorWidgetComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ CodeEditorComponent ]
+      declarations: [ MonacoEditorWidgetComponent ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(CodeEditorComponent);
+    fixture = TestBed.createComponent(MonacoEditorWidgetComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

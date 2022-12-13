@@ -1,0 +1,120 @@
+<div class="tal-editor-files-tree">
+  <div class="tal-editor-files-header">
+    <button pButton class="p-button-secondary" icon="pi pi-file-export" label="Esporta tutto"
+      (click)="closeAllContextMenus($event); export()"></button>
+    <button pButton icon="pi pi-file" label="Nuovo file"
+      (click)="closeAllContextMenus($event); addNewItem(root, 'file')"></button>
+    <button pButton icon="pi pi-folder" label="Nuova cartella"
+      (click)="closeAllContextMenus($event); addNewItem(root, 'folder')"></button>
+  </div>
+  <div class="tal-editor-files-body">
+    <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: root }"></ng-container>
+  </div>
+</div>
+
+<ng-template #TalFolder let-folder>
+  <div class="tal-folder">
+    <ng-container *ngFor="let subfolder of folder.folders">
+      <div class="tal-folder-subtree">
+        <div class="tal-folder-row" (contextmenu)="closeAllContextMenus($event); folderOverlayPanel.show($event)">
+          <div class="tal-folder-title collapse-toggle"
+            (dblclick)="closeAllContextMenus($event); startEditing(folder, subfolder)">
+            <i class="pi pi-chevron-up"></i>
+            <ng-container *ngIf="editingItem!=subfolder;else ItemEditingTemplate">
+              <i class="pi pi-folder"></i>
+              <p>{{subfolder.name}}</p>
+            </ng-container>
+          </div>
+          <div class="tal-row-settings" *ngIf="editingItem!=subfolder">
+            <div class="tal-row-button" (click)="folderOverlayPanel.show($event)">
+              <i class="pi pi-ellipsis-h"></i>
+            </div>
+          </div>
+
+          <p-overlayPanel #folderOverlayPanel>
+            <ng-template pTemplate>
+              <div class="tal-contextmenu-container">
+                <div class="tal-contextmenu-item" (click)="closeAllContextMenus($event); addNewItem(subfolder, 'file')">
+                  <i class="pi pi-plus"></i>
+                  <p>Nuovo file</p>
+                </div>
+                <div class="tal-contextmenu-item"
+                  (click)="closeAllContextMenus($event); addNewItem(subfolder, 'folder')">
+                  <i class="pi pi-plus"></i>
+                  <p>Nuova cartella</p>
+                </div>
+                <div class="tal-contextmenu-item"
+                  (click)="closeAllContextMenus($event); startEditing(folder, subfolder)">
+                  <i class="pi pi-pencil"></i>
+                  <p>Rinomina cartella</p>
+                </div>
+                <div class="tal-contextmenu-item"
+                  (click)="closeAllContextMenus($event); deleteFolderClick($event, subfolder)">
+                  <i class="pi pi-trash"></i>
+                  <p>Elimina cartella</p>
+                </div>
+              </div>
+            </ng-template>
+          </p-overlayPanel>
+
+        </div>
+        <div class="tal-subfolder">
+          <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: subfolder }"></ng-container>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="newItemFolder === folder">
+      <ng-container *ngTemplateOutlet="NewItemTemplate"></ng-container>
+    </ng-container>
+
+    <ng-container *ngFor="let file of folder.files">
+      <div class="tal-file" (contextmenu)="closeAllContextMenus($event); fileOverlayPanel.show($event)"
+        [class.opened]="file===openedFile">
+        <div class="tal-file-title" (click)="closeAllContextMenus($event); openFile(file)"
+          (dblclick)="closeAllContextMenus($event); startEditing(folder, file)">
+          <ng-container *ngIf="editingItem!=file;else ItemEditingTemplate">
+            <p>{{file.name}}</p>
+          </ng-container>
+        </div>
+        <div class="tal-row-settings">
+          <div class="tal-row-button" (click)="fileOverlayPanel.show($event)">
+            <i class="pi pi-ellipsis-h"></i>
+          </div>
+        </div>
+
+        <p-overlayPanel #fileOverlayPanel>
+          <ng-template pTemplate>
+            <div class="tal-contextmenu-container">
+              <div class="tal-contextmenu-item" (click)="closeAllContextMenus($event); startEditing(folder, file)">
+                <i class="pi pi-pencil"></i>
+                <p>Rinomina file</p>
+              </div>
+              <div class="tal-contextmenu-item" (click)="closeAllContextMenus($event); deleteFileClick($event, file)">
+                <i class="pi pi-trash"></i>
+                <p>Elimina file</p>
+              </div>
+            </div>
+          </ng-template>
+        </p-overlayPanel>
+      </div>
+    </ng-container>
+  </div>
+</ng-template>
+
+<ng-template #ItemEditingTemplate>
+  <input #nameEditing class="tal-item-input" type="text" [(ngModel)]="editingValue" (blur)="saveEditing()"
+    (keyup.enter)="saveEditing()" (keyup.esc)="cancelEditing()" (input)="editItemChange()"
+    [class.error]="editingItemError">
+</ng-template>
+
+<ng-template #NewItemTemplate>
+  <div class="tal-new-item">
+    <input #newItemName class="tal-item-input" type="text" [(ngModel)]="newItemValue" (blur)="saveNewItem()"
+      (keyup.enter)="saveNewItem()" (keyup.esc)="cancelNewItem()" (input)="newItemChange()"
+      [class.error]="newItemError">
+  </div>
+</ng-template>
+
+<p-confirmDialog acceptLabel="Elimina" acceptIcon="pi pi-trash" rejectLabel="Annulla">
+</p-confirmDialog>

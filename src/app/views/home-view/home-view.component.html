@@ -1,0 +1,34 @@
+<div class="tal-home-container">
+  <div class="tal-home-editor">
+    <div class="tal-editor">
+      <p-splitter [style]="{'height': '100%'}" [panelSizes]="[15,50,35]" [minSizes]="[12,20,20]">
+        <ng-template pTemplate>
+          <div class="tal-editor-files">
+            <tal-editor-files-widget (open)="openFile($event)"></tal-editor-files-widget>
+          </div>
+        </ng-template>
+        <ng-template pTemplate>
+          <ng-container *ngIf="openedFile; else NoSelectedFileTemplate">
+            <div class="tal-code-editor-container">
+              <div class="tal-code-editor-header">
+                <h3>{{openedFile!.name}}</h3>
+                <button pButton icon="pi pi-play">RUN</button>
+              </div>
+              <div class="tal-code-editor">
+                <tal-code-editor-widget [(ngModel)]="openedFile!.content" lang="javascript"></tal-code-editor-widget>
+              </div>
+            </div>
+          </ng-container>
+          <ng-template #NoSelectedFileTemplate>
+            <div class="tal-center-page">
+              <p class="tal-placeholder-message">Seleziona o crea un file</p>
+            </div>
+          </ng-template>
+        </ng-template>
+        <ng-template pTemplate>
+          <tal-console-widget></tal-console-widget>
+        </ng-template>
+      </p-splitter>
+    </div>
+  </div>
+</div>

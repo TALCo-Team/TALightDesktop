@@ -1,12 +1,16 @@
-/* You can add global styles to this file, and also import other style files */
-@use '/node_modules/@angular/material' as mat;
-@include mat.core();
+@import "primeng/resources/primeng.min.css";
+@import "primeflex/primeflex.css";
+@import "primeicons/primeicons.css";
 
-@import '/node_modules/codemirror/lib/codemirror';
-@import '/node_modules/codemirror/theme/material';
-@import '/node_modules/@angular/material/theming';
-//@import "/node_modules/material-icons/iconfont/material-icons.css";
-@import 'https://fonts.googleapis.com/icon?family=Material+Icons';
+
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--surface-ground);
+  color: var(--text-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 *{
     padding: 0;
@@ -19,58 +23,112 @@ html, body{
 
 }
 
+p-terminal {
+  width:100%;
+  height: 100%;
 
-/*theme*/
-
-*{
-  font-family: Roboto, "Helvetica Neue", sans-serif; 
+  .p-terminal {
+    width: 100%;
+    height: 100%;
+  }
 }
 
+ngx-monaco-editor{
+  height:100% !important;
 
-html, body{
-  background-color: rgb(50, 50, 50);
-  color: white;
-} 
-
-$angular-primary: mat.define-palette(mat.$teal-palette, 500, 100, 900);
-$angular-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
-
-$angular-warn: mat.define-palette(mat.$red-palette);
-
-$angular-default-theme: mat.define-light-theme(
-  (
-    color: (
-      primary: $angular-primary,
-      accent: $angular-accent,
-      warn: $angular-warn,
-    ),
-  )
-);
-
-@include mat.all-component-themes($angular-default-theme);
-
-$angular-dark-theme: mat.define-dark-theme(
-  (
-    color: (
-      primary: $angular-primary,
-      accent: $angular-accent,
-      warn: $angular-warn,
-    ),
-  )
-);
-
-.darkMode {
-  @include mat.all-component-colors($angular-dark-theme);
+  div.editor-container{
+    height:100% !important;
+  }
 }
 
-h2,
-p {
-  padding: 16px;
+p-splitter{
+  .p-splitter-panel{
+    width:10%;
+  }
 }
 
-.mr-8 {
-  margin-right: 8px;
+div.tal-center-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width:100%;
+  height: 100%;
+
+  p.tal-placeholder-message{
+    opacity:0.6;
+    font-size:1.2rem;
+  }
+
+  h1 {
+    margin-bottom: 3rem;
+  }
+
+  div.tal-center-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+
+    div.tal-form-input {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      margin-bottom: 1rem;
+
+      label {
+        margin-bottom: 0.5rem;
+      }
+
+      input {
+        width: 500px;
+        max-width: 90vw;
+      }
+    }
+
+    p.tal-error {
+      display: flex;
+      align-items: center;
+      color: var(--red-500);
+
+      i {
+        margin-right: 0.5rem;
+      }
+    }
+
+    button {
+      margin-top: 2rem;
+      align-self: flex-end;
+    }
+  }
 }
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+div.tal-contextmenu-container{
+  display:flex;
+  flex-direction:column;
+
+  div.tal-contextmenu-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding:0.8rem 1rem;
+    cursor:pointer;
+    
+    &:hover{
+      background: var(--surface-hover);
+    }
+
+    &:active{
+      background: var(--surface-active);
+    }
+
+    i{
+      margin-right:0.5rem;
+    }
+  }
+}
+
+.p-overlaypanel-content{
+  padding:0 !important;
+}
