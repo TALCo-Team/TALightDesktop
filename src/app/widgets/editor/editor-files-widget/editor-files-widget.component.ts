@@ -85,7 +85,7 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
   }
 
   ngOnInit(): void {
-    this.addFile();
+    
   }
 
   
@@ -96,7 +96,7 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
   
 
   addFile(isFolder=false){
-    this.test.createTestFiles();
+    this.driver.createDirectory("added");
   }
 
   deleteFile(){

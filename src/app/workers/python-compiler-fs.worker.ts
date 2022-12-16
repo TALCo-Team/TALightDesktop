@@ -2,32 +2,32 @@
 // Configs
 
 
+
 let pyodideRoot = "."
-let pyodideMount = "/mnt"
+let pyodideMount = "/asd"
 
 // Bootstrap pyodide
 
 importScripts("https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js");
 
-declare var pyodide: any;
 declare var loadPyodide: any;
-declare var micropip: any;
 
-async function initPyodide(){
-  pyodide = await loadPyodide();  
-  console.log(self.pyodide.FS);
-  pyodide.FS.syncfs(true);
+//let worker: PyodideFsWorker;
+async function main() {
+  //console.log(loadPyodide)
+  console.log("loadPyodide: ...")
+  let pyodide = await loadPyodide();
+  console.log("loadPyodide: done")
+  //console.log(pyodide)
+  let worker = new PyodideFsWorker(pyodide, pyodideRoot, pyodideMount);
 }
 
-let worker:DyodideFsWorker;
-initPyodide().then(()=>{
-  worker = new DyodideFsWorker(pyodideRoot, pyodideMount);    
-});
-
+main()
 
 // Worker definition 
 
 export enum PyodideFsMessageType {
+  Ready = 'Ready',
   CreateDirectory = 'CreateDirectory',
   WriteFile = 'WriteFile',
   ReadFile = 'ReadFile',
@@ -60,7 +60,7 @@ export interface PyodideFsResponse {
 
 export type FsMessageHandler = (message:PyodideFsRequest)=>PyodideFsResponse;
 
-class DyodideFsWorker{
+class PyodideFsWorker{
   RequestQueueUID = new Map<string,PyodideFsRequest>();
   pyodide: any;
   fs: any;
@@ -69,9 +69,9 @@ class DyodideFsWorker{
   root:string;
   mount:string;
 
-  constructor(root:string, mount:string ){
+  constructor(pyodide:any, root:string, mount:string ){
     this.pyodide = pyodide;
-    this.fs = pyodide.FS;
+    this.fs = this.pyodide.FS;
     this.root = root;
     this.mount = mount;
     this.load(root,mount);
@@ -81,16 +81,23 @@ class DyodideFsWorker{
   {
     this.root = root;
     this.mount = mount;
-    this.fs.mount(this.fs.filesystems.IDBFS, { root: root }, mount);
+    console.log("PyodideFsWorker: load")
+    this.fs.mkdir(this.mount);
+    this.fs.mount(this.fs.filesystems.IDBFS, { root: root }, this.mount);
+    this.fs.syncfs(true)
+    console.log("PyodideFsWorker: load: done")
 
+    
     console.log(this.fs.mounts)
     console.log(this.fs.root)
     console.log(this.fs.root.mount)
-
-    addEventListener("message", async (event:any) => { this.onData(event.data)})
+    
+    addEventListener("message", ({ data }) => { this.onData(data)})
   }
 
   onData(request:PyodideFsRequest) {
+    console.log('PyodideFsWorker:onData:',request);
+    let action: HandleMessage | null;
     let action: FsMessageHandler | null;
 
     switch (request.message.type) {
@@ -113,7 +120,7 @@ class DyodideFsWorker{
     }
     if(action){ 
       let response = action(request);
-      this.pyodide.message()
+      this.pyodide.message(response);
     }
   }
   
@@ -192,7 +199,6 @@ class DyodideFsWorker{
   }
 }
   
-
 
 
 
