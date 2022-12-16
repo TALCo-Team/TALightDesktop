@@ -32,7 +32,9 @@ export enum PyodideFsMessageType {
   WriteFile = 'WriteFile',
   ReadFile = 'ReadFile',
   ReadDirectory = 'ReadDirectory',
-  ScanDirectory = 'ScanDirectory'  
+  ScanDirectory = 'ScanDirectory',
+  Exists = 'Exists',
+  Delete = 'Delete', 
 }
 
 export interface PyodideFsMessage {
@@ -56,7 +58,7 @@ export interface PyodideFsResponse {
   errors: string[];
 }
 
-export type HandleMessage = (message:PyodideFsRequest)=>PyodideFsResponse;
+export type FsMessageHandler = (message:PyodideFsRequest)=>PyodideFsResponse;
 
 class DyodideFsWorker{
   RequestQueueUID = new Map<string,PyodideFsRequest>();
@@ -89,7 +91,7 @@ class DyodideFsWorker{
   }
 
   onData(request:PyodideFsRequest) {
-    let action: HandleMessage | null;
+    let action: FsMessageHandler | null;
 
     switch (request.message.type) {
       case PyodideFsMessageType.CreateDirectory:

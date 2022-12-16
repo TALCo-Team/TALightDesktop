@@ -2,16 +2,14 @@ import { Component, ElementRef, EventEmitter, Input, OnInit, Output, QueryList, 
 import { removeFileDecorator } from 'indexeddb-fs/dist/framework/parts';
 import { ConfirmationService } from 'primeng/api';
 import { OverlayPanel } from 'primeng/overlaypanel';
+import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver, FsServiceTest } from 'src/app/services/fs-service/fs.service';
 
-export interface TalFile {
-  name: string;
+export interface TalFile extends FsNodeFile {
   content: string;
 }
 
-export interface TalFolder {
-  name: string;
-  folders: TalFolder[];
-  files: TalFile[];
+export interface TalFolder extends FsNodeFolder {
+
 }
 
 @Component({
@@ -20,50 +18,15 @@ export interface TalFolder {
   styleUrls: ['./editor-files-widget.component.scss']
 })
 export class EditorFilesWidgetComponent implements OnInit {
-  @Input("root") root: TalFolder =
-    {
-      name: "src",
-      folders: [
-        {
-          name: "app",
-          folders: [
-            {
-              name: "widgets",
-              folders: [
-                {
-                  name: "code-editor-test-nome-lungo",
-                  folders: [],
-                  files: [
-                    {
-                      name: "editor-files-widget",
-                      content: "content"
-                    }
-                  ]
-                }
-              ],
-              files: []
-            }
-          ],
-          files: [
-            {
-              name: "app.component.ts",
-              content: "content"
-            },
-            {
-              name: "app.module.ts",
-              content: "content"
-            },
-          ]
-        }
-      ],
-      files: [
-        {
-          name: "main.ts",
-          content: "content"
-        }
-      ]
-    };
+  public driver?: FsServiceDriver;
+  public rootDir = "root"
+  //public driverName = 'example'
+  public driverName = 'pyodide'
+  public emptyNode = {name:"", path: this.rootDir, files:[], folders:[]}
 
+  @Input("root") root: TalFolder = this.emptyNode;
+
+  
   public editingValue: string = "";
   public editingItem: TalFile | TalFolder | null = null;
   public editingItemFolder: TalFolder | null = null;
@@ -84,10 +47,26 @@ export class EditorFilesWidgetComponent implements OnInit {
   @Output("change") public change: EventEmitter<TalFolder> = new EventEmitter<TalFolder>();
   @Output("open") public open: EventEmitter<TalFile> = new EventEmitter<TalFile>();
 
-  constructor(private confirmationService: ConfirmationService) { }
+  constructor(private confirmationService: ConfirmationService, private fs:FsService) {
+    //this.driver = fs.getDriver('pyodide');
+    this.driver = fs.getDriver(this.driverName);
+   }
 
   ngOnInit() {
     this.bindCollapseEvent();
+    let test = new FsServiceTest(this.fs, this.driverName)
+    test.createTestFiles().then(()=>{
+      this.refreshRoot();
+    })
+  }
+
+  refreshRoot(){
+    this.driver?.scanDirectory(this.rootDir, true).then((folder)=>{
+      this.root = folder ?? this.emptyNode;
+      this.bindCollapseEvent();
+      this.change?.emit(this.root);
+    });
+    
   }
 
   private bindCollapseEvent() {
@@ -125,8 +104,12 @@ export class EditorFilesWidgetComponent implements OnInit {
   }
 
   public openFile(file: TalFile) {
-    this.openedFile = file;
-    this.open?.emit(file);
+    this.driver?.readFile(file.path).then((content)=>{
+      file.content = content ?? "";
+      this.openedFile = file;
+      this.open?.emit(file);
+    })
+    
   }
 
   /** EDITING METHODS  **/
@@ -149,7 +132,6 @@ export class EditorFilesWidgetComponent implements OnInit {
         this.editingValue = this.editingValue.trim();
         if (this.editingValue.length > 0) {
           this.editingItem.name = this.editingValue;
-
           this.change?.emit(this.root);
         }
       }
@@ -264,10 +246,11 @@ export class EditorFilesWidgetComponent implements OnInit {
             this.newItemFolder.files.push({
               name: this.newItemValue,
               content: ""
-            });
+            } as TalFile );
           } else {
             this.newItemFolder.folders.push({
               name: this.newItemValue,
+              path: "./"+this.newItemValue,
               files: [],
               folders: []
             });

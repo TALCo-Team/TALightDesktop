@@ -10,7 +10,7 @@ class FileNode implements FsNode{
   path: string;
   isFolder: boolean;
   depth:number;
-  children?: FileNode[];
+  folders?: FileNode[];
   expanded:boolean;
   changed:boolean;
   
@@ -20,7 +20,7 @@ class FileNode implements FsNode{
     this.path = "";
     this.depth=0;
     this.isFolder = false;
-    this.children = Array<FileNode>();
+    this.folders = Array<FileNode>();
     this.expanded = false;
     this.changed = true;
   }
@@ -57,12 +57,12 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
 
   constructor( private _fs:FsService ) { 
     this.fs = _fs;
-    this.driver = this.fs.getDriver('pyodide')!;
-    //this.driver = this.fs.getDriver('example')!;
+    //this.driver = this.fs.getDriver('pyodide')!;
+    this.driver = this.fs.getDriver('example')!;
 
-    this.treeControl = new EditorTreeControl<FileNode>( node => node.children );
+    this.treeControl = new EditorTreeControl<FileNode>( node => node.folders );
     this.dataSource = new MatTreeNestedDataSource<FileNode>();
-    this.treeControl.isExpandable = (node)=>{return node.children == undefined || node.children == null};
+    this.treeControl.isExpandable = (node)=>{return node.folders == undefined || node.folders == null};
     this.treeControl.onSelect = (node)=>{
       alert("click: "+node.path)
       return true;
@@ -81,7 +81,7 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
   }
 
   hasChild(_: number, node: FileNode){ 
-    return !!node.children && node.children.length > 0;
+    return !!node.folders && node.folders.length > 0;
   }
 
   ngOnInit(): void {
@@ -110,7 +110,7 @@ export class EditorFilesWidgetComponent implements OnInit, AfterViewInit  {
   async refresh(){
     //alert("asd")
     this.driver.scanDirectory(this.driver.rootDir, true).then((node)=>{
-    this.root = node as FileNode;
+    //this.root = node as FileNode;
     this.dataSource.data = [this.root]!;
   });
     //alert(JSON.stringify(this.root));

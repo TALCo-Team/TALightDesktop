@@ -1,6 +1,6 @@
 import { ThisReceiver } from '@angular/compiler';
 import { Injectable } from '@angular/core';
-import { FsNode, FsService, FsServiceDriver } from '../fs-service/fs.service';
+import { FsNode, FsNodeFolder, FsService, FsServiceDriver } from '../fs-service/fs.service';
 
 
 
@@ -41,12 +41,16 @@ export interface PythonCompilerMessageInterface {
 
 // --- PyodideFsDriver --- 
 
+export type FsMessageHandler = (message:PyodideFsRequest)=>PyodideFsResponse;
+
 export enum PyodideFsMessageType {
   CreateDirectory = 'CreateDirectory',
   WriteFile = 'WriteFile',
   ReadFile = 'ReadFile',
   ReadDirectory = 'ReadDirectory',
-  ScanDirectory = 'ScanDirectory'  
+  ScanDirectory = 'ScanDirectory',
+  Exists = 'Exists',
+  Delete = 'Delete', 
 }
 
 export interface PyodideFsMessage {
@@ -84,8 +88,33 @@ export class PyodideFsDriver implements FsServiceDriver {
       this.worker.onmessage = (event:MessageEvent) => this.onMessage(event.data);
   }
 
-  onMessage(message:PyodideFsResponse){
+  onMessage(response:PyodideFsResponse){
     alert('onMessage!!! ');
+      let action: FsMessageHandler | null;
+  
+      switch (response.message.type) {
+        case PyodideFsMessageType.CreateDirectory:
+          action=this.createDirectory;
+          break;
+        case PyodideFsMessageType.ReadDirectory:
+          action=this.readDirectory;
+          break;
+        case PyodideFsMessageType.WriteFile:
+          action=this.writeFile;
+          break;
+        case PyodideFsMessageType.ReadFile:
+          action=this.readFile;
+          break;
+        case PyodideFsMessageType.ScanDirectory:
+          action=this.scanDirectory;
+          break;
+        default: action=null;
+      }
+      if(action){ 
+        let response = action(request);
+        this.pyodide.message()
+      }
+    
   }
 
   
@@ -101,15 +130,25 @@ export class PyodideFsDriver implements FsServiceDriver {
     return -1;
   }
 
-  async readDirectory(fullpath:string):Promise<FsNode|null>{
+  async readDirectory(fullpath:string):Promise<FsNodeFolder|null>{
     return null;
   }
 
   
 
-  async scanDirectory(path?:string, recursive=false, parent?:FsNode):Promise<FsNode>{
+  async scanDirectory(path?:string, recursive=false, parent?:FsNode):Promise<FsNodeFolder>{
     if(!path){path='./'}
-    return {name:path,path:path,isFolder:false, depth:-1};
+    return {name:path,path:path, files:[], folders:[]};
+  }
+
+  async delete(fullpath:string): Promise<boolean>{
+    if(!this.exists(fullpath)) return true;
+    //await this.worker.remove(fullpath);
+    return !this.exists(fullpath);
+  }
+
+  async exists(fullpath:string): Promise<boolean>{
+    return true; //this.worker.exists(fullpath);
   }
 
   /*

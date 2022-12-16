@@ -33,6 +33,22 @@ export class FsService {
   }
 }
 
+
+export interface FsNode {
+  name: string;
+  path: string;
+}
+
+export interface FsNodeFolder extends FsNode {
+  folders: FsNodeFolder[];
+  files: FsNodeFile[];
+}
+export interface FsNodeFile extends FsNode {}
+
+
+
+
+
 export interface FsServiceDriver {
   rootDir:string;
   
@@ -42,9 +58,13 @@ export interface FsServiceDriver {
 
   readFile(fullpath:string): Promise<string|null>;
 
-  readDirectory(fullpath:string): Promise<FsNode|null>;
+  readDirectory(fullpath:string): Promise<FsNodeFolder|null>;
 
-  scanDirectory(fullpath:string, recursive?:boolean, parent?:FsNode):Promise<FsNode|null>;
+  scanDirectory(fullpath:string, recursive?:boolean, parent?:FsNodeFolder):Promise<FsNodeFolder|null>;
+
+  delete(fullpath:string): Promise<boolean>;
+
+  exists(fullpath:string): Promise<boolean>;
 }
 
 export class IndexeddbFsDriver implements FsServiceDriver {
@@ -77,7 +97,7 @@ export class IndexeddbFsDriver implements FsServiceDriver {
     return res.data.length;
   }
 
-  async readDirectory(fullpath:string):Promise<FsNode|null>{
+  async readDirectory(fullpath:string):Promise<FsNodeFolder|null>{
     if ( await this.fs.exists(fullpath) ) {
       return this.scanDirectory(fullpath, false );
     }
@@ -86,64 +106,62 @@ export class IndexeddbFsDriver implements FsServiceDriver {
 
   
 
-  async scanDirectory(path?:string, recursive=false, parent?:FsNode):Promise<FsNode>{
+  async scanDirectory(path?:string, recursive=false, parent?:FsNodeFolder):Promise<FsNodeFolder>{
     if (!path){path = this.rootDir;}
-    let depth = (parent? parent.depth + 1 : 0);
-    let rootNode:FsNode = {
+    //let depth = (parent? parent.depth + 1 : 0);
+    let rootNode:FsNodeFolder = {
       name: path.split("/").reverse()[0]+"/",
       path: path,
-      depth: depth,
-      isFolder: true,
-      children: new Array<FsNode>(),
+      //depth: depth,
+      folders: [],
+      files: []
     };
     console.log("scanDirectory:dir: ",path);
     
     let dirContent = await this.fs.readDirectory(path)
      
 
-    let fileNodes = Array<FsNode>();
     for(let key in dirContent.files){
       let element = dirContent.files[key]
-      let childNode:FsNode = {
+      let childNode:FsNodeFile = {
         name: element.name,
         path: element.fullPath,
-        depth: depth + 1,
-        isFolder: false,
+        //depth: depth + 1,
       }
-      fileNodes.push(childNode);
+      rootNode.files.push(childNode);
       console.log("scanDirectory:file: ",element.fullPath);
     }
 
-    let dirNodes = Array<FsNode>();
     for(let key in dirContent.directories){
       let element = dirContent.directories[key]
       if (recursive){
-        dirNodes.push(await this.scanDirectory(element.fullPath, true, rootNode));
+        rootNode.folders.push(await this.scanDirectory(element.fullPath, true, rootNode));
       }
       else{
-        let childNode:FsNode = {
+        let childNode:FsNodeFolder = {
           name: element.name,
           path: element.fullPath,
-          depth: depth + 1,
-          isFolder: true,
-          children: new Array<FsNode>()
+          //depth: depth + 1,
+          folders: [],
+          files: []
         }
-        dirNodes.push(childNode);
+        rootNode.folders.push(childNode);
       }
     }
-    rootNode.children = dirNodes.concat( fileNodes );
 
     return rootNode;
   }
-}
 
+  async delete(fullpath:string): Promise<boolean>{
+    if(!this.exists(fullpath)) return true;
+    await this.fs.remove(fullpath);
+    return !this.exists(fullpath);
+  }
 
-export interface FsNode {
-  name: string;
-  path: string;
-  depth: number;
-  isFolder: boolean;
-  children?: FsNode[];
+  async exists(fullpath:string): Promise<boolean>{
+    return this.fs.exists(fullpath);
+  }
+
 }
 
 
@@ -168,8 +186,8 @@ export class FsServiceTest{
     //alert('createTestFiles: before: '+this.driver.constructor.name);
     await this.driver.createDirectory('/src');
     await this.driver.createDirectory('/assets');
-    await this.driver.createDirectory('assets/data');
-    await this.driver.createDirectory('assets/img');
+    await this.driver.createDirectory('/assets/data');
+    await this.driver.createDirectory('/assets/img');
     await this.driver.writeFile('main.py',           'import src/testclass.py\nprint("hello");');
     await this.driver.writeFile('mainC.py',           'import src/testclass.py\nprint("helloC");');
     await this.driver.writeFile('src/__init__.py',   '');

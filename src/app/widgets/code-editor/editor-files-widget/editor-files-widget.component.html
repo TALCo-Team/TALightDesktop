@@ -19,7 +19,7 @@
         <div class="tal-folder-row" (contextmenu)="closeAllContextMenus($event); folderOverlayPanel.show($event)">
           <div class="tal-folder-title collapse-toggle"
             (dblclick)="closeAllContextMenus($event); startEditing(folder, subfolder)">
-            <i class="pi pi-chevron-up"></i>
+            <i class="pi pi-chevron-down"></i>
             <ng-container *ngIf="editingItem!=subfolder;else ItemEditingTemplate">
               <i class="pi pi-folder"></i>
               <p>{{subfolder.name}}</p>
