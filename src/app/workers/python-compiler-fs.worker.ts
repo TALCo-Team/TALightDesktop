@@ -3,8 +3,8 @@
 
 
 
-let pyodideRoot = "."
-let pyodideMount = "/asd"
+let pyodideRoot = "/"
+let pyodideMount = "/mnt"
 
 // Bootstrap pyodide
 
@@ -14,17 +14,15 @@ declare var loadPyodide: any;
 
 //let worker: PyodideFsWorker;
 async function main() {
-  //console.log(loadPyodide)
-  console.log("loadPyodide: ...")
-  let pyodide = await loadPyodide();
-  console.log("loadPyodide: done")
-  //console.log(pyodide)
-  let worker = new PyodideFsWorker(pyodide, pyodideRoot, pyodideMount);
+  
+  let worker = new PyodideFsWorker(pyodideRoot, pyodideMount);
 }
 
-main()
+
 
 // Worker definition 
+
+type PromiseResolver<T> = (value: T | PromiseLike<T>) => void;
 
 export enum PyodideFsMessageType {
   Ready = 'Ready',
@@ -68,13 +66,37 @@ class PyodideFsWorker{
   micropip: any;
   root:string;
   mount:string;
+  isReady = false;
+  readyPromise: Promise<boolean>;
+  readyResolver: PromiseResolver<boolean>;
 
-  constructor(pyodide:any, root:string, mount:string ){
-    this.pyodide = pyodide;
-    this.fs = this.pyodide.FS;
+  constructor(root:string, mount:string ){
     this.root = root;
     this.mount = mount;
-    this.load(root,mount);
+    
+    let promiseResolver: PromiseResolver<boolean>;
+    this.readyPromise =  new Promise<boolean>((resolve, reject) => {
+      promiseResolver = resolve;
+    })
+
+    this.readyResolver = (value)=>{ promiseResolver(value) }
+
+    addEventListener("message", ( payload:any ) => { this.onData(payload.data) })
+
+    this.initPydiode().then(()=>{
+      this.load(this.root, this.mount);
+      this.isReady = true;
+      this.readyResolver(this.isReady);
+    })
+  }
+
+  async initPydiode(){
+    //console.log(loadPyodide)
+    console.log("loadPyodide: ...")
+    this.pyodide = await loadPyodide();
+    this.fs = this.pyodide.FS;
+    console.log("loadPyodide: done")
+    //console.log(pyodide)
   }
 
   async load(root:string, mount:string)
@@ -84,7 +106,7 @@ class PyodideFsWorker{
     console.log("PyodideFsWorker: load")
     this.fs.mkdir(this.mount);
     this.fs.mount(this.fs.filesystems.IDBFS, { root: root }, this.mount);
-    this.fs.syncfs(true)
+    this.fs.syncfs;
     console.log("PyodideFsWorker: load: done")
 
     
@@ -92,35 +114,42 @@ class PyodideFsWorker{
     console.log(this.fs.root)
     console.log(this.fs.root.mount)
     
-    addEventListener("message", ({ data }) => { this.onData(data)})
   }
 
   onData(request:PyodideFsRequest) {
     console.log('PyodideFsWorker:onData:',request);
-    let action: HandleMessage | null;
-    let action: FsMessageHandler | null;
+    let action: FsMessageHandler | null = null;
 
     switch (request.message.type) {
+      case PyodideFsMessageType.Ready:
+        this.ready(request);
+        break;
       case PyodideFsMessageType.CreateDirectory:
-        action=this.createDirectory;
+        action=(request)=>{return this.createDirectory(request)};
         break;
       case PyodideFsMessageType.ReadDirectory:
-        action=this.readDirectory;
+        action=(request)=>{return this.readDirectory(request)};
         break;
       case PyodideFsMessageType.WriteFile:
-        action=this.writeFile;
+        action=(request)=>{return this.writeFile(request)};
         break;
       case PyodideFsMessageType.ReadFile:
-        action=this.readFile;
+        action=(request)=>{return this.readFile(request)};
         break;
       case PyodideFsMessageType.ScanDirectory:
-        action=this.scanDirectory;
+        action=(request)=>{return this.scanDirectory(request)};
         break;
-      default: action=null;
+      case PyodideFsMessageType.Delete:
+        action=(request)=>{return this.delete(request)};
+        break;
+      case PyodideFsMessageType.Exists:
+        action=(request)=>{return this.exists(request)};
+        break;
+      default: break;
     }
     if(action){ 
       let response = action(request);
-      this.pyodide.message(response);
+      postMessage(response);
     }
   }
   
@@ -146,6 +175,18 @@ class PyodideFsWorker{
     return response;
   }
 
+  ready(request:PyodideFsRequest){
+    let response = this.responseFromRequest(request);
+    response.message.args = ['true'];
+    if (this.isReady) {
+      postMessage(response);
+    }else{
+      this.readyPromise.then((ready)=>{
+        response.message.args = [ready?'true':'false'];
+        postMessage(response);
+      })
+    }
+  }
   
 
   createDirectory(request:PyodideFsRequest):PyodideFsResponse{
@@ -155,7 +196,10 @@ class PyodideFsWorker{
     }
     //TODO: allow for multiple queries;
     let fullpath = request.message.args[0];
-    return this.fs.mkdir(fullpath);
+    let res = this.fs.mkdir(this.mount + fullpath);
+    console.log('pydiode:mkdir:',res)
+    response.message.args = [fullpath];
+    return response;
   }
 
   readDirectory(request:PyodideFsRequest):PyodideFsResponse{
@@ -164,7 +208,8 @@ class PyodideFsWorker{
       return this.responseError(response,"readDirectory: Requires at least 1 path as argument and 1 content");
     }
     let fullpath = request.message.args[0];
-    response.message.args = this.fs.readdir(fullpath);
+    this.fs.readdir(this.mount + fullpath);
+    response.message.args = [fullpath];
     return response;
   }
 
@@ -176,8 +221,8 @@ class PyodideFsWorker{
     
     let fullpath = request.message.args[0];
     let content = request.message.contents[0];
-    this.fs.writeFile(fullpath, content, { encoding: "utf8" });
-    this.fs.syncfs(true)
+    this.fs.writeFile(this.mount + fullpath, content, { encoding: "utf8" });
+    //this.fs.syncfs(true)
     return response;
   }
 
@@ -188,7 +233,7 @@ class PyodideFsWorker{
       return this.responseError(response,"readFile: Requires at least 1 path as argument");
     }
     let fullpath = request.message.args[0];
-    let content = this.fs.readFile(fullpath, { encoding: "utf8" });
+    let content = this.fs.readFile(this.mount + fullpath, { encoding: "utf8" });
     response.message.contents.push(content);
     return response;
   }
@@ -197,13 +242,23 @@ class PyodideFsWorker{
     //TODO: do it recursive
     return this.readDirectory(request);
   }
+
+  delete(request:PyodideFsRequest):PyodideFsResponse{
+    let response = this.responseFromRequest(request); 
+    return response;
+  }
+
+  exists(request:PyodideFsRequest):PyodideFsResponse{
+    let response = this.responseFromRequest(request); 
+    return response;
+  }
 }
   
 
 
 
 
-
+main()
 
 
 

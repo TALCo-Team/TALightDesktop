@@ -52,6 +52,8 @@ export interface FsNodeFile extends FsNode {}
 export interface FsServiceDriver {
   rootDir:string;
   
+  ready(): Promise<boolean>;
+
   createDirectory(fullpath:string): Promise<boolean>;
 
   writeFile(fullpath:string, content:string): Promise<number>;
@@ -79,6 +81,10 @@ export class IndexeddbFsDriver implements FsServiceDriver {
 
   constructor() { 
     this.fs = createFs(this.options);
+  }
+
+  async ready(): Promise<boolean>{
+    return true;
   }
 
   async readFile(fullpath:string): Promise<string|null>{
@@ -188,12 +194,12 @@ export class FsServiceTest{
     await this.driver.createDirectory('/assets');
     await this.driver.createDirectory('/assets/data');
     await this.driver.createDirectory('/assets/img');
-    await this.driver.writeFile('main.py',           'import src/testclass.py\nprint("hello");');
-    await this.driver.writeFile('mainC.py',           'import src/testclass.py\nprint("helloC");');
-    await this.driver.writeFile('src/__init__.py',   '');
-    await this.driver.writeFile('src/testclassA.py',  'class testclassA: pass');
-    await this.driver.writeFile('src/testclassB.py',  'class testclassB: pass');
-    await this.driver.writeFile('src/testclassC.py',  'class testclassC: pass');
+    await this.driver.writeFile('/main.py',           'import src/testclass.py\nprint("hello");');
+    await this.driver.writeFile('/mainC.py',           'import src/testclass.py\nprint("helloC");');
+    await this.driver.writeFile('/src/__init__.py',   '');
+    await this.driver.writeFile('/src/testclassA.py',  'class testclassA: pass');
+    await this.driver.writeFile('/src/testclassB.py',  'class testclassB: pass');
+    await this.driver.writeFile('/src/testclassC.py',  'class testclassC: pass');
   }
 
 }

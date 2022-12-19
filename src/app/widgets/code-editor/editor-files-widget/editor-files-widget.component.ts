@@ -19,7 +19,7 @@ export interface TalFolder extends FsNodeFolder {
 })
 export class EditorFilesWidgetComponent implements OnInit {
   public driver?: FsServiceDriver;
-  public rootDir = "root"
+  public rootDir = "/"
   //public driverName = 'example'
   public driverName = 'pyodide'
   public emptyNode = {name:"", path: this.rootDir, files:[], folders:[]}
@@ -50,14 +50,24 @@ export class EditorFilesWidgetComponent implements OnInit {
   constructor(private confirmationService: ConfirmationService, private fs:FsService) {
     //this.driver = fs.getDriver('pyodide');
     this.driver = fs.getDriver(this.driverName);
+    //alert(this.driver)
    }
 
   ngOnInit() {
     this.bindCollapseEvent();
+    this.driver
     let test = new FsServiceTest(this.fs, this.driverName)
-    test.createTestFiles().then(()=>{
-      this.refreshRoot();
+
+    this.driver?.ready().then((ready)=>{
+      console.log('ready!');
+      //alert('ready!');
+      test.createTestFiles().then(()=>{
+        this.refreshRoot();
+      })
     })
+
+    
+
   }
 
   refreshRoot(){
@@ -219,6 +229,11 @@ export class EditorFilesWidgetComponent implements OnInit {
   /***************/
 
   /** CREATE METHODS **/
+  public syncFilesystem(folder: TalFolder) {
+    setTimeout(() => { this.refreshRoot(); }, 0);
+  }
+
+
   public addNewItem(folder: TalFolder, type: "file" | "folder") {
     this.newItemValue = "";
     this.newItemFolder = folder;
@@ -248,6 +263,9 @@ export class EditorFilesWidgetComponent implements OnInit {
               content: ""
             } as TalFile );
           } else {
+            this.driver?.createDirectory("./"+this.newItemValue).then(()=>{
+
+            })
             this.newItemFolder.folders.push({
               name: this.newItemValue,
               path: "./"+this.newItemValue,

@@ -4,8 +4,10 @@
       (click)="closeAllContextMenus($event); export()"></button>
     <button pButton icon="pi pi-file" label="Nuovo file"
       (click)="closeAllContextMenus($event); addNewItem(root, 'file')"></button>
-    <button pButton icon="pi pi-folder" label="Nuova cartella"
+      <button pButton icon="pi pi-folder" label="Nuova cartella"
       (click)="closeAllContextMenus($event); addNewItem(root, 'folder')"></button>
+      <button pButton icon="pi pi-sync" label="Refresh"
+      (click)="closeAllContextMenus($event); syncFilesystem(root)"></button>
   </div>
   <div class="tal-editor-files-body">
     <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: root }"></ng-container>
