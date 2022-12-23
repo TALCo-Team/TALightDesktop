@@ -55,9 +55,9 @@ export class EditorFilesWidgetComponent implements OnInit {
 
   ngOnInit() {
     this.bindCollapseEvent();
-    this.driver
+    
     let test = new FsServiceTest(this.fs, this.driverName)
-
+    //this.rootDir = this.driver?.rootDir ?? this.rootDir;
     this.driver?.ready().then((ready)=>{
       console.log('ready!');
       //alert('ready!');
@@ -71,7 +71,7 @@ export class EditorFilesWidgetComponent implements OnInit {
   }
 
   refreshRoot(){
-    this.driver?.scanDirectory(this.rootDir, true).then((folder)=>{
+    this.driver?.scanDirectory(this.rootDir).then((folder)=>{
       this.root = folder ?? this.emptyNode;
       this.bindCollapseEvent();
       this.change?.emit(this.root);

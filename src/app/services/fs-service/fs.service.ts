@@ -62,7 +62,7 @@ export interface FsServiceDriver {
 
   readDirectory(fullpath:string): Promise<FsNodeFolder|null>;
 
-  scanDirectory(fullpath:string, recursive?:boolean, parent?:FsNodeFolder):Promise<FsNodeFolder|null>;
+  scanDirectory(fullpath:string): Promise<FsNodeFolder|null>;
 
   delete(fullpath:string): Promise<boolean>;
 
@@ -105,20 +105,21 @@ export class IndexeddbFsDriver implements FsServiceDriver {
 
   async readDirectory(fullpath:string):Promise<FsNodeFolder|null>{
     if ( await this.fs.exists(fullpath) ) {
-      return this.scanDirectory(fullpath, false );
+      return this.scanDirectory_recursive(fullpath);
     }
     return null;
   }
 
   
-
-  async scanDirectory(path?:string, recursive=false, parent?:FsNodeFolder):Promise<FsNodeFolder>{
+  async scanDirectory(path?:string):Promise<FsNodeFolder>{
     if (!path){path = this.rootDir;}
-    //let depth = (parent? parent.depth + 1 : 0);
+    return this.scanDirectory_recursive(path, true)
+  }
+
+  async scanDirectory_recursive(path:string, recursive=false):Promise<FsNodeFolder>{
     let rootNode:FsNodeFolder = {
       name: path.split("/").reverse()[0]+"/",
       path: path,
-      //depth: depth,
       folders: [],
       files: []
     };
@@ -141,7 +142,7 @@ export class IndexeddbFsDriver implements FsServiceDriver {
     for(let key in dirContent.directories){
       let element = dirContent.directories[key]
       if (recursive){
-        rootNode.folders.push(await this.scanDirectory(element.fullPath, true, rootNode));
+        rootNode.folders.push(await this.scanDirectory_recursive(element.fullPath, true));
       }
       else{
         let childNode:FsNodeFolder = {

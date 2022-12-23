@@ -1,10 +1,11 @@
-import { FsNode, FsNodeFolder, FsServiceDriver } from '../fs-service/fs.service';
+import { FsNodeFolder, FsServiceDriver } from '../fs-service/fs.service';
 
 // --- PyodideFsDriver --- 
 
 type UID = string; // should I ? 
 
 type PromiseResolver<T> = (value: T | PromiseLike<T>) => void;
+
 
 
 export enum PyodideFsMessageType {
@@ -45,8 +46,6 @@ export interface PyodideFsRequestHandler {
 }
 
 
-
-
 export class PyodideFsDriver implements FsServiceDriver {
   public worker: Worker = new Worker(new URL('../../workers/python-compiler-fs.worker', import.meta.url));
   public rootDir = "."
@@ -78,11 +77,14 @@ export class PyodideFsDriver implements FsServiceDriver {
 
       switch(response.message.type){
         case PyodideFsMessageType.Ready:           this.didReceiveReady(msgSent, msgRecived, resolvePromise); break;
+        
         case PyodideFsMessageType.CreateDirectory: this.didReceiveCreateDirectory(msgSent, msgRecived, resolvePromise); break;
         case PyodideFsMessageType.ReadDirectory:   this.didReceiveReadDirectory(msgSent, msgRecived, resolvePromise); break;
+        case PyodideFsMessageType.ScanDirectory:   this.didReceiveScanDirectory(msgSent, msgRecived, resolvePromise); break;
+
         case PyodideFsMessageType.WriteFile:       this.didReceiveWriteFile(msgSent, msgRecived, resolvePromise); break;
         case PyodideFsMessageType.ReadFile:        this.didReceiveReadFile(msgSent, msgRecived, resolvePromise); break;
-        case PyodideFsMessageType.ScanDirectory:   this.didReceiveScanDirectory(msgSent, msgRecived, resolvePromise); break;
+        
         case PyodideFsMessageType.Delete:          this.didReceiveDelete(msgSent, msgRecived, resolvePromise); break;
         case PyodideFsMessageType.Exists:          this.didReceiveExists(msgSent, msgRecived, resolvePromise); break;
       }
@@ -91,44 +93,14 @@ export class PyodideFsDriver implements FsServiceDriver {
   }
 
   didReceiveReady(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveReady: ")
     let ready = msgRecived.args[0]
     ///alert(111)
     resolvePromise(ready == 'true'?true:false)
   }
-  
-  didReceiveReadDirectory(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<FsNodeFolder | null> ){
-    //TODO: do the actual thing 
-    let node:FsNodeFolder = {
-      path: msgRecived.args[0],
-      name: msgRecived.args[0],
-      files:[],
-      folders:[]
-    };
-    resolvePromise( node )
-  }
-  
-  didReceiveReadFile(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<string> ){
-    resolvePromise(msgRecived.contents[0])
-  }
-  
-  didReceiveWriteFile(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<number> ){
-    //TODO:
-    resolvePromise(1)
-  }
-  
-  didReceiveScanDirectory(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<FsNodeFolder | null> ){
-    //TODO: do the actual thing 
-    let node:FsNodeFolder = {
-      path: msgRecived.args[0],
-      name: msgRecived.args[0],
-      files:[],
-      folders:[]
-    };
-    resolvePromise( node )
-  }
 
   didReceiveCreateDirectory(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<boolean> ){
-    
+    console.log("didReceiveCreateDirectory: ")
     if (msgSent.args.length != 1){ 
       resolvePromise(false); 
     }
@@ -136,13 +108,41 @@ export class PyodideFsDriver implements FsServiceDriver {
     let pathRecived = msgRecived.args[0];
 
     resolvePromise(pathSent == pathRecived)
+  } 
+
+  didReceiveReadDirectory(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<FsNodeFolder | null> ){
+    //TODO: do the actual thing 
+    let node = JSON.parse(msgRecived.contents[0])
+    console.log("didReceiveReadDirectory: ", node)
+    resolvePromise( node )
   }
 
+  didReceiveScanDirectory(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<FsNodeFolder | null> ){
+    //TODO: do the actual thing 
+    let node = JSON.parse(msgRecived.contents[0])
+    console.log("didReceiveScanDirectory: ", node)
+    resolvePromise( node )
+  }
+
+  didReceiveReadFile(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<string> ){
+    console.log("didReceiveReadFile: ")
+    resolvePromise(msgRecived.contents[0])
+  }
+  
+  didReceiveWriteFile(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<number> ){
+    console.log("didReceiveWriteFile: ")
+    //TODO:
+    resolvePromise(1)
+  }
+  
+
   didReceiveDelete(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveDelete: ")
     resolvePromise(true)
   }
 
   didReceiveExists(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveExists: ")
     resolvePromise(true)
   }
 
@@ -286,7 +286,7 @@ export class PyodideFsDriver implements FsServiceDriver {
     let seed = Math.floor(Math.random() * 100000000);
     return 'uid-' + timestap + '-' + seed;
   }
-
+}
   /*
 }
  
@@ -379,4 +379,3 @@ export class PyodideFsDriver implements FsServiceDriver {
     return null;
   }
   */
-}

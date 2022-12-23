@@ -13,7 +13,6 @@ export class HomeViewComponent implements OnInit {
 
   public fs;
 
-
   constructor(
     private pythonSrv: PythonCompilerService,
     private _fs: FsService
@@ -22,37 +21,6 @@ export class HomeViewComponent implements OnInit {
   }
 
   ngOnInit(): void {
-
-    const test = new FsServiceTest(this.fs, 'pyodide');
-    test.createTestFiles().then(() => {
-      //alert('done!')
-      /*
-      this.pythonSrv.worker.onmessage = ({ data }) => {
-        console.log(`page got message: ${data}`);
-      }
-
-
-      const messageInstall: PythonCompilerMessageInterface = {
-        type: PythonCompilerMessageInterfaceType.PackageInstall,
-        packages: ['fake-traffic'],
-      }
-      this.pythonSrv.worker.postMessage(messageInstall);
-
-      const messageToSend: PythonCompilerMessageInterface = {
-        type: PythonCompilerMessageInterfaceType.ExecuteCode,
-        code: `
-        import os
-        print(os.listdir('/'))
-        print(os.listdir('/mnt'))
-        import fox
-        import mainC
-`
-      }
-
-      this.pythonSrv.worker.postMessage(messageToSend);
-
-      */
-    });
 
   }
 

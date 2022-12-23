@@ -10,6 +10,14 @@ let pyodideMount = "/mnt"
 
 importScripts("https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js");
 
+
+//
+//wget https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js
+//wget https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide_py.tar
+//wget https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.asm.js
+//wget https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js.map
+//importScripts("./assets/pyodide.js");
+
 declare var loadPyodide: any;
 
 //let worker: PyodideFsWorker;
@@ -21,8 +29,21 @@ async function main() {
 
 
 // Worker definition 
-
+//TODO: import claees from pydiode-fsdriver
 type PromiseResolver<T> = (value: T | PromiseLike<T>) => void;
+
+
+export interface FsNode {
+  name: string;
+  path: string;
+}
+
+export interface FsNodeFolder extends FsNode {
+  folders: FsNodeFolder[];
+  files: FsNodeFile[];
+}
+export interface FsNodeFile extends FsNode {}
+
 
 export enum PyodideFsMessageType {
   Ready = 'Ready',
@@ -202,15 +223,63 @@ class PyodideFsWorker{
     return response;
   }
 
+  getPath(node:any){
+    //any: https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.getPath
+    let path = this.fs.getPath(node)
+    let pattern =  new RegExp("^"+this.mount); 
+    return path.replace(pattern,"/");
+  }
+
   readDirectory(request:PyodideFsRequest):PyodideFsResponse{
     let response = this.responseFromRequest(request); 
     if ( request.message.args.length < 1 ){
       return this.responseError(response,"readDirectory: Requires at least 1 path as argument and 1 content");
     }
     let fullpath = request.message.args[0];
-    this.fs.readdir(this.mount + fullpath);
+    let curDir = this.scanDirectory_recursive(fullpath)
     response.message.args = [fullpath];
+    response.message.contents = [JSON.stringify(curDir)]
     return response;
+  }
+
+  scanDirectory_recursive(fullpath:string, recursive=false):FsNodeFolder{
+    let res = this.fs.lookupPath(this.mount + fullpath);
+    console.log("scanDirectory_recursive: ", res)
+    console.log("scanDirectory_recursive:contents: ", res.node.contents);
+    let curDir:FsNodeFolder = {
+      folders: [],
+      files: [],
+      name: res.node.name,
+      path: this.fs.getPath(res.node)
+    };
+
+    for(let name in res.node.contents){
+      let item = res.node.contents[name];
+      let path = this.getPath(item);
+      if (this.fs.isDir(item.mode)){
+        let childDir;
+        if (recursive){
+          childDir = this.scanDirectory_recursive(path, true);
+        }
+        else{
+          childDir = {
+            folders: [],
+            files: [],
+            name: name,
+            path: path
+          }
+        }
+        curDir.folders.push(childDir);
+      }else{
+        curDir.files.push({
+          name: name,
+          path: path,
+          //content: "" //should I add also the content ?
+        })
+      }
+    }
+
+    return curDir;
   }
 
   writeFile(request:PyodideFsRequest):PyodideFsResponse{
@@ -226,7 +295,6 @@ class PyodideFsWorker{
     return response;
   }
 
-
   readFile(request:PyodideFsRequest):PyodideFsResponse{
     let response = this.responseFromRequest(request);
     if ( request.message.args.length < 1){ 
@@ -239,8 +307,15 @@ class PyodideFsWorker{
   }
 
   scanDirectory(request:PyodideFsRequest):PyodideFsResponse{
-    //TODO: do it recursive
-    return this.readDirectory(request);
+    let response = this.responseFromRequest(request); 
+    if ( request.message.args.length < 1 ){
+      return this.responseError(response,"readDirectory: Requires at least 1 path as argument and 1 content");
+    }
+    let fullpath = request.message.args[0];
+    let curDir = this.scanDirectory_recursive(fullpath, true)
+    response.message.args = [fullpath];
+    response.message.contents = [JSON.stringify(curDir)]
+    return response;
   }
 
   delete(request:PyodideFsRequest):PyodideFsResponse{
@@ -260,78 +335,3 @@ class PyodideFsWorker{
 
 main()
 
-
-
-
-  /*}
-
-      await pyodideReadyPromise;
-      for (const pkg of data.packages) {
-        self.pyodide.runPythonAsync(`
-        import micropip
-        await micropip.install("${pkg}")
-        package_list = micropip.list()
-        print(package_list)
-        `).then((result: any) => {
-          postMessage(result);
-        })
-        .catch((error: any) => {
-          postMessage(error);
-        });
-      }
-    }
-    if (data.type === "ExecuteCode") {
-      await pyodideReadyPromise;
-      const result = await self.pyodide.runPythonAsync(data.code);
-      postMessage(result);
-    }
-  }
-
-
-async loadPyodideAndPackages() {
-  self.pyodide = await loadPyodide();
-  await self.pyodide.loadPackage(["micropip"]);
-  self.pyodide.FS.mkdir("/mnt");
-  console.log(self.pyodide.FS)
-  self.pyodide.FS.mount(self.pyodide.FS.filesystems.IDBFS, { root: "." }, "/mnt");
-  // self.pyodide.FS.writeFile("/mnt/fox.py", `print("HELLOWORLDFOX")`, { encoding: "utf8" });
-  self.pyodide.FS.syncfs(true)
-  // self.pyodide.FS.filesystems.IDBFS.getDB("indexeddb", (err: any, db: any) => {
-  //   
-  //   console.log(self.pyodide.FS)
-  //   console.log(self.pyodide.FS.mounts)
-  //   console.log(self.pyodide.FS.root)
-  //   console.log(self.pyodide.FS.root.mount)
-  //   self.pyodide.FS.writeFile("fox.py", `print("HELLOWORLDFOX")`, { encoding: "utf8" });
-  //   self.pyodide.FS.writeFile("/mnt/fox.py", `print("HELLOWORLDFOX")`, { encoding: "utf8" });
-  //   console.log(self.pyodide.FS.readdir("/mnt"));
-  //   console.log(self.pyodide.FS.readdir("/home/pyodide"));
-  // });
-
-
-  // console.log(self.pyodide.FS.filesystems.IDBFS.dbs)
-  // await self.pyodide.loadPackage(["numpy", "pytz"]);
-}
-
-
-
-
-// addEventListener('message', async ({ data }) => {
-//   data
-//   // pyodide.loadPackage(['pandas', 'numpy']).then(() => {
-//   //   // console.log(pyodide);
-
-//   //   let print_code = `
-//   //     print("HELLOWORLD")
-
-//   //     `
-//   //   pyodide.runPython(print_code)
-//   //   postMessage("HELLOWORLD");
-
-
-//   // });
-
-// }
-// );
-
-*/
