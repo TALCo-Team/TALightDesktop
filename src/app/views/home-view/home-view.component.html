@@ -12,7 +12,7 @@
             <div class="tal-code-editor-container">
               <div class="tal-code-editor-header">
                 <h3>{{openedFile!.name}}</h3>
-                <button pButton icon="pi pi-play">RUN</button>
+                <button pButton icon="pi pi-play" (click)="runProject()" >RUN</button>
               </div>
               <div class="tal-code-editor">
                 <tal-code-editor-widget [(ngModel)]="openedFile!.content" lang="javascript"></tal-code-editor-widget>

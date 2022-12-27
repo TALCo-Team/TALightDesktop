@@ -1,3 +1,4 @@
+
 /// <reference lib="webworker" />
 
 
@@ -33,7 +34,7 @@ async function loadPyodideAndPackages() {
 let pyodideReadyPromise = loadPyodideAndPackages();
 
 addEventListener("message", async ({ data }) => {
-  if (data.type === "PackageInstall") {
+  if (data.type === "InstallPackages") {
     await pyodideReadyPromise;
     for (const pkg of data.packages) {
       self.pyodide.runPythonAsync(`
@@ -50,6 +51,11 @@ addEventListener("message", async ({ data }) => {
     }
   }
   if (data.type === "ExecuteCode") {
+    await pyodideReadyPromise;
+    const result = await self.pyodide.runPythonAsync(data.code);
+    postMessage(result);
+  }
+  if (data.type === "ExecuteFile") {
     await pyodideReadyPromise;
     const result = await self.pyodide.runPythonAsync(data.code);
     postMessage(result);

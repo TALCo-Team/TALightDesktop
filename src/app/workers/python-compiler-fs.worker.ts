@@ -47,6 +47,9 @@ export interface FsNodeFile extends FsNode {}
 
 export enum PyodideFsMessageType {
   Ready = 'Ready',
+  InstallPackages = 'InstallPackages',
+  ExecuteFile = 'ExecuteFile',
+  ExecuteCode = 'ExecuteCode',
   CreateDirectory = 'CreateDirectory',
   WriteFile = 'WriteFile',
   ReadFile = 'ReadFile',
@@ -116,6 +119,8 @@ class PyodideFsWorker{
     console.log("loadPyodide: ...")
     this.pyodide = await loadPyodide();
     this.fs = this.pyodide.FS;
+    await this.pyodide.loadPackage(["micropip"]);
+    this.micropip = this.pyodide.pyimport("micropip");
     console.log("loadPyodide: done")
     //console.log(pyodide)
   }
@@ -134,7 +139,30 @@ class PyodideFsWorker{
     console.log(this.fs.mounts)
     console.log(this.fs.root)
     console.log(this.fs.root.mount)
-    
+  }
+
+
+  
+  responseFromRequest(request:PyodideFsRequest, success:boolean=true, errors:string[]=[]):PyodideFsResponse{
+    let response:PyodideFsResponse = {
+      uid: request.uid,
+      timestamp: Date.now(),
+      success: success,
+      errors: errors,
+      message: {
+        uid: request.message.uid,
+        type: request.message.type,
+        args:[],
+        contents:[]
+      }
+    };
+    return response
+  }
+
+  responseError(response:PyodideFsResponse, error?:string):PyodideFsResponse{
+    response.success = false;
+    if (error){response.errors.push(error)};
+    return response;
   }
 
   onData(request:PyodideFsRequest) {
@@ -144,6 +172,15 @@ class PyodideFsWorker{
     switch (request.message.type) {
       case PyodideFsMessageType.Ready:
         this.ready(request);
+        break;
+      case PyodideFsMessageType.InstallPackages:
+        action=(request)=>{return this.installPackages(request)};
+        break;
+      case PyodideFsMessageType.ExecuteCode:
+        action=(request)=>{return this.executeCode(request)};
+        break;
+      case PyodideFsMessageType.ExecuteFile:
+        action=(request)=>{return this.executeFile(request)};
         break;
       case PyodideFsMessageType.CreateDirectory:
         action=(request)=>{return this.createDirectory(request)};
@@ -173,28 +210,6 @@ class PyodideFsWorker{
       postMessage(response);
     }
   }
-  
-  responseFromRequest(request:PyodideFsRequest, success:boolean=true, errors:string[]=[]):PyodideFsResponse{
-    let response:PyodideFsResponse = {
-      uid: request.uid,
-      timestamp: Date.now(),
-      success: success,
-      errors: errors,
-      message: {
-        uid: request.message.uid,
-        type: request.message.type,
-        args:[],
-        contents:[]
-      }
-    };
-    return response
-  }
-
-  responseError(response:PyodideFsResponse, error?:string):PyodideFsResponse{
-    response.success = false;
-    if (error){response.errors.push(error)};
-    return response;
-  }
 
   ready(request:PyodideFsRequest){
     let response = this.responseFromRequest(request);
@@ -208,6 +223,42 @@ class PyodideFsWorker{
       })
     }
   }
+
+  installPackages(request:PyodideFsRequest){
+    let response = this.responseFromRequest(request); 
+    let packages = request.message.args;
+    console.log("installPackages:\n",packages)//,res)
+    let res = this.micropip.install(packages)
+    console.log("installPackages: DONE!\n")//,res)
+    response.message.contents.push("")//res+": "+res)
+    
+    return response;
+  }
+
+  executeCode(request:PyodideFsRequest){
+    let response = this.responseFromRequest(request); 
+    let code = request.message.contents[0];
+    console.log("executeCode:\n",code)//,res)
+    const result = this.pyodide.runPython(code);
+    response.message.contents = [result]
+    return response;
+  }
+
+  executeFile(request:PyodideFsRequest){
+    let response = this.responseFromRequest(request); 
+    let fullpath = request.message.args[0];
+    let path = this.mount +"/"+ fullpath
+    console.log("executeFile:",path)//,res)
+    let rawContent = this.fs.readFile(path) as Uint8Array
+    let code = new TextDecoder().decode(rawContent.buffer);
+
+    console.log("executeFile: result:\n",code)//,res)
+    const result = this.pyodide.runPython(code);
+    postMessage(result);
+    return response
+  }
+
+
   
 
   createDirectory(request:PyodideFsRequest):PyodideFsResponse{
@@ -283,6 +334,7 @@ class PyodideFsWorker{
   }
 
   writeFile(request:PyodideFsRequest):PyodideFsResponse{
+    
     let response = this.responseFromRequest(request);
     if ( request.message.args.length < 1 || request.message.args.length < request.message.contents.length ){ 
       return this.responseError(response,"writeFile: Requires at least 1 path as argument and 1 content");
@@ -290,6 +342,7 @@ class PyodideFsWorker{
     
     let fullpath = request.message.args[0];
     let content = request.message.contents[0];
+    console.log("writeFile: ", fullpath)
     this.fs.writeFile(this.mount + fullpath, content, { encoding: "utf8" });
     //this.fs.syncfs(true)
     return response;
@@ -301,6 +354,7 @@ class PyodideFsWorker{
       return this.responseError(response,"readFile: Requires at least 1 path as argument");
     }
     let fullpath = request.message.args[0];
+    console.log("readFile: ", fullpath)
     let content = this.fs.readFile(this.mount + fullpath, { encoding: "utf8" });
     response.message.contents.push(content);
     return response;
@@ -312,19 +366,42 @@ class PyodideFsWorker{
       return this.responseError(response,"readDirectory: Requires at least 1 path as argument and 1 content");
     }
     let fullpath = request.message.args[0];
+    console.log("scanDirectory: ", fullpath)
     let curDir = this.scanDirectory_recursive(fullpath, true)
     response.message.args = [fullpath];
-    response.message.contents = [JSON.stringify(curDir)]
+    response.message.contents = [JSON.stringify(curDir,null, 4)]
     return response;
   }
 
   delete(request:PyodideFsRequest):PyodideFsResponse{
     let response = this.responseFromRequest(request); 
+    
+    if (request.message.args.length < 1){
+      response.message.args = ["false"]
+      return response;  
+    }
+
+    
+    let fullpath = request.message.args[0];
+    console.log("delete: ", fullpath)
+    this.fs.unlink(this.mount + fullpath)
+    
+    response.message.args = ["true"]
     return response;
   }
 
   exists(request:PyodideFsRequest):PyodideFsResponse{
     let response = this.responseFromRequest(request); 
+    if (request.message.args.length < 1){
+      response.message.args = ["false"]
+      return response;  
+    }
+    let fullpath = request.message.args[0];
+    console.log("exists: ", fullpath)
+    // https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.analyzePath
+    let res = this.fs.analyzePath(this.mount + fullpath)
+    
+    response.message.args = [res["exists"]]
     return response;
   }
 }

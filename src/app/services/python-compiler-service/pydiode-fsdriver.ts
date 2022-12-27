@@ -1,4 +1,5 @@
 import { FsNodeFolder, FsServiceDriver } from '../fs-service/fs.service';
+import { PythonCompiler as PythonCompiler } from './python-compiler.service';
 
 // --- PyodideFsDriver --- 
 
@@ -10,6 +11,9 @@ type PromiseResolver<T> = (value: T | PromiseLike<T>) => void;
 
 export enum PyodideFsMessageType {
   Ready = 'Ready',
+  InstallPackages = 'InstallPackages',
+  ExecuteFile = 'ExecuteFile',
+  ExecuteCode = 'ExecuteCode',
   CreateDirectory = 'CreateDirectory',
   WriteFile = 'WriteFile',
   ReadFile = 'ReadFile',
@@ -46,7 +50,7 @@ export interface PyodideFsRequestHandler {
 }
 
 
-export class PyodideFsDriver implements FsServiceDriver {
+export class PyodideDriver implements FsServiceDriver, PythonCompiler {
   public worker: Worker = new Worker(new URL('../../workers/python-compiler-fs.worker', import.meta.url));
   public rootDir = "."
   public requestIndex = new Map<UID, PyodideFsRequestHandler>();
@@ -67,6 +71,7 @@ export class PyodideFsDriver implements FsServiceDriver {
 
 
   didRecieve(response: PyodideFsResponse) {
+    if (!response) {return;}
     console.log('PyodideFsDriver:didRecieve:', response.constructor.name);
 
     let requestHandler = this.requestIndex.get(response.uid);
@@ -78,6 +83,10 @@ export class PyodideFsDriver implements FsServiceDriver {
       switch(response.message.type){
         case PyodideFsMessageType.Ready:           this.didReceiveReady(msgSent, msgRecived, resolvePromise); break;
         
+        case PyodideFsMessageType.InstallPackages: this.didReceiveInstallPackages(msgSent, msgRecived, resolvePromise); break;
+        case PyodideFsMessageType.ExecuteCode:     this.didReceiveExecuteCode(msgSent, msgRecived, resolvePromise); break;
+        case PyodideFsMessageType.ExecuteFile:     this.didReceiveExecuteFile(msgSent, msgRecived, resolvePromise); break;
+
         case PyodideFsMessageType.CreateDirectory: this.didReceiveCreateDirectory(msgSent, msgRecived, resolvePromise); break;
         case PyodideFsMessageType.ReadDirectory:   this.didReceiveReadDirectory(msgSent, msgRecived, resolvePromise); break;
         case PyodideFsMessageType.ScanDirectory:   this.didReceiveScanDirectory(msgSent, msgRecived, resolvePromise); break;
@@ -98,6 +107,36 @@ export class PyodideFsDriver implements FsServiceDriver {
     ///alert(111)
     resolvePromise(ready == 'true'?true:false)
   }
+
+  didReceiveInstallPackages(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveInstallPackages: ")
+    if (msgSent.contents.length != 1){ 
+      resolvePromise(false); 
+    }
+    console.log(msgRecived.contents)
+
+    resolvePromise(true)
+  } 
+
+  didReceiveExecuteCode(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveExecuteCode: ")
+    if (msgSent.contents.length != 1){ 
+      resolvePromise(false); 
+    }
+    console.log(msgRecived.contents)
+
+    resolvePromise(true)
+  } 
+
+  didReceiveExecuteFile(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveExecuteFile: ")
+    if (msgSent.contents.length != 1){ 
+      resolvePromise(false); 
+    }
+    console.log(msgRecived.contents)
+
+    resolvePromise(true)
+  } 
 
   didReceiveCreateDirectory(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<boolean> ){
     console.log("didReceiveCreateDirectory: ")
@@ -184,6 +223,45 @@ export class PyodideFsDriver implements FsServiceDriver {
     return resultPromise;
   }
 
+  async installPackages(packages: string[]): Promise<boolean> {
+    let message: PyodideFsMessage = {
+      uid: this.requestUID(),
+      type: PyodideFsMessageType.InstallPackages,
+      args: packages,
+      contents: [],
+    }
+    
+    let resultPromise = this.sendMessage<boolean>(message);
+
+    return resultPromise;
+  }
+
+  async executeCode(code: string): Promise<boolean> {
+    let message: PyodideFsMessage = {
+      uid: this.requestUID(),
+      type: PyodideFsMessageType.ExecuteCode,
+      args: [],
+      contents: [code],
+    }
+    
+    let resultPromise = this.sendMessage<boolean>(message);
+
+    return resultPromise;
+  }
+
+  async executeFile(fullpath: string): Promise<boolean> {
+    let message: PyodideFsMessage = {
+      uid: this.requestUID(),
+      type: PyodideFsMessageType.ExecuteFile,
+      args: [fullpath],
+      contents: [],
+    }
+    
+    let resultPromise = this.sendMessage<boolean>(message);
+
+    return resultPromise;
+  }
+
   async createDirectory(fullpath: string): Promise<boolean> {
     let message: PyodideFsMessage = {
       uid: this.requestUID(),
@@ -210,6 +288,7 @@ export class PyodideFsDriver implements FsServiceDriver {
   }
 
   async writeFile(fullpath: string, content: string): Promise<number> {
+    console.log("writeFile: "+fullpath)
     let message: PyodideFsMessage = {
       uid: this.requestUID(),
       type: PyodideFsMessageType.WriteFile,

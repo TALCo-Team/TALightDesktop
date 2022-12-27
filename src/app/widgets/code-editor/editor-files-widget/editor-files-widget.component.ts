@@ -2,7 +2,9 @@ import { Component, ElementRef, EventEmitter, Input, OnInit, Output, QueryList, 
 import { removeFileDecorator } from 'indexeddb-fs/dist/framework/parts';
 import { ConfirmationService } from 'primeng/api';
 import { OverlayPanel } from 'primeng/overlaypanel';
-import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver, FsServiceTest } from 'src/app/services/fs-service/fs.service';
+import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver } from 'src/app/services/fs-service/fs.service';
+import { FsServiceTest } from 'src/app/services/fs-service/fs.service.test';
+import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 
 export interface TalFile extends FsNodeFile {
   content: string;
@@ -47,7 +49,11 @@ export class EditorFilesWidgetComponent implements OnInit {
   @Output("change") public change: EventEmitter<TalFolder> = new EventEmitter<TalFolder>();
   @Output("open") public open: EventEmitter<TalFile> = new EventEmitter<TalFile>();
 
-  constructor(private confirmationService: ConfirmationService, private fs:FsService) {
+  constructor(
+    private confirmationService: ConfirmationService, 
+    private fs:FsService,
+    private python: PythonCompilerService,
+    ) {
     //this.driver = fs.getDriver('pyodide');
     this.driver = fs.getDriver(this.driverName);
     //alert(this.driver)
@@ -59,10 +65,10 @@ export class EditorFilesWidgetComponent implements OnInit {
     let test = new FsServiceTest(this.fs, this.driverName)
     //this.rootDir = this.driver?.rootDir ?? this.rootDir;
     this.driver?.ready().then((ready)=>{
-      console.log('ready!');
       //alert('ready!');
-      test.createTestFiles().then(()=>{
+      this.python.createPythonProject().then(()=>{
         this.refreshRoot();
+        //alert('ready!');
       })
     })
 
@@ -187,6 +193,10 @@ export class EditorFilesWidgetComponent implements OnInit {
   }
 
   private deleteFile(currentFolder: TalFolder, file: TalFile) {
+    this.driver?.delete(file.path).then(()=>{
+      this.refreshRoot();
+    })
+    /*
     if (currentFolder.files.indexOf(file) >= 0) {
       currentFolder.files.splice(currentFolder.files.indexOf(file), 1);
       this.change?.emit(this.root);
@@ -196,6 +206,7 @@ export class EditorFilesWidgetComponent implements OnInit {
         this.deleteFile(folder, file);
       }
     }
+    */
   }
 
   public deleteFolderClick(event: Event, folder: TalFolder) {
@@ -216,6 +227,10 @@ export class EditorFilesWidgetComponent implements OnInit {
   }
 
   private deleteFolder(currentFolder: TalFolder, folder: TalFolder) {
+    this.driver?.delete(folder.path).then(()=>{
+      this.refreshRoot();
+    })
+    /*
     if (currentFolder.folders.indexOf(folder) >= 0) {
       currentFolder.folders.splice(currentFolder.folders.indexOf(folder), 1);
       this.change?.emit(this.root);
@@ -225,6 +240,7 @@ export class EditorFilesWidgetComponent implements OnInit {
         this.deleteFolder(subFolder, folder);
       }
     }
+    */
   }
   /***************/
 
