@@ -20,20 +20,41 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
+            "allowedCommonJsDependencies": [
+              "lodash"
+            ],
             "outputPath": "dist/talight-desktop",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
-            "assets": [
+            "assets": [{
+                "glob": "**/*",
+                "input": "node_modules/monaco-editor",
+                "output": "/assets/monaco/"
+              },
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              {
+                "glob": "**/*",
+                "input": "./node_modules/ngx-monaco-editor/assets/monaco",
+                "output": "/assets/monaco"
+              }
             ],
-            "styles": [
+            "styles": [{
+                "input": "src/themes/dark.scss",
+                "bundleName": "dark-theme",
+                "inject": false
+              }, {
+                "input": "src/themes/light.scss",
+                "bundleName": "light-theme",
+                "inject": false
+              },
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [],
+            "webWorkerTsConfig": "tsconfig.worker.json"
           },
           "configurations": {
             "production": {
@@ -91,18 +112,34 @@
             "tsConfig": "tsconfig.spec.json",
             "karmaConfig": "karma.conf.js",
             "inlineStyleLanguage": "scss",
-            "assets": [
+            "assets": [{
+                "glob": "**/*",
+                "input": "node_modules/monaco-editor",
+                "output": "/assets/monaco/"
+              },
               "src/favicon.ico",
               "src/assets"
             ],
-            "styles": [
+            "styles": [{
+                "input": "src/themes/dark.scss",
+                "bundleName": "dark-theme",
+                "inject": false
+              }, {
+                "input": "src/themes/light.scss",
+                "bundleName": "light-theme",
+                "inject": false
+              },
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [],
+            "webWorkerTsConfig": "tsconfig.worker.json"
           }
         }
       }
     }
   },
-  "defaultProject": "TALightDesktop"
+  "defaultProject": "TALightDesktop",
+  "cli": {
+    "analytics": false
+  }
 }

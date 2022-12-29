@@ -1,0 +1,165 @@
+div.tal-editor-files-tree {
+  padding: 1rem;
+  height: 100%;
+  width: 100%;
+  background: var(--surface-50);
+
+  div.tal-editor-files-header{
+    display:flex;
+    flex-direction: column;
+
+    button{
+      width:100%;
+      margin-bottom:1rem;
+      height:1.8rem;
+    }
+  }
+
+  div.tal-editor-files-body {}
+}
+
+div.tal-folder-row,
+div.tal-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 0.2rem;
+  margin:0.2rem 0;
+  border-radius: 0.2rem;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--surface-hover);
+
+    div.tal-row-settings {
+      opacity: 1 !important;
+    }
+  }
+
+}
+
+div.tal-file {
+  max-width: 100%;
+  border:solid 1px transparent;
+
+  &.opened{
+    background-color:var(--surface-c);
+    border:solid 1px var(--surface-border);
+  }
+
+    div.tal-file-title {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+
+      p{
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        font-size:1rem;
+      }
+    }
+}
+
+div.tal-folder-row {
+    max-width:100%;
+    
+  div.tal-folder-title {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+
+    p {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size:1rem;
+    }
+
+    i:first-child {
+      font-size: 0.8rem;
+      margin-right: 0.4rem;
+      color: var(--gray-500);
+    }
+
+    i:nth-child(2) {
+      font-size: 0.8rem;
+      margin-right: 0.2rem;
+    }
+  }
+}
+
+div.tal-row-settings {
+  display: flex;
+  align-items: center;
+  opacity: 0;
+
+  div.tal-row-button {
+    display: flex;
+    align-items: center;
+    justify-items: center;
+    margin-left: 0.2rem;
+    padding: 0.4rem;
+    border-radius: 4px;
+    text-align: center;
+
+    i {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+    }
+
+    &:hover {
+      background-color: var(--surface-100);
+
+      i {
+        color: var(--text-color);
+      }
+    }
+
+    &:active {
+      background-color: var(--surface-200);
+
+    }
+  }
+}
+
+div.tal-folder-subtree {
+  &.collapsed {
+    div.tal-subfolder {
+      display: none;
+    }
+
+    div.tal-folder-row {
+      div.tal-folder-title {
+        i:first-child {
+          transform: rotate(180deg);
+        }
+      }
+
+    }
+  }
+}
+
+div.tal-subfolder {
+  padding-left: 0.6rem;
+  border-left: solid 1px var(--surface-border);
+}
+
+input.tal-item-input{
+    width:100%;
+    border:none;
+    outline:none;
+    background-color:var(--surface-0);
+    font-size:1rem;
+    padding:0.2rem;
+    border-radius:0.2rem;
+    color:var(--text-color);
+    border:1px solid transparent;
+
+    &.error{
+        border:1px solid var(--red-500);
+    }
+}
