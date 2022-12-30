@@ -170,6 +170,8 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
   
   didReceiveWriteFile(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<number> ){
     console.log("didReceiveWriteFile: ")
+    console.log(msgRecived.args)
+    console.log(msgRecived.contents)
     //TODO:
     resolvePromise(1)
   }
@@ -182,7 +184,8 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
 
   didReceiveExists(msgSent:PyodideFsMessage, msgRecived:PyodideFsMessage, resolvePromise:PromiseResolver<boolean> ){
     console.log("didReceiveExists: ")
-    resolvePromise(true)
+    let res = msgRecived.args[0]
+    resolvePromise(res  == 'true' )
   }
 
   sendMessage<T>(message: PyodideFsMessage) {

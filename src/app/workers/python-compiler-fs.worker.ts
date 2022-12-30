@@ -93,6 +93,8 @@ class PyodideFsWorker{
   isReady = false;
   readyPromise: Promise<boolean>;
   readyResolver: PromiseResolver<boolean>;
+  isSync = false;
+  needSync = false;
 
   constructor(root:string, mount:string ){
     this.root = root;
@@ -109,8 +111,10 @@ class PyodideFsWorker{
 
     this.initPydiode().then(()=>{
       this.load(this.root, this.mount);
-      this.isReady = true;
-      this.readyResolver(this.isReady);
+      this.fs.syncfs(()=>{
+        this.isReady = true;
+        this.readyResolver(this.isReady);
+      });
     })
   }
 
@@ -132,7 +136,6 @@ class PyodideFsWorker{
     console.log("PyodideFsWorker: load")
     this.fs.mkdir(this.mount);
     this.fs.mount(this.fs.filesystems.IDBFS, { root: root }, this.mount);
-    this.fs.syncfs;
     console.log("PyodideFsWorker: load: done")
 
     
@@ -163,6 +166,26 @@ class PyodideFsWorker{
     response.success = false;
     if (error){response.errors.push(error)};
     return response;
+  }
+
+  syncFS(){
+    if (!this.isSync){
+      this.isSync = true
+      this.needSync = false;
+      console.log('syncFS: do!');
+      this.fs.syncfs((err?:any)=>{
+        this.isSync = false;
+        if (this.needSync){
+          this.needSync = false;
+          console.log('syncFS: repeat!');
+          this.syncFS()
+        }
+      })
+    }
+    else{
+      console.log('syncFS: queued');
+      this.needSync = true;
+    }
   }
 
   onData(request:PyodideFsRequest) {
@@ -229,6 +252,7 @@ class PyodideFsWorker{
     let packages = request.message.args;
     console.log("installPackages:\n",packages)//,res)
     let res = this.micropip.install(packages)
+    this.syncFS()
     console.log("installPackages: DONE!\n")//,res)
     response.message.contents.push("")//res+": "+res)
     
@@ -270,6 +294,7 @@ class PyodideFsWorker{
     let fullpath = request.message.args[0];
     let res = this.fs.mkdir(this.mount + fullpath);
     console.log('pydiode:mkdir:',res)
+    this.syncFS()
     response.message.args = [fullpath];
     return response;
   }
@@ -278,7 +303,7 @@ class PyodideFsWorker{
     //any: https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.getPath
     let path = this.fs.getPath(node)
     let pattern =  new RegExp("^"+this.mount); 
-    return path.replace(pattern,"/");
+    return path.replace(pattern,"/").replace(/\/\/+/,"/");
   }
 
   readDirectory(request:PyodideFsRequest):PyodideFsResponse{
@@ -301,7 +326,7 @@ class PyodideFsWorker{
       folders: [],
       files: [],
       name: res.node.name,
-      path: this.fs.getPath(res.node)
+      path: this.getPath(res.node)
     };
 
     for(let name in res.node.contents){
@@ -343,8 +368,9 @@ class PyodideFsWorker{
     let fullpath = request.message.args[0];
     let content = request.message.contents[0];
     console.log("writeFile: ", fullpath)
-    this.fs.writeFile(this.mount + fullpath, content, { encoding: "utf8" });
-    //this.fs.syncfs(true)
+    let res = this.fs.writeFile(this.mount + fullpath, content, { encoding: "utf8" });
+    console.log("writeFile:res: ", res)
+    this.syncFS()
     return response;
   }
 
@@ -385,7 +411,7 @@ class PyodideFsWorker{
     let fullpath = request.message.args[0];
     console.log("delete: ", fullpath)
     this.fs.unlink(this.mount + fullpath)
-    
+    this.syncFS()
     response.message.args = ["true"]
     return response;
   }
@@ -397,10 +423,11 @@ class PyodideFsWorker{
       return response;  
     }
     let fullpath = request.message.args[0];
-    console.log("exists: ", fullpath)
+    console.log("exists: ", this.mount + fullpath)
     // https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.analyzePath
     let res = this.fs.analyzePath(this.mount + fullpath)
-    
+    console.log("exists:res:exists ", res["exists"])
+    console.log("exists:res ", res)
     response.message.args = [res["exists"]]
     return response;
   }

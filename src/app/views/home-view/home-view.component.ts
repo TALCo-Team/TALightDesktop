@@ -38,18 +38,23 @@ export class HomeViewComponent implements OnInit {
   public editorDidChange(event: Event){
     console.log("editorDidChange:")
     if ( this.openedFile ){ // && this.needSave ){
-      let content = this.editorWidget.value;
-      console.log("new content:\n", this.editorWidget.value)
-      this.driver?.writeFile(this.openedFile.path, content)
+      this.saveFile(this.openedFile.path, this.editorWidget.value)
     }
   }
 
   public editorDidInput(event: InputEvent){
     //this.needSave = true;
     console.log("Input: ", this.editorWidget.value)
+    if ( this.openedFile ){ // && this.needSave ){
+      this.saveFile(this.openedFile.path, this.editorWidget.value)
+    }
   }
 
-  
+  public saveFile(path: string, content:string){
+    console.log("saveFile:\n", path, "\n", content)
+    this.driver?.writeFile(path, content)
+    
+  }
 
   public runProject(){
     this.python.runProject();

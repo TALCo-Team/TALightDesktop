@@ -21,15 +21,14 @@ export class PythonCompilerService {
   }
 
   async createPythonProject(force=false){
-    /*
+    
     if (!this.driver) {return false}
 
-    if (!force && await this.driver.exists(this.configFile)){
+    if (!force && await this.driver.exists("/"+this.configFile)){
       console.log("createPythonProject: Skipping, config file already present")
       return true;
     }
-    */
-   
+  
     let configContent = JSON.stringify(new PythonConfig(), null, 4)
     await this.driver?.writeFile('/'+this.configFile, configContent );
 

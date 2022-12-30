@@ -69,10 +69,12 @@ export class EditorFilesWidgetComponent implements OnInit {
     //this.rootDir = this.driver?.rootDir ?? this.rootDir;
     this.driver?.ready().then((ready)=>{
       //alert('ready!');
+      /*
       this.python.createPythonProject().then(()=>{
         this.refreshRoot();
         //alert('ready!');
       })
+      */
     })
 
     
@@ -261,7 +263,13 @@ export class EditorFilesWidgetComponent implements OnInit {
 
   /** CREATE METHODS **/
   public syncFilesystem(folder: TalFolder) {
-    setTimeout(() => { this.refreshRoot(); }, 0);
+    setTimeout(() => { 
+      //this.refreshRoot();
+      this.python.createPythonProject().then(()=>{
+        this.refreshRoot();
+        //alert('ready!');
+      });
+    }, 0);
   }
 
 
