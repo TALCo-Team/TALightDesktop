@@ -25,11 +25,9 @@ export class CodeEditorWidgetComponent implements ControlValueAccessor, OnInit, 
   @ViewChild("editor") public editor!: EditorComponent;
 
   private innerValue: string = '';
+  @Output('change') public onChange = new EventEmitter<Event>();
+  @Output('input') public onInput = new EventEmitter<InputEvent>();
 
-  @Output('input') public onInput: EventEmitter<string> =
-    new EventEmitter<string>();
-  @Output('change') public onChange: EventEmitter<string> =
-    new EventEmitter<string>();
 
   constructor(
     private readonly themeService: ThemeService,
@@ -41,6 +39,7 @@ export class CodeEditorWidgetComponent implements ControlValueAccessor, OnInit, 
       this.updateEditorOptions();
     });
 
+    
     this.updateEditorOptions();
   }
 
@@ -73,11 +72,12 @@ export class CodeEditorWidgetComponent implements ControlValueAccessor, OnInit, 
     }
   }
 
-  public input(): void {
-    this.onInput.emit(this.value);
+  
+  public change(event:Event): void {
+    this.onChange.emit(event);
   }
-  public change(): void {
-    this.onChange.emit(this.value);
+  public input(event:InputEvent): void {
+    this.onInput.emit(event);
   }
 
   // From ControlValueAccessor interface

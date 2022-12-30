@@ -15,7 +15,12 @@
                 <button pButton icon="pi pi-play" (click)="runProject()" >RUN</button>
               </div>
               <div class="tal-code-editor">
-                <tal-code-editor-widget [(ngModel)]="openedFile!.content" lang="javascript"></tal-code-editor-widget>
+                <tal-code-editor-widget #editorwideget
+                  [(ngModel)]="openedFile!.content" 
+                  lang="python" 
+                  (change)="editorDidChange($event)" 
+                  (input)="editorDidInput($event)">
+                </tal-code-editor-widget>
               </div>
             </div>
           </ng-container>

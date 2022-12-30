@@ -72,7 +72,7 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
 
   didRecieve(response: PyodideFsResponse) {
     if (!response) {return;}
-    console.log('PyodideFsDriver:didRecieve:', response.constructor.name);
+    console.log('PyodideFsDriver:didRecieve:', response.message.type);
 
     let requestHandler = this.requestIndex.get(response.uid);
     if (requestHandler != null) {

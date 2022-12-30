@@ -25,6 +25,7 @@ export class EditorFilesWidgetComponent implements OnInit {
   //public driverName = 'example'
   public driverName = 'pyodide'
   public emptyNode = {name:"", path: this.rootDir, files:[], folders:[]}
+  public showHidden = false
 
   @Input("root") root: TalFolder = this.emptyNode;
 
@@ -46,8 +47,9 @@ export class EditorFilesWidgetComponent implements OnInit {
 
   @ViewChildren(OverlayPanel) public panels?: QueryList<OverlayPanel>;
 
-  @Output("change") public change: EventEmitter<TalFolder> = new EventEmitter<TalFolder>();
-  @Output("open") public open: EventEmitter<TalFile> = new EventEmitter<TalFile>();
+  @Output("change") public change = new EventEmitter<TalFolder>();
+  @Output("open") public open = new EventEmitter<TalFile>();
+  @Output("showHiddenChanged") public showHiddenChanged = new EventEmitter<boolean>(); 
 
   constructor(
     private confirmationService: ConfirmationService, 
@@ -57,6 +59,7 @@ export class EditorFilesWidgetComponent implements OnInit {
     //this.driver = fs.getDriver('pyodide');
     this.driver = fs.getDriver(this.driverName);
     //alert(this.driver)
+    //this.driver?.writeFile(this.editingItem.path,this.editingItem)
    }
 
   ngOnInit() {
@@ -90,26 +93,28 @@ export class EditorFilesWidgetComponent implements OnInit {
       const rows = document.getElementsByClassName("collapse-toggle");
       for (let i = 0; i < rows.length; i++) {
         if (!rows[i].classList.contains("bound")) {
-          rows[i].addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const row = e.target as HTMLElement;
-            let newParent: HTMLElement = row;
-            let safeCount = 0;
-            do {
-              newParent = newParent.parentElement as HTMLElement;
-              safeCount++;
-            } while (!newParent.classList.contains("tal-folder-subtree") && safeCount < 10);
-
-            if (safeCount < 10) {
-              newParent.classList.toggle("collapsed");
-            }
-          });
-
-          rows[i].classList.add("bound");
+          let row = rows[i];
+          row.addEventListener("click", (event) => { this.handleClickEvent(event) });
+          row.classList.add("bound");
         }
       }
     }, 0);
+  }
+
+  public handleClickEvent(event:Event){
+    event.preventDefault();
+    event.stopPropagation();
+    const row = event.target as HTMLElement;
+    let newParent: HTMLElement = row;
+    let safeCount = 0;
+    do {
+      newParent = newParent.parentElement as HTMLElement;
+      safeCount++;
+    } while (!newParent.classList.contains("tal-folder-subtree") && safeCount < 10);
+
+    if (safeCount < 10) {
+      newParent.classList.toggle("collapsed");
+    }
   }
 
   public closeAllContextMenus(event: Event) {
@@ -126,6 +131,16 @@ export class EditorFilesWidgetComponent implements OnInit {
       this.open?.emit(file);
     })
     
+  }
+
+  public toggleHidden(){
+    this.showHidden = !this.showHidden;
+    
+  }
+
+  public isVisibile(fsitem: TalFile|TalFolder){
+    let isHidden = fsitem.name.startsWith('.');
+    return this.showHidden || ( !this.showHidden && !isHidden ) 
   }
 
   /** EDITING METHODS  **/
