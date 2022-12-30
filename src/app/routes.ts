@@ -3,6 +3,7 @@ import { AuthGuard } from './guards/auth.guard';
 import { ConnectViewComponent } from './views/connect-view/connect-view.component';
 import { HomeViewComponent } from './views/home-view/home-view.component';
 import { SelectProblemViewComponent } from './views/select-problem-view/select-problem-view.component';
+import { DemoViewComponent } from './views/demo-view/demo-view';
 
 export const routes: Routes = [
     {
@@ -25,5 +26,10 @@ export const routes: Routes = [
         path: 'home',
         canActivate: [AuthGuard],
         component: HomeViewComponent
+    },
+
+    {
+        path: 'demo',
+        component: DemoViewComponent
     },
 ];
