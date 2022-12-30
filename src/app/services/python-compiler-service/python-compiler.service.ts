@@ -39,7 +39,7 @@ export class PythonCompilerService {
   async readPythonConfig(){
     if (!this.driver) {return null}
 
-    if (!await this.driver.exists(this.configFile)){
+    if (!await this.driver.exists("/"+this.configFile)){
       console.log("readPythonConfig: config file doesn't exisit!")
       return null;
     }

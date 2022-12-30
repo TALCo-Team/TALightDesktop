@@ -428,7 +428,7 @@ class PyodideFsWorker{
     let res = this.fs.analyzePath(this.mount + fullpath)
     console.log("exists:res:exists ", res["exists"])
     console.log("exists:res ", res)
-    response.message.args = [res["exists"]]
+    response.message.args = [res["exists"]?'true':'false']
     return response;
   }
 }
