@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { PyodideDriver, PyodideFsRequest } from './pydiode-fsdriver';
+import { PyodideDriver, PyodideRequest } from './pydiode-driver';
 import { FsService } from '../fs-service/fs.service';
 
 
@@ -20,11 +20,11 @@ export class PythonCompilerService {
     this.fs.registerDriver(this.driverName, this.driver); 
   }
 
-  async createPythonProject(force=false){
+  async createPythonProject(){
     
     if (!this.driver) {return false}
 
-    if (!force && await this.driver.exists("/"+this.configFile)){
+    if (await this.driver.exists("/"+this.configFile)){
       console.log("createPythonProject: Skipping, config file already present")
       return true;
     }

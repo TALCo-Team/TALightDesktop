@@ -1,7 +1,7 @@
 import { Component, EventEmitter, forwardRef, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { EditorComponent } from 'ngx-monaco-editor-v2';
-import { AppTheme, ThemeService } from 'src/app/services/theme.service';
+import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
 
 const noop = () => { };
 
