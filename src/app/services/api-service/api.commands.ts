@@ -9,18 +9,21 @@ export namespace Commands{
       public debug=false; 
       public onReciveHandshake?:(message:Packets.Reply.Handshake)=>void;
       public onReciveBinary?:(message:string)=>void;
+      public onReciveUndecodedBinary?:(message:ArrayBuffer)=>void;
       public onRecive?:(message:Packets.PacketsPayload)=>void; 
       public onClose?:()=>void;
       public onError?:(error:any)=>void;
   
-      constructor(url:string){
+      constructor(url:string, decodeBinary?:boolean){
         this.url = url;
         this.tal = new TaligthSocket(this.url);
+        if(decodeBinary === false) {this.tal.decode = decodeBinary;}
 
         this.tal.onError = (error)=>{ this.didError(error); };
         this.tal.onClose = ()=>{ this.didClose(); };
         this.tal.onRecive = (payload)=> { this.didRecive(payload) }
         this.tal.onReciveBinary = (payload)=> { this.didReciveBinary(payload) }
+        this.tal.onReciveUndecodedBinary = (payload)=> { this.didReciveUndecodedBinary(payload) }
       }
       
       public run(){
@@ -53,6 +56,11 @@ export namespace Commands{
       public didReciveBinary(payload:string){
         this.log("didReciveBinary:\n"+payload);
         if(this.onReciveBinary){this.onReciveBinary(payload)}
+      }
+
+      public didReciveUndecodedBinary(payload:ArrayBuffer){
+        this.log("didReciveUndecodedBinary:\n");
+        if(this.onReciveUndecodedBinary){this.onReciveUndecodedBinary(payload)}
       }
 
       public didRecive(payload:Packets.PacketsPayload){
@@ -92,8 +100,118 @@ export namespace Commands{
       }
     }
 
-    export class Connect extends Command{
+    export class Attchment extends Command{
+      public onReciveAttachment?:(message:Packets.Reply.Attachment )=>void;
+      public onReciveAttachmentInfo?:(message:Packets.Reply.AttachmentInfo)=>void;
+
+      private msg:Packets.Request.Attachment;
+  
+      constructor(url:string, problem_name:string){
+        super(url, false);
+  
+        this.msg = new Packets.Request.Attachment(problem_name);
+      }
+  
+      public override didReciveHandshake(handshake: Packets.Reply.Handshake){
+        super.didReciveHandshake(handshake);
+  
+        this.tal!.send(this.msg)
+      }
+
+      public override didRecive(payload: Packets.PacketsPayload): void {
+        super.didRecive(payload);
+        let message;
+
+        message = payload.getMessage(Packets.Reply.Attachment)
+        if (message){ this.didRecieveAttachment(message); }
+ 
+        message = payload.getMessage(Packets.Reply.AttachmentInfo)
+        if (message){ this.didRecieveAttachmentInfo(message);}
+        
+      }
+
+      public didRecieveAttachment(message: Packets.Reply.Attachment){
+        this.log("Attachment");
+        if (this.onReciveAttachment ) { this.onReciveAttachment(message); }
+      }
       
+      public didRecieveAttachmentInfo(message: Packets.Reply.AttachmentInfo){
+        this.log("AttachmentInfo");
+        if (this.onReciveAttachmentInfo ) { this.onReciveAttachmentInfo(message); }
+      }
+      
+    }  
+    
+    export class Connect extends Command{ 
+      public onReciveConnectBegin?:(message:Packets.Reply.ConnectBegin )=>void;
+      public onReciveConnectStart?:(message:Packets.Reply.ConnectStart)=>void;
+      public onReciveConnectStop?:(message:Packets.Reply.ConnectStop)=>void;
+      
+      private msg:Packets.Request.ConnectBegin;
+  
+      constructor(url:string, problem_name:string, service:string, args?:{}, tty?:boolean, token?:string, files?:string[]){
+        super(url);
+        this.msg = new Packets.Request.ConnectBegin(problem_name, service, args, tty, token, files);
+      }
+
+      public override didReciveHandshake(handshake: Packets.Reply.Handshake){
+        super.didReciveHandshake(handshake);
+        this.tal.send(this.msg);
+      }
+      
+      public override didRecive(payload: Packets.PacketsPayload): void {
+        super.didRecive(payload);
+        let message;
+        message = payload.getMessage(Packets.Reply.ConnectBegin);
+        if (message){ this.didRecieveConnectBegin(message); }
+
+        message = payload.getMessage(Packets.Reply.ConnectStart)
+        if (message){ this.didRecieveConnectStart(message); }
+
+        message = payload.getMessage(Packets.Reply.ConnectStop)
+        if (message){ this.didRecieveConnectStop(message); }
+      }
+
+      public didRecieveConnectBegin(message: Packets.Reply.ConnectBegin){
+        this.log("didRecieveJoin");
+        if (this.onReciveConnectBegin ) { this.onReciveConnectBegin(message); }
+      }
+
+      public didRecieveConnectStart(message: Packets.Reply.ConnectStart){
+        this.log("didRecieveUpdate");
+        if (this.onReciveConnectStart ) { this.onReciveConnectStart(message); }
+      }
+      
+      public didRecieveConnectStop(message: Packets.Reply.ConnectStop){
+        this.log("didRecieveStart");
+        if (this.onReciveConnectStop ) { this.sendConnectStop(); this.onReciveConnectStop(message); }
+      }
+
+      public sendConnectStop() {
+        this.tal.send(new Packets.Request.ConnectStop());
+      }
+    }
+
+    export class CloseConnection extends Command{
+      public onReciveConnectStop?:(message:Packets.Reply.ConnectStop)=>void;
+
+      public override didReciveHandshake( handshake: Packets.Reply.Handshake){
+        super.didReciveHandshake(handshake);
+
+        let msg = new Packets.Request.ConnectStop();
+        this.tal.send(msg);
+      }
+
+      public override didRecive(payload:Packets.PacketsPayload){
+        super.didRecive(payload);
+        let message = payload.getMessage(Packets.Reply.ConnectStop);
+        if (message){ this.didReciveConnectStop(message); }
+      }
+        
+      public didReciveConnectStop(message:Packets.Reply.ConnectStop){
+        this.log("didRecieveGameList");
+        if (this.onReciveConnectStop) { this.onReciveConnectStop(message); }
+      }
     }
 
     /*

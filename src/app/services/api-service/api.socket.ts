@@ -6,6 +6,7 @@ export class TaligthSocket{
   public url = 'ws://localhost:8088';
   public ws?:WebSocketSubject<any>;
   
+  public decode = true;
   public binEncoder = new TextEncoder(); // always utf-8
   public binDecoder = new TextDecoder("utf-8");
   
@@ -13,6 +14,7 @@ export class TaligthSocket{
   public onClose?:()=>void;
   public onRecive?:(payload: Packets.PacketsPayload) => void;
   public onReciveBinary?:(payload: string) => void;
+  public onReciveUndecodedBinary?:(payload: ArrayBuffer) => void;
       
   constructor(url:string){
     this.url = url;
@@ -75,11 +77,17 @@ export class TaligthSocket{
   public didRecieve(payload:MessageEvent){ // Called whenever there is a message from the server.
     let data = payload.data;
     console.log("TalightSocket:didRecieve:type: "+payload.constructor.name+"<"+payload.data.constructor.name+">" )
+
     if(typeof data === "object" && data instanceof ArrayBuffer) {
-      if (data.byteLength == 0) {return}
-      data = this.binDecoder.decode(data);
-      console.log("TalightSocket:didRecieve:binary:\n"+data)
-      if(this.onReciveBinary){ this.onReciveBinary( data );}
+      if(this.decode) {
+        if (data.byteLength == 0) {return}
+        data = this.binDecoder.decode(data);
+        console.log("TalightSocket:didRecieve:binary:\n"+data)
+        if(this.onReciveBinary){ this.onReciveBinary( data );}
+      } 
+      else {
+        if(this.onReciveUndecodedBinary){ this.onReciveUndecodedBinary( data );}
+      }
     } else{
       let packetsPayload = new Packets.PacketsPayload(data)
       console.log("TalightSocket:didRecieve:packets: "+packetsPayload.packetTypes)

@@ -3,7 +3,7 @@ export namespace Packets{
 
     export class PacketsPayload{
       public data;
-      public packets;
+      public packets:any;
       public packetTypes:string[] = []
 
       constructor(data:string){
@@ -11,6 +11,15 @@ export namespace Packets{
         this.packets = JSON.parse(this.data);
         for (var pkttype in this.packets) {
           this.packetTypes.push(pkttype)
+        }
+
+        if(this.packetTypes.length === 3 &&
+          this.packetTypes.indexOf("name") === 0 &&
+          this.packetTypes.indexOf("size") === 1 &&
+          this.packetTypes.indexOf("hash") === 2
+          ) {
+            this.packetTypes = ["AttachmentInfo"];
+            this.packets = {"AttachmentInfo" : this.packets};
         }
       }
 
@@ -80,17 +89,8 @@ export namespace Packets{
             this[msgField] = value;
           }
         }
-        //alert("Deserialized msg "+ msg.MessageName() ) ;
         return true;
       }
-
-      /*
-      public fromMultiPacket(payload:string){
-        let packets = Message.dataToPayload(payload)
-        let packet = Packets.Message.findPacket(packets, this.messageName() );
-        if (packet != null) {this.fromPacket(payload);} 
-      }
-      */
     }
 
   export class Service {
@@ -120,15 +120,30 @@ export namespace Packets{
     }
     export class MetaList extends Message {}
     export class  Attachment extends Message{
-      public problem: String = ""
+      public problem: String;
+
+      constructor(problem_name:String) {
+        super();
+        this.problem = problem_name;
+      }
     }
     export class ConnectBegin extends Message {
       public problem:string = "";
-      public service:string = "solve";
-      public args:any = {};
+      public service:string = "";
+      public args:{} = {};
       public tty:boolean = true;
-      public token?:string = undefined;
-      public files:string[] = []
+      public token:string|null = null;
+      public files:string[] = [];
+
+      constructor(problem:string, service:string, args:{}={}, tty:boolean=true, token:string|null = null, files:string[] = []) {
+        super();
+        this.problem = problem;
+        this.service = service;
+        this.args = args;
+        this.tty = tty;
+        this.token = token;
+        this.files = files;
+      }
     }
     export class ConnectStop extends Message {}
   }
@@ -144,16 +159,21 @@ export namespace Packets{
       public meta:Map<string, Meta> = new Map<string, Meta>();
     }
     export class  Attachment extends Message{
-      public problem?:Map<string, any>;
+      public status = {"Ok": undefined, "Err": ""};
+    }
+    export class AttachmentInfo extends Message {
+      public name:string = "";
+      public size:string = "";
+      public hash:string = "";
     }
     export class ConnectBegin extends Message {
-      public status?:Map<string, any>;
+      public status = {"Ok": [""], "Err": ""};
     }
-    export class ConncetStart extends Message {
-      public status?:Map<string, any>;
+    export class ConnectStart extends Message {
+      public status = {"Ok": undefined, "Err": ""};
     }
-    export class ConncetStop extends Message {
-      public status?:Map<string, any>;
+    export class ConnectStop extends Message {
+      public status = {"Ok": [""], "Err": ""};
     }
 
     /*

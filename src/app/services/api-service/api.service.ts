@@ -3,20 +3,13 @@ import { Packets } from './api.packets';
 import { Commands } from './api.commands';
 import { TaligthSocket } from './api.socket';
 
-
-export enum LobbyEventType{ 
-  Join = 'LobbyJoin', 
-  Start = 'LobbyStart', 
-  End = 'LobbyEnd', 
-  Sync = 'LobbySync'
-}
-
 export enum ErrorType{ 
   LobbyJoinFailed = 'LobbyJoinFailed',
   LobbyCreateFailed = 'LobbyCeateFailed'
 }
 
 export interface Meta extends Packets.Meta{}
+export interface AttachmentInfo extends Packets.Reply.AttachmentInfo{}
 
 @Injectable({
   providedIn: 'root'
@@ -36,65 +29,87 @@ export class ApiService {
 
   public problemList(onResult:(problemList:Map<string, Meta>)=>void){
     
-    let cmdGameList = new Commands.ProblemList(this.url);
-    cmdGameList.onRecieveGameList = (message)=>{
+    let cmdList = new Commands.ProblemList(this.url);
+    cmdList.onRecieveGameList = (message)=>{
       if(onResult){onResult(message.meta!)}
     }
-    cmdGameList.run();
-    return cmdGameList;
+    cmdList.run();
+    return cmdList;
+  }
+
+  public GetAttachment( 
+    problemName:string, 
+    onAttachment?: ()=>void,
+    onAttachmentInfo?: (message: Packets.Reply.AttachmentInfo)=>void, 
+    onData?: (data:ArrayBuffer)=>void,
+    onError?: (error:string)=>void
+  ){
+  
+    let cmdGet = new Commands.Attchment(this.url, problemName);
+
+    cmdGet.onReciveAttachment = (message) => { 
+      if (message.status.Err){ 
+        if (cmdGet.onError) { cmdGet.onError("Failed to receive attachment: "+message.status.Ok) } 
+        return;
+      }
+      if(onAttachment) { onAttachment() } 
+    }
+    cmdGet.onReciveAttachmentInfo = (message) => { if(onAttachmentInfo) { onAttachmentInfo(message) } }
+    cmdGet.onReciveUndecodedBinary = (message) => { if(onData) { onData( message )} }
+    cmdGet.onError = onError;
+
+    cmdGet.run();
+    return cmdGet;
+  }
+
+  public Connect (
+    problem_name:string, 
+    service:string, 
+    args?:{}, 
+    tty?:boolean, 
+    token?:string, 
+    files?:string[],
+    onConnectBegin?:(message:string[] )=>void,
+    onConnectStart?:()=>void,
+    onConnectStop?:(message:string[])=>void,
+    onData?: (data:string)=>void,
+    onError?:(data:string)=>void
+  ){
+
+    let cmdConnect = new Commands.Connect(this.url, problem_name, service, args, tty, token, files);
+
+    cmdConnect.onReciveConnectBegin = (message) => { 
+      if (message.status.Err){ 
+        if (cmdConnect.onError) { cmdConnect.onError("Failed to begin connection: "+message.status.Err); } 
+        return;
+      }
+      if(onConnectBegin && message.status.Ok) { onConnectBegin(message.status.Ok) }
+    }
+
+    cmdConnect.onReciveConnectStart = (message) => { 
+      if (message.status.Err){ 
+        if (cmdConnect.onError) { cmdConnect.onError("Failed to start connect: "+message.status.Err)  } 
+        return;
+      }
+      if(onConnectStart) { onConnectStart() }
+    }
+
+    cmdConnect.onReciveConnectStop = (message) => { 
+      if (message.status.Err){ 
+        if (cmdConnect.onError) { cmdConnect.onError("Failed to stop connection: "+message.status.Err)  } 
+        return;
+      }
+      if(onConnectStop && message.status.Ok) { onConnectStop(message.status.Ok) }
+    }
+    
+    cmdConnect.onReciveBinary = (message) => { if(onData) { onData(message)} }
+    cmdConnect.onError = onError
+    
+    cmdConnect.run();
+    return cmdConnect;
   }
 
   /*
-
-  public lobbyList( onData:(lobbyList:MatchInfo[])=>void ){
-    let cmdLobbyList = new Commands.LobbyList(this.url);
-    cmdLobbyList.onReciveLobbyList = (message)=>{
-      if(onData){onData(message.info)}
-    }
-    cmdLobbyList.run();
-    return cmdLobbyList;
-  }
-
-  public gameDescription(
-    game:string,
-    onData:(gameDescription:string)=>void) {
-    
-    let cmdGameList = new Commands.GameDescription(this.url, game);
-    cmdGameList.onRecieveGameDescription = (message)=>{
-      if(onData){onData(message.description)}
-    }    
-    cmdGameList.run();
-    return cmdGameList;
-  }
-
-  public createNewLobby( 
-      onData:(newGame:string)=>void, 
-      gameDetails:GameDetails
-    ){
-      let gameArgs;
-      if(gameDetails.args!.length > 1) { 
-        gameArgs = new Packets.RoshamboArgs(gameDetails.args![0].value, gameDetails.args![1].value);
-      }
-      else if(gameDetails.args!.length === 1){
-        gameArgs = new Packets.RoyalurArgs(gameDetails.args![0].value);
-      }
-
-      let cmdNewGame = new Commands.NewLobby(this.url, gameDetails.lobby_name, gameDetails.game_description!.game_name, gameDetails.game_params!.players, gameDetails.game_params!.bots, gameDetails.game_params!.timeout, gameArgs, gameDetails.password);
-      cmdNewGame.onReciveNewLobby = (message)=>{
-        if(onData){
-          if(message.id["Err"] != undefined){
-            if(cmdNewGame.onError){
-              cmdNewGame.onError(message.id["Err"]);
-            }
-          }
-          else{
-            onData(message.id["Ok"])
-          }
-        }
-      }
-      cmdNewGame.run();
-      return cmdNewGame;
-  }
 
   public connectToPlay( 
       lobbyID:string, 
