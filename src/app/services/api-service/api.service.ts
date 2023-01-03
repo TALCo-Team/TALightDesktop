@@ -3,11 +3,6 @@ import { Packets } from './api.packets';
 import { Commands } from './api.commands';
 import { TaligthSocket } from './api.socket';
 
-export enum ErrorType{ 
-  LobbyJoinFailed = 'LobbyJoinFailed',
-  LobbyCreateFailed = 'LobbyCeateFailed'
-}
-
 export interface Meta extends Packets.Meta{}
 export interface AttachmentInfo extends Packets.Reply.AttachmentInfo{}
 

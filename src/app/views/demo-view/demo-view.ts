@@ -12,12 +12,7 @@ import { ConsoleModule } from 'src/app/widgets/console/console.module';
   styleUrls: ['./demo-view.component.scss']
 })
 export class DemoViewComponent implements OnInit {
-  public child: Child | undefined;
-  public filename: string = "";
   public output = "";
-  public lobbyID?:string;
-  public displayName = "AgentSmith"+Math.floor(Math.random()*1000000);
-  public password?:string;
   public cmdConnect?:Commands.Connect;
 
   constructor(
@@ -76,9 +71,7 @@ export class DemoViewComponent implements OnInit {
 
   async apiProblemList() {
     let onSuccess = (problemList:Map<string, Meta>)=>{ 
-      let text = JSON.stringify(problemList)
-      this.output = text;
-      console.log("Problem List: "+text);
+      console.log(problemList);
       this.refreshOutput();
     }
     let req = this.api.problemList( onSuccess );
@@ -92,8 +85,7 @@ export class DemoViewComponent implements OnInit {
     let onAttachmentInfo = (onAttachmentInfo: any) => {console.log(onAttachmentInfo)};
     
     let onData = (data: ArrayBuffer)=>{
-      this.output += ''+data
-      console.log("Bynary attachment: "+data);
+      console.log(data);
       this.refreshOutput();
     };
 
@@ -106,13 +98,13 @@ export class DemoViewComponent implements OnInit {
     let problem_name = "piastrelle";
     let service = "synopsis";
 
-    let onConnectionBegin = (onConnectionBegin: any) => {console.log("Connection Begin -> " + onConnectionBegin); };
+    let onConnectionBegin = (onConnectionBegin: string[]) => {console.log("Connection Begin -> " + onConnectionBegin); };
     let onConnectionStart = () => {console.log("Connection Start")};
-    let onConnectionClose = (onConnectionClose: any) => {console.log(onConnectionClose)};
+    let onConnectionClose = (onConnectionClose: string[]) => {console.log(onConnectionClose)};
     
     let onData = (data: string)=>{
       this.output += ''+data
-      console.log("Bynary attachment: "+data);
+      console.log("Binary data: "+data);
       this.refreshOutput();
     };
 
@@ -120,11 +112,6 @@ export class DemoViewComponent implements OnInit {
     req.onError = this.onApiError;
 
     this.cmdConnect = req;
-  }
-
-  async apiPlay() {
-    this.cmdConnect?.sendBinary("ROCK\n");
-    this.refreshOutput();
   }
 
 }
