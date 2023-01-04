@@ -2,7 +2,6 @@
 // Configs
 
 
-
 let pyodideRoot = "/"
 let pyodideMount = "/mnt"
 
@@ -50,6 +49,9 @@ export enum PyodideMessageType {
   InstallPackages = 'InstallPackages',
   ExecuteFile = 'ExecuteFile',
   ExecuteCode = 'ExecuteCode',
+  SubscribeStdout = 'SubscribeStdout',
+  SubscribeStderr = 'SubscribeStderr',
+  SendStdin = 'SendStdin',
   CreateDirectory = 'CreateDirectory',
   WriteFile = 'WriteFile',
   ReadFile = 'ReadFile',
@@ -83,7 +85,10 @@ export interface PyodideResponse {
 export type FsMessageHandler = (message:PyodideRequest)=>PyodideResponse;
 
 class PyodideWorker{
-  RequestQueueUID = new Map<string,PyodideRequest>();
+  
+  requestQueueStdout = new Map<string,PyodideRequest>();
+  requestQueueStderr = new Map<string,PyodideRequest>();
+
   pyodide: any;
   fs: any;
   loadPyodide: any;
@@ -93,21 +98,30 @@ class PyodideWorker{
   isReady = false;
   readyPromise: Promise<boolean>;
   readyResolver: PromiseResolver<boolean>;
+  stdinPending=false;
+  stdinResolver?: PromiseResolver<string>;
   isSync = false;
   needSync = false;
+  stdinBuffer = new Array<string>();
 
   constructor(root:string, mount:string ){
     this.root = root;
     this.mount = mount;
+
+    this.requestQueueStdout = new Map();
+    this.requestQueueStderr = new Map();
     
-    let promiseResolver: PromiseResolver<boolean>;
+    //onReady
+    let readyResolver: PromiseResolver<boolean>;
     this.readyPromise =  new Promise<boolean>((resolve, reject) => {
-      promiseResolver = resolve;
+      readyResolver = resolve;
     })
+    this.readyResolver = (value)=>{ readyResolver(value) }
 
-    this.readyResolver = (value)=>{ promiseResolver(value) }
-
+    
     addEventListener("message", ( payload:any ) => { this.onData(payload.data) })
+
+   
 
     this.initPydiode().then(()=>{
       this.load(this.root, this.mount);
@@ -119,12 +133,21 @@ class PyodideWorker{
   }
 
   async initPydiode(){
-    //console.log(loadPyodide)
+    
     console.log("loadPyodide: ...")
-    this.pyodide = await loadPyodide();
+    
+    let options = {
+      stdin: async ()=>{return await this.onStdin()},
+      stdout: (msg:string)=>{this.onStdout(msg)},
+      stderr: (msg:string)=>{this.onStderr(msg)},
+    }
+
+    //console.log(loadPyodide)
+    this.pyodide = await loadPyodide(options);
     this.fs = this.pyodide.FS;
     await this.pyodide.loadPackage(["micropip"]);
     this.micropip = this.pyodide.pyimport("micropip");
+    
     console.log("loadPyodide: done")
     //console.log(pyodide)
   }
@@ -188,6 +211,51 @@ class PyodideWorker{
     }
   }
 
+  async onStdin(){
+    let cnt = this.stdinBuffer.length
+    let msg;
+    if(cnt > 0){
+      let items = this.stdinBuffer.splice(0,cnt)
+      msg = items.concat("")
+      
+    }
+    return msg
+    /*
+    else{
+      //onStdin
+      let stdinResolver: PromiseResolver<string>;
+      let stdinPromise =  new Promise<string>((resolve, reject) => {
+        stdinResolver = resolve;
+      })
+      this.stdinResolver = (value)=>{ 
+        stdinResolver(value); 
+        this.stdinResolver = undefined; 
+      }
+      return stdinPromise
+    }
+    */
+  }
+
+  onStdout(msg:string){
+    console.log("stdout: "+msg)
+    this.requestQueueStdout.forEach(( request:PyodideRequest, uid:string )=>{
+      let response = this.responseFromRequest(request); 
+      response.message.contents = [msg]
+      console.log("stdout:uid:\n",uid)//,res)
+      postMessage(response)
+    })
+  }
+
+  onStderr(msg:string){
+    console.log("stderr: "+msg)
+    this.requestQueueStderr.forEach(( request:PyodideRequest, uid:string )=>{
+      let response = this.responseFromRequest(request); 
+      response.message.contents = [msg]
+      console.log("stderr:uid:\n",uid)//,res)
+      postMessage(response)
+    })
+  }
+
   onData(request:PyodideRequest) {
     console.log('PyodideFsWorker:onData:',request);
     let action: FsMessageHandler | null = null;
@@ -195,6 +263,15 @@ class PyodideWorker{
     switch (request.message.type) {
       case PyodideMessageType.Ready:
         this.ready(request);
+        break;
+      case PyodideMessageType.SubscribeStdout:
+        action=(request)=>{return this.subscribeStdout(request)};
+        break;
+      case PyodideMessageType.SubscribeStderr:
+        action=(request)=>{return this.subscribeStderr(request)};
+        break;
+      case PyodideMessageType.SendStdin:
+        action=(request)=>{return this.sendStdin(request)};
         break;
       case PyodideMessageType.InstallPackages:
         action=(request)=>{return this.installPackages(request)};
@@ -230,7 +307,7 @@ class PyodideWorker{
     }
     if(action){ 
       let response = action(request);
-      postMessage(response);
+      if (response){ postMessage(response) }
     }
   }
 
@@ -273,17 +350,56 @@ class PyodideWorker{
     let fullpath = request.message.args[0];
     let path = this.mount +"/"+ fullpath
     console.log("executeFile:",path)//,res)
+    
     let rawContent = this.fs.readFile(path) as Uint8Array
     let code = new TextDecoder().decode(rawContent.buffer);
 
-    console.log("executeFile: result:\n",code)//,res)
-    const result = this.pyodide.runPython(code);
-    postMessage(result);
+    let result = this.pyodide.runPython(code)
+    
+
+    console.log("executeFile: result:\n",result)
+    response.message.contents = [result]
     return response
   }
 
+  subscribeStdout(request:PyodideRequest){
+    let response = this.responseFromRequest(request); 
+    let enable = request.message.args[0] == 'true';
+    if (enable){
+      this.requestQueueStdout.set(request.uid, request)
+    } else{
+      this.requestQueueStdout.delete(request.uid)
+    }
+    console.log("subscribeStdout:\n", enable)//,res)
+    response.message.args = [enable?'true':'false']
+    return response;
+  }
 
-  
+  subscribeStderr(request:PyodideRequest){
+    let response = this.responseFromRequest(request); 
+    let enable = request.message.args[0] == 'true';
+    if (enable){
+      this.requestQueueStderr.set(request.uid, request)
+    } else{
+      this.requestQueueStderr.delete(request.uid)
+    }
+    console.log("subscribeStderr:\n", enable)//,res)
+    response.message.args = [enable?'true':'false']
+    return response;
+  }
+
+  sendStdin(request:PyodideRequest){
+    let response = this.responseFromRequest(request); 
+    let data = request.message.contents[0];
+    console.log("sendStdin:\n",data)//,res)
+    if (this.stdinResolver){
+      this.stdinResolver(data)
+    }else{
+      this.stdinBuffer.push(data)
+    }
+    response.message.args = ['true']
+    return response;
+  }
 
   createDirectory(request:PyodideRequest):PyodideResponse{
     let response = this.responseFromRequest(request); 

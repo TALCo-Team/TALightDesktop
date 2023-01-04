@@ -31,8 +31,12 @@ export class PythonCompilerService {
   
     let configContent = JSON.stringify(new PythonConfig(), null, 4)
     await this.driver?.writeFile('/'+this.configFile, configContent );
-
-    await this.driver?.writeFile('/main.py', 'print("hello world");\n');
+    let content = `
+    print("sad")
+    data = input("Please enter the message:\\n")
+    print("data:", data)
+    `
+    await this.driver?.writeFile('/main.py', content);
     return true
   }
 
@@ -49,15 +53,13 @@ export class PythonCompilerService {
     return config
   }
 
-  runProject(){
-    this.readPythonConfig().then((config)=>{
-      if (!config){return false;}
-      this.driver?.installPackages(config.PACKAGES).then(()=>{
-        this.driver?.executeFile(config!.MAIN)
-      })
-      return true;
-    })
-    
+  async runProject(){
+    let config = await this.readPythonConfig()
+    if (!config){return null;}
+    await this.driver?.installPackages(config.PACKAGES)
+    let stdout = await this.driver?.executeFile(config!.MAIN)
+    console.log(stdout)
+    return stdout    
   }
 
   async installPackages(packages:string[]){
@@ -101,9 +103,9 @@ export interface PythonCompilerMessageInterface {
 
 
 export interface PythonCompiler{
-  installPackages(packages: string[]): Promise<boolean>;
+  installPackages(packages: string[]): Promise<string>;
 
-  executeCode(code: string): Promise<boolean>;
+  executeCode(code: string): Promise<string>;
 
-  executeFile(fullpath: string): Promise<boolean>;
+  executeFile(fullpath: string): Promise<string>;
 }

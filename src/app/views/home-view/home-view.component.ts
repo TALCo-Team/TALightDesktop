@@ -3,6 +3,7 @@ import { FsService } from 'src/app/services/fs-service/fs.service';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 import { CodeEditorWidgetComponent } from 'src/app/widgets/code-editor/code-editor-widget/code-editor-widget.component';
 import { TalFile } from 'src/app/widgets/code-editor/editor-files-widget/editor-files-widget.component';
+import { ConsoleWidgetComponent } from 'src/app/widgets/console/console-widget/console-widget.component';
 
 @Component({
   selector: 'tal-home-view',
@@ -14,9 +15,9 @@ export class HomeViewComponent implements OnInit {
 
   public fs;
   public driver;
-  //public needSave = false;
 
-  @ViewChild("editorwideget") public editorWidget!: CodeEditorWidgetComponent;
+  @ViewChild("editorWideget") public editorWidget!: CodeEditorWidgetComponent;
+  @ViewChild("consoleWidget") public consoleWidget?: ConsoleWidgetComponent;
 
   constructor(
     private _fs: FsService,
@@ -41,7 +42,6 @@ export class HomeViewComponent implements OnInit {
   }
 
   public editorDidInput(event: InputEvent){
-    //this.needSave = true;
     console.log("Input: ", this.editorWidget.value)
     this.saveFile()
   }
@@ -55,6 +55,10 @@ export class HomeViewComponent implements OnInit {
 
   public runProject(){
     this.saveFile();
-    this.python.runProject();
+    this.python.runProject().then((stdout)=>{
+      if (stdout){
+        this.consoleWidget?.print(stdout)
+      }
+    })
   }
 }

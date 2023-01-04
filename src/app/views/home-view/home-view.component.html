@@ -15,7 +15,7 @@
                 <button pButton icon="pi pi-play" (click)="runProject()" >RUN</button>
               </div>
               <div class="tal-code-editor">
-                <tal-code-editor-widget #editorwideget
+                <tal-code-editor-widget #editorWideget
                   [(ngModel)]="openedFile!.content" 
                   lang="python" 
                   (change)="editorDidChange($event)" 
@@ -31,7 +31,7 @@
           </ng-template>
         </ng-template>
         <ng-template pTemplate>
-          <tal-console-widget></tal-console-widget>
+          <tal-console-widget #consoleWidget ></tal-console-widget>
         </ng-template>
       </p-splitter>
     </div>

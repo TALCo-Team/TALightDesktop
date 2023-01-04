@@ -1,4 +1,4 @@
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, AfterViewInit, EventEmitter, Output } from '@angular/core';
 import { TerminalService } from 'primeng/terminal';
 
 @Component({
@@ -9,6 +9,8 @@ import { TerminalService } from 'primeng/terminal';
 })
 export class ConsoleWidgetComponent {
 
+  @Output('input') public onInput = new EventEmitter<InputEvent>();
+
   constructor(private terminalService: TerminalService) {
     this.terminalService.commandHandler.subscribe(command => {
 
@@ -18,6 +20,10 @@ export class ConsoleWidgetComponent {
       // -- //
 
     });
+  }
+
+  print(content:string){
+    this.terminalService.sendResponse(content);
   }
 
 

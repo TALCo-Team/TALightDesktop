@@ -14,6 +14,9 @@ export enum PyodideMessageType {
   InstallPackages = 'InstallPackages',
   ExecuteFile = 'ExecuteFile',
   ExecuteCode = 'ExecuteCode',
+  SubscribeStdout = 'SubscribeStdout',
+  SubscribeStderr = 'SubscribeStderr',
+  SendStdin = 'SendStdin',
   CreateDirectory = 'CreateDirectory',
   WriteFile = 'WriteFile',
   ReadFile = 'ReadFile',
@@ -108,34 +111,34 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     resolvePromise(ready == 'true'?true:false)
   }
 
-  didReceiveInstallPackages(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
+  didReceiveInstallPackages(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<string> ){
     console.log("didReceiveInstallPackages: ")
     if (msgSent.contents.length != 1){ 
-      resolvePromise(false); 
+      resolvePromise(""); 
     }
     console.log(msgRecived.contents)
 
-    resolvePromise(true)
+    resolvePromise(msgRecived.contents[0])
   } 
 
-  didReceiveExecuteCode(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
+  didReceiveExecuteCode(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<string> ){
     console.log("didReceiveExecuteCode: ")
     if (msgSent.contents.length != 1){ 
-      resolvePromise(false); 
+      resolvePromise(""); 
     }
     console.log(msgRecived.contents)
 
-    resolvePromise(true)
+    resolvePromise(msgRecived.contents[0])
   } 
 
-  didReceiveExecuteFile(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
+  didReceiveExecuteFile(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<string> ){
     console.log("didReceiveExecuteFile: ")
     if (msgSent.contents.length != 1){ 
-      resolvePromise(false); 
+      resolvePromise(""); 
     }
     console.log(msgRecived.contents)
 
-    resolvePromise(true)
+    resolvePromise(msgRecived.contents[0])
   } 
 
   didReceiveCreateDirectory(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
@@ -226,7 +229,7 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     return resultPromise;
   }
 
-  async installPackages(packages: string[]): Promise<boolean> {
+  async installPackages(packages: string[]): Promise<string> {
     let message: PyodideMessage = {
       uid: this.requestUID(),
       type: PyodideMessageType.InstallPackages,
@@ -234,12 +237,12 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
       contents: [],
     }
     
-    let resultPromise = this.sendMessage<boolean>(message);
+    let resultPromise = this.sendMessage<string>(message);
 
     return resultPromise;
   }
 
-  async executeCode(code: string): Promise<boolean> {
+  async executeCode(code: string): Promise<string> {
     let message: PyodideMessage = {
       uid: this.requestUID(),
       type: PyodideMessageType.ExecuteCode,
@@ -247,12 +250,12 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
       contents: [code],
     }
     
-    let resultPromise = this.sendMessage<boolean>(message);
+    let resultPromise = this.sendMessage<string>(message);
 
     return resultPromise;
   }
 
-  async executeFile(fullpath: string): Promise<boolean> {
+  async executeFile(fullpath: string): Promise<string> {
     let message: PyodideMessage = {
       uid: this.requestUID(),
       type: PyodideMessageType.ExecuteFile,
@@ -260,10 +263,50 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
       contents: [],
     }
     
-    let resultPromise = this.sendMessage<boolean>(message);
+    let resultPromise = this.sendMessage<string>(message);
 
     return resultPromise;
   }
+
+  subscribeStdout(enable=true){
+    let message: PyodideMessage = {
+      uid: this.requestUID(),
+      type: PyodideMessageType.SubscribeStdout,
+      args: [enable?'true':'false'],
+      contents: [],
+    }
+    
+    let resultPromise = this.sendMessage<string>(message);
+
+    return resultPromise;
+  }
+
+  subscribeStderr(enable=true){
+    let message: PyodideMessage = {
+      uid: this.requestUID(),
+      type: PyodideMessageType.SubscribeStderr,
+      args: [enable?'true':'false'],
+      contents: [],
+    }
+    
+    let resultPromise = this.sendMessage<string>(message);
+
+    return resultPromise;
+  }
+
+  sendStdin(){
+    let message: PyodideMessage = {
+      uid: this.requestUID(),
+      type: PyodideMessageType.SendStdin,
+      args: ['true'],
+      contents: [],
+    }
+    
+    let resultPromise = this.sendMessage<string>(message);
+
+    return resultPromise;
+  }
+
 
   async createDirectory(fullpath: string): Promise<boolean> {
     let message: PyodideMessage = {
