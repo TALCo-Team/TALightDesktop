@@ -7,7 +7,7 @@ type UID = string; // should I ?
 
 type PromiseResolver<T> = (value: T | PromiseLike<T>) => void;
 
-
+type stdCallback = (data:string)=>void;
 
 export enum PyodideMessageType {
   Ready = 'Ready',
@@ -58,6 +58,9 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
   public rootDir = "."
   public requestIndex = new Map<UID, PyodideRequestHandler>();
 
+  onStdout?: stdCallback
+  onStderr?: stdCallback
+
   constructor() {
     //alert('driver built!');
     this.worker.onmessage = (event: MessageEvent) => { this.didRecieve(event.data) };   
@@ -79,6 +82,7 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
 
     let requestHandler = this.requestIndex.get(response.uid);
     if (requestHandler != null) {
+      let removeRequest = true;
       let msgSent = requestHandler.request.message;
       let msgRecived = response.message;
       let resolvePromise = requestHandler.resolvePromise;
@@ -90,6 +94,10 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
         case PyodideMessageType.ExecuteCode:     this.didReceiveExecuteCode(msgSent, msgRecived, resolvePromise); break;
         case PyodideMessageType.ExecuteFile:     this.didReceiveExecuteFile(msgSent, msgRecived, resolvePromise); break;
 
+        case PyodideMessageType.SubscribeStdout: this.didReceiveSubscribeStdout(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
+        case PyodideMessageType.SubscribeStderr: this.didReceiveSubscribeStderr(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
+        case PyodideMessageType.SendStdin:       this.didReceiveSendStdin(msgSent, msgRecived, resolvePromise); break;
+
         case PyodideMessageType.CreateDirectory: this.didReceiveCreateDirectory(msgSent, msgRecived, resolvePromise); break;
         case PyodideMessageType.ReadDirectory:   this.didReceiveReadDirectory(msgSent, msgRecived, resolvePromise); break;
         case PyodideMessageType.ScanDirectory:   this.didReceiveScanDirectory(msgSent, msgRecived, resolvePromise); break;
@@ -100,7 +108,10 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
         case PyodideMessageType.Delete:          this.didReceiveDelete(msgSent, msgRecived, resolvePromise); break;
         case PyodideMessageType.Exists:          this.didReceiveExists(msgSent, msgRecived, resolvePromise); break;
       }
-      this.requestIndex.delete(response.uid)
+      
+      if (removeRequest){
+        this.requestIndex.delete(response.uid)
+      }
     }
   }
 
@@ -139,6 +150,42 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     console.log(msgRecived.contents)
 
     resolvePromise(msgRecived.contents[0])
+  } 
+
+  didReceiveSubscribeStdout(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveSubscribeStdout: ")
+    if (msgRecived.args.length == 1){ 
+      let result = msgRecived.args[0] == 'true'
+      resolvePromise(result); 
+    }
+    if ( this.onStdout && msgRecived.contents.length > 0){
+      console.log(msgRecived.contents)
+      let content = msgRecived.contents[0]
+      this.onStdout(content)
+    }
+  } 
+
+  didReceiveSubscribeStderr(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveSubscribeStderr: ")
+    if (msgRecived.args.length == 1){ 
+      let result = msgRecived.args[0] == 'true'
+      resolvePromise(result); 
+    }
+    if ( this.onStderr && msgRecived.contents.length > 0){
+      console.log(msgRecived.contents)
+      let content = msgRecived.contents[0]
+      this.onStderr(content)
+    }
+  } 
+
+  didReceiveSendStdin(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveSendStdin: ")
+    if (msgRecived.args.length > 0){ 
+      let result = msgRecived.args[0] == 'true'
+      resolvePromise(result); 
+    }
+
+    resolvePromise(false)
   } 
 
   didReceiveCreateDirectory(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
@@ -268,41 +315,51 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     return resultPromise;
   }
 
-  subscribeStdout(enable=true){
+  subscribeStdout(enable=true, onStdout?:stdCallback){
     let message: PyodideMessage = {
       uid: this.requestUID(),
       type: PyodideMessageType.SubscribeStdout,
       args: [enable?'true':'false'],
       contents: [],
     }
-    
-    let resultPromise = this.sendMessage<string>(message);
+    if (onStdout && enable){
+      this.onStdout = (msg:string)=>{onStdout(msg)}
+    }else{
+      this.onStdout = undefined;
+    }
+
+    let resultPromise = this.sendMessage<boolean>(message);
 
     return resultPromise;
   }
 
-  subscribeStderr(enable=true){
+  subscribeStderr(enable=true, onStderr?:stdCallback){
     let message: PyodideMessage = {
       uid: this.requestUID(),
       type: PyodideMessageType.SubscribeStderr,
       args: [enable?'true':'false'],
       contents: [],
     }
+    if (onStderr && enable){
+      this.onStderr = (msg:string)=>{onStderr(msg)}
+    }else{
+      this.onStderr = undefined;
+    }
     
-    let resultPromise = this.sendMessage<string>(message);
+    let resultPromise = this.sendMessage<boolean>(message);
 
     return resultPromise;
   }
 
-  sendStdin(){
+  sendStdin(msg:string){
     let message: PyodideMessage = {
       uid: this.requestUID(),
       type: PyodideMessageType.SendStdin,
-      args: ['true'],
-      contents: [],
+      args: [],
+      contents: [msg],
     }
     
-    let resultPromise = this.sendMessage<string>(message);
+    let resultPromise = this.sendMessage<boolean>(message);
 
     return resultPromise;
   }

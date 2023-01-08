@@ -17,7 +17,7 @@ export class HomeViewComponent implements OnInit {
   public driver;
 
   @ViewChild("editorWideget") public editorWidget!: CodeEditorWidgetComponent;
-  @ViewChild("consoleWidget") public consoleWidget?: ConsoleWidgetComponent;
+  @ViewChild("consoleWidget") public consoleWidget!: ConsoleWidgetComponent;
 
   constructor(
     private _fs: FsService,
@@ -28,7 +28,18 @@ export class HomeViewComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    
+    this.python.driver?.subscribeStdout(true,(msg)=>{this.onStdout(msg)})
+    this.python.driver?.subscribeStderr(true,(msg)=>{this.onStderr(msg)})
+  }
+
+  public onStdout(data:string){
+    //alert("STDOUT: "+data)
+    this.consoleWidget.print(data)
+  }
+
+  public onStderr(data:string){
+    //alert("STDERR: "+data)
+    this.consoleWidget.print(data)
   }
 
   public openFile(file: TalFile) {
@@ -54,11 +65,12 @@ export class HomeViewComponent implements OnInit {
   }
 
   public runProject(){
+    this.consoleWidget.print("python main.py\n")
     this.saveFile();
-    this.python.runProject().then((stdout)=>{
-      if (stdout){
-        this.consoleWidget?.print(stdout)
-      }
+    
+ 
+    this.python.runProject().then(()=>{
+
     })
   }
 }

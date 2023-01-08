@@ -31,11 +31,7 @@ export class PythonCompilerService {
   
     let configContent = JSON.stringify(new PythonConfig(), null, 4)
     await this.driver?.writeFile('/'+this.configFile, configContent );
-    let content = `
-    print("sad")
-    data = input("Please enter the message:\\n")
-    print("data:", data)
-    `
+    let content = `print("asd") \ndata = 123 \nprint("data:", data)`;
     await this.driver?.writeFile('/main.py', content);
     return true
   }

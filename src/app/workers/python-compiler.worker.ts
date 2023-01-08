@@ -137,7 +137,7 @@ class PyodideWorker{
     console.log("loadPyodide: ...")
     
     let options = {
-      stdin: async ()=>{return await this.onStdin()},
+      stdin: ()=>{return this.onStdin()},
       stdout: (msg:string)=>{this.onStdout(msg)},
       stderr: (msg:string)=>{this.onStderr(msg)},
     }
@@ -241,7 +241,7 @@ class PyodideWorker{
     this.requestQueueStdout.forEach(( request:PyodideRequest, uid:string )=>{
       let response = this.responseFromRequest(request); 
       response.message.contents = [msg]
-      console.log("stdout:uid:\n",uid)//,res)
+      console.log("stdout:uid:\n",response)//,res)
       postMessage(response)
     })
   }
@@ -251,7 +251,7 @@ class PyodideWorker{
     this.requestQueueStderr.forEach(( request:PyodideRequest, uid:string )=>{
       let response = this.responseFromRequest(request); 
       response.message.contents = [msg]
-      console.log("stderr:uid:\n",uid)//,res)
+      console.log("stderr:uid:\n",response)//,res)
       postMessage(response)
     })
   }
