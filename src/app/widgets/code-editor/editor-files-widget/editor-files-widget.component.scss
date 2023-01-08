@@ -6,12 +6,14 @@ div.tal-editor-files-tree {
 
   div.tal-editor-files-header{
     display:flex;
-    flex-direction: column;
+    flex-direction: row-reverse;
+    
 
     button{
       width:100%;
       margin-bottom:1rem;
       height:1.8rem;
+      margin: 2px;
     }
   }
 
@@ -134,8 +136,8 @@ div.tal-folder-subtree {
 
     div.tal-folder-row {
       div.tal-folder-title {
-        i:first-child {
-          transform: rotate(180deg);
+        i.pi-chevron-down {
+          transform: rotate(-90deg);
         }
       }
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { Observable } from 'rxjs';
-import { ConnectionManagerService } from '../services/connection-manager.service';
+import { ConnectionManagerService } from '../services/connection-manager-service/connection-manager.service';
 
 @Injectable({
   providedIn: 'root'

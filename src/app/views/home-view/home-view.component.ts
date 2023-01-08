@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { FsService, FsServiceTest } from 'src/app/services/fs-service/fs.service';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FsService } from 'src/app/services/fs-service/fs.service';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
+import { CodeEditorWidgetComponent } from 'src/app/widgets/code-editor/code-editor-widget/code-editor-widget.component';
 import { TalFile } from 'src/app/widgets/code-editor/editor-files-widget/editor-files-widget.component';
+import { ConsoleWidgetComponent } from 'src/app/widgets/console/console-widget/console-widget.component';
 
 @Component({
   selector: 'tal-home-view',
@@ -12,52 +14,63 @@ export class HomeViewComponent implements OnInit {
   public openedFile?: TalFile;
 
   public fs;
+  public driver;
 
+  @ViewChild("editorWideget") public editorWidget!: CodeEditorWidgetComponent;
+  @ViewChild("consoleWidget") public consoleWidget!: ConsoleWidgetComponent;
 
   constructor(
-    private pythonSrv: PythonCompilerService,
-    private _fs: FsService
+    private _fs: FsService,
+    private python:PythonCompilerService,
   ) {
     this.fs = _fs;
+    this.driver = this.fs.getDriver('pyodide')
   }
 
   ngOnInit(): void {
+    this.python.driver?.subscribeStdout(true,(msg)=>{this.onStdout(msg)})
+    this.python.driver?.subscribeStderr(true,(msg)=>{this.onStderr(msg)})
+  }
 
-    const test = new FsServiceTest(this.fs, 'pyodide');
-    test.createTestFiles().then(() => {
-      //alert('done!')
-      /*
-      this.pythonSrv.worker.onmessage = ({ data }) => {
-        console.log(`page got message: ${data}`);
-      }
+  public onStdout(data:string){
+    //alert("STDOUT: "+data)
+    this.consoleWidget.print(data)
+  }
 
-
-      const messageInstall: PythonCompilerMessageInterface = {
-        type: PythonCompilerMessageInterfaceType.PackageInstall,
-        packages: ['fake-traffic'],
-      }
-      this.pythonSrv.worker.postMessage(messageInstall);
-
-      const messageToSend: PythonCompilerMessageInterface = {
-        type: PythonCompilerMessageInterfaceType.ExecuteCode,
-        code: `
-        import os
-        print(os.listdir('/'))
-        print(os.listdir('/mnt'))
-        import fox
-        import mainC
-`
-      }
-
-      this.pythonSrv.worker.postMessage(messageToSend);
-
-      */
-    });
-
+  public onStderr(data:string){
+    //alert("STDERR: "+data)
+    this.consoleWidget.print(data)
   }
 
   public openFile(file: TalFile) {
     this.openedFile = file;
+    
   }
 
+  public editorDidChange(event: Event){
+    console.log("editorDidChange:")
+    this.saveFile()
+  }
+
+  public editorDidInput(event: InputEvent){
+    console.log("Input: ", this.editorWidget.value)
+    this.saveFile()
+  }
+
+  public saveFile(){
+    if ( this.openedFile ){ // && this.needSave ){
+      console.log("saveFile:\n", this.openedFile.path, "\n", this.editorWidget.value)
+      this.driver?.writeFile(this.openedFile.path, this.editorWidget.value)
+    }
+  }
+
+  public runProject(){
+    this.consoleWidget.print("python main.py\n")
+    this.saveFile();
+    
+ 
+    this.python.runProject().then(()=>{
+
+    })
+  }
 }
