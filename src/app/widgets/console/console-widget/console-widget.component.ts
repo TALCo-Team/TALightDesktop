@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Output, ViewChild, ViewEncapsulation, NgZone } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild, ViewEncapsulation, NgZone, ElementRef } from '@angular/core';
 import { Terminal, TerminalService } from 'primeng/terminal';
 import { Subscription } from 'rxjs';
+import { ApiService, Meta } from 'src/app/services/api-service/api.service';
 //import { Terminal } from 'xterm';
 
 @Component({
@@ -13,37 +14,69 @@ import { Subscription } from 'rxjs';
 export class ConsoleWidgetComponent {
 
   @Output('input') public onInput = new EventEmitter<InputEvent>();
+  @Output('stdin') public onStdin = new EventEmitter<string>();
+
   @ViewChild("terminal") public terminal!: Terminal;
-  @ViewChild("output") public output!: HTMLPreElement;
+  @ViewChild("output") public output!: ElementRef;
+  @ViewChild("sdtinInput") public sdtinInput!: ElementRef;
+  
 
   public outputText = ""
+
+
+  commandSub: Subscription
+
   
+  constructor(private terminalService: TerminalService, private zone: NgZone, private api: ApiService) {
+    this.commandSub = this.terminalService.commandHandler.subscribe(command => {this.execCommand(command)});
+  }
+
+  ngOnDestroy() {
+    this.commandSub.unsubscribe();
+  }
+
+
+  clearOutput(){
+    this.zone.run(() => this.outputText = "")
+  }
+
+  print(content:string, end="\n"){
+    this.zone.run(() => this.outputText += content+end)
+  }
+    
+  async onApiError(message: string){
+    alert("API Error: "+message)
+  }
+
+  async apiProblemList() {
+    let onSuccess = (problemList:Map<string, Meta>)=>{ 
+      console.log(problemList);
+    }
+    let req = this.api.problemList( onSuccess );
+    req.onError = (error) =>{ this.onApiError(error) };
+  }
+  
+
   
   public testOutput(){
     this.print("python main.py\n")
   }
   
 
-  subscr: Subscription
-
-  
-  constructor(private terminalService: TerminalService, private zone: NgZone) {
-    this.subscr = this.terminalService.commandHandler.subscribe(command => {
-      
-      let params = command.split(" ") 
-      let operation = params.splice(0,1)[0]
-      console.log('tokens: ',params)
-      console.log('command: ',command)
-      let response = 'Unknown command: ' + command;
-      switch(operation){
-        case "echo": response = params.join(" "); break;
-        case "date": response = new Date().toDateString(); break;
-      }
-      
-      this.terminalService.sendResponse(response);
-    });
+  public sendStdin(){
+    let msg = this.sdtinInput.nativeElement.value ?? ""
+    msg = msg.trim()
+    console.log("sendStdin:",this.sdtinInput)
+    if(msg == ""){return}
     
+    this.sdtinInput.nativeElement.value=""
+    this.onStdin.emit(msg);
   }
+  
+  public sendOnEnter(event:KeyboardEvent){
+    if ( event.key == 'Enter' ) { this.sendStdin(); }
+  }
+
 
   injectCommand(command:string){
     
@@ -73,15 +106,24 @@ export class ConsoleWidgetComponent {
 
 
   }
-  
-  print(content:string){
-    this.injectCommand("echo "+content);
+
+  execCommand(command:string){
+    let params = command.split(" ") 
+    let operation = params.splice(0,1)[0]
+    console.log('tokens: ',params)
+    console.log('command: ',command)
+    let response = 'Unknown command: ' + command;
+    switch(operation){
+      case "echo": response = params.join(" "); break;
+      case "date": response = new Date().toDateString(); break;
+    }
     
+    this.terminalService.sendResponse(response);
   }
 
-  ngOnDestroy() {
-    this.subscr.unsubscribe();
-  }
+
+
+  
   
   /*
   public term: Terminal;

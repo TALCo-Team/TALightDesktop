@@ -31,7 +31,7 @@
           </ng-template>
         </ng-template>
         <ng-template pTemplate>
-          <tal-console-widget #consoleWidget ></tal-console-widget>
+          <tal-console-widget #consoleWidget (stdin)="onStdin($event)" ></tal-console-widget>
         </ng-template>
       </p-splitter>
     </div>
