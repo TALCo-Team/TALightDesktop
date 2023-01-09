@@ -1,11 +1,19 @@
 <div class="tal-editor-files-tree">
   <div class="tal-editor-files-header">
-    <button pButton class="p-button-secondary" icon="pi pi-file-export" label="Esporta tutto"
+    <button pButton class="p-button-secondary" icon="pi pi-download" title="Esporta tutto"
       (click)="closeAllContextMenus($event); export()"></button>
-    <button pButton icon="pi pi-file" label="Nuovo file"
+    <button pButton icon="pi pi-file" title="Nuovo file"
       (click)="closeAllContextMenus($event); addNewItem(root, 'file')"></button>
-    <button pButton icon="pi pi-folder" label="Nuova cartella"
+      <button pButton icon="pi pi-folder" title="Nuova cartella"
       (click)="closeAllContextMenus($event); addNewItem(root, 'folder')"></button>
+      <button pButton icon="pi pi-sync" title="Refresh"
+      (click)="closeAllContextMenus($event); syncFilesystem(root)"></button>
+
+      
+      <button pButton icon="pi pi-eye" *ngIf="showHidden" title="Toggle show hidden files"
+      (click)="closeAllContextMenus($event); toggleHidden()"></button>
+      <button pButton icon="pi pi-eye-slash" *ngIf="!showHidden" title="Toggle show hidden files"
+      (click)="closeAllContextMenus($event); toggleHidden()"></button>
   </div>
   <div class="tal-editor-files-body">
     <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: root }"></ng-container>
@@ -15,11 +23,11 @@
 <ng-template #TalFolder let-folder>
   <div class="tal-folder">
     <ng-container *ngFor="let subfolder of folder.folders">
-      <div class="tal-folder-subtree">
+      <div *ngIf="isVisibile(subfolder)" class="tal-folder-subtree">
         <div class="tal-folder-row" (contextmenu)="closeAllContextMenus($event); folderOverlayPanel.show($event)">
           <div class="tal-folder-title collapse-toggle"
             (dblclick)="closeAllContextMenus($event); startEditing(folder, subfolder)">
-            <i class="pi pi-chevron-up"></i>
+            <i class="pi pi-chevron-down"></i>
             <ng-container *ngIf="editingItem!=subfolder;else ItemEditingTemplate">
               <i class="pi pi-folder"></i>
               <p>{{subfolder.name}}</p>
@@ -69,7 +77,7 @@
     </ng-container>
 
     <ng-container *ngFor="let file of folder.files">
-      <div class="tal-file" (contextmenu)="closeAllContextMenus($event); fileOverlayPanel.show($event)"
+      <div *ngIf="isVisibile(file)" class="tal-file" (contextmenu)="closeAllContextMenus($event); fileOverlayPanel.show($event)"
         [class.opened]="file===openedFile">
         <div class="tal-file-title" (click)="closeAllContextMenus($event); openFile(file)"
           (dblclick)="closeAllContextMenus($event); startEditing(folder, file)">

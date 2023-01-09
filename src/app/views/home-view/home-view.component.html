@@ -12,10 +12,15 @@
             <div class="tal-code-editor-container">
               <div class="tal-code-editor-header">
                 <h3>{{openedFile!.name}}</h3>
-                <button pButton icon="pi pi-play">RUN</button>
+                <button pButton icon="pi pi-play" (click)="runProject()" >RUN</button>
               </div>
               <div class="tal-code-editor">
-                <tal-code-editor-widget [(ngModel)]="openedFile!.content" lang="javascript"></tal-code-editor-widget>
+                <tal-code-editor-widget #editorWideget
+                  [(ngModel)]="openedFile!.content" 
+                  lang="python" 
+                  (change)="editorDidChange($event)" 
+                  (input)="editorDidInput($event)">
+                </tal-code-editor-widget>
               </div>
             </div>
           </ng-container>
@@ -26,7 +31,7 @@
           </ng-template>
         </ng-template>
         <ng-template pTemplate>
-          <tal-console-widget></tal-console-widget>
+          <tal-console-widget #consoleWidget ></tal-console-widget>
         </ng-template>
       </p-splitter>
     </div>
