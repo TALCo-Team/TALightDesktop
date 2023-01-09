@@ -22,7 +22,41 @@
     //background-color: red;
 }
 
-.console-widget-main-terminal{
-    //background-color: green;
+.console-widget-terminal, .console-widget-output{
+    width:100%;
+    height:100%;
+    flex-direction: column;
+
+    
+    
+}
+
+.console-widget-label{
+    flex-grow: 1;
+    display: flex;
+    background-color: green;
+}
+
+.console-widget-terminal-scroll, .console-widget-output-scroll{
+    background-color: blue;
+    overflow-y: scroll;
+    flex-wrap: wrap;
     flex-grow: 2;
+    display: flex;
+    margin-bottom: auto;
+}
+
+.console-widget-terminal-shell, .console-widget-output-text{
+    background-color: magenta !important;
+    display: flexbox;
+    width: 100%;
+    height: 100%;
+    
+    flex-flow: column;
+}
+
+.console-widget-output-stdin{
+    background-color: red;
+    
+    flex-grow: 1;
 }
