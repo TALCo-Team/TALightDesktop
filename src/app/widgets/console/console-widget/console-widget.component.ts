@@ -4,6 +4,11 @@ import { Subscription } from 'rxjs';
 import { ApiService, Meta } from 'src/app/services/api-service/api.service';
 //import { Terminal } from 'xterm';
 
+export class ProblemMenuEntry{
+  label = ""
+  value = ""
+}
+
 @Component({
   selector: 'tal-console-widget',
   templateUrl: './console-widget.component.html',
@@ -23,14 +28,21 @@ export class ConsoleWidgetComponent {
 
   public outputText = ""
 
+  
 
   commandSub: Subscription
+  problemList = new Map<string, Meta>()
+  problems = new Array<ProblemMenuEntry>();
+  selectedProblem = new ProblemMenuEntry();
 
   
   constructor(private terminalService: TerminalService, private zone: NgZone, private api: ApiService) {
     this.commandSub = this.terminalService.commandHandler.subscribe(command => {this.execCommand(command)});
+    
   }
-
+  ngOnInit(){
+    this.apiProblemList();
+  }
   ngOnDestroy() {
     this.commandSub.unsubscribe();
   }
@@ -48,18 +60,46 @@ export class ConsoleWidgetComponent {
     alert("API Error: "+message)
   }
 
-  async apiProblemList() {
-    let onSuccess = (problemList:Map<string, Meta>)=>{ 
-      console.log(problemList);
+  async updateProblemsUI(){
+    
+    let problems = new Array<ProblemMenuEntry>();
+    for( let key in this.problemList ){
+      
+      let problem = new ProblemMenuEntry()
+      problem.value = key
+      problem.label = key.replace(/[_-]+/g," ")
+      problems.push(problem)
+      console.log('updateProblemsUI:problem:',problem)
     }
-    let req = this.api.problemList( onSuccess );
+    console.log('updateProblemsUI:problems:', problems)
+    problems = problems.sort((a,b)=>{ 
+      if (a.value == b.value) return 0
+      if (a.value > b.value) return 1
+      if (a.value < b.value) return -1
+      return 0 
+    })
+    this.zone.run(()=>{ this.problems = problems })
+  }
+
+  async apiProblemList() {
+    let req = this.api.problemList( (problemList)=> {
+      console.log('fetchProblemsAPI', problemList)
+      this.problemList = problemList
+      this.updateProblemsUI()
+    } );
     req.onError = (error) =>{ this.onApiError(error) };
   }
+
+  async didSelectProblem(problem: any) {
+    console.log('didSelectProblem', problem)
+  }
+  
   
 
   
   public testOutput(){
     this.print("python main.py\n")
+    this.apiProblemList()
   }
   
 
