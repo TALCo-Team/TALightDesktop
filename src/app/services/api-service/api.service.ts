@@ -25,7 +25,7 @@ export class ApiService {
   public problemList(onResult:(problemList:Map<string, Meta>)=>void){
     
     let cmdList = new Commands.ProblemList(this.url);
-    cmdList.onRecieveGameList = (message)=>{
+    cmdList.onRecieveProblemList = (message)=>{
       if(onResult){onResult(message.meta!)}
     }
     cmdList.run();

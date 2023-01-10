@@ -79,7 +79,7 @@ export namespace Commands{
     }
 
     export class ProblemList extends Command{
-      public onRecieveGameList?:(message:Packets.Reply.MetaList)=>void
+      public onRecieveProblemList?:(message:Packets.Reply.MetaList)=>void
       
       public override didReciveHandshake( handshake: Packets.Reply.Handshake){
         super.didReciveHandshake(handshake);
@@ -91,12 +91,12 @@ export namespace Commands{
       public override didRecive(payload:Packets.PacketsPayload){
         super.didRecive(payload);
         let message = payload.getMessage(Packets.Reply.MetaList);
-        if (message){ this.didReciveGameList(message); }
+        if (message){ this.didReciveProblemList(message); }
       }
         
-      public didReciveGameList(message:Packets.Reply.MetaList){
-        this.log("didRecieveGameList");
-        if (this.onRecieveGameList) { this.onRecieveGameList(message); }
+      public didReciveProblemList(message:Packets.Reply.MetaList){
+        this.log("onRecieveProblemList");
+        if (this.onRecieveProblemList) { this.onRecieveProblemList(message); }
       }
     }
 

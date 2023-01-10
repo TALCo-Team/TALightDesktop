@@ -1,7 +1,8 @@
 
 <div class="console-widget-main">
     <div class="console-widget-bar">
-        <button pButton icon="pi pi-test" (click)="testOutput()" >TEST</button>
+        <p-dropdown class="console-widget-problem-selector" [style]="{'width':'100%', 'height':'50px'}" [options]="problems" [(ngModel)]="selectedProblem" (onChange)="didSelectProblem($event)" optionLabel="label" optionValue="value"></p-dropdown>
+        <button pButton icon="pi pi-paperclip" (click)="testOutput()"  title="V"></button>
     </div>
 
     

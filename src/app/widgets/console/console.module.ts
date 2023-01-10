@@ -4,6 +4,7 @@ import { ConsoleWidgetComponent } from './console-widget/console-widget.componen
 import { TerminalModule } from 'primeng/terminal';
 import { DropdownModule } from 'primeng/dropdown';
 import { SplitterModule } from 'primeng/splitter';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -13,7 +14,8 @@ import { SplitterModule } from 'primeng/splitter';
     CommonModule,
     TerminalModule,
     DropdownModule,
-    SplitterModule
+    SplitterModule,
+    FormsModule
   ],
   exports: [
     ConsoleWidgetComponent
