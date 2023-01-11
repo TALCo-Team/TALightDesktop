@@ -67,16 +67,20 @@ export class ConsoleWidgetComponent {
 
   async updateProblemsUI(){
     
+    let problemList = Array.from(this.problemList.entries())
+
     let menu = new Array<ProblemMenuEntry>();
-    for( let name in this.problemList ){
-      let metadata = this.problemList.get(name)
+    for( var idx in problemList ){
+      let name = problemList[idx][0];
+      let metadata = problemList[idx][1];
+      //console.log("updateProblemsUI:metadata:",name,metadata)
       if (!metadata){continue}
       let menuEntry = new ProblemMenuEntry()
       menuEntry.value = name
       menuEntry.label = name.replace(/[_-]+/g," ")
       menuEntry.problem = new ProblemDescriptor(name, metadata)
       menu.push(menuEntry)
-      console.log('updateProblemsUI:problem:',menu)
+      //console.log('updateProblemsUI:problem:',menu)
     }
     console.log('updateProblemsUI:problems:', menu)
     menu = menu.sort((a,b)=>{ 
@@ -89,11 +93,11 @@ export class ConsoleWidgetComponent {
   }
 
   async apiProblemList() {
-    let req = this.api.problemList( (problemList)=> {
-      console.log('fetchProblemsAPI', problemList)
+    let req = this.api.problemList( async (problemList)=> {
+      console.log('apiProblemList:problemList:', problemList)
       this.problemList = problemList
       this.onProblemListUpdate.emit(problemList)
-      this.updateProblemsUI()
+      await this.updateProblemsUI()
     } );
     req.onError = (error) =>{ this.onApiError(error) };
   }

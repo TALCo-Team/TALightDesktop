@@ -24,28 +24,17 @@ export class ProblemDescriptor {
 
 export class ApiService {
   public url = 'ws://localhost:8008';
-  public ws?:TALightSocket;
 
   constructor(){
 
-  }
-  
-  private createCoCosocket(url:string) {
-    this.ws = new TALightSocket(url);
   }
 
   public problemList(onResult:(problemList:Map<string, Meta>)=>void){
     
     let cmdList = new Commands.ProblemList(this.url);
     cmdList.onRecieveProblemList = (message)=>{
-      let data:any = message.meta; //
-      let metaMap = new Map<string,Meta>()
-      for(var attr in data){
-        let value = data[attr];
-        metaMap.set(attr,value)
-      }
-      console.log(metaMap)
-      if(onResult){onResult(metaMap)}
+      console.log("onRecieveProblemList:",message)
+      if(onResult){onResult(message.meta)}
     }
     cmdList.run();
     return cmdList;
