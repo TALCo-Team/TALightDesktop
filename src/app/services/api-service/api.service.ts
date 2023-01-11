@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Packets } from './api.packets';
 import { Commands } from './api.commands';
-import { TaligthSocket } from './api.socket';
+import { TaligthSocket as TALightSocket } from './api.socket';
 
-export interface Meta extends Packets.Meta{}
+export class Meta extends Packets.Meta{}
 export interface AttachmentInfo extends Packets.Reply.AttachmentInfo{}
 
 export type ProblemMap = Map<string, Meta>;
@@ -24,14 +24,14 @@ export class ProblemDescriptor {
 
 export class ApiService {
   public url = 'ws://localhost:8008';
-  public ws?:TaligthSocket;
+  public ws?:TALightSocket;
 
   constructor(){
 
   }
   
   private createCoCosocket(url:string) {
-    this.ws = new TaligthSocket(url);
+    this.ws = new TALightSocket(url);
   }
 
   public problemList(onResult:(problemList:Map<string, Meta>)=>void){
