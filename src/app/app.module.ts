@@ -21,6 +21,7 @@ import { CodeEditorModule } from './widgets/code-editor/code-editor.module';
 import { SelectProblemViewComponent } from './views/select-problem-view/select-problem-view.component';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { EditorWidgetComponent } from './widgets/code-editor/editor-widget/editor-widget.component';
 
 @NgModule({
   declarations: [

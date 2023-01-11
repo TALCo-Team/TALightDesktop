@@ -6,6 +6,18 @@ import { TaligthSocket } from './api.socket';
 export interface Meta extends Packets.Meta{}
 export interface AttachmentInfo extends Packets.Reply.AttachmentInfo{}
 
+export type ProblemMap = Map<string, Meta>;
+
+export class ProblemDescriptor {
+  name: string
+  metadata:Meta
+
+  constructor(name:string, meta:Meta){
+    this.name = name
+    this.metadata = meta
+  }
+}
+
 @Injectable({
   providedIn: 'root'
 })

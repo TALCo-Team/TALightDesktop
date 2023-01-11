@@ -33,6 +33,7 @@ export class PythonCompilerService {
     await this.driver?.writeFile('/'+this.configFile, configContent );
     let content = `print("asd") \ndata = 123 \nprint("data:", data)`;
     await this.driver?.writeFile('/main.py', content);
+    await this.driver?.createDirectory('/data/');
     return true
   }
 
@@ -79,6 +80,8 @@ export class PythonCompilerService {
 class PythonConfig {
   MAIN = "main.py"
   DEBUG = ""
+  DOWNLOAD_ATTACHMENT_AUTO = true
+  DEFAULT_PROJECT="3SAT"
   PACKAGES: string[] = ["numpy"]
 }
 

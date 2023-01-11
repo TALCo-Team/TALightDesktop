@@ -297,14 +297,21 @@ export class EditorFilesWidgetComponent implements OnInit {
       if (this.newItemValue.length > 0) {
         if (this.newItemFolder) {
           if (this.newItemType === "file") {
+            let path = this.newItemFolder.path + "/" + this.newItemValue
+            this.driver?.writeFile(path, "").then(()=>{
+              this.refreshRoot()
+            })
+            /*
             this.newItemFolder.files.push({
               name: this.newItemValue,
               content: ""
             } as TalFile );
+            */
           } else {
             this.driver?.createDirectory("./"+this.newItemValue).then(()=>{
-
+              this.refreshRoot()
             })
+            
             this.newItemFolder.folders.push({
               name: this.newItemValue,
               path: "./"+this.newItemValue,
@@ -312,10 +319,10 @@ export class EditorFilesWidgetComponent implements OnInit {
               folders: []
             });
 
-            this.bindCollapseEvent();
+            //this.bindCollapseEvent();
           }
-
-          this.change?.emit(this.root);
+          //this.refreshRoot()
+          //this.change?.emit(this.root);
         }
       }
     }
