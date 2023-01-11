@@ -2,7 +2,7 @@ import { WebSocketSubject } from 'rxjs/webSocket';
 import { Packets } from './api.packets';
 
 
-export class TaligthSocket{
+export class TALightSocket{
   public url = 'ws://localhost:8088';
   public ws?:WebSocketSubject<any>;
   

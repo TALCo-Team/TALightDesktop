@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Packets } from './api.packets';
 import { Commands } from './api.commands';
-import { TaligthSocket as TALightSocket } from './api.socket';
+import { TALightSocket as TALightSocket } from './api.socket';
 
 export class Meta extends Packets.Meta{}
 export interface AttachmentInfo extends Packets.Reply.AttachmentInfo{}
@@ -38,7 +38,14 @@ export class ApiService {
     
     let cmdList = new Commands.ProblemList(this.url);
     cmdList.onRecieveProblemList = (message)=>{
-      if(onResult){onResult(message.meta!)}
+      let data:any = message.meta; //
+      let metaMap = new Map<string,Meta>()
+      for(var attr in data){
+        let value = data[attr];
+        metaMap.set(attr,value)
+      }
+      console.log(metaMap)
+      if(onResult){onResult(metaMap)}
     }
     cmdList.run();
     return cmdList;
