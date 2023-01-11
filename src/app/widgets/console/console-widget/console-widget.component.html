@@ -1,8 +1,8 @@
 
 <div class="console-widget-main">
     <div class="console-widget-bar">
-        <p-dropdown class="console-widget-problem-selector" [style]="{'width':'100%', 'height':'30px' }" [options]="problems" [(ngModel)]="selectedProblem" (onChange)="didSelectProblem()" optionLabel="label" optionValue="value"></p-dropdown>
-        <button pButton icon="pi pi-paperclip" (click)="apiDownloadAttachment()"  title="V"></button>
+        <p-dropdown class="console-widget-problem-selector" [style]="{'width':'100%', 'height':'30px' }" [options]="problems" [(ngModel)]="selectedName" (onChange)="didSelectProblem()" optionLabel="label" optionValue="value"></p-dropdown>
+        <button pButton icon="pi pi-paperclip" (click)="apiDownloadAttachment()"  title="Download Attachments"></button>
     </div>
 
     

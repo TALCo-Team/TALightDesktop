@@ -22,7 +22,7 @@ export class ConsoleWidgetComponent {
   @Output('input') public onInput = new EventEmitter<InputEvent>();
   @Output('stdin') public onStdin = new EventEmitter<string>();
   @Output('problemListUpdate') public onProblemListUpdate = new EventEmitter<Map<string, Meta>>();
-  @Output('problemChanged') public onProblemSelected = new EventEmitter<ProblemMenuEntry>();
+  @Output('problemChanged') public onProblemSelected = new EventEmitter<ProblemDescriptor>();
   @Output('attachments') public onAttachments = new EventEmitter<ArrayBuffer>();
 
   @ViewChild("terminal") public terminal!: Terminal;
@@ -38,7 +38,8 @@ export class ConsoleWidgetComponent {
   commandSub: Subscription
   problemList = new Map<string, Meta>()
   problems = new Array<ProblemMenuEntry>();
-  selectedProblem = new ProblemMenuEntry();
+  selectedName = "";
+  selectedProblem?: ProblemDescriptor;
 
   
   constructor(private terminalService: TerminalService, private zone: NgZone, private api: ApiService) {
@@ -62,21 +63,25 @@ export class ConsoleWidgetComponent {
   }
     
   async onApiError(message: string){
-    alert("API Error: "+message)
+    console.log("API Error: ",message)
   }
 
   async updateProblemsUI(){
     
+    let problemList = Array.from(this.problemList.entries())
+
     let menu = new Array<ProblemMenuEntry>();
-    for( let name in this.problemList ){
-      let metadata = this.problemList.get(name)
+    for( var idx in problemList ){
+      let name = problemList[idx][0];
+      let metadata = problemList[idx][1];
+      //console.log("updateProblemsUI:metadata:",name,metadata)
       if (!metadata){continue}
       let menuEntry = new ProblemMenuEntry()
       menuEntry.value = name
       menuEntry.label = name.replace(/[_-]+/g," ")
       menuEntry.problem = new ProblemDescriptor(name, metadata)
       menu.push(menuEntry)
-      console.log('updateProblemsUI:problem:',menu)
+      //console.log('updateProblemsUI:problem:',menu)
     }
     console.log('updateProblemsUI:problems:', menu)
     menu = menu.sort((a,b)=>{ 
@@ -89,25 +94,32 @@ export class ConsoleWidgetComponent {
   }
 
   async apiProblemList() {
-    let req = this.api.problemList( (problemList)=> {
-      console.log('fetchProblemsAPI', problemList)
+    let req = this.api.problemList( async (problemList)=> {
+      console.log('apiProblemList:problemList:', problemList)
       this.problemList = problemList
       this.onProblemListUpdate.emit(problemList)
-      this.updateProblemsUI()
+      await this.updateProblemsUI()
     } );
     req.onError = (error) =>{ this.onApiError(error) };
   }
 
   async didSelectProblem() {
-    console.log('didSelectProblem', this.selectedProblem)
+    let name= this.selectedName;
+    console.log('didSelectProblem', name)
+    let meta = this.problemList.get(name)
+    if(!meta){return}
+    this.selectedProblem = new ProblemDescriptor(name, meta)
     this.onProblemSelected.emit(this.selectedProblem)
   }
   
   async apiDownloadAttachment() {
-    let problem_name = this.selectedProblem.value;
+    console.log('apiDownloadAttachment', this.selectedProblem?.name)
 
+    if(!this.selectedProblem){return}
+    let problem_name = this.selectedProblem.name;
+    
     let onAttachment = ()=>{console.log("Attachment packet received")};
-    let onAttachmentInfo = (onAttachmentInfo: any) => {console.log(onAttachmentInfo)};
+    let onAttachmentInfo = (info: any) => {console.log('apiDownloadAttachment:info:',info)};
     
     let onData = (data: ArrayBuffer)=>{
       console.log("apiDownloadAttachment:onData:",data);
