@@ -92,6 +92,11 @@ export namespace Packets{
         return true;
       }
     }
+  
+  export class Meta {
+    public public_folder: string = "";
+    public services: Map<String, Service> = new Map<String, Service>();
+  }
 
   export class Service {
     public evaluator: string[] = [];
@@ -104,10 +109,6 @@ export namespace Packets{
     public default?: string;
   }
 
-  export class Meta {
-    public public_folder: string = "";
-    public services: Map<String, Service> = new Map<String, Service>();
-  }
 
 
     
