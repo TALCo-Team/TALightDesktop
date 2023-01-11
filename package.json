@@ -31,6 +31,7 @@
     "primeicons": "^6",
     "primeng": "^14.0.2",
     "rxjs": "~7.5.0",
+    "tar-stream": "^3.0.0",
     "tslib": "^2.3.0",
     "xterm": "^5.1.0",
     "xterm-addon-web-links": "^0.7.0",

@@ -37,10 +37,10 @@ export namespace Commands{
       }
 
       public log(...args:string[]){
-        let message = this.constructor.name+": " + (args).join(" ")
-        console.log(message);
+        let prefix = this.constructor.name+": "
+        console.log(prefix, ...args);
 
-        if (this.debug) alert(message);
+        if (this.debug) alert(prefix + (args).join(" ") );
       }
       
       public didClose(){
@@ -49,7 +49,7 @@ export namespace Commands{
       }
   
       public didError(error:any){
-        this.log("didError "+error);
+        this.log("didError ",error);
         if (this.onError){ this.onError(error);}
       }
 

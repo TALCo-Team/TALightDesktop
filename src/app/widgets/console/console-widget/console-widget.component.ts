@@ -22,7 +22,7 @@ export class ConsoleWidgetComponent {
   @Output('input') public onInput = new EventEmitter<InputEvent>();
   @Output('stdin') public onStdin = new EventEmitter<string>();
   @Output('problemListUpdate') public onProblemListUpdate = new EventEmitter<Map<string, Meta>>();
-  @Output('problemChanged') public onProblemSelected = new EventEmitter<ProblemMenuEntry>();
+  @Output('problemChanged') public onProblemSelected = new EventEmitter<ProblemDescriptor>();
   @Output('attachments') public onAttachments = new EventEmitter<ArrayBuffer>();
 
   @ViewChild("terminal") public terminal!: Terminal;
@@ -38,7 +38,8 @@ export class ConsoleWidgetComponent {
   commandSub: Subscription
   problemList = new Map<string, Meta>()
   problems = new Array<ProblemMenuEntry>();
-  selectedProblem = new ProblemMenuEntry();
+  selectedName = "";
+  selectedProblem?: ProblemDescriptor;
 
   
   constructor(private terminalService: TerminalService, private zone: NgZone, private api: ApiService) {
@@ -62,7 +63,7 @@ export class ConsoleWidgetComponent {
   }
     
   async onApiError(message: string){
-    alert("API Error: "+message)
+    console.log("API Error: ",message)
   }
 
   async updateProblemsUI(){
@@ -103,15 +104,22 @@ export class ConsoleWidgetComponent {
   }
 
   async didSelectProblem() {
-    console.log('didSelectProblem', this.selectedProblem)
+    let name= this.selectedName;
+    console.log('didSelectProblem', name)
+    let meta = this.problemList.get(name)
+    if(!meta){return}
+    this.selectedProblem = new ProblemDescriptor(name, meta)
     this.onProblemSelected.emit(this.selectedProblem)
   }
   
   async apiDownloadAttachment() {
-    let problem_name = this.selectedProblem.value;
+    console.log('apiDownloadAttachment', this.selectedProblem?.name)
 
+    if(!this.selectedProblem){return}
+    let problem_name = this.selectedProblem.name;
+    
     let onAttachment = ()=>{console.log("Attachment packet received")};
-    let onAttachmentInfo = (onAttachmentInfo: any) => {console.log(onAttachmentInfo)};
+    let onAttachmentInfo = (info: any) => {console.log('apiDownloadAttachment:info:',info)};
     
     let onData = (data: ArrayBuffer)=>{
       console.log("apiDownloadAttachment:onData:",data);
