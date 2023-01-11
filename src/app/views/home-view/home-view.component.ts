@@ -42,6 +42,10 @@ export class HomeViewComponent implements OnInit {
     this.consoleWidget.print(data)
   }
 
+  public onStdin(msg:string){
+    this.consoleWidget.print(msg)
+  }
+
   public openFile(file: TalFile) {
     this.openedFile = file;
     

@@ -1,18 +1,40 @@
 
 <div class="console-widget-main">
-    <div class="console-widget-main-bar">
-        <button pButton icon="pi pi-test" (click)="testOutput()" >TEST</button>
+    <div class="console-widget-bar">
+        <p-dropdown class="console-widget-problem-selector" [style]="{'width':'100%', 'height':'50px'}" [options]="problems" [(ngModel)]="selectedProblem" (onChange)="didSelectProblem($event)" optionLabel="label" optionValue="value"></p-dropdown>
+        <button pButton icon="pi pi-paperclip" (click)="testOutput()"  title="V"></button>
     </div>
-    <div class="console-widget-main-terminal">
-        <!-- <div id="xterm-container"></div> -->
-        
-        <p-terminal #terminal welcomeMessage="Welcome to TALight Desktop" prompt="talight$&nbsp;"></p-terminal>
-        
-    </div>
-    <div class="console-widget-main-output">
-        <!-- <div id="xterm-container"></div> -->
-        <div>Output<div>
-        <pre #output></pre>
-        
-    </div>
+
+    
+    <p-splitter class="console-widget-splitter" [style]="{'width': '100%'}" layout="vertical" [panelSizes]="[1,1]" [minSizes]="[0,0]">
+      
+
+        <ng-template pTemplate>
+            <div class="console-widget-terminal">
+                
+                <!-- <div id="xterm-container"></div> -->
+                <div class="console-widget-label">Terminal</div>
+                <div class="console-widget-terminal-scroll">
+                    <p-terminal class="console-widget-terminal-shell"  #terminal welcomeMessage="Welcome to TALight Desktop" prompt="talight$&nbsp;"></p-terminal>        
+                </div>
+            </div>
+        </ng-template>
+    
+
+        <ng-template pTemplate>
+            <div class="console-widget-output">
+                <!-- <div id="xterm-container"></div> -->
+                <div class="console-widget-label">Output</div>
+                <div class="console-widget-output-scroll">
+                    <pre class="console-widget-output-text" #output>{{outputText}}</pre>      
+                </div>
+                <div class="console-widget-output-stdin">
+                    <input #sdtinInput (keydown)="sendOnEnter($event)" />        
+                    <button pButton icon="pi pi-test" (click)="sendStdin()" >Send</button>
+                </div>
+            </div>
+        </ng-template>
+    
+    </p-splitter>
+    
 </div>
