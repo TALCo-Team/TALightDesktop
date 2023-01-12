@@ -3,7 +3,7 @@
   <p-splitter [style]="{'height': '100%'}" [panelSizes]="[15,50,35]" [minSizes]="[12,20,20]">
     <ng-template pTemplate>
       <div class="tal-editor-files">
-        <tal-editor-files-widget (open)="openFile($event)"></tal-editor-files-widget>
+        <tal-editor-files-widget #fileWidget (open)="openFile($event)"></tal-editor-files-widget>
       </div>
     </ng-template>
     <ng-template pTemplate>
@@ -30,7 +30,12 @@
       </ng-template>
     </ng-template>
     <ng-template pTemplate>
-      <tal-console-widget #consoleWidget (stdin)="onStdin($event)" ></tal-console-widget>
+      <tal-console-widget #consoleWidget 
+        (stdin)="onStdin($event)" 
+        (attachments)="onAttachments($event)"
+        (problemChanged)="onProblemChanged($event)"
+        >
+      </tal-console-widget>
     </ng-template>
   </p-splitter>
 </div>

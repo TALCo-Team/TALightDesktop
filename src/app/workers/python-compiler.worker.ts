@@ -65,7 +65,7 @@ export interface PyodideMessage {
   uid: string;
   type: PyodideMessageType;
   args: string[];
-  contents: string[];
+  contents: Array<string|ArrayBuffer>;
 }
 
 export interface PyodideRequest {
@@ -88,6 +88,9 @@ class PyodideWorker{
   
   requestQueueStdout = new Map<string,PyodideRequest>();
   requestQueueStderr = new Map<string,PyodideRequest>();
+
+  public binEncoder = new TextEncoder(); // always utf-8
+  public binDecoder = new TextDecoder("utf-8");
 
   pyodide: any;
   fs: any;
@@ -167,7 +170,16 @@ class PyodideWorker{
     console.log(this.fs.root.mount)
   }
 
+  toString(data:string|ArrayBuffer){
+    if(data instanceof ArrayBuffer) { return this.binDecoder.decode(data) }
+    return data
+  }
 
+  toArrayBuffer(data:string|ArrayBuffer){
+    if(data instanceof ArrayBuffer) { return data }
+    return this.binEncoder.encode(data)
+  }
+  
   
   responseFromRequest(request:PyodideRequest, success:boolean=true, errors:string[]=[]):PyodideResponse{
     let response:PyodideResponse = {
@@ -393,9 +405,9 @@ class PyodideWorker{
     let data = request.message.contents[0];
     console.log("sendStdin:\n",data)//,res)
     if (this.stdinResolver){
-      this.stdinResolver(data)
+      this.stdinResolver(this.toString(data))
     }else{
-      this.stdinBuffer.push(data)
+      this.stdinBuffer.push(this.toString(data))
     }
     response.message.args = ['true']
     return response;
@@ -477,12 +489,21 @@ class PyodideWorker{
   writeFile(request:PyodideRequest):PyodideResponse{
     
     let response = this.responseFromRequest(request);
-    if ( request.message.args.length < 1 || request.message.args.length < request.message.contents.length ){ 
+    let nargs = request.message.args.length;
+    let ncont = request.message.contents.length
+    if ( nargs < 1 || nargs < ncont ){ 
       return this.responseError(response,"writeFile: Requires at least 1 path as argument and 1 content");
     }
     
     let fullpath = request.message.args[0];
-    let content = request.message.contents[0];
+    let data = request.message.contents[0];
+    let content;
+    if (data instanceof ArrayBuffer){
+      content = new DataView(data)
+    }else{
+      content = data
+    }
+
     console.log("writeFile: ", fullpath)
     let res = this.fs.writeFile(this.mount + fullpath, content, { encoding: "utf8" });
     console.log("writeFile:res: ", res)
