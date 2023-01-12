@@ -1,10 +1,22 @@
 import { Injectable } from '@angular/core';
 import { Packets } from './api.packets';
 import { Commands } from './api.commands';
-import { TaligthSocket } from './api.socket';
+import { TALightSocket as TALightSocket } from './api.socket';
 
-export interface Meta extends Packets.Meta{}
+export class Meta extends Packets.Meta{}
 export interface AttachmentInfo extends Packets.Reply.AttachmentInfo{}
+
+export type ProblemMap = Map<string, Meta>;
+
+export class ProblemDescriptor {
+  name: string
+  metadata:Meta
+
+  constructor(name:string, meta:Meta){
+    this.name = name
+    this.metadata = meta
+  }
+}
 
 @Injectable({
   providedIn: 'root'
@@ -12,21 +24,17 @@ export interface AttachmentInfo extends Packets.Reply.AttachmentInfo{}
 
 export class ApiService {
   public url = 'ws://localhost:8008';
-  public ws?:TaligthSocket;
 
   constructor(){
 
-  }
-  
-  private createCoCosocket(url:string) {
-    this.ws = new TaligthSocket(url);
   }
 
   public problemList(onResult:(problemList:Map<string, Meta>)=>void){
     
     let cmdList = new Commands.ProblemList(this.url);
     cmdList.onRecieveProblemList = (message)=>{
-      if(onResult){onResult(message.meta!)}
+      console.log("onRecieveProblemList:",message)
+      if(onResult){onResult(message.meta)}
     }
     cmdList.run();
     return cmdList;

@@ -5,6 +5,7 @@ import { TerminalModule } from 'primeng/terminal';
 import { DropdownModule } from 'primeng/dropdown';
 import { SplitterModule } from 'primeng/splitter';
 import { FormsModule } from '@angular/forms';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @NgModule({
   declarations: [
@@ -15,10 +16,13 @@ import { FormsModule } from '@angular/forms';
     TerminalModule,
     DropdownModule,
     SplitterModule,
-    FormsModule
+    FormsModule,
+    //OverlayPanelModule,
+    ConfirmDialogModule
   ],
   exports: [
     ConsoleWidgetComponent
-  ]
+  ],
+  //providers: [ConfirmationService],
 })
 export class ConsoleModule { }

@@ -1,10 +1,10 @@
-import { TaligthSocket } from "./api.socket";
+import { TALightSocket } from "./api.socket";
 import { Packets } from "./api.packets";
 
 export namespace Commands{
 
     export class Command{
-      public tal: TaligthSocket;
+      public tal: TALightSocket;
       public url?:string;
       public debug=false; 
       public onReciveHandshake?:(message:Packets.Reply.Handshake)=>void;
@@ -16,7 +16,7 @@ export namespace Commands{
   
       constructor(url:string, decodeBinary?:boolean){
         this.url = url;
-        this.tal = new TaligthSocket(this.url);
+        this.tal = new TALightSocket(this.url);
         if(decodeBinary === false) {this.tal.decode = decodeBinary;}
 
         this.tal.onError = (error)=>{ this.didError(error); };
@@ -37,10 +37,10 @@ export namespace Commands{
       }
 
       public log(...args:string[]){
-        let message = this.constructor.name+": " + (args).join(" ")
-        console.log(message);
+        let prefix = this.constructor.name+": "
+        console.log(prefix, ...args);
 
-        if (this.debug) alert(message);
+        if (this.debug) alert(prefix + (args).join(" ") );
       }
       
       public didClose(){
@@ -49,7 +49,7 @@ export namespace Commands{
       }
   
       public didError(error:any){
-        this.log("didError "+error);
+        this.log("didError ",error);
         if (this.onError){ this.onError(error);}
       }
 

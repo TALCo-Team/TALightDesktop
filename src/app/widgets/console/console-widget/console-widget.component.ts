@@ -1,12 +1,13 @@
 import { Component, EventEmitter, Output, ViewChild, ViewEncapsulation, NgZone, ElementRef } from '@angular/core';
 import { Terminal, TerminalService } from 'primeng/terminal';
 import { Subscription } from 'rxjs';
-import { ApiService, Meta } from 'src/app/services/api-service/api.service';
+import { ApiService, Meta, ProblemDescriptor } from 'src/app/services/api-service/api.service';
 //import { Terminal } from 'xterm';
 
 export class ProblemMenuEntry{
   label = ""
   value = ""
+  problem?: ProblemDescriptor
 }
 
 @Component({
@@ -20,10 +21,14 @@ export class ConsoleWidgetComponent {
 
   @Output('input') public onInput = new EventEmitter<InputEvent>();
   @Output('stdin') public onStdin = new EventEmitter<string>();
+  @Output('problemListUpdate') public onProblemListUpdate = new EventEmitter<Map<string, Meta>>();
+  @Output('problemChanged') public onProblemSelected = new EventEmitter<ProblemDescriptor>();
+  @Output('attachments') public onAttachments = new EventEmitter<ArrayBuffer>();
 
   @ViewChild("terminal") public terminal!: Terminal;
   @ViewChild("output") public output!: ElementRef;
   @ViewChild("sdtinInput") public sdtinInput!: ElementRef;
+  
   
 
   public outputText = ""
@@ -33,7 +38,8 @@ export class ConsoleWidgetComponent {
   commandSub: Subscription
   problemList = new Map<string, Meta>()
   problems = new Array<ProblemMenuEntry>();
-  selectedProblem = new ProblemMenuEntry();
+  selectedName = "";
+  selectedProblem?: ProblemDescriptor;
 
   
   constructor(private terminalService: TerminalService, private zone: NgZone, private api: ApiService) {
@@ -57,44 +63,73 @@ export class ConsoleWidgetComponent {
   }
     
   async onApiError(message: string){
-    alert("API Error: "+message)
+    console.log("API Error: ",message)
   }
 
   async updateProblemsUI(){
     
-    let problems = new Array<ProblemMenuEntry>();
-    for( let key in this.problemList ){
-      
-      let problem = new ProblemMenuEntry()
-      problem.value = key
-      problem.label = key.replace(/[_-]+/g," ")
-      problems.push(problem)
-      console.log('updateProblemsUI:problem:',problem)
+    let problemList = Array.from(this.problemList.entries())
+
+    let menu = new Array<ProblemMenuEntry>();
+    for( var idx in problemList ){
+      let name = problemList[idx][0];
+      let metadata = problemList[idx][1];
+      //console.log("updateProblemsUI:metadata:",name,metadata)
+      if (!metadata){continue}
+      let menuEntry = new ProblemMenuEntry()
+      menuEntry.value = name
+      menuEntry.label = name.replace(/[_-]+/g," ")
+      menuEntry.problem = new ProblemDescriptor(name, metadata)
+      menu.push(menuEntry)
+      //console.log('updateProblemsUI:problem:',menu)
     }
-    console.log('updateProblemsUI:problems:', problems)
-    problems = problems.sort((a,b)=>{ 
+    console.log('updateProblemsUI:problems:', menu)
+    menu = menu.sort((a,b)=>{ 
       if (a.value == b.value) return 0
       if (a.value > b.value) return 1
       if (a.value < b.value) return -1
       return 0 
     })
-    this.zone.run(()=>{ this.problems = problems })
+    this.zone.run(()=>{ this.problems = menu })
   }
 
   async apiProblemList() {
-    let req = this.api.problemList( (problemList)=> {
-      console.log('fetchProblemsAPI', problemList)
+    let req = this.api.problemList( async (problemList)=> {
+      console.log('apiProblemList:problemList:', problemList)
       this.problemList = problemList
-      this.updateProblemsUI()
+      this.onProblemListUpdate.emit(problemList)
+      await this.updateProblemsUI()
     } );
     req.onError = (error) =>{ this.onApiError(error) };
   }
 
-  async didSelectProblem(problem: any) {
-    console.log('didSelectProblem', problem)
+  async didSelectProblem() {
+    let name= this.selectedName;
+    console.log('didSelectProblem', name)
+    let meta = this.problemList.get(name)
+    if(!meta){return}
+    this.selectedProblem = new ProblemDescriptor(name, meta)
+    this.onProblemSelected.emit(this.selectedProblem)
   }
   
-  
+  async apiDownloadAttachment() {
+    console.log('apiDownloadAttachment', this.selectedProblem?.name)
+
+    if(!this.selectedProblem){return}
+    let problem_name = this.selectedProblem.name;
+    
+    let onAttachment = ()=>{console.log("Attachment packet received")};
+    let onAttachmentInfo = (info: any) => {console.log('apiDownloadAttachment:info:',info)};
+    
+    let onData = (data: ArrayBuffer)=>{
+      console.log("apiDownloadAttachment:onData:",data);
+      this.onAttachments.emit(data);
+    };
+
+    let req = this.api.GetAttachment(problem_name, onAttachment, onAttachmentInfo, onData);
+    req.onError = (error) =>{ this.onApiError(error) };
+
+  }
 
   
   public testOutput(){

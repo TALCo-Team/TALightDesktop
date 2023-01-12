@@ -8,31 +8,6 @@ div.tal-home-container{
         align-items: stretch;
         height:100%;
     
-        div.tal-editor{
-            flex:1;
-        }
-    }
-}
-
-div.tal-editor-files{
-    width:100%;
-}
-
-div.tal-code-editor-container{
-    display:flex;
-    flex-direction: column;
-    width:100%;
-
-    div.tal-code-editor-header{
-        display:flex;
-        align-items: center;
-        justify-content: space-between;
-        padding:0.5rem 0.5rem 0.5rem 2rem;
-        width:100%;
-    }
-    
-    div.tal-code-editor{
-        flex:1;
-        width:100%;
+      
     }
 }

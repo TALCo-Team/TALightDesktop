@@ -57,7 +57,7 @@ export interface FsServiceDriver {
 
   createDirectory(fullpath:string): Promise<boolean>;
 
-  writeFile(fullpath:string, content:string): Promise<number>;
+  writeFile(fullpath:string, content:string|ArrayBuffer): Promise<number>;
 
   readFile(fullpath:string): Promise<string|null>;
 

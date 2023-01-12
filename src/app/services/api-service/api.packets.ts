@@ -23,13 +23,12 @@ export namespace Packets{
         }
       }
 
-      public getMessage<T extends Message>( packetClass: new ()=>T ):T | null{
+      public getMessage<T extends Message>( packetClass: new (packet?: any)=>T ):T | null{
         let packetType = packetClass.name;
         for (var pkttype in this.packets) {
           if (pkttype != packetType){ continue; }
           let packet = this.packets[packetType] 
-          let message = new packetClass();
-          message.fromPacket(packet);
+          let message = new packetClass(packet);
           return message;
         }        
         return null;
@@ -92,22 +91,51 @@ export namespace Packets{
         return true;
       }
     }
+  
+  export class Meta {
+    constructor(data?: any){
+      //console.log("Meta:constructor:", data)
+      this.public_folder = data.public_folder
+      let servicesMap = new Map<string,Service>()
+      for(var attr in data.services){
+        let value = data.services[attr];
+        //console.log("Meta:constructor:services:",attr,value)
+        let service = new Service(value);
+        servicesMap.set(attr,service)
+      }
+      this.services = servicesMap
+    }
+    public public_folder: string = "";
+    public services: Map<string, Service> = new Map<string, Service>();
+  }
 
   export class Service {
+    constructor(data?: any){
+      //console.log("Service:constructor:", data)
+      this.evaluator = data.evaluator
+      this.files = data.files
+      let argsMap = new Map<string,Arg>()
+      for(var attr in data.args){
+        let value = data.args[attr];
+        let arg = new Arg(value);
+        argsMap.set(attr,arg)
+      }
+      this.args = argsMap
+    }
     public evaluator: string[] = [];
     public args?:Map<String, Arg>;
     public files?: string[];
   }
 
   export class Arg {
+    constructor(data?: any){
+      this.regex = data.regex
+      this.default = data.default
+    }
     public regex?: RegExp;
     public default?: string;
   }
 
-  export class Meta {
-    public public_folder: string = "";
-    public services: Map<String, Service> = new Map<String, Service>();
-  }
 
 
     
@@ -156,6 +184,16 @@ export namespace Packets{
       public version:number = 2;
     }
     export class MetaList extends Message {
+      constructor(packet?: any){
+        super(packet)
+        let metaMap = new Map<string,Meta>()
+        for(var attr in packet.meta){
+          let value = packet.meta[attr];
+          let meta = new Meta(value);
+          metaMap.set(attr,meta)
+        }
+        this.meta = metaMap
+      }
       public meta:Map<string, Meta> = new Map<string, Meta>();
     }
     export class  Attachment extends Message{
