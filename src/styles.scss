@@ -33,6 +33,19 @@ p-terminal {
   }
 }
 
+p-splitter{
+  div.p-splitter-panel-nested{
+    height: 100%;
+    overflow: auto;
+  }
+}
+
+p-dropdown{
+  .p-dropdown{
+    width:100%;
+  }
+}
+
 ngx-monaco-editor{
   height:100% !important;
 

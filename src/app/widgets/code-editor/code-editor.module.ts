@@ -10,6 +10,7 @@ import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SplitterModule } from 'primeng/splitter';
 import { ConsoleModule } from '../console/console.module';
+import { TooltipModule } from 'primeng/tooltip';
 
 
 @NgModule({
@@ -26,7 +27,8 @@ import { ConsoleModule } from '../console/console.module';
     OverlayPanelModule,
     SplitterModule,
     SharedModule,
-    ConsoleModule
+    ConsoleModule,
+    TooltipModule
   ],
   exports: [
     CodeEditorWidgetComponent,
