@@ -31,7 +31,9 @@
     "primeicons": "^6",
     "primeng": "^14.0.2",
     "rxjs": "~7.5.0",
+    "tar-stream": "^3.0.0",
     "tslib": "^2.3.0",
+    "xterm": "^5.1.0",
     "xterm-addon-web-links": "^0.7.0",
     "zone.js": "~0.11.4"
   },
@@ -42,7 +44,6 @@
     "@tauri-apps/cli": "^1.2.1",
     "@types/jasmine": "~3.10.0",
     "@types/node": "^12.11.1",
-    "@tauri-apps/cli": "^1.2.1",
     "jasmine-core": "~4.0.0",
     "karma": "~6.3.0",
     "karma-chrome-launcher": "~3.1.0",

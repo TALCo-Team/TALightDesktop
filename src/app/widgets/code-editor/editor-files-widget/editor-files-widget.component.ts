@@ -2,16 +2,16 @@ import { Component, ElementRef, EventEmitter, Input, OnInit, Output, QueryList, 
 import { removeFileDecorator } from 'indexeddb-fs/dist/framework/parts';
 import { ConfirmationService } from 'primeng/api';
 import { OverlayPanel } from 'primeng/overlaypanel';
+import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver } from 'src/app/services/fs-service/fs.service';
+import { FsServiceTest } from 'src/app/services/fs-service/fs.service.test';
+import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 
-export interface TalFile {
-  name: string;
+export interface TalFile extends FsNodeFile {
   content: string;
 }
 
-export interface TalFolder {
-  name: string;
-  folders: TalFolder[];
-  files: TalFile[];
+export interface TalFolder extends FsNodeFolder {
+
 }
 
 @Component({
@@ -20,50 +20,16 @@ export interface TalFolder {
   styleUrls: ['./editor-files-widget.component.scss']
 })
 export class EditorFilesWidgetComponent implements OnInit {
-  @Input("root") root: TalFolder =
-    {
-      name: "src",
-      folders: [
-        {
-          name: "app",
-          folders: [
-            {
-              name: "widgets",
-              folders: [
-                {
-                  name: "code-editor-test-nome-lungo",
-                  folders: [],
-                  files: [
-                    {
-                      name: "editor-files-widget",
-                      content: "content"
-                    }
-                  ]
-                }
-              ],
-              files: []
-            }
-          ],
-          files: [
-            {
-              name: "app.component.ts",
-              content: "content"
-            },
-            {
-              name: "app.module.ts",
-              content: "content"
-            },
-          ]
-        }
-      ],
-      files: [
-        {
-          name: "main.ts",
-          content: "content"
-        }
-      ]
-    };
+  public driver?: FsServiceDriver;
+  public rootDir = "/"
+  //public driverName = 'example'
+  public driverName = 'pyodide'
+  public emptyNode = {name:"", path: this.rootDir, files:[], folders:[]}
+  public showHidden = false
 
+  @Input("root") root: TalFolder = this.emptyNode;
+
+  
   public editingValue: string = "";
   public editingItem: TalFile | TalFolder | null = null;
   public editingItemFolder: TalFolder | null = null;
@@ -81,13 +47,47 @@ export class EditorFilesWidgetComponent implements OnInit {
 
   @ViewChildren(OverlayPanel) public panels?: QueryList<OverlayPanel>;
 
-  @Output("change") public change: EventEmitter<TalFolder> = new EventEmitter<TalFolder>();
-  @Output("open") public open: EventEmitter<TalFile> = new EventEmitter<TalFile>();
+  @Output("change") public change = new EventEmitter<TalFolder>();
+  @Output("open") public open = new EventEmitter<TalFile>();
+  @Output("showHiddenChanged") public showHiddenChanged = new EventEmitter<boolean>(); 
 
-  constructor(private confirmationService: ConfirmationService) { }
+  constructor(
+    private confirmationService: ConfirmationService, 
+    private fs:FsService,
+    private python: PythonCompilerService,
+    ) {
+    //this.driver = fs.getDriver('pyodide');
+    this.driver = fs.getDriver(this.driverName);
+    //alert(this.driver)
+    //this.driver?.writeFile(this.editingItem.path,this.editingItem)
+   }
 
   ngOnInit() {
     this.bindCollapseEvent();
+    
+    let test = new FsServiceTest(this.fs, this.driverName)
+    //this.rootDir = this.driver?.rootDir ?? this.rootDir;
+    this.driver?.ready().then((ready)=>{
+      //alert('ready!');
+      
+      this.python.createPythonProject().then(()=>{
+        this.refreshRoot();
+        //alert('ready!');
+      })
+      
+    })
+
+    
+
+  }
+
+  refreshRoot(){
+    this.driver?.scanDirectory(this.rootDir).then((folder)=>{
+      this.root = folder ?? this.emptyNode;
+      this.bindCollapseEvent();
+      this.change?.emit(this.root);
+    });
+    
   }
 
   private bindCollapseEvent() {
@@ -95,26 +95,28 @@ export class EditorFilesWidgetComponent implements OnInit {
       const rows = document.getElementsByClassName("collapse-toggle");
       for (let i = 0; i < rows.length; i++) {
         if (!rows[i].classList.contains("bound")) {
-          rows[i].addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const row = e.target as HTMLElement;
-            let newParent: HTMLElement = row;
-            let safeCount = 0;
-            do {
-              newParent = newParent.parentElement as HTMLElement;
-              safeCount++;
-            } while (!newParent.classList.contains("tal-folder-subtree") && safeCount < 10);
-
-            if (safeCount < 10) {
-              newParent.classList.toggle("collapsed");
-            }
-          });
-
-          rows[i].classList.add("bound");
+          let row = rows[i];
+          row.addEventListener("click", (event) => { this.handleClickEvent(event) });
+          row.classList.add("bound");
         }
       }
     }, 0);
+  }
+
+  public handleClickEvent(event:Event){
+    event.preventDefault();
+    event.stopPropagation();
+    const row = event.target as HTMLElement;
+    let newParent: HTMLElement = row;
+    let safeCount = 0;
+    do {
+      newParent = newParent.parentElement as HTMLElement;
+      safeCount++;
+    } while (!newParent.classList.contains("tal-folder-subtree") && safeCount < 10);
+
+    if (safeCount < 10) {
+      newParent.classList.toggle("collapsed");
+    }
   }
 
   public closeAllContextMenus(event: Event) {
@@ -125,8 +127,22 @@ export class EditorFilesWidgetComponent implements OnInit {
   }
 
   public openFile(file: TalFile) {
-    this.openedFile = file;
-    this.open?.emit(file);
+    this.driver?.readFile(file.path).then((content)=>{
+      file.content = content ?? "";
+      this.openedFile = file;
+      this.open?.emit(file);
+    })
+    
+  }
+
+  public toggleHidden(){
+    this.showHidden = !this.showHidden;
+    
+  }
+
+  public isVisibile(fsitem: TalFile|TalFolder){
+    let isHidden = fsitem.name.startsWith('.');
+    return this.showHidden || ( !this.showHidden && !isHidden ) 
   }
 
   /** EDITING METHODS  **/
@@ -149,7 +165,6 @@ export class EditorFilesWidgetComponent implements OnInit {
         this.editingValue = this.editingValue.trim();
         if (this.editingValue.length > 0) {
           this.editingItem.name = this.editingValue;
-
           this.change?.emit(this.root);
         }
       }
@@ -195,6 +210,10 @@ export class EditorFilesWidgetComponent implements OnInit {
   }
 
   private deleteFile(currentFolder: TalFolder, file: TalFile) {
+    this.driver?.delete(file.path).then(()=>{
+      this.refreshRoot();
+    })
+    /*
     if (currentFolder.files.indexOf(file) >= 0) {
       currentFolder.files.splice(currentFolder.files.indexOf(file), 1);
       this.change?.emit(this.root);
@@ -204,6 +223,7 @@ export class EditorFilesWidgetComponent implements OnInit {
         this.deleteFile(folder, file);
       }
     }
+    */
   }
 
   public deleteFolderClick(event: Event, folder: TalFolder) {
@@ -224,6 +244,10 @@ export class EditorFilesWidgetComponent implements OnInit {
   }
 
   private deleteFolder(currentFolder: TalFolder, folder: TalFolder) {
+    this.driver?.delete(folder.path).then(()=>{
+      this.refreshRoot();
+    })
+    /*
     if (currentFolder.folders.indexOf(folder) >= 0) {
       currentFolder.folders.splice(currentFolder.folders.indexOf(folder), 1);
       this.change?.emit(this.root);
@@ -233,10 +257,22 @@ export class EditorFilesWidgetComponent implements OnInit {
         this.deleteFolder(subFolder, folder);
       }
     }
+    */
   }
   /***************/
 
   /** CREATE METHODS **/
+  public syncFilesystem(folder: TalFolder) {
+    setTimeout(() => { 
+      //this.refreshRoot();
+      this.python.createPythonProject().then(()=>{
+        this.refreshRoot();
+        //alert('ready!');
+      });
+    }, 0);
+  }
+
+
   public addNewItem(folder: TalFolder, type: "file" | "folder") {
     this.newItemValue = "";
     this.newItemFolder = folder;
@@ -261,21 +297,32 @@ export class EditorFilesWidgetComponent implements OnInit {
       if (this.newItemValue.length > 0) {
         if (this.newItemFolder) {
           if (this.newItemType === "file") {
+            let path = this.newItemFolder.path + "/" + this.newItemValue
+            this.driver?.writeFile(path, "").then(()=>{
+              this.refreshRoot()
+            })
+            /*
             this.newItemFolder.files.push({
               name: this.newItemValue,
               content: ""
-            });
+            } as TalFile );
+            */
           } else {
+            this.driver?.createDirectory("./"+this.newItemValue).then(()=>{
+              this.refreshRoot()
+            })
+            
             this.newItemFolder.folders.push({
               name: this.newItemValue,
+              path: "./"+this.newItemValue,
               files: [],
               folders: []
             });
 
-            this.bindCollapseEvent();
+            //this.bindCollapseEvent();
           }
-
-          this.change?.emit(this.root);
+          //this.refreshRoot()
+          //this.change?.emit(this.root);
         }
       }
     }

@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { MonacoEditorWidgetComponent } from './monaco-editor-widget.component';
+import { EditorWidgetComponent } from './editor-widget.component';
 
-describe('EditorViewComponent', () => {
-  let component: MonacoEditorWidgetComponent;
-  let fixture: ComponentFixture<MonacoEditorWidgetComponent>;
+describe('EditorWidgetComponent', () => {
+  let component: EditorWidgetComponent;
+  let fixture: ComponentFixture<EditorWidgetComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ MonacoEditorWidgetComponent ]
+      declarations: [ EditorWidgetComponent ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(MonacoEditorWidgetComponent);
+    fixture = TestBed.createComponent(EditorWidgetComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

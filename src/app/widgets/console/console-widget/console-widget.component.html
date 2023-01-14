@@ -1,1 +1,41 @@
-<p-terminal welcomeMessage="Welcome to TALight Desktop" prompt="talight$&nbsp;"></p-terminal>
+
+<div class="console-widget-main">
+    <div class="console-widget-bar">
+        <p-dropdown class="console-widget-problem-selector" [style]="{'width':'100%', 'height':'30px' }" [options]="problems" [(ngModel)]="selectedName" (onChange)="didSelectProblem()" optionLabel="label" optionValue="value"></p-dropdown>
+        <button pButton icon="pi pi-paperclip" (click)="apiDownloadAttachment()"  title="Download Attachments"></button>
+    </div>
+
+    
+    <p-splitter class="console-widget-splitter" [style]="{'width': '100%'}" layout="vertical" [panelSizes]="[1,1]" [minSizes]="[0,0]">
+      
+
+        <ng-template pTemplate>
+            <div class="console-widget-terminal">
+                
+                <!-- <div id="xterm-container"></div> -->
+                <div class="console-widget-label">Terminal</div>
+                <div class="console-widget-terminal-scroll">
+                    <p-terminal class="console-widget-terminal-shell"  #terminal welcomeMessage="Welcome to TALight Desktop" prompt="talight$&nbsp;"></p-terminal>        
+                </div>
+            </div>
+        </ng-template>
+    
+
+        <ng-template pTemplate>
+            <div class="console-widget-output">
+                <!-- <div id="xterm-container"></div> -->
+                <div class="console-widget-label">Output</div>
+                <div class="console-widget-output-scroll">
+                    <pre class="console-widget-output-text" #output>{{outputText}}</pre>      
+                </div>
+                <div class="console-widget-output-stdin">
+                    <button pButton icon="pi pi-trash" (click)="clearOutput()" title="Clear output"></button>
+                    <input #sdtinInput class="console-widget-output-stdin-input" (keydown)="sendOnEnter($event)" />        
+                    <button pButton icon="pi pi-send" (click)="sendStdin()" title="Send"></button>
+                </div>
+            </div>
+        </ng-template>
+    
+    </p-splitter>
+    
+</div>
