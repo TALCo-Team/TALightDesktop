@@ -6,13 +6,8 @@ import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver } from 'src/app/se
 import { FsServiceTest } from 'src/app/services/fs-service/fs.service.test';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 
-export interface TalFile extends FsNodeFile {
-  content: string;
-}
-
-export interface TalFolder extends FsNodeFolder {
-
-}
+export interface TalFile extends FsNodeFile {}
+export interface TalFolder extends FsNodeFolder {}
 
 @Component({
   selector: 'tal-editor-files-widget',
@@ -127,7 +122,7 @@ export class EditorFilesWidgetComponent implements OnInit {
   }
 
   public openFile(file: TalFile) {
-    this.driver?.readFile(file.path).then((content)=>{
+    this.driver?.readFile(file.path, false).then((content)=>{
       file.content = content ?? "";
       this.openedFile = file;
       this.open?.emit(file);

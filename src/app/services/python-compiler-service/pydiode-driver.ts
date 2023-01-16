@@ -218,9 +218,9 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     resolvePromise( node )
   }
 
-  didReceiveReadFile(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<string> ){
-    console.log("didReceiveReadFile: ")
-    resolvePromise( this.toString(msgRecived.contents[0]))
+  didReceiveReadFile(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<string|ArrayBuffer> ){
+    console.log("didReceiveReadFile:\n", msgRecived.contents[0])
+    resolvePromise( msgRecived.contents[0] )
   }
   
   didReceiveWriteFile(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<number> ){
@@ -228,7 +228,7 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     console.log(msgRecived.args)
     console.log(msgRecived.contents)
     //TODO:
-    resolvePromise(1)
+    resolvePromise(msgRecived.contents.length)
   }
   
 
@@ -383,15 +383,15 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     return resultPromise;
   }
 
-  async readFile(fullpath: string): Promise<string> {
+  async readFile(fullpath: string, binary: boolean): Promise<string|ArrayBuffer> {
     let message: PyodideMessage = {
       uid: this.requestUID(),
       type: PyodideMessageType.ReadFile,
       args: [fullpath],
       contents: [],
     }
-    
-    let resultPromise = this.sendMessage<string>(message);
+    if(binary){message.args.push('binary');}
+    let resultPromise = this.sendMessage<string|ArrayBuffer>(message);
     return resultPromise;
   }
 

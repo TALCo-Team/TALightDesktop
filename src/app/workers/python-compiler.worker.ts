@@ -516,10 +516,25 @@ class PyodideWorker{
     if ( request.message.args.length < 1){ 
       return this.responseError(response,"readFile: Requires at least 1 path as argument");
     }
+     
     let fullpath = request.message.args[0];
+
+    let opts:{} = { encoding: 'utf8' }
+    if (request.message.args.length == 2 && request.message.args[1] == 'binary' ){
+      opts = {} 
+    }
+
     console.log("readFile: ", fullpath)
-    let content = this.fs.readFile(this.mount + fullpath, { encoding: "utf8" });
-    response.message.contents.push(content);
+    let content = this.fs.readFile(this.mount + fullpath, opts);
+    console.log('readFile:content:\n', content)
+    if(content instanceof Uint8Array){
+      console.log('readFile:content: BUFFER')
+      response.message.contents = [content.buffer];
+    }
+    else{
+      console.log('readFile:content: STRING')
+      response.message.contents = [content];
+    }
     return response;
   }
 
