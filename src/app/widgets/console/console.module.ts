@@ -6,6 +6,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { SplitterModule } from 'primeng/splitter';
 import { FormsModule } from '@angular/forms';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TooltipModule } from 'primeng/tooltip';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
     SplitterModule,
     FormsModule,
     //OverlayPanelModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    TooltipModule
   ],
   exports: [
     ConsoleWidgetComponent

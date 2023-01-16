@@ -12,22 +12,28 @@
     display: flex;
     flex-direction: column;
     height:100%;
-}
 
-.console-widget-bar{
-    padding: 5px;
-    display: flex;
-    flex-direction: row;
-    //background-color: red;
-}
+    .console-widget-bar {
+      padding: 5px;
+      display: flex;
+      flex-direction: row;
+      //background-color: red;
 
-.console-widget-problem-selector{
-    width:100%;
-    height: 20px;
-}
+      p-dropdown.console-widget-problem-selector {
+        width: 100%;
+      }
 
+      button{
+        margin-left:0.5rem;
+      }
+    }
+
+    p-splitter.console-widget-splitter{
+        height:100%;
+        overflow: auto;
+    }
+}
 .console-widget-output-stdin-input{
-    height: 30px;
     flex-grow: 2;
 }
 
@@ -45,27 +51,30 @@
 }
 
 .console-widget-label{
-    background-color: #333;
+    padding:0.5rem;
+    font-weight:600;
 }
 
 .console-widget-terminal-scroll, .console-widget-output-scroll{
-    background-color: blue;
-    overflow-y: scroll;
+    overflow-y: auto;
     flex-wrap: wrap;
     flex-grow: 2;
     display: flex;
     margin-bottom: auto;
+    padding:0.5rem;
 }
 
-.console-widget-terminal-shell, .console-widget-output-text{
-    background-color: magenta !important;
+p-terminal.console-widget-terminal-shell, pre.console-widget-output-text{
     display: flex;
     width: 100%;
     height: 100%;
-    
     flex-direction: column;
 }
 
+pre.console-widget-output-text{
+    border:solid 1px rgba(255, 255, 255, 0.12);
+    padding:1rem;
+}
 
 
 .console-widget-output-stdin{
@@ -73,16 +82,14 @@
     padding:5px;
     display: flex;
     flex-direction: row;
+
+    input{
+        margin:0 0.5rem;
+        padding:0 0.5rem;
+    }
 }
 
 
 button{
-    height: 30px;
-    width: 30px;
-    margin: 5px;
     border-radius: 5px;
-}
-
-p-dropdownitem{
-    height: 30px !important;
 }

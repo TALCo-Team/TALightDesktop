@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs';
 import { ApiService, Meta, ProblemDescriptor } from 'src/app/services/api-service/api.service';
 //import { Terminal } from 'xterm';
 
-export class ProblemMenuEntry{
+export class ProblemMenuEntry {
   label = ""
   value = ""
   problem?: ProblemDescriptor
@@ -28,12 +28,12 @@ export class ConsoleWidgetComponent {
   @ViewChild("terminal") public terminal!: Terminal;
   @ViewChild("output") public output!: ElementRef;
   @ViewChild("sdtinInput") public sdtinInput!: ElementRef;
-  
-  
 
-  public outputText = ""
 
-  
+
+  public outputText: string = "";
+
+
 
   commandSub: Subscription
   problemList = new Map<string, Meta>()
@@ -41,12 +41,12 @@ export class ConsoleWidgetComponent {
   selectedName = "";
   selectedProblem?: ProblemDescriptor;
 
-  
+
   constructor(private terminalService: TerminalService, private zone: NgZone, private api: ApiService) {
-    this.commandSub = this.terminalService.commandHandler.subscribe(command => {this.execCommand(command)});
-    
+    this.commandSub = this.terminalService.commandHandler.subscribe(command => { this.execCommand(command) });
+
   }
-  ngOnInit(){
+  ngOnInit() {
     this.apiProblemList();
   }
   ngOnDestroy() {
@@ -54,152 +54,161 @@ export class ConsoleWidgetComponent {
   }
 
 
-  clearOutput(){
+  clearOutput() {
     this.zone.run(() => this.outputText = "")
   }
 
-  print(content:string, end="\n"){
-    this.zone.run(() => this.outputText += content+end)
-  }
-    
-  async onApiError(message: string){
-    console.log("API Error: ",message)
+  print(content: string, end = "\n") {
+    this.zone.run(() => this.outputText += content + end);
+
+    // Scroll #console-bottom-scroll to bottom
+    setTimeout(() => {
+      const scrollEl = document.getElementById("console-bottom-scroll");
+      if (scrollEl) {
+        scrollEl.scrollTop = scrollEl.scrollHeight;
+        console.log(scrollEl.scrollTop, scrollEl.scrollHeight)
+      }
+    });
   }
 
-  async updateProblemsUI(){
-    
+  async onApiError(message: string) {
+    console.log("API Error: ", message)
+  }
+
+  async updateProblemsUI() {
+
     let problemList = Array.from(this.problemList.entries())
 
     let menu = new Array<ProblemMenuEntry>();
-    for( var idx in problemList ){
+    for (var idx in problemList) {
       let name = problemList[idx][0];
       let metadata = problemList[idx][1];
       //console.log("updateProblemsUI:metadata:",name,metadata)
-      if (!metadata){continue}
+      if (!metadata) { continue }
       let menuEntry = new ProblemMenuEntry()
       menuEntry.value = name
-      menuEntry.label = name.replace(/[_-]+/g," ")
+      menuEntry.label = name.replace(/[_-]+/g, " ")
       menuEntry.problem = new ProblemDescriptor(name, metadata)
       menu.push(menuEntry)
       //console.log('updateProblemsUI:problem:',menu)
     }
     console.log('updateProblemsUI:problems:', menu)
-    menu = menu.sort((a,b)=>{ 
+    menu = menu.sort((a, b) => {
       if (a.value == b.value) return 0
       if (a.value > b.value) return 1
       if (a.value < b.value) return -1
-      return 0 
+      return 0
     })
-    this.zone.run(()=>{ this.problems = menu })
+    this.zone.run(() => { this.problems = menu })
   }
 
   async apiProblemList() {
-    let req = this.api.problemList( async (problemList)=> {
+    let req = this.api.problemList(async (problemList) => {
       console.log('apiProblemList:problemList:', problemList)
       this.problemList = problemList
       this.onProblemListUpdate.emit(problemList)
       await this.updateProblemsUI()
-    } );
-    req.onError = (error) =>{ this.onApiError(error) };
+    });
+    req.onError = (error) => { this.onApiError(error) };
   }
 
   async didSelectProblem() {
-    let name= this.selectedName;
+    let name = this.selectedName;
     console.log('didSelectProblem', name)
     let meta = this.problemList.get(name)
-    if(!meta){return}
+    if (!meta) { return }
     this.selectedProblem = new ProblemDescriptor(name, meta)
     this.onProblemSelected.emit(this.selectedProblem)
   }
-  
+
   async apiDownloadAttachment() {
     console.log('apiDownloadAttachment', this.selectedProblem?.name)
 
-    if(!this.selectedProblem){return}
+    if (!this.selectedProblem) { return }
     let problem_name = this.selectedProblem.name;
-    
-    let onAttachment = ()=>{console.log("Attachment packet received")};
-    let onAttachmentInfo = (info: any) => {console.log('apiDownloadAttachment:info:',info)};
-    
-    let onData = (data: ArrayBuffer)=>{
-      console.log("apiDownloadAttachment:onData:",data);
+
+    let onAttachment = () => { console.log("Attachment packet received") };
+    let onAttachmentInfo = (info: any) => { console.log('apiDownloadAttachment:info:', info) };
+
+    let onData = (data: ArrayBuffer) => {
+      console.log("apiDownloadAttachment:onData:", data);
       this.onAttachments.emit(data);
     };
 
     let req = this.api.GetAttachment(problem_name, onAttachment, onAttachmentInfo, onData);
-    req.onError = (error) =>{ this.onApiError(error) };
+    req.onError = (error) => { this.onApiError(error) };
 
   }
 
-  
-  public testOutput(){
+
+  public testOutput() {
     this.print("python main.py\n")
     this.apiProblemList()
   }
-  
 
-  public sendStdin(){
+
+  public sendStdin() {
     let msg = this.sdtinInput.nativeElement.value ?? ""
     msg = msg.trim()
-    console.log("sendStdin:",this.sdtinInput)
-    if(msg == ""){return}
-    
-    this.sdtinInput.nativeElement.value=""
+    console.log("sendStdin:", this.sdtinInput)
+    if (msg == "") { return }
+
+    this.sdtinInput.nativeElement.value = ""
     this.onStdin.emit(msg);
   }
-  
-  public sendOnEnter(event:KeyboardEvent){
-    if ( event.key == 'Enter' ) { this.sendStdin(); }
+
+  public sendOnEnter(event: KeyboardEvent) {
+    if (event.key == 'Enter') { this.sendStdin(); }
   }
 
 
-  injectCommand(command:string){
-    
-    let event = new KeyboardEvent('keydown', {'key': 'Enter'})
+  injectCommand(command: string) {
+
+    let event = new KeyboardEvent('keydown', { 'key': 'Enter' })
     // https://stackoverflow.com/a/44190874/320926
     // https://stackoverflow.com/a/30003941/320926
     // console.log(this.terminal.el)
-    
+
     var enterKey = new KeyboardEvent('keydown', {
       code: 'Enter',
       key: 'Enter',
       charCode: 13,
       keyCode: 13
     });
-    
-    this.zone.run(()=>{
+
+    this.zone.run(() => {
       let term = this.terminal.el.nativeElement.children[0];
       this.terminal.focus(term);
       this.terminalService.sendCommand(command)
       this.terminal.command = command
-      
-      
+
+
       this.terminal.handleCommand(enterKey);
-      
+
       //this.terminal.el.nativeElement.dispatchEvent(enterKey);
     })
 
 
   }
 
-  execCommand(command:string){
-    let params = command.split(" ") 
-    let operation = params.splice(0,1)[0]
-    console.log('tokens: ',params)
-    console.log('command: ',command)
+  execCommand(command: string) {
+    let params = command.split(" ")
+    let operation = params.splice(0, 1)[0]
+    console.log('tokens: ', params)
+    console.log('command: ', command)
     let response = 'Unknown command: ' + command;
-    switch(operation){
+    switch (operation) {
       case "echo": response = params.join(" "); break;
       case "date": response = new Date().toDateString(); break;
     }
-    
+
     this.terminalService.sendResponse(response);
   }
 
 
 
-  
-  
+
+
   /*
   public term: Terminal;
   container?: HTMLElement | null;
@@ -246,7 +255,7 @@ export class ConsoleWidgetComponent {
   }
 
   */
-  
+
 
 }
 
