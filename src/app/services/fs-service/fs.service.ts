@@ -36,7 +36,7 @@ export class FsService {
 
 
 export class Tar{
-  public static tarstream = require('tar-stream')
+  public static tarstream = require('tar-web')
   public static b4a = require('b4a')
 
   public static binEncoder = new TextEncoder(); // always utf-8

@@ -6202,10 +6202,10 @@ tapable@^2.1.1, tapable@^2.2.0:
   resolved "https://registry.yarnpkg.com/tapable/-/tapable-2.2.1.tgz#1967a73ef4060a82f12ab96af86d52fdb76eeca0"
   integrity sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ==
 
-tar-stream@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/tar-stream/-/tar-stream-3.0.0.tgz#43de9f0e8d1bccc0036dbe2731260ca7668406b6"
-  integrity sha512-O6OfUKBbQOqAhh6owTWmA730J/yZCYcpmZ1DBj2YX51ZQrt7d7NgzrR+CnO9wP6nt/viWZW2XeXLavX3/ZEbEg==
+tar-web@^3.0.0-alpha-2:
+  version "3.0.0-alpha-2"
+  resolved "https://registry.yarnpkg.com/tar-web/-/tar-web-3.0.0-alpha-2.tgz#21f628dc4a68af240239b16ad21a565acd799131"
+  integrity sha512-YTRpBDmHZHjSgYS7C88fiayLklcSy2Ww6BDRQIAoelx7Zu+EfFgzmsV3sytbqhtD3byetzr7b98Zutu5zPt2Yg==
   dependencies:
     b4a "^1.6.1"
     bl "^6.0.0"
