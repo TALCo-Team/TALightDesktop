@@ -11,13 +11,15 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SplitterModule } from 'primeng/splitter';
 import { ConsoleModule } from '../console/console.module';
 import { TooltipModule } from 'primeng/tooltip';
+import { FileViewerWidgetComponent } from './file-viewer-widget/file-viewer-widget.component';
 
 
 @NgModule({
   declarations: [
     CodeEditorWidgetComponent,
     EditorFilesWidgetComponent,
-    EditorWidgetComponent
+    EditorWidgetComponent,
+    FileViewerWidgetComponent
   ],
   imports: [
     CommonModule,
@@ -27,7 +29,7 @@ import { TooltipModule } from 'primeng/tooltip';
     OverlayPanelModule,
     SplitterModule,
     SharedModule,
-    ConsoleModule,
+    ConsoleModule,                                      
     TooltipModule
   ],
   exports: [

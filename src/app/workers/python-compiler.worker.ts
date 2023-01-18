@@ -128,7 +128,7 @@ class PyodideWorker{
 
     this.initPydiode().then(()=>{
       this.load(this.root, this.mount);
-      this.fs.syncfs(()=>{
+      this.fs.syncfs(true,()=>{
         this.isReady = true;
         this.readyResolver(this.isReady);
       });
@@ -225,11 +225,10 @@ class PyodideWorker{
 
   async onStdin(){
     let cnt = this.stdinBuffer.length
-    let msg;
+    let msg = "";
     if(cnt > 0){
       let items = this.stdinBuffer.splice(0,cnt)
-      msg = items.concat("")
-      
+      msg = items.join("")
     }
     return msg
     /*

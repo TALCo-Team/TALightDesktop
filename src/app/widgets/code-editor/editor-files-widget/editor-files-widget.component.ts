@@ -2,9 +2,10 @@ import { Component, ElementRef, EventEmitter, Input, OnInit, Output, QueryList, 
 import { removeFileDecorator } from 'indexeddb-fs/dist/framework/parts';
 import { ConfirmationService } from 'primeng/api';
 import { OverlayPanel } from 'primeng/overlaypanel';
-import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver } from 'src/app/services/fs-service/fs.service';
+import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver, Tar } from 'src/app/services/fs-service/fs.service';
 import { FsServiceTest } from 'src/app/services/fs-service/fs.service.test';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
+import { FsNode } from 'src/app/workers/python-compiler.worker';
 
 export interface TalFile extends FsNodeFile {}
 export interface TalFolder extends FsNodeFolder {}
@@ -17,7 +18,6 @@ export interface TalFolder extends FsNodeFolder {}
 export class EditorFilesWidgetComponent implements OnInit {
   public driver?: FsServiceDriver;
   public rootDir = "/"
-  //public driverName = 'example'
   public driverName = 'pyodide'
   public emptyNode = {name:"", path: this.rootDir, files:[], folders:[]}
   public showHidden = false
@@ -340,6 +340,35 @@ export class EditorFilesWidgetComponent implements OnInit {
   /***************/
 
   public export() {
-    // TODO: export
+    let files = new Array<FsNodeFile|FsNodeFolder>();
+    let file:FsNodeFile ={
+      content: 'print("hello world")',
+      name: 'main.py',
+      path: 'main.py'
+    }
+    Tar.pack([file], (tarball:ArrayBuffer)=>{
+      console.log('tarball:',tarball)
+      this.triggerDownload("attachments.tar",tarball,"application/x-tar")
+    })
   }
+
+  public triggerDownload(filename:string, content:ArrayBuffer|string, mime="octet/stream"){
+    let a = document.createElement("a");
+    
+    const blob = new Blob([content], {type: mime});
+    let url = window.URL.createObjectURL(blob);
+    
+    a.style.display = "none";
+    a.download = filename;
+    a.href = url;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
+
+
+
+
+
 }

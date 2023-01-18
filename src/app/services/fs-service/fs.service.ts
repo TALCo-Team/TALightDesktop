@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { Writable } from 'stream';
 import { IndexeddbFsDriver } from './fs.service.test';
 
 @Injectable({
@@ -36,23 +35,14 @@ export class FsService {
 
 
 export class Tar{
-  public static tarstream = require('tar-stream')
+  public static tarstream = require('tar-web')
   public static b4a = require('b4a')
 
   public static binEncoder = new TextEncoder(); // always utf-8
   public static binDecoder = new TextDecoder("utf-8");
 
-  static streamReader(ab: ArrayBuffer) {
-    return new ReadableStream({
-      start(controller) {
-        controller.enqueue(ab)
-        controller.close()
-      }
-    })
-  }
-  
   static unpack(tarball: ArrayBuffer, cb: (files:FsNodeFile[],folders:FsNodeFolder[])=>void ){
-    var extract:Writable = this.tarstream.extract()
+    var extract = this.tarstream.extract()
 
     var files = new Array<FsNodeFile>();
     var folders = new Array<FsNodeFolder>();
@@ -96,6 +86,10 @@ export class Tar{
 
     extract.on('finish', function() {
       console.log('Tar:unpack:finish')
+      console.log('Tar:unpack:files',files)
+      console.log('Tar:unpack:folders',folders)
+      files.sort((a,b)=>a.path.length - b.path.length)
+      folders.sort((a,b)=>a.path.length - b.path.length)
       // all entries read
       if(cb){cb(files,folders)}
     })
@@ -104,60 +98,54 @@ export class Tar{
     console.log('Tar:unpack:extract',extract)
 
     let tarData = new Uint8Array(tarball)
-    extract.write(tarData, (errr)=>{console.log("Tar:unpack:extract:write:",errr)})
+    extract.write(tarData, (errr:any)=>{console.log("Tar:unpack:extract:write:",errr)})
     extract.end()
     
-    console.log('Tar:unpack:files',files)
-    console.log('Tar:unpack:folders',folders)
-    files.sort((a,b)=>a.path.length - b.path.length)
-    folders.sort((a,b)=>a.path.length - b.path.length)
-  }
-
-
-
-
-
-
-
-
-
-  static streamWriter(ab: ArrayBuffer) {
-    let tarthis = this;
-    let result = "";
-    const writableStream = new WritableStream({
-      // Implement the sink
-      write(chunk) {
-        return new Promise((resolve, reject) => {
-          const buffer = new ArrayBuffer(1);
-          const view = new Uint8Array(buffer);
-          view[0] = chunk;
-          const decoded = tarthis.binDecoder.decode(view, { stream: true });
-          result += decoded;
-          resolve();
-        });
-      },
-      close() {
-        const listItem = document.createElement('li');
-        listItem.textContent = `[MESSAGE RECEIVED] ${result}`;
-      },
-      abort(err) {
-        console.log("Sink error:", err);
-      }
-    });
-    return writableStream;
     
   }
 
-  static pack(files: FsNodeFile[]){
+  static pack(files: Array<FsNodeFile|FsNodeFolder>, cb:(tarbell:ArrayBuffer)=>void){
     let pack = this.tarstream.pack() // pack is a stream
-    
-    files.forEach( (file, idx)=>{
-      // add a file called YourFile.txt with the content "Hello World!"
-      pack.entry({name: file.name}, file.content, function (error:any) {
-        if (error) { throw error }
-        pack.finalize()
-      })
+    console.log(pack);
+
+    var length = 0
+    var chunks = new Array<any>();
+    pack.on('data', (chunk:ArrayBuffer)=>{
+      console.log('data:chunk:prototype:',chunk.constructor.name)
+      console.log('data:chunk:',chunk)
+      length += chunk.byteLength
+      chunks.push(chunk)
     })
+
+    pack.on('end', ()=>{
+      // Create a new array with total length and merge all source arrays.
+      console.log(chunks)
+      let data = new Uint8Array(length);
+      let offset = 0;
+      chunks.forEach(item => {
+        data.set(item, offset);
+        offset += item.length;
+      });
+      console.log(data)
+      if(cb){cb(data)}
+    })
+
+    files.forEach( (item, idx)=>{
+      // add a file called YourFile.txt with the content "Hello World!"
+      if( (item as FsNodeFile).content ){
+        let file = item as FsNodeFile
+        pack.entry({name: file.path, type:"file"}, file.content, (error:any) => {
+          if (error) { throw error }
+        })
+      } else {
+        pack.entry({name: item.path, type:"directory"}, null, (error:any) => {
+          if (error) { throw error }
+        })
+      }
+    })
+
+    pack.finalize()
+    
     //let tarball = new ArrayBuffer();
     //var stream = streamWriter()
 
