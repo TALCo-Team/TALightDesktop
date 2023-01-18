@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve --open",
     "build": "ng build",
+    "build:github": "ng build --base-href https://TALCo-Team.github.io/TALightDesktop/",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
