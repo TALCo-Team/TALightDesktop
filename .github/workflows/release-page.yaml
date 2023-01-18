@@ -18,13 +18,13 @@ jobs:
         node-version: '16'
 
     - name: Install dependencies
-      run: npm install
+      run: yarn install
 
     # - name: Run tests
     #   run: npm run test:headless
 
     - name: Build
-      run: npm run build:prod
+      run: yarn run build:prod
 
     - name: Deploy
       if: success()
