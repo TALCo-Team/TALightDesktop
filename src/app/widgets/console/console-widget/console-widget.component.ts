@@ -102,6 +102,10 @@ export class ConsoleWidgetComponent {
     this.zone.run(() => { this.problems = menu })
   }
 
+  async reloadProblemList(){
+    this.apiProblemList()
+  }
+  
   async apiProblemList() {
     let req = this.api.problemList(async (problemList) => {
       console.log('apiProblemList:problemList:', problemList)

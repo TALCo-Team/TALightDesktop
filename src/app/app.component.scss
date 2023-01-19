@@ -20,4 +20,22 @@ div.tal-page-container{
         overflow: auto;
         flex:1;
     }   
+
+    .tal-buttons{
+        height: 40px;
+        display: flex;
+        align-items: center;
+        
+        .p-button{
+            width:40px;
+            height:40px;
+        }
+
+    }
+
+    
+    .top-bar-url-input{
+        height: 40px;
+        margin: 5px;
+    }
 }   

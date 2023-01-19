@@ -1,7 +1,4 @@
-//@import 'xterm/css/xterm.css';
-@import "primeng/resources/primeng.min.css";
-@import "primeflex/primeflex.css";
-@import "primeicons/primeicons.css";
+
 
 :host{
     width:100%;
@@ -14,18 +11,20 @@
     height:100%;
 
     .console-widget-bar {
-      padding: 5px;
-      display: flex;
-      flex-direction: row;
-      //background-color: red;
+        padding: 5px;
+        display: flex;
+        flex-direction: row;
+        height: 63px;
+        
+        //background-color: red;
+        .p-inputwrapper{
+            margin-left:  0.5rem;
+            margin-right: 0.5rem;
+        }
 
-      p-dropdown.console-widget-problem-selector {
-        width: 100%;
-      }
-
-      button{
-        margin-left:0.5rem;
-      }
+        .p-button{
+            width: 63px;
+        }
     }
 
     p-splitter.console-widget-splitter{
@@ -33,14 +32,35 @@
         overflow: auto;
     }
 }
+
+.console-widget-problem-selector {
+    //background-color: blue;
+    width: 100%;
+    flex-grow: 2;
+    height: 60px;
+    padding: 0 !important;
+    
+}
+
+.console-widget-problem-selector-item{
+    //background-color: fuchsia;
+    padding: 0 ;
+    height: 60px;
+    
+    .p-dropdown-item{
+        height: 60px !important;
+    }
+}
+
+.console-widget-problem-selector-selected, .p-dropdown-label{
+    //background-color: green;
+}
+
+
 .console-widget-output-stdin-input{
     flex-grow: 2;
 }
 
-.console-widget-problem-selector span{
-    background-color: fuchsia;
-    height: 20px;
-}
 
 
 .console-widget-terminal, .console-widget-output{

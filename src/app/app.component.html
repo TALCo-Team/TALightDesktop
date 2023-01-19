@@ -3,9 +3,15 @@
     <div class="tal-brand">
       <h1>TALight Desktop</h1>
     </div>
+    
     <div class="tal-buttons">
+      <input #urlInput pInputText type="text" class="top-bar-url-input p-inputtext-sm"
+             placeholder="ws://localhost:8088/" [(ngModel)]="url"
+             (change)="changeURL($event)" (blur)="changeURL($event)">  
       <button pButton icon="pi {{changeThemIcon}}" (click)="toggleTheme()"></button>
     </div>
+    
+    
   </div>
   <div class="tal-page">
     <router-outlet></router-outlet>

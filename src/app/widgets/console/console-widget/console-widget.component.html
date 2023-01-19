@@ -1,15 +1,17 @@
 <div class="console-widget-main">
   <div class="console-widget-bar">
-    <p-dropdown class="console-widget-problem-selector" [options]="problems" [(ngModel)]="selectedName"
-      (onChange)="didSelectProblem()" optionLabel="label" optionValue="value" placeholder="Seleziona un problema">
-    </p-dropdown>
-    <button pButton class="p-button-help" icon="pi pi-download" (click)="apiDownloadAttachment()"
-      title="Download Attachments" pTooltip="Scarica allegati"></button>
+      <button pButton class="p-button-danger" icon="pi pi-refresh" (click)="reloadProblemList()"
+              title="Refresh" pTooltip="Refresh"></button>
+      <p-dropdown placeholder="Seleziona un problema" class="console-widget-problem-selector" 
+                  [options]="problems" optionLabel="label" optionValue="value" [(ngModel)]="selectedName"
+                  (onChange)="didSelectProblem()" [style]="{'height': '55px', 'padding': 0}"></p-dropdown>
+      <button pButton class="p-button-help" icon="pi pi-download" (click)="apiDownloadAttachment()"
+              title="Download Attachments" pTooltip="Scarica allegati"></button>
   </div>
 
 
-  <p-splitter class="console-widget-splitter" [style]="{'width': '100%'}" layout="vertical" [panelSizes]="[1,1]"
-    [minSizes]="[0,0]">
+  <p-splitter class="console-widget-splitter" [style]="{'width': '100%'}" 
+              layout="vertical" [panelSizes]="[1,1]" [minSizes]="[0,0]">
 
 
     <ng-template pTemplate>
