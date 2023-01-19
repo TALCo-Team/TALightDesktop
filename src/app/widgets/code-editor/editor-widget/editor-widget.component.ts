@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { ProblemDescriptor } from 'src/app/services/api-service/api.service';
-import { FsService } from 'src/app/services/fs-service/fs.service';
+import { FsService, Tar } from 'src/app/services/fs-service/fs.service';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 import { CodeEditorWidgetComponent } from 'src/app/widgets/code-editor/code-editor-widget/code-editor-widget.component';
 import { EditorFilesWidgetComponent, TalFile } from 'src/app/widgets/code-editor/editor-files-widget/editor-files-widget.component';
@@ -35,6 +35,7 @@ export class EditorWidgetComponent implements OnInit {
     this.python.driver?.subscribeStdout(true,(msg)=>{this.onStdout(msg)})
     this.python.driver?.subscribeStderr(true,(msg)=>{this.onStderr(msg)})
   }
+  
 
   public onStdout(data:string){
     //alert("STDOUT: "+data)
@@ -59,10 +60,50 @@ export class EditorWidgetComponent implements OnInit {
     console.log("onAttachments:",data)
     if(!this.selectedProblem){return;}
     let name = this.selectedProblem.name
+
+    /*
     let path = "/data/"+name+".tar"
-    await this.driver?.writeFile(path,data)
-    this.fileWidget.refreshRoot()
     
+    await this.driver?.writeFile(path,data)
+    this.fileWidget.refreshRoot()    
+    
+    await this.extractTar(path)
+  }
+
+  async extractTar(path:string){
+    let exists = await this.driver?.exists(path)
+    let basedir = path.split("/").slice(0,-1).join("/") + "/"
+    let filename = path.split("/").splice(-1)[0]
+    let basename = filename.split(".").slice(0,-1).join('.')
+    let extractdir = basedir + basename + "/"
+    await this.driver?.createDirectory(extractdir)
+    let data = await this.driver?.readFile(path, true)
+    */
+    if (!(data instanceof ArrayBuffer ) ) {return;}
+    Tar.unpack(data, async (files,folders) => {
+      console.log("extractTar:unpack:files",files)
+      console.log("extractTar:unpack:folders",folders)
+  
+      for(var idx in folders){
+        console.log("extractTar:createDirectory:")
+        let folder = folders[idx]
+        let path = '/data/' + folder.path
+        console.log("extractTar:createDirectory:",path)
+        await this.driver?.createDirectory(path)
+      }
+      console.log("extractTar:createDirectory:DONE")
+      for(var idx in files){
+        console.log("extractTar:writeFile:")
+        let file = files[idx]
+        let path = '/data/' + file.path
+        let content = file.content
+        console.log("extractTar:writeFile:",path,content)
+        await this.driver?.writeFile(path, content)
+      }
+      console.log("extractTar:writeFile:DONE")
+      this.fileWidget.refreshRoot()
+    });
+   
   }
 
   public openFile(file: TalFile) {
@@ -90,7 +131,7 @@ export class EditorWidgetComponent implements OnInit {
   public runProject(){
     this.consoleWidget.print("python main.py\n")
     this.saveFile();
-    
+     
  
     this.python.runProject().then(()=>{
 

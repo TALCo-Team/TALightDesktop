@@ -45,7 +45,7 @@ export class PythonCompilerService {
       return null;
     }
     
-    let configContent = await this.driver?.readFile('/'+this.configFile );
+    let configContent = await this.driver?.readFile('/'+this.configFile, false ) as string;
     let config = JSON.parse(configContent) as PythonConfig
     return config
   }

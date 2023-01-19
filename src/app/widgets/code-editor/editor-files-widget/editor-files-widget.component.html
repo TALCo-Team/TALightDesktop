@@ -1,7 +1,13 @@
 <div class="tal-editor-files-tree">
   <div class="tal-editor-files-header">
-    <button pButton class="p-button-secondary" icon="pi pi-download" title="Esporta tutto"
-      (click)="closeAllContextMenus($event); export()" pTooltip="Scarica tutto"></button>
+    <button pButton class="p-button p-button-secondary" icon="pi pi-download" title="Esporta"
+      (click)="closeAllContextMenus($event); export()" pTooltip="Esporta"></button>
+    
+    <button pButton class="p-button p-button-secondary" icon="pi pi-upload" title="Importa"
+      (click)="fileUpload.click()" pTooltip="Importa"></button>
+    
+    <input #fileUpload type="file" style="display: none;" accept="application/x-tar" (change)="import($event)"/>
+
     <button pButton icon="pi pi-file" title="Nuovo file"
       (click)="closeAllContextMenus($event); addNewItem(root, 'file')" pTooltip="Nuovo file"></button>
     <button pButton icon="pi pi-folder" title="Nuova cartella"
