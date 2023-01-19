@@ -582,6 +582,7 @@ class PyodideWorker{
     console.log("delete: ", fullpath)
     //TODO: use lookupPath and isDir/isFile
     // https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.lookupPath
+    //TODO: do it recursive
     try{this.fs.rmdir(this.mount + fullpath)}catch(_){}
     try{this.fs.unlink(this.mount + fullpath)}catch(_){}
     this.syncFS()
