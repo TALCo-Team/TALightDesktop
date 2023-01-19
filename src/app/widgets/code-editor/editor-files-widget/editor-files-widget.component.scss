@@ -9,7 +9,7 @@ div.tal-editor-files-tree {
     flex-direction: row-reverse;
     
 
-    button, .p-button{
+    button{
       margin-bottom:1rem;
       height: 30px;
       width: 30px;
@@ -21,15 +21,6 @@ div.tal-editor-files-tree {
   }
 
   div.tal-editor-files-body {}
-}
-
-.tal-import-button {
-  background-color: green;
-  margin: 0;
-  padding: 0;
-  height: 30px;
-  width: 30px;
-
 }
 
 
