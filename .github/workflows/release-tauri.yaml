@@ -1,9 +1,6 @@
 name: 'bundle'
 on:
   workflow_dispatch:
-  #push:
-  #  branches:
-  #    - release
 
 jobs:
   publish-tauri:
@@ -35,5 +32,5 @@ jobs:
           tagName: TALight-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
           releaseName: 'TALight v__VERSION__'
           releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
