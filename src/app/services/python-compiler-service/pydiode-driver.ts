@@ -83,7 +83,7 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
 
   didRecieve(response: PyodideResponse) {
     if (!response) {return;}
-    console.log('PyodideFsDriver:didRecieve:', response.message.type);
+    console.log('PyodideFsDriver:didRecieve:', response.message.type, response);
 
     let requestHandler = this.requestIndex.get(response.uid);
     if (requestHandler != null) {
@@ -206,17 +206,40 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
 
   didReceiveReadDirectory(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<FsNodeFolder | null> ){
     //TODO: do the actual thing 
-    let node = JSON.parse(this.toString(msgRecived.contents[0]))
+    let replacer = (key:any, value:any) => {
+      if (value instanceof ArrayBuffer){
+        let buffer = new Uint8Array(value)
+        return Array.from(buffer)
+      }
+      return value
+    }
+    let node = JSON.parse(this.toString(msgRecived.contents[0]),this.jsonReplacer)
     console.log("didReceiveReadDirectory: ", node)
     resolvePromise( node )
   }
 
   didReceiveScanDirectory(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<FsNodeFolder | null> ){
     //TODO: do the actual thing 
-    let node = JSON.parse(this.toString(msgRecived.contents[0]))
+    let node = JSON.parse(this.toString(msgRecived.contents[0]),this.jsonReplacer)
     console.log("didReceiveScanDirectory: ", node)
     resolvePromise( node )
   }
+
+  jsonReplacer(key:any,value:any){
+    if ( typeof value !== 'object') {return value; }
+    //console.log('jsonReplacer:object:',key,value)
+    if (!("flags" in value && "constructor" in value && "data" in value )){ return value; }
+    //console.log('jsonReplacer:constructor',value.constructor)
+    if ( value.constructor == 'ArrayBuffer' && value.data instanceof Array){
+      //console.log('jsonReplacer:ArrayBuffer')
+      let buffer = Uint8Array.from(value.data).buffer
+      console.log('jsonReplacer:ArrayBuffer',buffer)
+      return buffer;
+    }
+    return value
+  }
+
+
 
   didReceiveReadFile(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<string|ArrayBuffer> ){
     console.log("didReceiveReadFile:\n", msgRecived.contents[0])

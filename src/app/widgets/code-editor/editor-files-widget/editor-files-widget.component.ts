@@ -1,14 +1,16 @@
 import { Component, ElementRef, EventEmitter, Input, OnInit, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
-import { removeFileDecorator } from 'indexeddb-fs/dist/framework/parts';
+
 import { ConfirmationService } from 'primeng/api';
 import { OverlayPanel } from 'primeng/overlaypanel';
 import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver, Tar } from 'src/app/services/fs-service/fs.service';
 import { FsServiceTest } from 'src/app/services/fs-service/fs.service.test';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
-import { FsNode } from 'src/app/workers/python-compiler.worker';
+
+
 
 export interface TalFile extends FsNodeFile {}
 export interface TalFolder extends FsNodeFolder {}
+
 
 @Component({
   selector: 'tal-editor-files-widget',
@@ -339,16 +341,53 @@ export class EditorFilesWidgetComponent implements OnInit {
   }
   /***************/
 
+  async import(event:Event) {
+    if (!( event.target instanceof HTMLInputElement )){ return false; }
+    let target = event.target as HTMLInputElement
+    if(!target.files || target.files.length == 0){ return false; }
+    let file = target.files[0]
+    let tarball = await file.arrayBuffer();
+    Tar.unpack(tarball, async (files, folders)=>{
+      console.log("extractTar:unpack:files",files)
+      console.log("extractTar:unpack:folders",folders)
+  
+      for(var idx in folders){
+        console.log("extractTar:createDirectory:")
+        let folder = folders[idx]
+        let path = folder.path
+        console.log("extractTar:createDirectory:",path)
+        await this.driver?.createDirectory(path)
+      }
+      console.log("extractTar:createDirectory:DONE")
+      for(var idx in files){
+        console.log("extractTar:writeFile:")
+        let file = files[idx]
+        let path = file.path
+        let content = file.content
+        console.log("extractTar:writeFile:",path,content)
+        await this.driver?.writeFile(path, content)
+      }
+      console.log("extractTar:writeFile:DONE")
+      this.refreshRoot()
+    })
+    console.log("import:data:",tarball)
+    console.log("import:file:",file)
+    
+    
+    return false
+  }
+
   public export() {
-    let files = new Array<FsNodeFile|FsNodeFolder>();
-    let file:FsNodeFile ={
-      content: 'print("hello world")',
-      name: 'main.py',
-      path: 'main.py'
+    let items = this.fs.treeToList(this.root)
+    if(items.length == 0 ) {
+      console.log("export: No files found to be exported")
     }
-    Tar.pack([file], (tarball:ArrayBuffer)=>{
-      console.log('tarball:',tarball)
-      this.triggerDownload("attachments.tar",tarball,"application/x-tar")
+
+    console.log("export:items:",items)
+    Tar.pack(items, (tarball:ArrayBuffer)=>{
+      let tarname = "tal-project-"+ Date.now()+".tar"
+      console.log('export:tarball:',tarname,tarball)
+      this.triggerDownload(tarname, tarball, "application/x-tar")
     })
   }
 

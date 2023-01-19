@@ -41,7 +41,9 @@ export interface FsNodeFolder extends FsNode {
   folders: FsNodeFolder[];
   files: FsNodeFile[];
 }
-export interface FsNodeFile extends FsNode {}
+export interface FsNodeFile extends FsNode {
+  content: string|ArrayBuffer
+}
 
 
 export enum PyodideMessageType {
@@ -433,6 +435,8 @@ class PyodideWorker{
     return path.replace(pattern,"/").replace(/\/\/+/,"/");
   }
 
+  
+
   readDirectory(request:PyodideRequest):PyodideResponse{
     let response = this.responseFromRequest(request); 
     if ( request.message.args.length < 1 ){
@@ -441,9 +445,36 @@ class PyodideWorker{
     let fullpath = request.message.args[0];
     let curDir = this.scanDirectory_recursive(fullpath)
     response.message.args = [fullpath];
-    response.message.contents = [JSON.stringify(curDir)]
+    response.message.contents = [JSON.stringify(curDir,this.jsonReplacer)]
     return response;
   }
+
+
+  scanDirectory(request:PyodideRequest):PyodideResponse{
+    let response = this.responseFromRequest(request); 
+    if ( request.message.args.length < 1 ){
+      return this.responseError(response,"readDirectory: Requires at least 1 path as argument and 1 content");
+    }
+    let fullpath = request.message.args[0];
+    console.log("scanDirectory: ", fullpath)
+    let curDir = this.scanDirectory_recursive(fullpath, true)
+    response.message.args = [fullpath];
+    response.message.contents = [JSON.stringify(curDir,this.jsonReplacer)]
+    return response;
+  }
+
+  jsonReplacer(key:any,value:any){
+    if (value instanceof ArrayBuffer){
+      let buffer = new Uint8Array(value)
+      return {
+        constructor: value.constructor.name,
+        data: Array.from(buffer),
+        flags: []
+      }
+    }
+    return value
+  }
+
 
   scanDirectory_recursive(fullpath:string, recursive=false):FsNodeFolder{
     let res = this.fs.lookupPath(this.mount + fullpath);
@@ -474,10 +505,11 @@ class PyodideWorker{
         }
         curDir.folders.push(childDir);
       }else{
+        let content = this.fs.readFile(this.mount + path)
         curDir.files.push({
           name: name,
           path: path,
-          //content: "" //should I add also the content ?
+          content: content.buffer
         })
       }
     }
@@ -537,19 +569,6 @@ class PyodideWorker{
     return response;
   }
 
-  scanDirectory(request:PyodideRequest):PyodideResponse{
-    let response = this.responseFromRequest(request); 
-    if ( request.message.args.length < 1 ){
-      return this.responseError(response,"readDirectory: Requires at least 1 path as argument and 1 content");
-    }
-    let fullpath = request.message.args[0];
-    console.log("scanDirectory: ", fullpath)
-    let curDir = this.scanDirectory_recursive(fullpath, true)
-    response.message.args = [fullpath];
-    response.message.contents = [JSON.stringify(curDir,null, 4)]
-    return response;
-  }
-
   delete(request:PyodideRequest):PyodideResponse{
     let response = this.responseFromRequest(request); 
     
@@ -561,7 +580,10 @@ class PyodideWorker{
     
     let fullpath = request.message.args[0];
     console.log("delete: ", fullpath)
-    this.fs.unlink(this.mount + fullpath)
+    //TODO: use lookupPath and isDir/isFile
+    // https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.lookupPath
+    try{this.fs.rmdir(this.mount + fullpath)}catch(_){}
+    try{this.fs.unlink(this.mount + fullpath)}catch(_){}
     this.syncFS()
     response.message.args = ["true"]
     return response;

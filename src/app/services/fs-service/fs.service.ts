@@ -31,6 +31,24 @@ export class FsService {
   getDriverNames(){
     return Array.from(this.drivers.keys());
   }
+
+  treeToList(root:FsNodeFolder){
+    let items = new Array<FsNodeFile|FsNodeFolder>();
+    let queue = new Array<FsNodeFolder>();
+    
+    queue.push(root)
+    console.log('treeToList:root',root)
+    console.log('treeToList:queue:0:',queue.length)
+    while(queue.length > 0){
+      let dir = queue.shift()
+      console.log('treeToList:dir:',dir)
+      if(!dir){break;}
+      items = items.concat(dir.files, dir.folders)
+      queue = queue.concat(dir.folders)
+      console.log('treeToList:queue:',queue.length)
+    }
+    return items;
+  }
 }
 
 
@@ -104,7 +122,7 @@ export class Tar{
     
   }
 
-  static pack(files: Array<FsNodeFile|FsNodeFolder>, cb:(tarbell:ArrayBuffer)=>void){
+  static pack(items: Array<FsNodeFile|FsNodeFolder>, cb:(tarbell:ArrayBuffer)=>void){
     let pack = this.tarstream.pack() // pack is a stream
     console.log(pack);
 
@@ -130,38 +148,39 @@ export class Tar{
       if(cb){cb(data)}
     })
 
-    files.forEach( (item, idx)=>{
-      // add a file called YourFile.txt with the content "Hello World!"
-      if( (item as FsNodeFile).content ){
-        let file = item as FsNodeFile
-        pack.entry({name: file.path, type:"file"}, file.content, (error:any) => {
-          if (error) { throw error }
-        })
+    let processItems = function(items: Array<FsNodeFile|FsNodeFolder>){
+      let item = items.shift()
+      let file = item as FsNodeFile;
+      console.log("Tar:pack:item", item)
+      
+      let content;
+      let header;
+      if( file.content ){
+        console.log("Tar:pack:file", file)
+        if ( file.content instanceof ArrayBuffer ){
+          content = new Uint8Array(file.content)
+        }else{
+          content = file.content
+        }
+        header = {name: file.path}
       } else {
-        pack.entry({name: item.path, type:"directory"}, null, (error:any) => {
-          if (error) { throw error }
-        })
+        header = {name: item!.path, type:"directory"}
       }
-    })
-
-    pack.finalize()
-    
-    //let tarball = new ArrayBuffer();
-    //var stream = streamWriter()
-
-    // pipe the pack stream to your file
-    /*
-    pack.pipe(yourTarball)
-
-    yourTarball.on('close', function () {
-      console.log(path + ' has been written')
-      fs.stat(path, function(err, stats) {
-        if (err) throw err
-        console.log(stats)
-        console.log('Got file info successfully!')
+      
+      pack.entry(header, content, (error:any) => {
+        console.log("Tar:pack:onFinishEntry", error)
+        if (error) { throw error }
+        if ( items.length == 0 ){
+          pack.finalize()
+        }else{
+          processItems(items)
+        }
       })
-    })
-    */
+
+    }
+
+    console.log("Tar:pack:processItems", items)
+    processItems(items)
   }
 
   

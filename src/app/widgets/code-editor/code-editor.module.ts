@@ -13,7 +13,6 @@ import { ConsoleModule } from '../console/console.module';
 import { TooltipModule } from 'primeng/tooltip';
 import { FileViewerWidgetComponent } from './file-viewer-widget/file-viewer-widget.component';
 
-
 @NgModule({
   declarations: [
     CodeEditorWidgetComponent,
