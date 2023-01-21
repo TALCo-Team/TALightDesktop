@@ -113,6 +113,10 @@ export class ConsoleWidgetComponent {
   }
 
   async reloadProblemList(){
+    this.selectedProblem = undefined;
+    this.selectedService = undefined;
+    this.selectedArgs = undefined;
+    this.servicesMenu = []
     this.apiProblemList()
   }
 
