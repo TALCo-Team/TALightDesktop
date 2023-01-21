@@ -184,11 +184,12 @@ export namespace Commands{
       
       public didRecieveConnectStop(message: Packets.Reply.ConnectStop){
         this.log("didRecieveStart");
-        if (this.onReciveConnectStop ) { this.sendConnectStop(); this.onReciveConnectStop(message); }
+        if (this.onReciveConnectStop ) { if(this.tal.isOpen()) {this.sendConnectStop();} this.tal.closeConnection(); this.onReciveConnectStop(message); }
       }
 
       public sendConnectStop() {
         this.tal.send(new Packets.Request.ConnectStop());
+        //this.tal.closeConnection();
       }
     }
 
