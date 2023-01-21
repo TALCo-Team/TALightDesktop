@@ -16,13 +16,12 @@ export class ApiService {
   urlCache;
 
   constructor(){
-    this._url = 'ws://localhost:8088'
+    this._url = 'wss://ta.di.univr.it/sfide'
     this.urlCache = [
       this._url,
-      'wss://ta.di.univr.it/sfide',
-      'wss://ta.di.univr.it/rtal'
+      'ws://localhost:8008/',
+      'wss://ta.di.univr.it/rtal',
     ]
-
   }
 
   public get url(): string {
@@ -50,8 +49,8 @@ export class ApiService {
     if(!( url.protocol == 'ws:' || url.protocol == 'wss:' )){ return false; }
     console.log("setUrl:valid!")
     this.resetAllConnections()
-    this._url = value;
-    this.addToCache(value)
+    this._url = url.toString();
+    this.addToCache(this._url)
     return true;
   }
 

@@ -95,8 +95,8 @@ export class DemoViewComponent implements OnInit {
   }
 
   async apiConnect() {
-    let problem_name = "piastrelle";
-    let service = "synopsis";
+    let problem_name = "sum_testAPI";
+    let service = "free_sum";
 
     let onConnectionBegin = (onConnectionBegin: string[]) => {console.log("Connection Begin -> " + onConnectionBegin); };
     let onConnectionStart = () => {console.log("Connection Start")};
@@ -112,6 +112,28 @@ export class DemoViewComponent implements OnInit {
     req.onError = this.onApiError;
 
     this.cmdConnect = req;
+
+    this.sendBinary();
   }
+
+  async sendBinary() {
+    setTimeout(() => {this.cmdConnect?.sendBinary("100 0\n");}, 1500);
+    //setTimeout(() => {this.cmdConnect?.sendConnectStop();}, 2500);
+    /*
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 2500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 3500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 4500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 5500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 6500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 7500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 8500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 9500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 10500);
+    */
+
+    setTimeout(() => {console.log("this.cmdConnect!.tal.isOpen()");
+    console.log(this.cmdConnect!.tal.isOpen());}, 2500);
+  }
+
 
 }

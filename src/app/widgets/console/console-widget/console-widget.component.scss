@@ -7,6 +7,8 @@
     
 }
 
+
+
 .console-widget-main{
     display: flex;
     flex-direction: column;
@@ -15,15 +17,41 @@
     .console-widget-api{
         display: flex;
         flex-direction: column;
+        height:100%;
 
         .console-widget-api-problem{
             display: flex;
             flex-direction: row;
             border-bottom: darkgray 1 px solid;
         }
+
+        .console-widget-api-args-row{
+            display: flex;
+            //background-color: aquamarine;
+            margin: 5px;
+            flex-direction: column;
+        }
+
         .console-widget-api-args-row-title{
+            display: flex;
             font-weight: bold;
         }
+
+        .console-widget-api-args-row.stretch-flex{
+            flex-grow: 1;
+            justify-content: center;
+            justify-items: center;
+        }
+
+        .console-widget-api-args-row-no-params{
+            flex-grow: 1;
+            height: 100%;
+            display: flex;
+            justify-content: center; // left-right
+            align-items: center; //top-bottom
+            border: 1px solid #444;
+        }
+
         .console-widget-api-args{
             display: flex;
             flex-direction: column;
@@ -35,24 +63,30 @@
                 align-items: center;
                 height: 30px;
                 padding: 5px;
+                border-bottom: 1px solid #333;
+            }
+
+            .console-widget-api-args-row:last-child{
+                border: 0px;
             }
 
             .console-widget-api-args-row-info{
                 display: flex;
                 width: 20px;
-                padding: 4px;
+                padding: 5px;
             }
 
             .console-widget-api-args-row-name{
                 display: flex;
                 flex-grow: 1;
-                width: 10em
+                width: 10em;
+                padding-left: 5px;
             }
 
             .console-widget-api-args-row-field{
                 display: flex;
                 flex-grow: 3;
-                padding: 4px;
+                padding: 5px;
                 input{
                     width: 100%
                 }
@@ -61,7 +95,7 @@
 
             .console-widget-api-args-row-actions{
                 display: flex;
-                padding: 4px;
+                padding: 5px;
             }
 
             .console-widget-api-args-row{
@@ -100,35 +134,7 @@
         }
     }
 
-    console-widget-api {
-        padding: 5px;
-        display: flex;
-        flex-direction: row;
-        height: 63px;
-        
-        //background-color: red;
-        .p-inputwrapper{
-            margin-left:  0.5rem;
-            margin-right: 0.5rem;
-        }
-
-        
-    }
-
-    p-splitter.console-widget-splitter{
-        height:100%;
-        overflow: auto;
-    }
-}
-
-
-
-.p-dropdown-panel, .p-dropdown-items, .p-dropdown-item{
-    padding: 5px !important;
-}
-.console-widget-problem-group{
-    background-color: red;
-    height: 1px;
+    
 }
 
 

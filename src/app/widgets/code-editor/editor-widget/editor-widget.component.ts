@@ -145,4 +145,14 @@ export class EditorWidgetComponent implements OnInit {
 
     })
   }
+
+  public testConnectAPI(){
+    this.consoleWidget.print("python free_sum_mysimplebot.py\n")
+    this.saveFile();
+    
+ 
+    this.python.testConnectAPI(this.consoleWidget).then(()=>{
+
+    })
+  }
 }

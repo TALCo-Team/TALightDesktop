@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
 import { AutoComplete } from 'primeng/autocomplete';
 import { ApiService } from 'src/app/services/api-service/api.service';
 import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
@@ -16,10 +16,11 @@ export class TopbarWidgetComponent implements OnInit {
   urlCache:string[] = []
   escapeRegEx = /[.*+?^${}()|[\]\\]/g
   
-  constructor(
-    public readonly themeService: ThemeService, 
-    public api:ApiService) {
-      this.api.setUrl(this.url)
+  constructor( public readonly themeService: ThemeService, 
+               public api: ApiService,
+               public zone: NgZone,
+             ) {
+    this.api.setUrl(this.url)
   }
 
   ngOnInit(): void {
@@ -50,22 +51,28 @@ export class TopbarWidgetComponent implements OnInit {
     console.log("changeURL:event:", event)
     let url = this.url;
     console.log("changeURL:urlCache:before:",this.urlCache)
-    if(!url || !this.api.setUrl(url)){
+    if( !this.api.setUrl(url) ){
       console.log("changeURL:setURL:failed")
+      this.zone.run( ()=>{ this.url = this.api.url; } )
+      return
+    }else{
+      this.urlCache = this.api.urlCache
     }
-    this.urlCache = this.api.urlCache
-    console.log("changeURL:urlCache:after:",this.urlCache)
-    console.log("changeURL:url:",url)
+    console.log("changeURL:urlCache:after:", this.urlCache )
+    console.log("changeURL:url:", this.url )
   }
 
   public removeURL(url:string, event:Event) {
     if(event){ event.preventDefault();event.stopPropagation();event.stopImmediatePropagation(); }
     
     console.log("changeURL:urlCache:before:",this.urlCache)
-    if(!url || !this.api.removeFromCache(url)){
-      console.log("changeURL:setURL:failed")
+    if( !this.api.removeFromCache(url) ){
+      console.log("changeURL:removeURL:done")
     }
     this.urlCache = this.api.urlCache
+    
+
+
     console.log("changeURL:urlCache:after:",this.urlCache)
     console.log("changeURL:url:",url)
   }
