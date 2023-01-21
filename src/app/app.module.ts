@@ -21,7 +21,8 @@ import { CodeEditorModule } from './widgets/code-editor/code-editor.module';
 import { SelectProblemViewComponent } from './views/select-problem-view/select-problem-view.component';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { EditorWidgetComponent } from './widgets/code-editor/editor-widget/editor-widget.component';
+import { TopbarModule } from './widgets/topbar/topbar.module';
+
 
 @NgModule({
   declarations: [
@@ -40,13 +41,16 @@ import { EditorWidgetComponent } from './widgets/code-editor/editor-widget/edito
     InputSwitchModule,
     DropdownModule,
     FileUploadModule,
+    FormsModule,
+    InputTextModule,
     TooltipModule,
     ScrollPanelModule,
     SelectButtonModule,
     SplitterModule,
     RadioButtonModule,
     ConsoleModule,
-    CodeEditorModule
+    CodeEditorModule,
+    TopbarModule
   ],
   providers: [],
   bootstrap: [AppComponent]

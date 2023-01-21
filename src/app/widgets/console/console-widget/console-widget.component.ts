@@ -1,14 +1,33 @@
-import { Component, EventEmitter, Output, ViewChild, ViewEncapsulation, NgZone, ElementRef } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild, NgZone, ElementRef } from '@angular/core';
+import {Pipe, PipeTransform} from '@angular/core';
 import { Terminal, TerminalService } from 'primeng/terminal';
 import { Subscription } from 'rxjs';
-import { ApiService, Meta, ProblemDescriptor } from 'src/app/services/api-service/api.service';
-//import { Terminal } from 'xterm';
+import { ApiService, Meta } from 'src/app/services/api-service/api.service';
+import { ProblemManagerService, ServiceDescriptor, ProblemDescriptor, ArgsMap, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
 
-export class ProblemMenuEntry {
-  label = ""
-  value = ""
-  problem?: ProblemDescriptor
+
+export class ServiceMenuEntry {
+  constructor(
+    public problem = "",
+    public service = "",
+    public descriptor: ServiceDescriptor,
+  ){}
 }
+
+
+
+@Pipe({name: 'cleanupName'})
+export class CleanUpNamePipe implements PipeTransform {
+    transform(name:string): string {
+        name = name.replace(new RegExp('[-_ ]+','g'), " ") 
+        name = name.replace("[^a-zA-Z0-9 ]+", "") 
+        name = name.charAt(0).toUpperCase() + name.slice(1);
+        return name
+    }
+}
+
+
+
 
 @Component({
   selector: 'tal-console-widget',
@@ -23,6 +42,7 @@ export class ConsoleWidgetComponent {
   @Output('stdin') public onStdin = new EventEmitter<string>();
   @Output('problemListUpdate') public onProblemListUpdate = new EventEmitter<Map<string, Meta>>();
   @Output('problemChanged') public onProblemSelected = new EventEmitter<ProblemDescriptor>();
+  @Output('serviceChanged') public onServiceSelected = new EventEmitter<ServiceDescriptor>();
   @Output('attachments') public onAttachments = new EventEmitter<ArrayBuffer>();
 
   @ViewChild("terminal") public terminal!: Terminal;
@@ -34,15 +54,20 @@ export class ConsoleWidgetComponent {
   public outputText: string = "";
 
 
-
   commandSub: Subscription
-  problemList = new Map<string, Meta>()
-  problems = new Array<ProblemMenuEntry>();
-  selectedName = "";
+  servicesMenu = new Array<ServiceMenuEntry>();
   selectedProblem?: ProblemDescriptor;
+  selectedService?: ServiceMenuEntry;
+  selectedArgs?: ArgsMap;
 
 
-  constructor(private terminalService: TerminalService, private zone: NgZone, private api: ApiService) {
+
+  constructor( public terminalService: TerminalService,
+               public zone: NgZone,
+               public api: ApiService,
+               public pm: ProblemManagerService
+             )
+  {
     this.commandSub = this.terminalService.commandHandler.subscribe(command => { this.execCommand(command) });
 
   }
@@ -74,55 +99,71 @@ export class ConsoleWidgetComponent {
   async onApiError(message: string) {
     console.log("API Error: ", message)
   }
+  
+  async argDidChange(key:string,event:Event){
+    console.log('argDidChange:',key,event)
+  }
 
-  async updateProblemsUI() {
-
-    let problemList = Array.from(this.problemList.entries())
-
-    let menu = new Array<ProblemMenuEntry>();
-    for (var idx in problemList) {
-      let name = problemList[idx][0];
-      let metadata = problemList[idx][1];
-      //console.log("updateProblemsUI:metadata:",name,metadata)
-      if (!metadata) { continue }
-      let menuEntry = new ProblemMenuEntry()
-      menuEntry.value = name
-      menuEntry.label = name.replace(/[_-]+/g, " ")
-      menuEntry.problem = new ProblemDescriptor(name, metadata)
-      menu.push(menuEntry)
-      //console.log('updateProblemsUI:problem:',menu)
-    }
-    console.log('updateProblemsUI:problems:', menu)
-    menu = menu.sort((a, b) => {
-      if (a.value == b.value) return 0
-      if (a.value > b.value) return 1
-      if (a.value < b.value) return -1
-      return 0
-    })
-    this.zone.run(() => { this.problems = menu })
+  async argDidReset(key:string,event:Event){
+    console.log('argDidReset:',key,event)
+    if(!this.selectedArgs){return}
+    let arg = this.selectedArgs.get(key)
+    if (!arg){return}
+    arg.value = arg.default
   }
 
   async reloadProblemList(){
     this.apiProblemList()
   }
+
+  async updateProblemsUI() {
+    let menuServices = new Array<ServiceMenuEntry>();
+    this.pm.problemList.forEach((problemDesc)=>{      
+      problemDesc.services.forEach((serviceDesc)=>{
+        var pattern = new RegExp('[-_ ]+','g');
+        var serviceLabel = serviceDesc.name.replace(pattern, " ")
+        let serviceEntry = new ServiceMenuEntry(problemDesc.name,serviceLabel,serviceDesc)
+        menuServices.push(serviceEntry)
+      })
+    })
+
+    console.log('updateProblemsUI:menuServices:', menuServices)
+    
+    this.zone.run(() => { 
+      this.servicesMenu = menuServices
+    })
+    
+  }
+
   
   async apiProblemList() {
     let req = this.api.problemList(async (problemList) => {
       console.log('apiProblemList:problemList:', problemList)
-      this.problemList = problemList
+      this.pm.updateProblems(problemList)
       this.onProblemListUpdate.emit(problemList)
       await this.updateProblemsUI()
     });
     req.onError = (error) => { this.onApiError(error) };
   }
 
+  
+
   async didSelectProblem() {
-    let name = this.selectedName;
-    console.log('didSelectProblem', name)
-    let meta = this.problemList.get(name)
-    if (!meta) { return }
-    this.selectedProblem = new ProblemDescriptor(name, meta)
+    console.log('didSelectProblem:', this.selectedProblem)
+    if (!this.selectedProblem){return}
+    this.pm.selectProblem(this.selectedProblem)
     this.onProblemSelected.emit(this.selectedProblem)
+  }
+
+  async didSelectService() {
+    console.log('didSelectService:', this.selectedService)
+    if (!this.selectedService){return}
+    let serviceDesc = this.selectedService!.descriptor
+    this.pm.selectService(serviceDesc)
+    this.selectedArgs = serviceDesc.args
+    console.log('didSelectService:selectedArgs:', this.selectedArgs)
+    
+    this.onServiceSelected.emit(serviceDesc)
   }
 
   async apiDownloadAttachment() {

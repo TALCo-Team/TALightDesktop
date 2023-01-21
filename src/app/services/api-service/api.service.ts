@@ -5,30 +5,42 @@ import { Commands } from './api.commands';
 export class Meta extends Packets.Meta{}
 export interface AttachmentInfo extends Packets.Reply.AttachmentInfo{}
 
-export type ProblemMap = Map<string, Meta>;
 
-export class ProblemDescriptor {
-  name: string
-  metadata:Meta
 
-  constructor(name:string, meta:Meta){
-    this.name = name
-    this.metadata = meta
-  }
-}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  private _url = 'ws://localhost:8088';
+  private _url;
+  urlCache;
 
   constructor(){
+    this._url = 'ws://localhost:8088'
+    this.urlCache = [
+      this._url,
+      'wss://ta.di.univr.it/sfide',
+      'wss://ta.di.univr.it/rtal'
+    ]
 
   }
 
   public get url(): string {
     return this._url;
+  }
+
+  public addToCache(url:string){
+    this.removeFromCache(url)
+    this.urlCache.unshift(url)
+  }
+
+  public removeFromCache(url:string){
+    let idx = this.urlCache.indexOf(url)
+    if(idx != -1){
+      this.urlCache.splice(idx,1)
+      return true
+    }
+    return false
   }
 
   public setUrl(value: string): boolean {
@@ -39,6 +51,7 @@ export class ApiService {
     console.log("setUrl:valid!")
     this.resetAllConnections()
     this._url = value;
+    this.addToCache(value)
     return true;
   }
 
