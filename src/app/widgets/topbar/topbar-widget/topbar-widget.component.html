@@ -4,11 +4,7 @@
     </div>
 
     <div class="tal-buttons">
-        <!--
-        <input #urlInput pInputText type="text" class="top-bar-url-input p-inputtext-sm"
-                placeholder="ws://localhost:8088/" [(ngModel)]="url"
-                (change)="changeURL($event)" (blur)="changeURL($event)">  
-            -->
+
         <p-autoComplete #urlInput class="top-bar-url-input p-inputtext-sm"
             (placeholder)="urlCache"  [(ngModel)]="url"
             (change)="changeURL($event)" [suggestions]="urlCache"
@@ -22,10 +18,6 @@
             </ng-template>
 
         </p-autoComplete>        
-<!--
-        < [(ngModel)]="selectedCountryAdvanced" [suggestions]="filteredCountries"
-                (completeMethod)="filterCountry($event)" field="name" [dropdown]="true">
--->
 
         <button pButton icon="pi {{changeThemIcon}}" (click)="toggleTheme()"></button>
     </div>

@@ -159,11 +159,11 @@ export namespace Packets{
       public problem:string = "";
       public service:string = "";
       public args:{} = {};
-      public tty:boolean = true;
+      public tty:boolean = false;
       public token:string|null = null;
       public files:string[] = [];
 
-      constructor(problem:string, service:string, args:{}={}, tty:boolean=true, token:string|null = null, files:string[] = []) {
+      constructor(problem:string, service:string, args:{}={}, tty:boolean=false, token:string|null = null, files:string[] = []) {
         super();
         this.problem = problem;
         this.service = service;

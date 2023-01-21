@@ -3,7 +3,7 @@ import { Packets } from './api.packets';
 
 
 export class TALightSocket{
-  public url = 'ws://localhost:8088';
+  public url = 'ws://localhost:8008';
   public ws?:WebSocketSubject<any>;
   
   public decode = true;
