@@ -131,6 +131,8 @@ print("100 0")`
     if (!config){return null;}
     await this.driver?.installPackages(config.PACKAGES)
     let stdout = await this.driver?.executeFile(config!.MAIN)
+
+    //this.cmdConnect.sendConnectStop();
     
     console.log(stdout)
     return stdout      
