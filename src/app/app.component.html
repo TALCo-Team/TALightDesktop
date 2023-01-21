@@ -1,13 +1,8 @@
 <div class="tal-page-container">
-  <div class="tal-topbar">
-    <div class="tal-brand">
-      <h1>TALight Desktop</h1>
-    </div>
-    <div class="tal-buttons">
-      <button pButton icon="pi {{changeThemIcon}}" (click)="toggleTheme()"></button>
-    </div>
+  <div class="tal-page-topbar">
+    <tal-topbar-widget></tal-topbar-widget>
   </div>
-  <div class="tal-page">
+  <div class="tal-page-content">
     <router-outlet></router-outlet>
   </div>
 </div>

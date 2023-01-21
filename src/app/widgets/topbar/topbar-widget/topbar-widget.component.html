@@ -1,0 +1,32 @@
+<div class="tal-topbar">
+    <div class="tal-brand">
+        <h1>TALight Desktop</h1>
+    </div>
+
+    <div class="tal-buttons">
+        <!--
+        <input #urlInput pInputText type="text" class="top-bar-url-input p-inputtext-sm"
+                placeholder="ws://localhost:8088/" [(ngModel)]="url"
+                (change)="changeURL($event)" (blur)="changeURL($event)">  
+            -->
+        <p-autoComplete #urlInput class="top-bar-url-input p-inputtext-sm"
+            (placeholder)="urlCache"  [(ngModel)]="url"
+            (change)="changeURL($event)" [suggestions]="urlCache"
+            (completeMethod)="filterSuggestions($event)" [dropdown]="true">
+
+            <ng-template let-url pTemplate="item">
+                <div class="url-item">
+                    <div class="url-item-label">{{url}}</div>
+                    <button pButton icon="pi pi-trash" pTooltip="Remove URL" (click)="removeURL(url, $event)"></button>
+                </div>
+            </ng-template>
+
+        </p-autoComplete>        
+<!--
+        < [(ngModel)]="selectedCountryAdvanced" [suggestions]="filteredCountries"
+                (completeMethod)="filterCountry($event)" field="name" [dropdown]="true">
+-->
+
+        <button pButton icon="pi {{changeThemIcon}}" (click)="toggleTheme()"></button>
+    </div>
+</div>
