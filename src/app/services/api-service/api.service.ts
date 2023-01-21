@@ -1,37 +1,67 @@
 import { Injectable } from '@angular/core';
 import { Packets } from './api.packets';
 import { Commands } from './api.commands';
-import { TALightSocket as TALightSocket } from './api.socket';
 
 export class Meta extends Packets.Meta{}
 export interface AttachmentInfo extends Packets.Reply.AttachmentInfo{}
 
-export type ProblemMap = Map<string, Meta>;
 
-export class ProblemDescriptor {
-  name: string
-  metadata:Meta
 
-  constructor(name:string, meta:Meta){
-    this.name = name
-    this.metadata = meta
-  }
-}
 
 @Injectable({
   providedIn: 'root'
 })
-
 export class ApiService {
-  public url = 'ws://localhost:8008';
+  private _url;
+  urlCache;
 
   constructor(){
+    this._url = 'ws://localhost:8088'
+    this.urlCache = [
+      this._url,
+      'wss://ta.di.univr.it/sfide',
+      'wss://ta.di.univr.it/rtal'
+    ]
 
+  }
+
+  public get url(): string {
+    return this._url;
+  }
+
+  public addToCache(url:string){
+    this.removeFromCache(url)
+    this.urlCache.unshift(url)
+  }
+
+  public removeFromCache(url:string){
+    let idx = this.urlCache.indexOf(url)
+    if(idx != -1){
+      this.urlCache.splice(idx,1)
+      return true
+    }
+    return false
+  }
+
+  public setUrl(value: string): boolean {
+    let url;
+    console.log("setUrl")
+    try{ url = new URL(value); }catch(_){ return false; }
+    if(!( url.protocol == 'ws:' || url.protocol == 'wss:' )){ return false; }
+    console.log("setUrl:valid!")
+    this.resetAllConnections()
+    this._url = value;
+    this.addToCache(value)
+    return true;
+  }
+
+  public resetAllConnections(){
+    //TODO: is it necessary to kill all old connection upon URL change ? 
   }
 
   public problemList(onResult:(problemList:Map<string, Meta>)=>void){
     
-    let cmdList = new Commands.ProblemList(this.url);
+    let cmdList = new Commands.ProblemList(this._url);
     cmdList.onRecieveProblemList = (message)=>{
       console.log("onRecieveProblemList:",message)
       if(onResult){onResult(message.meta)}
@@ -44,11 +74,10 @@ export class ApiService {
     problemName:string, 
     onAttachment?: ()=>void,
     onAttachmentInfo?: (message: Packets.Reply.AttachmentInfo)=>void, 
-    onData?: (data:ArrayBuffer)=>void,
-    onError?: (error:string)=>void
+    onData?: (data: ArrayBuffer)=>void,
+    onError?: (error: string)=>void
   ){
-  
-    let cmdGet = new Commands.Attchment(this.url, problemName);
+    let cmdGet = new Commands.Attchment(this._url, problemName);
 
     cmdGet.onReciveAttachment = (message) => { 
       if (message.status.Err){ 
@@ -59,7 +88,7 @@ export class ApiService {
     }
     cmdGet.onReciveAttachmentInfo = (message) => { if(onAttachmentInfo) { onAttachmentInfo(message) } }
     cmdGet.onReciveUndecodedBinary = (message) => { if(onData) { onData( message )} }
-    cmdGet.onError = onError;
+    cmdGet.onError = (error) => { if(onError) {onError(error)} }
 
     cmdGet.run();
     return cmdGet;
@@ -79,7 +108,7 @@ export class ApiService {
     onError?:(data:string)=>void
   ){
 
-    let cmdConnect = new Commands.Connect(this.url, problem_name, service, args, tty, token, files);
+    let cmdConnect = new Commands.Connect(this._url, problem_name, service, args, tty, token, files);
 
     cmdConnect.onReciveConnectBegin = (message) => { 
       if (message.status.Err){ 
@@ -106,7 +135,7 @@ export class ApiService {
     }
     
     cmdConnect.onReciveBinary = (message) => { if(onData) { onData(message)} }
-    cmdConnect.onError = onError
+    cmdConnect.onError = (error) => { if(onError) {onError(error)} }
     
     cmdConnect.run();
     return cmdConnect;

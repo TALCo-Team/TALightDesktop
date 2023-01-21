@@ -225,7 +225,7 @@ class PyodideWorker{
     }
   }
 
-  async onStdin(){
+  onStdin(){
     let cnt = this.stdinBuffer.length
     let msg = "";
     if(cnt > 0){

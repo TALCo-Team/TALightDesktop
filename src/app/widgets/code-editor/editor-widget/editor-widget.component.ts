@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { ProblemDescriptor } from 'src/app/services/api-service/api.service';
+
 import { FsService, Tar } from 'src/app/services/fs-service/fs.service';
+import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 import { CodeEditorWidgetComponent } from 'src/app/widgets/code-editor/code-editor-widget/code-editor-widget.component';
 import { EditorFilesWidgetComponent, TalFile } from 'src/app/widgets/code-editor/editor-files-widget/editor-files-widget.component';
@@ -17,6 +18,7 @@ export class EditorWidgetComponent implements OnInit {
   public fs;
   public driver;
   public selectedProblem?: ProblemDescriptor;
+  public selectedService?: ServiceDescriptor;
 
   @ViewChild("fileWidget") public fileWidget!: EditorFilesWidgetComponent;
   @ViewChild("editorWidget") public editorWidget!: CodeEditorWidgetComponent;
@@ -54,6 +56,12 @@ export class EditorWidgetComponent implements OnInit {
   public onProblemChanged(selectedProblem: ProblemDescriptor){
     console.log("onProblemChanged:",selectedProblem)
     this.selectedProblem=selectedProblem;
+  }
+
+  public onServiceChanged(selectedService: ServiceDescriptor){
+    console.log("onServiceChanged:",selectedService)
+    this.selectedService=selectedService;
+    this.selectedProblem=selectedService.parent;
   }
 
   async onAttachments(data: ArrayBuffer){

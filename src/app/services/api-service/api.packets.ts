@@ -123,17 +123,17 @@ export namespace Packets{
       this.args = argsMap
     }
     public evaluator: string[] = [];
-    public args?:Map<String, Arg>;
+    public args?:Map<string, Arg>;
     public files?: string[];
   }
 
   export class Arg {
-    constructor(data?: any){
+    constructor(data: any){
       this.regex = data.regex
       this.default = data.default
     }
-    public regex?: RegExp;
-    public default?: string;
+    public regex: RegExp;
+    public default: string;
   }
 
 
