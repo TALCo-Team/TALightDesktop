@@ -48,8 +48,9 @@
             height: 100%;
             display: flex;
             justify-content: center; // left-right
-            align-items: center; //top-bottom
+            align-items: center;     // top-bottom
             border: 1px solid #444;
+            padding: 25px;
         }
 
         .console-widget-api-args{
