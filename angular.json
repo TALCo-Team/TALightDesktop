@@ -18,8 +18,16 @@
       "prefix": "tal",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "builder": "@angular-builders/custom-webpack:browser",
           "options": {
+            "customWebpackConfig": {
+              "path": "./webpack.config.js",
+              "mergeRules": {
+                "module": {
+                  "rules": "replace"
+                }
+              }
+            },
             "allowedCommonJsDependencies": [
               "lodash"
             ],
@@ -138,7 +146,6 @@
       }
     }
   },
-  "defaultProject": "TALightDesktop",
   "cli": {
     "analytics": false
   }

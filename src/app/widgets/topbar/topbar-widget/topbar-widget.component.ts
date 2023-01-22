@@ -53,7 +53,7 @@ export class TopbarWidgetComponent implements OnInit {
     console.log("changeURL:urlCache:before:",this.urlCache)
     if( !this.api.setUrl(url) ){
       console.log("changeURL:setURL:failed")
-      this.zone.run( ()=>{ this.url = this.api.url; } )
+      this.zone.run( ()=>{ this.url = "failed" }) // this.api.url; } )
       return
     }else{
       this.urlCache = this.api.urlCache

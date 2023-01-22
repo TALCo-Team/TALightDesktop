@@ -54,6 +54,23 @@ ngx-monaco-editor{
   }
 }
 
+.field-validation-editing{
+  border:3px solid orange;
+}
+
+.field-validation-error{
+  border:3px solid darkred;
+}
+
+.field-validation-ok{
+  border:3px solid green;
+}
+
+.field-validation-default{
+  border: 0px;
+}
+
+
 
 div.tal-center-page {
   display: flex;
