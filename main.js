@@ -4706,11 +4706,14 @@ class ConsoleWidgetComponent {
   apiDownloadAttachment() {
     var _this7 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
-      console.log('apiDownloadAttachment', _this7.selectedProblem?.name);
-      if (!_this7.selectedProblem) {
+      console.log('apiDownloadAttachment:', _this7.selectedService);
+      if (!_this7.selectedService) {
         return;
       }
-      let problem_name = _this7.selectedProblem.name;
+      let problem = _this7.selectedService.descriptor.parent;
+      if (!problem) {
+        return;
+      }
       let onAttachment = () => {
         console.log("Attachment packet received");
       };
@@ -4721,7 +4724,7 @@ class ConsoleWidgetComponent {
         console.log("apiDownloadAttachment:onData:", data);
         _this7.onAttachments.emit(data);
       };
-      let req = _this7.api.GetAttachment(problem_name, onAttachment, onAttachmentInfo, onData);
+      let req = _this7.api.GetAttachment(problem.name, onAttachment, onAttachmentInfo, onData);
       req.onError = error => {
         _this7.onApiError(error);
       };
