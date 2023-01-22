@@ -83,11 +83,7 @@
               }],
               "outputHashing": "all",
               "buildOptimizer": false,
-              "optimization": false,
-              "vendorChunk": true,
-              "extractLicenses": false,
-              "sourceMap": true,
-              "namedChunks": true
+              "optimization": false
             },
             "development": {
               "buildOptimizer": false,
