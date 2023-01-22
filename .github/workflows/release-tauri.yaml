@@ -1,4 +1,4 @@
-name: 'bundle'
+name: 'Release Tauri'
 on:
   workflow_dispatch:
   #push:
