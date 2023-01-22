@@ -23,7 +23,6 @@
     "@angular/router": "~14.1.0",
     "@tauri-apps/api": "^1.2.0",
     "b4a": "^1.6.1",
-    "tar-web": "^3.0.0-alpha-2",
     "indexeddb-fs": "^1.2.5",
     "monaco-editor": "^0.34.1",
     "ngx-monaco-editor-v2": "^14.0.4",
@@ -31,12 +30,14 @@
     "primeicons": "^6",
     "primeng": "^14.0.2",
     "rxjs": "~7.5.0",
+    "tar-web": "^3.0.0-alpha-2",
     "tslib": "^2.3.0",
     "xterm": "^5.1.0",
     "xterm-addon-web-links": "^0.7.0",
     "zone.js": "~0.11.4"
   },
   "devDependencies": {
+    "@angular-builders/custom-webpack": "~14.1.0",
     "@angular-devkit/build-angular": "~14.1.0",
     "@angular/cli": "~14.1.0",
     "@angular/compiler-cli": "~14.1.0",
@@ -49,6 +50,7 @@
     "karma-coverage": "~2.1.0",
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "~1.7.0",
+    "terser-webpack-plugin": "^5.3.6",
     "typescript": "~4.7.0"
   }
 }

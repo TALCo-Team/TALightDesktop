@@ -171,11 +171,11 @@ export class ConsoleWidgetComponent {
   }
 
   async apiDownloadAttachment() {
-    console.log('apiDownloadAttachment', this.selectedProblem?.name)
-
-    if (!this.selectedProblem) { return }
-    let problem_name = this.selectedProblem.name;
-
+    console.log('apiDownloadAttachment:', this.selectedService)
+    if (!this.selectedService) { return }
+    let problem = this.selectedService.descriptor.parent;
+    if(!problem) {return;}
+    
     let onAttachment = () => { console.log("Attachment packet received") };
     let onAttachmentInfo = (info: any) => { console.log('apiDownloadAttachment:info:', info) };
 
@@ -184,7 +184,7 @@ export class ConsoleWidgetComponent {
       this.onAttachments.emit(data);
     };
 
-    let req = this.api.GetAttachment(problem_name, onAttachment, onAttachmentInfo, onData);
+    let req = this.api.GetAttachment(problem.name, onAttachment, onAttachmentInfo, onData);
     req.onError = (error) => { this.onApiError(error) };
 
   }
