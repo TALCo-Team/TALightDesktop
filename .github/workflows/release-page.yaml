@@ -1,4 +1,4 @@
-name: "publish github pages"
+name: "Release Pages"
 
 on:
   workflow_dispatch:
