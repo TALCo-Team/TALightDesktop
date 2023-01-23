@@ -25,12 +25,7 @@
             border-bottom: darkgray 1 px solid;
         }
 
-        .console-widget-api-args-row{
-            display: flex;
-            //background-color: aquamarine;
-            margin: 5px;
-            flex-direction: column;
-        }
+        
 
         .console-widget-api-args-row-title{
             display: flex;
@@ -47,24 +42,38 @@
             flex-grow: 1;
             height: 100%;
             display: flex;
+            width: 100%;
             justify-content: center; // left-right
             align-items: center;     // top-bottom
             border: 1px solid #444;
-            padding: 25px;
         }
 
         .console-widget-api-args{
             display: flex;
             flex-direction: column;
             width: 100%;
+
+    
             
             .console-widget-api-args-row{
                 display: flex;
-                flex-direction: row;
+                flex-direction: column;
                 align-items: center;
-                height: 30px;
                 padding: 5px;
                 border-bottom: 1px solid #333;
+            }
+
+            .console-widget-api-args-subrow{
+                display: flex;
+                width:100%;
+                //background-color: aquamarine;
+                flex-direction: row;
+                align-items: center;
+
+                button{
+                    width: 20px;
+                    height: 20px;
+                }
             }
 
             .console-widget-api-args-row:last-child{
@@ -99,17 +108,13 @@
                 padding: 5px;
             }
 
-            .console-widget-api-args-row{
-                //background-color: darkred;
-                display: flex;
-                flex-direction: row;
-
-                button{
-                    width: 20px;
-                    height: 20px;
-                }
-            }
             
+            .console-widget-api-args-subrow-regexpr{
+                font-size: 11px;
+                color: gray;
+                word-wrap: break-word;
+                font-family: monospace;
+            }
         }
 
 

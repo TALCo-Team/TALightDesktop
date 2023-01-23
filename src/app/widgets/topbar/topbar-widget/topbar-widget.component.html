@@ -5,6 +5,8 @@
 
     <div class="tal-buttons">
 
+        <i #statusDot class="pi pi-circle-fill" pTooltip="Status"></i>
+
         <p-autoComplete #urlInput class="top-bar-url-input p-inputtext-sm"
             (placeholder)="urlCache"  [(ngModel)]="url"
             (change)="changeURL($event)" (onBlur)="changeURL($event)" [suggestions]="urlCache"

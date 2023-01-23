@@ -32,8 +32,6 @@
     "rxjs": "~7.5.0",
     "tar-web": "^3.0.0-alpha-2",
     "tslib": "^2.3.0",
-    "xterm": "^5.1.0",
-    "xterm-addon-web-links": "^0.7.0",
     "zone.js": "~0.11.4"
   },
   "devDependencies": {

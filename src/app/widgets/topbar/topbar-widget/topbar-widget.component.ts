@@ -11,20 +11,25 @@ import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.ser
 export class TopbarWidgetComponent implements OnInit {
 
   @ViewChild("urlInput") public urlInput?: AutoComplete;
+  @ViewChild("statusDot") public statusDot?: ElementRef;
   
-  url = "wss://ta.di.univr.it/sfide";
+  
+
+  url;
   urlCache:string[] = []
   escapeRegEx = /[.*+?^${}()|[\]\\]/g
+  urlInputClass = ""
   
   constructor( public readonly themeService: ThemeService, 
                public api: ApiService,
                public zone: NgZone,
              ) {
-    this.api.setUrl(this.url)
+    this.url = api.url;
+    this.urlCache = [...this.api.urlCache]
   }
 
   ngOnInit(): void {
-    this.urlCache = [...this.api.urlCache]
+    
   }
 
   public get changeThemIcon(): string {
@@ -48,16 +53,21 @@ export class TopbarWidgetComponent implements OnInit {
   }
 
   public changeURL(event:Event) {
+    let dot = this.statusDot!.nativeElement as HTMLElement
+    console.log("changeURL:dot:", dot)
     console.log("changeURL:event:", event)
     let url = this.url;
     console.log("changeURL:urlCache:before:",this.urlCache)
     if( !this.api.setUrl(url) ){
+      dot.style.color = "darkred"
       console.log("changeURL:setURL:failed")
-      this.zone.run( ()=>{ this.url = "failed" }) // this.api.url; } )
-      return
     }else{
+      this.url = this.api.url;
+      console.log("changeURL:setURL:success")
+      dot.style.color = "green"
       this.urlCache = this.api.urlCache
     }
+    
     console.log("changeURL:urlCache:after:", this.urlCache )
     console.log("changeURL:url:", this.url )
   }
