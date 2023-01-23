@@ -56,10 +56,11 @@
               </div>
               
               <!-- ROW: arg -->
-              <div class="console-widget-api-args-row" *ngFor="let arg of selectedArgs | keyvalue"> 
+              <div class="console-widget-api-args-row" *ngFor="let arg of selectedArgs | keyvalue; "> 
+                <div class="console-widget-api-args-subrow">
                   <!-- CELL: info -->
                   <div class="console-widget-api-args-row-info">
-                    <i class="pi pi-info-circle" [pTooltip]="arg.value.regex+''"></i>
+                    <i #argsIcons class="pi pi-info-circle" [id]="'args-icon-'+arg.value.key" (click)="toggleShowRegex(arg.value,$event)" style="cursor: pointer;" [pTooltip]="arg.value.regex+''"></i>
                   </div>
                   <!-- CELL: name -->
                   <div class="console-widget-api-args-row-name">{{arg.value.name}}</div>
@@ -68,16 +69,27 @@
                   <div class="console-widget-api-args-row-field">
                     <input pInputText type="text" class="top-bar-url-input p-inputtext-sm"
                       [placeholder]="arg.value.default" [(ngModel)]="arg.value.value"
-                      (change)="argDidChange(arg.value.key,$event)">  
+                      (change)="argDidChange(arg.value,$event)"
+                      (blur)="argDidChange(arg.value,$event)"
+                      (focus)="argDidFocus(arg.value,$event)"
+                      (loadstart)="argDidChange(arg.value,$event)">
                   </div>
 
                   <!-- CELL: reset -->
                   <div class="console-widget-api-args-row-actions">
-                    <button pButton class="p-button" icon="pi pi-trash" (click)="argDidReset(arg.value.key,$event)"
+                    <button pButton class="p-button" icon="pi pi-trash" (click)="argDidReset(arg.value,$event)"
                       title="Reset to default" pTooltip="Reset to default"></button>
                   </div>
                 </div>
+
+                <!-- regex -->
+                <div class="console-widget-api-args-subrow" [id]="'args-regex-panel-'+arg.value.key" style="display:none; cursor: pointer;" (dblclick)="toggleRegexFormat(arg.value,$event)" >
+                  <div class="console-widget-api-args-subrow-regexpr format-regex-simple" [id]="'args-regex-'+arg.value.key" >{{this.clenupRegex(arg.value.regex)}}</div>
+                </div>
+
+
               </div>
+            </div>
           </ng-template>
     
 

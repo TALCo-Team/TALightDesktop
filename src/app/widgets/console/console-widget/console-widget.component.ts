@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, ViewChild, NgZone, ElementRef } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild, NgZone, ElementRef, ViewChildren, QueryList } from '@angular/core';
 import {Pipe, PipeTransform} from '@angular/core';
 import { Terminal, TerminalService } from 'primeng/terminal';
 import { Subscription } from 'rxjs';
@@ -48,7 +48,7 @@ export class ConsoleWidgetComponent {
   @ViewChild("terminal") public terminal!: Terminal;
   @ViewChild("output") public output!: ElementRef;
   @ViewChild("sdtinInput") public sdtinInput!: ElementRef;
-
+  @ViewChildren('argsIcons') public argsIcons!: QueryList<ElementRef>
 
 
   public outputText: string = "";
@@ -59,7 +59,8 @@ export class ConsoleWidgetComponent {
   selectedProblem?: ProblemDescriptor;
   selectedService?: ServiceMenuEntry;
   selectedArgs?: ArgsMap;
-
+  regexFormat = true;
+  showRegex = true;
 
 
   constructor( public terminalService: TerminalService,
@@ -83,6 +84,32 @@ export class ConsoleWidgetComponent {
     this.zone.run(() => this.outputText = "")
   }
 
+  clenupRegex(re:RegExp){
+    let text = re+""
+    text = text.replace(/\/(.*)\//,'$1')
+    text = text.replace(/\^(.*)\$/,'$1')
+    text = text.replace(/\((.*)\)/,'$1')
+    text = text.replace(/\|/g,' OR ')
+    return text;
+  }
+
+  readableRegex(re:RegExp){
+    let text = re+""
+    text = text.replace(/\/(.*)\//,'$1')
+    text = text.replace(/\^(.*)\$/,'$1')
+    text = text.replace(/\[([^\]]*)\]/, (match:string, content:string)=>{
+      if ( content.startsWith('^') ){
+        return ' invalid('+content.slice(1)+') '
+      }
+      return ' valid('+content.slice(1)+') '
+    })
+    text = text.replace(/\(([^|]+|)*([^|]+)*\)/g,(match:string, options:string, last:string)=>{
+      console.log('OROR:',match, options, last)
+      return text.replace(/\((.*)\)/,'$1').replace(/\|/g,' or ')
+    })
+    return text
+  }
+
   print(content: string, end = "\n") {
     this.zone.run(() => this.outputText += content + end);
 
@@ -100,16 +127,76 @@ export class ConsoleWidgetComponent {
     console.log("API Error: ", message)
   }
   
-  async argDidChange(key:string,event:Event){
-    console.log('argDidChange:',key,event)
+  async argDidFocus(arg:ArgDescriptor,event:Event){
+    console.log('argDidFocus:',arg,event)
+    let idPanel = 'args-regex-panel-' + arg.key
+    let idRegex = 'args-regex-' + arg.key
+    
+    let panel = document.getElementById(idPanel)
+    let regex = document.getElementById(idRegex)
+    
+    if(!(panel instanceof HTMLElement)) {return}
+    if(!(regex instanceof HTMLElement)) {return}
+    console.log('argDidFocus:show!')
+    panel.style.display = "flex"
+    if(regex.style.color == "red"){
+      regex.style.color = "orange"
+    }else{
+      regex.style.color = ""
+    }
+    
   }
 
-  async argDidReset(key:string,event:Event){
-    console.log('argDidReset:',key,event)
-    if(!this.selectedArgs){return}
-    let arg = this.selectedArgs.get(key)
-    if (!arg){return}
-    arg.value = arg.default
+  async argDidChange(arg:ArgDescriptor,event:Event){
+    console.log('argDidChange:',arg,event)
+    let idPanel = 'args-regex-panel-' + arg.key
+    let idRegex = 'args-regex-' + arg.key
+    
+    let panel = document.getElementById(idPanel)
+    let regex = document.getElementById(idRegex)
+    
+    if(!(panel instanceof HTMLElement)) {return}
+    if(!(regex instanceof HTMLElement)) {return}
+
+    console.log('argDidFocus:validate')
+    let issues = this.pm.validateArg(arg)
+    if(issues !== null){
+      regex.style.color = "red"
+      panel.style.display = "flex"
+    }else if(arg.value != arg.default){
+      regex.style.color = "green"
+      panel.style.display = "flex"
+    }else{
+      regex.style.color = ""
+      panel.style.display = "none"
+    }
+  }
+
+  async argDidReset(arg:ArgDescriptor,event:Event){
+    console.log('argDidReset:',arg.key,event)
+    arg.value = arg.default ?? ""
+    this.argDidChange(arg,event)
+  }
+
+  async toggleShowRegex(arg:ArgDescriptor,event:Event){
+    let idPanel = 'args-regex-panel-' + arg.key
+    let panel = document.getElementById(idPanel)
+    if(!(panel instanceof HTMLElement)) {return}
+    panel.style.display = panel.style.display == 'none' ? 'flex' : 'none';
+  }
+
+  async toggleRegexFormat(arg:ArgDescriptor,event:Event){
+    let idRegex = 'args-regex-'+arg.key;
+    let regex = document.getElementById(idRegex)
+    if(!(regex instanceof HTMLElement)) {return}
+    let content;
+    if(regex.classList.contains('format-regex-simple')){
+      regex.classList.remove('format-regex-simple')
+      regex.innerText = arg.regex + ""
+    }else{
+      regex.classList.add('format-regex-simple')
+      regex.innerText = this.clenupRegex(arg.regex)
+    }
   }
 
   async reloadProblemList(){
@@ -166,7 +253,6 @@ export class ConsoleWidgetComponent {
     this.pm.selectService(serviceDesc)
     this.selectedArgs = serviceDesc.args
     console.log('didSelectService:selectedArgs:', this.selectedArgs)
-    
     this.onServiceSelected.emit(serviceDesc)
   }
 

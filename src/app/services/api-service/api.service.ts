@@ -16,9 +16,9 @@ export class ApiService {
   urlCache;
 
   constructor(){
-    this._url = 'wss://ta.di.univr.it/sfide'
+    this._url = 'ws://localhost:8008/'
     this.urlCache = [
-      this._url,
+      'wss://ta.di.univr.it/sfide',
       'ws://localhost:8008/',
       'wss://ta.di.univr.it/rtal',
     ]
@@ -49,7 +49,8 @@ export class ApiService {
     if(!( url.protocol == 'ws:' || url.protocol == 'wss:' )){ return false; }
     console.log("setUrl:valid!")
     this.resetAllConnections()
-    this._url = url.toString();
+    this._url = url.href
+    console.log("setUrl:href:",url.href)
     this.addToCache(this._url)
     return true;
   }
