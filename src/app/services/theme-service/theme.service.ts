@@ -41,4 +41,13 @@ export class ThemeService {
     const newTheme: AppTheme = storedTheme === AppTheme.light ? AppTheme.dark : AppTheme.light;
     this.setTheme(newTheme);
   }
+
+  public themeName(): string {
+    switch (this.currentTheme) {
+      case AppTheme.dark:
+        return "vs-dark";
+      default:
+        return "vs";
+    }
+  }
 }
