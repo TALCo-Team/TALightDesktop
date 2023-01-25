@@ -316,7 +316,7 @@ class PyodideWorker {
     console.log("installPackages:\n", packages); //,res)
     let res = this.micropip.install(packages);
     this.syncFS();
-    console.log("installPackages: DONE!\n"); //,res)
+    console.log("installPackages: DONE!\n", res);
     response.message.contents.push(""); //res+": "+res)
     return response;
   }
@@ -503,7 +503,7 @@ class PyodideWorker {
     }
     console.log("readFile: ", fullpath);
     let content = this.fs.readFile(this.mount + fullpath, opts);
-    console.log('readFile:content:\n', content);
+    console.log('readFile:content:\n', content.length);
     if (content instanceof Uint8Array) {
       console.log('readFile:content: BUFFER');
       response.message.contents = [content.buffer];
