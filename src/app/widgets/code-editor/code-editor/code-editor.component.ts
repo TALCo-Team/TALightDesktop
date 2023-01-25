@@ -1,30 +1,30 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 
-import { FsService, Tar } from 'src/app/services/fs-service/fs.service';
+import { FsService, FsNodeFile, Tar } from 'src/app/services/fs-service/fs.service';
 import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
-import { CodeEditorWidgetComponent } from 'src/app/widgets/code-editor/code-editor-widget/code-editor-widget.component';
-import { EditorFilesWidgetComponent, TalFile } from 'src/app/widgets/code-editor/editor-files-widget/editor-files-widget.component';
-import { ConsoleWidgetComponent } from 'src/app/widgets/console/console-widget/console-widget.component';
+import { FileExplorerWidgetComponent } from 'src/app/widgets/code-editor/file-explorer-widget/file-explorer-widget.component';
+import { ExecbarWidgetComponent } from '../execbar-widget/execbar-widget.component';
+import { FileEditorWidgetComponent } from '../file-editor-widget/file-editor-widget.component';
+import { ProblemWidgetComponent } from '../problem-widget/problem-widget.component';
 
 @Component({
-  selector: 'tal-editor-widget',
-  templateUrl: './editor-widget.component.html',
-  styleUrls: ['./editor-widget.component.scss']
+  selector: 'tal-code-editor',
+  templateUrl: './code-editor.component.html',
+  styleUrls: ['./code-editor.component.scss']
 })
-export class EditorWidgetComponent implements OnInit {
-  public openedFile?: TalFile;
-
-  public fs;
-  public driver;
+export class CodeEditorComponent implements OnInit {
+  public selectedFile?: FsNodeFile;
   public selectedProblem?: ProblemDescriptor;
   public selectedService?: ServiceDescriptor;
+  public driver;
+  public fs;
 
-  @ViewChild("fileWidget") public fileWidget!: EditorFilesWidgetComponent;
-  @ViewChild("editorWidget") public editorWidget!: CodeEditorWidgetComponent;
-  @ViewChild("consoleWidget") public consoleWidget!: ConsoleWidgetComponent;
+  @ViewChild("fileExplorer") public fileExplorer!: FileExplorerWidgetComponent;
+  @ViewChild("fileEditor") public fileEditor!: FileEditorWidgetComponent;
+  @ViewChild("execBar") public execBar!: ExecbarWidgetComponent;
+  @ViewChild("problemWidget") public problemWidget!: ProblemWidgetComponent;
   
-
   constructor(
     private _fs: FsService,
     private python:PythonCompilerService,
@@ -41,16 +41,16 @@ export class EditorWidgetComponent implements OnInit {
 
   public onStdout(data:string){
     //alert("STDOUT: "+data)
-    this.consoleWidget.print(data)
+    this.problemWidget.print(data)
   }
 
   public onStderr(data:string){
     //alert("STDERR: "+data)
-    this.consoleWidget.print(data)
+    this.problemWidget.print(data)
   }
 
   public onStdin(msg:string){
-    this.consoleWidget.print(msg)
+    this.problemWidget.print(msg)
   }
 
   public onProblemChanged(selectedProblem: ProblemDescriptor){
@@ -89,9 +89,9 @@ export class EditorWidgetComponent implements OnInit {
     */
     if (!(data instanceof ArrayBuffer ) ) {return;}
     Tar.unpack(data, async (files,folders) => {
-      console.log("extractTar:unpack:files",files)
+      
+
       console.log("extractTar:unpack:folders",folders)
-  
       for(var idx in folders){
         console.log("extractTar:createDirectory:")
         let folder = folders[idx]
@@ -100,6 +100,9 @@ export class EditorWidgetComponent implements OnInit {
         await this.driver?.createDirectory(path)
       }
       console.log("extractTar:createDirectory:DONE")
+
+
+      console.log("extractTar:unpack:files",files)
       for(var idx in files){
         console.log("extractTar:writeFile:")
         let file = files[idx]
@@ -109,14 +112,18 @@ export class EditorWidgetComponent implements OnInit {
         await this.driver?.writeFile(path, content)
       }
       console.log("extractTar:writeFile:DONE")
-      this.fileWidget.refreshRoot()
+      
+      
+      this.fileExplorer.refreshRoot()
     });
    
   }
 
-  public openFile(file: TalFile) {
-    this.openedFile = file;
-    
+  public selectFile(file: FsNodeFile) {
+    console.log('selectFile',file)
+    this.selectedFile = file;
+    this.execBar.selectedFile = this.selectedFile
+    this.fileEditor.selectedFile = this.selectedFile 
   }
 
   public editorDidChange(event: Event){
@@ -125,19 +132,19 @@ export class EditorWidgetComponent implements OnInit {
   }
 
   public editorDidInput(event: InputEvent){
-    console.log("Input: ", this.editorWidget.value)
+    console.log("Input: ", this.fileEditor)
     this.saveFile()
   }
 
   public saveFile(){
-    if ( this.openedFile ){ // && this.needSave ){
-      console.log("saveFile:\n", this.openedFile.path, "\n", this.editorWidget.value)
-      this.driver?.writeFile(this.openedFile.path, this.editorWidget.value)
+    if ( this.selectedFile ){ // && this.needSave ){
+      console.log("saveFile:\n", this.selectedFile.path, "\n", this.fileEditor)
+      this.driver?.writeFile(this.selectedFile.path, this.selectedFile.content)
     }
   }
 
   public runProject(){
-    this.consoleWidget.print("python main.py\n")
+    this.problemWidget.print("python main.py\n")
     this.saveFile();
      
  
@@ -147,11 +154,11 @@ export class EditorWidgetComponent implements OnInit {
   }
 
   public testConnectAPI(){
-    this.consoleWidget.print("python free_sum_mysimplebot.py\n")
+    this.problemWidget.print("python free_sum_mysimplebot.py\n")
     this.saveFile();
     
  
-    this.python.testConnectAPI(this.consoleWidget).then(()=>{
+    this.python.testConnectAPI(this.problemWidget).then(()=>{
 
     })
   }

@@ -1,0 +1,29 @@
+<div class="tal-file-editor-switch">
+
+    <div [hidden]="shouldHide(EditorType.None)" class="tal-file-editor-case-none tal-file-editor-case ">
+        <div class="tal-center-page">
+            <p class="tal-placeholder-message">Seleziona o crea un file</p>
+        </div>
+    </div>
+
+    <div [hidden]="shouldHide(EditorType.Code)" class="tal-file-editor-case-code tal-file-editor-case ">
+        <div class="tal-file-editor-code">
+            <tal-monaco-editor-widget class="tal-file-editor-monaco-widget"
+                #monacoEditor
+                (onChange)="monacoEditorDidChange"
+                (onInput)="monacoEditorDidInput"
+            >
+            </tal-monaco-editor-widget>
+        </div>
+    </div>
+
+    <div [hidden]="shouldHide(EditorType.Browser)" class="tal-file-editor-case-browser tal-file-editor-case ">
+        <div class="tal-browser-viewer">
+            <iframe #browserEditor class="tal-browser-viewer-iframe"></iframe>
+        </div>
+    </div>
+
+    
+</div>
+
+

@@ -1,24 +1,28 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CodeEditorWidgetComponent } from './code-editor-widget/code-editor-widget.component';
-import { EditorFilesWidgetComponent } from './editor-files-widget/editor-files-widget.component';
-import { EditorWidgetComponent } from './editor-widget/editor-widget.component';
+import { FileExplorerWidgetComponent } from './file-explorer-widget/file-explorer-widget.component';
+import { CodeEditorComponent } from './code-editor/code-editor.component';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService, SharedModule } from 'primeng/api';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SplitterModule } from 'primeng/splitter';
-import { ConsoleModule } from '../console/console.module';
 import { TooltipModule } from 'primeng/tooltip';
-import { FileViewerWidgetComponent } from './file-viewer-widget/file-viewer-widget.component';
+import { FileEditorWidgetComponent } from './file-editor-widget/file-editor-widget.component';
+import { ExecbarWidgetComponent } from './execbar-widget/execbar-widget.component';
+import { ProblemWidgetComponent } from './problem-widget/problem-widget.component';
+import { DropdownModule } from 'primeng/dropdown';
+import { MonacoEditorWidgetComponent } from './monaco-editor-widget/monaco-editor-widget.component';
 
 @NgModule({
   declarations: [
-    CodeEditorWidgetComponent,
-    EditorFilesWidgetComponent,
-    EditorWidgetComponent,
-    FileViewerWidgetComponent
+    FileExplorerWidgetComponent,
+    FileEditorWidgetComponent,
+    CodeEditorComponent,
+    ExecbarWidgetComponent,
+    ProblemWidgetComponent,
+    MonacoEditorWidgetComponent
   ],
   imports: [
     CommonModule,
@@ -28,14 +32,13 @@ import { FileViewerWidgetComponent } from './file-viewer-widget/file-viewer-widg
     OverlayPanelModule,
     SplitterModule,
     SharedModule,
-    ConsoleModule,                                      
-    TooltipModule
+    TooltipModule,
+    DropdownModule,
   ],
   exports: [
-    CodeEditorWidgetComponent,
-    EditorFilesWidgetComponent,
-    EditorWidgetComponent
+    FileExplorerWidgetComponent,
+    CodeEditorComponent
   ],
-  providers: [ConfirmationService],
+  providers: [ ConfirmationService ],
 })
 export class CodeEditorModule { }

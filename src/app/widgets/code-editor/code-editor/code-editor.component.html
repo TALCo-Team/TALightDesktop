@@ -1,0 +1,45 @@
+
+<div class="tal-editor">
+  <p-splitter [style]="{'height': '100%'}" [panelSizes]="[15,50,35]" [minSizes]="[12,20,20]">
+
+
+    
+    <ng-template pTemplate>
+      <div class="tal-editor-files">
+        <tal-file-explorer-widget #fileExplorer (onSelectFile)="selectFile($event)"></tal-file-explorer-widget>
+      </div>
+    </ng-template>
+
+
+
+    <ng-template pTemplate>
+      
+        <div class="tal-code-editor-container">
+
+          <div class="tal-code-editor-header">
+            <tal-execbar-widget #execBar [selectedFile]="selectedFile"></tal-execbar-widget>
+          </div>
+
+          <div class="tal-code-editor">
+            <tal-file-editor-widget #fileEditor
+              (onChange)="editorDidChange($event)" 
+              (onInput)="editorDidInput($event)">
+            </tal-file-editor-widget>
+          </div>
+
+        </div>
+      
+    </ng-template>
+
+
+    <ng-template pTemplate>
+      <tal-problem-widget #problemWidget 
+        (stdin)="onStdin($event)" 
+        (attachments)="onAttachments($event)"
+        (problemChanged)="onProblemChanged($event)"
+        (serviceChanged)="onServiceChanged($event)">
+      </tal-problem-widget>
+    </ng-template>
+
+  </p-splitter>
+</div>

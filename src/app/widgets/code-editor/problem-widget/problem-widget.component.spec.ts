@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ConsoleWidgetComponent } from './console-widget.component';
+import { ProblemWidgetComponent } from './problem-widget.component';
 
-describe('ConsoleWidgetComponent', () => {
-  let component: ConsoleWidgetComponent;
-  let fixture: ComponentFixture<ConsoleWidgetComponent>;
+describe('ProblemWidgetComponent', () => {
+  let component: ProblemWidgetComponent;
+  let fixture: ComponentFixture<ProblemWidgetComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ConsoleWidgetComponent]
+      declarations: [ProblemWidgetComponent]
     })
       .compileComponents();
 
-    fixture = TestBed.createComponent(ConsoleWidgetComponent);
+    fixture = TestBed.createComponent(ProblemWidgetComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
