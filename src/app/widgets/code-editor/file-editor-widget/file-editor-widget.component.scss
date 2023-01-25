@@ -1,0 +1,35 @@
+:host{
+    width:100%;
+    height: 100%;
+}
+
+.tal-file-editor-switch{
+    display: flex;
+    width: 100%;
+    height:100%;
+
+    .tal-file-editor-case{
+        width: 100%;
+        height:100%;
+    }
+
+    .tal-file-editor-code{
+        display: flex;
+        width:100%;
+        height:100%;
+        
+        .tal-file-editor-monaco-widget{
+            width:100%;
+            height:100%;
+        }
+    }
+
+
+    .tal-browser-viewer-iframe, .tal-browser-viewer{
+        display: flex;
+        width:100%;
+        height:100%;
+        flex-grow: 1;
+        border: none;
+    }
+}

@@ -1,33 +1,30 @@
-import { Component, EventEmitter, forwardRef, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
+import { ControlValueAccessor } from '@angular/forms';
 import { EditorComponent } from 'ngx-monaco-editor-v2';
+import { noop } from 'rxjs';
+import { FsNodeFile } from 'src/app/services/fs-service/fs.service';
 import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
 
-const noop = () => { };
-
-const CUSTOM_INPUT_CONTROL_VALUE_ACCESSOR: any = {
-  provide: NG_VALUE_ACCESSOR,
-  useExisting: forwardRef(() => CodeEditorWidgetComponent),
-  multi: true,
-};
-
 @Component({
-  selector: 'tal-code-editor-widget',
-  templateUrl: './code-editor-widget.component.html',
-  styleUrls: ['./code-editor-widget.component.scss'],
-  providers: [CUSTOM_INPUT_CONTROL_VALUE_ACCESSOR],
+  selector: 'tal-monaco-editor-widget',
+  templateUrl: './monaco-editor-widget.component.html',
+  styleUrls: ['./monaco-editor-widget.component.scss']
 })
-export class CodeEditorWidgetComponent implements ControlValueAccessor, OnInit, OnChanges {
+export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit, OnChanges {
+  @ViewChild("monacoEditor") public monacoEditor!: EditorComponent;
   public editorOptions: any;
-
-  @Input("lang") public lang: string = "";
-
-  @ViewChild("editor") public editor!: EditorComponent;
-
   private innerValue: string = '';
-  @Output('change') public onChange = new EventEmitter<Event>();
-  @Output('input') public onInput = new EventEmitter<InputEvent>();
+  
+  @Input("selectedFile") private _selectedFile: FsNodeFile | null = null;
+  @Input("language") public language: string = "";
+  //Code
+  
+  
+  
+  @Output('onChange') public onChange = new EventEmitter<Event>();
+  @Output('onInput') public onInput = new EventEmitter<InputEvent>();
 
+  
 
   constructor(
     private readonly themeService: ThemeService,
@@ -47,8 +44,25 @@ export class CodeEditorWidgetComponent implements ControlValueAccessor, OnInit, 
     this.updateEditorOptions();
   }
 
-  // Placeholders for the callbacks which are later provided
-  // by the Control Value Accessor
+  public get selectedFile():FsNodeFile|null{
+    return this._selectedFile;
+  }
+
+  public set selectedFile(selectedFile:FsNodeFile|null){
+    this._selectedFile = selectedFile
+    if(!this._selectedFile) {
+      this.value = ""; 
+      return; 
+    }
+    let content = this._selectedFile.content; 
+    if(typeof content === 'string' )
+    { 
+      this.value = content
+    }
+
+  }
+
+  // CodeEditorControls
   private onTouchedCallback: () => void = noop;
   private onChangeCallback: (_: any) => void = noop;
 
@@ -92,21 +106,12 @@ export class CodeEditorWidgetComponent implements ControlValueAccessor, OnInit, 
 
 
   public updateEditorOptions(): void {
-    console.log(this.lang);
+    console.log(this.language);
     this.editorOptions = {
-      language: this.lang,
-      theme: this.theme,
+      language: this.language,
+      theme: this.themeService.themeName(),
       automaticLayout: true
     }
   }
-
-  public get theme(): string {
-    switch (this.themeService.currentTheme) {
-      case AppTheme.dark:
-        return "vs-dark";
-      default:
-        return "vs";
-    }
-  }
-
+    
 }

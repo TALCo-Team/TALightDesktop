@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { EditorWidgetComponent } from 'src/app/widgets/code-editor/editor-widget/editor-widget.component';
+import { CodeEditorComponent } from 'src/app/widgets/code-editor/code-editor/code-editor.component';
 
 
 @Component({
@@ -9,7 +9,7 @@ import { EditorWidgetComponent } from 'src/app/widgets/code-editor/editor-widget
 })
 export class HomeViewComponent implements OnInit {
   
-  @ViewChild("editorWidget") public editorWidget!: EditorWidgetComponent;
+  @ViewChild("codeEditor") public codeEditor!: CodeEditorComponent;
 
   constructor(
   ) {

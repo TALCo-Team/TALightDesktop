@@ -242,14 +242,14 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
 
 
   didReceiveReadFile(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<string|ArrayBuffer> ){
-    console.log("didReceiveReadFile:\n", msgRecived.contents[0])
+    console.log("didReceiveReadFile:\n", msgRecived.contents.length)
     resolvePromise( msgRecived.contents[0] )
   }
   
   didReceiveWriteFile(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<number> ){
     console.log("didReceiveWriteFile: ")
-    console.log(msgRecived.args)
-    console.log(msgRecived.contents)
+    console.log(msgRecived.args.length)
+    console.log(msgRecived.contents.length)
     //TODO:
     resolvePromise(msgRecived.contents.length)
   }

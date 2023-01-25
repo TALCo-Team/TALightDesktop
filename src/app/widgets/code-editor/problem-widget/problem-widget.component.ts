@@ -1,9 +1,7 @@
-import { Component, EventEmitter, Output, ViewChild, NgZone, ElementRef, ViewChildren, QueryList } from '@angular/core';
-import {Pipe, PipeTransform} from '@angular/core';
-import { Terminal, TerminalService } from 'primeng/terminal';
-import { Subscription } from 'rxjs';
+import { Component, EventEmitter, Output, ViewChild, NgZone, ElementRef } from '@angular/core';
 import { ApiService, Meta } from 'src/app/services/api-service/api.service';
-import { ProblemManagerService, ServiceDescriptor, ProblemDescriptor, ArgsMap, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
+import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
+import { ProblemDescriptor, ServiceDescriptor, ArgsMap, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
 
 
 export class ServiceMenuEntry {
@@ -14,47 +12,25 @@ export class ServiceMenuEntry {
   ){}
 }
 
-
-
-@Pipe({name: 'cleanupName'})
-export class CleanUpNamePipe implements PipeTransform {
-    transform(name:string): string {
-        name = name.replace(new RegExp('[-_ ]+','g'), " ") 
-        name = name.replace("[^a-zA-Z0-9 ]+", "") 
-        name = name.charAt(0).toUpperCase() + name.slice(1);
-        return name
-    }
-}
-
-
-
-
 @Component({
-  selector: 'tal-console-widget',
-  templateUrl: './console-widget.component.html',
-  styleUrls: ['./console-widget.component.scss'],
-  //encapsulation: ViewEncapsulation.None,
-  providers: [TerminalService]
+  selector: 'tal-problem-widget',
+  templateUrl: './problem-widget.component.html',
+  styleUrls: ['./problem-widget.component.scss'],
 })
-export class ConsoleWidgetComponent {
+export class ProblemWidgetComponent {
 
   @Output('input') public onInput = new EventEmitter<InputEvent>();
-  @Output('stdin') public onStdin = new EventEmitter<string>();
+  @Output('stdin') public onStdin = new EventEmitter<string>(); 
   @Output('problemListUpdate') public onProblemListUpdate = new EventEmitter<Map<string, Meta>>();
   @Output('problemChanged') public onProblemSelected = new EventEmitter<ProblemDescriptor>();
   @Output('serviceChanged') public onServiceSelected = new EventEmitter<ServiceDescriptor>();
   @Output('attachments') public onAttachments = new EventEmitter<ArrayBuffer>();
 
-  @ViewChild("terminal") public terminal!: Terminal;
   @ViewChild("output") public output!: ElementRef;
   @ViewChild("sdtinInput") public sdtinInput!: ElementRef;
-  @ViewChildren('argsIcons') public argsIcons!: QueryList<ElementRef>
-
 
   public outputText: string = "";
 
-
-  commandSub: Subscription
   servicesMenu = new Array<ServiceMenuEntry>();
   selectedProblem?: ProblemDescriptor;
   selectedService?: ServiceMenuEntry;
@@ -63,21 +39,15 @@ export class ConsoleWidgetComponent {
   showRegex = true;
 
 
-  constructor( public terminalService: TerminalService,
-               public zone: NgZone,
+  constructor( public zone: NgZone,
                public api: ApiService,
-               public pm: ProblemManagerService
-             )
-  {
-    this.commandSub = this.terminalService.commandHandler.subscribe(command => { this.execCommand(command) });
-
-  }
+               public pm: ProblemManagerService){}
+  
   ngOnInit() {
     this.apiProblemList();
   }
-  ngOnDestroy() {
-    this.commandSub.unsubscribe();
-  }
+
+  ngOnDestroy() {}
 
 
   clearOutput() {
@@ -105,7 +75,7 @@ export class ConsoleWidgetComponent {
     })
     text = text.replace(/\(([^|]+|)*([^|]+)*\)/g,(match:string, options:string, last:string)=>{
       console.log('OROR:',match, options, last)
-      return text.replace(/\((.*)\)/,'$1').replace(/\|/g,' or ')
+      return text.replace(/\((.*)\)/,'$1').replace(/\|/g,' OR ')
     })
     return text
   }
@@ -295,102 +265,6 @@ export class ConsoleWidgetComponent {
   public sendOnEnter(event: KeyboardEvent) {
     if (event.key == 'Enter') { this.sendStdin(); }
   }
-
-
-  injectCommand(command: string) {
-
-    let event = new KeyboardEvent('keydown', { 'key': 'Enter' })
-    // https://stackoverflow.com/a/44190874/320926
-    // https://stackoverflow.com/a/30003941/320926
-    // console.log(this.terminal.el)
-
-    var enterKey = new KeyboardEvent('keydown', {
-      code: 'Enter',
-      key: 'Enter',
-      charCode: 13,
-      keyCode: 13
-    });
-
-    this.zone.run(() => {
-      let term = this.terminal.el.nativeElement.children[0];
-      this.terminal.focus(term);
-      this.terminalService.sendCommand(command)
-      this.terminal.command = command
-
-
-      this.terminal.handleCommand(enterKey);
-
-      //this.terminal.el.nativeElement.dispatchEvent(enterKey);
-    })
-
-
-  }
-
-  execCommand(command: string) {
-    let params = command.split(" ")
-    let operation = params.splice(0, 1)[0]
-    console.log('tokens: ', params)
-    console.log('command: ', command)
-    let response = 'Unknown command: ' + command;
-    switch (operation) {
-      case "echo": response = params.join(" "); break;
-      case "date": response = new Date().toDateString(); break;
-    }
-
-    this.terminalService.sendResponse(response);
-  }
-
-
-
-
-
-  /*
-  public term: Terminal;
-  container?: HTMLElement | null;
-
-  constructor() {
-    this.term = new Terminal();
-  }
-
-  ngOnInit(){
-    this.container = document.getElementById('xterm-container');
-    if (this.container){
-      this.term.open(this.container);
-      this.term.writeln('Welcome to xterm.js');
-
-      let myBuffer:string[] = [];
-
-      // This is an xterm.js instance
-      this.term.onKey(( {key, domEvent} ) => {
-        myBuffer.push(key);
-        this.term.write(key)
-      });
-      
-      this.term.onLineFeed(() => {
-        let command = myBuffer.join('');  // Or something like that
-        myBuffer = [];  // Empty buffer
-        //this.term.write(command)
-        this.execCommand(command)
-        return false
-      });
-
-
-
-    }
-  }
-
-  public execCommand(command:string){
-    alert(command)
-  }
-
-
-
-  print(content:string){
-    this.term.writeln(content);
-  }
-
-  */
-
 
 }
 

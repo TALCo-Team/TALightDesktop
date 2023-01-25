@@ -1,11 +1,7 @@
 import { Component, NgZone, OnInit } from '@angular/core';
-import { Child, Command, open as ShellOpen } from '@tauri-apps/api/shell'
-import { open as DialogOpen } from '@tauri-apps/api/dialog';
 import { ApiService, Meta } from 'src/app/services/api-service/api.service';
-import { Packets } from 'src/app/services/api-service/api.packets';
-import { ReplaySubject } from 'rxjs';
 import { Commands } from 'src/app/services/api-service/api.commands';
-import { ConsoleModule } from 'src/app/widgets/console/console.module';
+
 @Component({
   selector: 'app-demo-view',
   templateUrl: './demo-view.component.html',

@@ -3,7 +3,8 @@ import { PyodideDriver, PyodideRequest } from './pydiode-driver';
 import { FsService } from '../fs-service/fs.service';
 import { ApiService } from '../api-service/api.service';
 import { Commands } from '../api-service/api.commands';
-import { ConsoleWidgetComponent } from 'src/app/widgets/console/console-widget/console-widget.component';
+import { ProblemWidgetComponent } from 'src/app/widgets/code-editor/problem-widget/problem-widget.component';
+
 
 
 @Injectable({
@@ -17,7 +18,7 @@ export class PythonCompilerService {
   public driver?: PyodideDriver;
   public worker: Worker = new Worker(new URL('../../workers/python-compiler.worker', import.meta.url));
   public cmdConnect?:Commands.Connect;
-  public consoleWidget?:ConsoleWidgetComponent;
+  public problemWidget?:ProblemWidgetComponent;
 
   constructor( private _fs:FsService) { 
     this.fs = _fs;
@@ -97,7 +98,7 @@ print("100 0")`
   }
 
   public onStdout(data:string){
-    this.consoleWidget!.print(data);
+    this.problemWidget!.print(data);
     this.cmdConnect!.sendBinary(data + "\n"); //lo \n va aggiunto all'output del bot python
   }
 
@@ -112,7 +113,7 @@ print("100 0")`
     
     let onData = (data: string)=>{
       console.log("Binary data: "+data);
-      this.consoleWidget!.print(data);
+      this.problemWidget!.print(data);
     };
 
     let req = api.Connect(problem_name, service, undefined, undefined, undefined, undefined, onConnectionBegin, onConnectionStart, onConnectionClose, onData);
@@ -121,8 +122,8 @@ print("100 0")`
     return req;
   }
 
-  async testConnectAPI(consoleWidget:ConsoleWidgetComponent){
-    this.consoleWidget = consoleWidget;
+  async testConnectAPI(problemWidget:ProblemWidgetComponent){
+    this.problemWidget = problemWidget;
     this.driver?.subscribeStdout(true,(msg)=>{this.onStdout(msg)})
 
     this.cmdConnect = await this.apiConnect();
@@ -131,8 +132,6 @@ print("100 0")`
     if (!config){return null;}
     await this.driver?.installPackages(config.PACKAGES)
     let stdout = await this.driver?.executeFile(config!.MAIN)
-
-    //this.cmdConnect.sendConnectStop();
     
     console.log(stdout)
     return stdout      
