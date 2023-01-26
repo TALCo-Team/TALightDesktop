@@ -17,13 +17,16 @@
         <div class="tal-code-editor-container">
 
           <div class="tal-code-editor-header">
-            <tal-execbar-widget #execBar [selectedFile]="selectedFile"></tal-execbar-widget>
+            <tal-execbar-widget #execBar 
+              (onRun)="runProject()"
+              (onConnect)="runConnectAPI()"
+              [selectedFile]="selectedFile">
+            </tal-execbar-widget>
           </div>
 
           <div class="tal-code-editor">
             <tal-file-editor-widget #fileEditor
-              (onChange)="editorDidChange($event)" 
-              (onInput)="editorDidInput($event)">
+              (onChange)="editorDidChange($event)">
             </tal-file-editor-widget>
           </div>
 
@@ -33,12 +36,23 @@
 
 
     <ng-template pTemplate>
-      <tal-problem-widget #problemWidget 
-        (stdin)="onStdin($event)" 
-        (attachments)="onAttachments($event)"
-        (problemChanged)="onProblemChanged($event)"
-        (serviceChanged)="onServiceChanged($event)">
-      </tal-problem-widget>
+      <p-splitter [style]="{'height': '100%'}" [panelSizes]="[15,50]" [minSizes]="[12,20]" layout="vertical">
+
+        <ng-template pTemplate>
+          <tal-problem-widget #problemWidget 
+            (onAttachments)="onAttachments($event)"
+            (onProblemChanged)="onProblemChanged($event)"
+            (onServiceChanged)="onServiceChanged($event)">
+          </tal-problem-widget>
+        </ng-template>
+
+        <ng-template pTemplate>
+          <tal-output-widget #outputWidget 
+            (onStdin)="onStdin($event)">
+          </tal-output-widget>
+        </ng-template>
+        
+      </p-splitter>
     </ng-template>
 
   </p-splitter>

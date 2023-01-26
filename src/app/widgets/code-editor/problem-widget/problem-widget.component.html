@@ -1,117 +1,93 @@
-<div class="console-widget-main">
-    <div class="console-widget-api">
-        <!-- API: PROBLEMS and SERVICES -->
-        <div class="console-widget-api-row console-widget-api-problem">
-            <button pButton class="p-button-danger" icon="pi pi-refresh"
-                            title="Refresh" pTooltip="Refresh"
-                            (click)="reloadProblemList()"></button>
-            <p-dropdown placeholder="Seleziona un problema" class="console-widget-problem-selector" 
-                        [options]="servicesMenu" [(ngModel)]="selectedService"
-                        (onChange)="didSelectService()" [style]="{'height': '55px', 'padding': 0}">
-                  
-                 
-                  <ng-template let-option pTemplate="selectedItem">
-                    <div class="console-widget-problem-selected">
-                      <span class="problem-label">{{option.problem}}</span>
-                      <span class="service-label">{{option.service}}</span>
-                    </div>
-                  </ng-template>
-                  
+<div class="tal-problem-widget-api">
+  <!-- ROW:title -->
+  <!--
+  <div class="tal-problem-widget-api-args-row">
+    <div class="tal-problem-widget-label">Problem</div>
+  </div>
+  -->
 
-                  <ng-template let-option pTemplate="item">
-                    <div class="console-widget-problem-item">
-                      <span class="problem-label">{{option.problem}}</span>
-                      <span class="service-label">{{option.service}}</span>
-                    </div>
-                  </ng-template>
-
-
-            </p-dropdown>
-            <button pButton class="p-button-help" icon="pi pi-download" (click)="apiDownloadAttachment()"
-                    title="Download Attachments" pTooltip="Scarica allegati"></button>
-        </div>
-
-        <!-- ROW:title -->
-        <div class="console-widget-api-args-row">
-          <div class="console-widget-label">Arguments</div>
-        </div>
-        
-        <p-splitter class="console-widget-api-row console-widget-splitter" [style]="{'width': '100%'}" 
-                    layout="vertical" [panelSizes]="[1,1]" [minSizes]="[3,3]">
-
-
-          
-          <ng-template pTemplate>
-              <!-- API: ARGS -->
-              <div class="console-widget-api-row console-widget-api-args">
-                <!-- ROW: empty -->
-                <div class="console-widget-api-args-row stretch-flex" *ngIf="!selectedArgs || selectedArgs.size==0">
-                  <div class="console-widget-api-args-row-no-params">
-                    <div>No arguments found.</div>
-                  </div>
-                </div>
-                
-                <!-- ROW: arg -->
-                <div class="console-widget-api-args-row" *ngFor="let arg of selectedArgs | keyvalue; "> 
-                  <div class="console-widget-api-args-subrow">
-                    <!-- CELL: info -->
-                    <div class="console-widget-api-args-row-info">
-                      <i #argsIcons class="pi pi-info-circle" [id]="'args-icon-'+arg.value.key" (click)="toggleShowRegex(arg.value,$event)" style="cursor: pointer;" [pTooltip]="arg.value.regex+''"></i>
-                    </div>
-                    <!-- CELL: name -->
-                    <div class="console-widget-api-args-row-name">{{arg.value.name}}</div>
-
-                    <!-- CELL: field -->
-                    <div class="console-widget-api-args-row-field">
-                      <input  pInputText type="text" 
-                              class="top-bar-url-input p-inputtext-sm" 
-                              [(ngModel)]="arg.value.value" 
-                              [placeholder]="arg.value.default" 
-                              (change)="argDidChange(arg.value,$event)" 
-                              (blur)="argDidChange(arg.value,$event)" 
-                              (focus)="argDidFocus(arg.value,$event)">
-                    </div>
-
-                    <!-- CELL: reset -->
-                    <div class="console-widget-api-args-row-actions">
-                      <button pButton class="p-button" icon="pi pi-trash" (click)="argDidReset(arg.value,$event)"
-                        title="Reset to default" pTooltip="Reset to default"></button>
-                    </div>
-                  </div>
-
-                  <!-- regex -->
-                  <div class="console-widget-api-args-subrow" [id]="'args-regex-panel-'+arg.value.key" style="display:none; cursor: pointer;" (dblclick)="toggleRegexFormat(arg.value,$event)" >
-                    <div class="console-widget-api-args-subrow-regexpr format-regex-simple" [id]="'args-regex-'+arg.value.key" >{{this.clenupRegex(arg.value.regex)}}</div>
-                  </div>
-                </div>
-
+  <!-- API: PROBLEMS and SERVICES -->
+  <div class="tal-problem-widget-api-row tal-problem-widget-api-problem">
+      <button pButton class="p-button-danger" icon="pi pi-refresh"
+                      title="Refresh" pTooltip="Refresh"
+                      (click)="reloadProblemList()"></button>
+      <p-dropdown placeholder="Seleziona un problema" class="tal-problem-widget-problem-selector" 
+                  [options]="servicesMenu" [(ngModel)]="selectedService"
+                  (onChange)="didSelectService()" [style]="{'height': '55px', 'padding': 0}">
+            
+            
+            <ng-template let-option pTemplate="selectedItem">
+              <div class="tal-problem-widget-problem-selected">
+                <span class="problem-label">{{option.problem}}</span>
+                <span class="service-label">{{option.service}}</span>
               </div>
-          </ng-template>
+            </ng-template>
+            
+
+            <ng-template let-option pTemplate="item">
+              <div class="tal-problem-widget-problem-item">
+                <span class="problem-label">{{option.problem}}</span>
+                <span class="service-label">{{option.service}}</span>
+              </div>
+            </ng-template>
+
+
+      </p-dropdown>
+      <button pButton class="p-button-help" icon="pi pi-download" (click)="apiDownloadAttachment()"
+              title="Download Attachments" pTooltip="Scarica allegati"></button>
+  </div>
+
+  <!-- ROW:title -->
+  <div class="tal-problem-widget-api-args-row">
+    <div class="tal-problem-widget-label">Arguments</div>
+  </div>
+
+  <!-- API: ARGS -->
+  <div class="tal-problem-widget-api-row tal-problem-widget-api-args">
+    <!-- ROW: empty -->
+    <div class="tal-problem-widget-api-args-row stretch-flex" *ngIf="!selectedArgs || selectedArgs.size==0">
+      <div class="tal-problem-widget-api-args-row-no-params">
+        <div>No arguments found.</div>
+      </div>
+    </div>
+    
+    <!-- ROW: arg -->
+    <div class="tal-problem-widget-api-args-row" *ngFor="let arg of selectedArgs | keyvalue; "> 
+      <div class="tal-problem-widget-api-args-subrow">
+        <!-- CELL: info -->
+        <div class="tal-problem-widget-api-args-row-info">
+          <i #argsIcons class="pi pi-info-circle" [id]="'args-icon-'+arg.value.key" (click)="toggleShowRegex(arg.value,$event)" style="cursor: pointer;" [pTooltip]="arg.value.regex+''"></i>
+        </div>
+        <!-- CELL: name -->
+        <div class="tal-problem-widget-api-args-row-name">{{arg.value.name}}</div>
+
+        <!-- CELL: field -->
+        <div class="tal-problem-widget-api-args-row-field">
+          <input  pInputText type="text" 
+                  class="top-bar-url-input p-inputtext-sm" 
+                  [(ngModel)]="arg.value.value" 
+                  [placeholder]="arg.value.default" 
+                  (change)="argDidChange(arg.value,$event)" 
+                  (blur)="argDidChange(arg.value,$event)" 
+                  (focus)="argDidFocus(arg.value,$event)">
+        </div>
+
+        <!-- CELL: reset -->
+        <div class="tal-problem-widget-api-args-row-actions">
+          <button pButton class="p-button" icon="pi pi-trash" (click)="argDidReset(arg.value,$event)"
+            title="Reset to default" pTooltip="Reset to default"></button>
+        </div>
+      </div>
+
+      <!-- regex -->
+      <div class="tal-problem-widget-api-args-subrow" [id]="'args-regex-panel-'+arg.value.key" style="display:none; cursor: pointer;" (dblclick)="toggleRegexFormat(arg.value,$event)" >
+        <div class="tal-problem-widget-api-args-subrow-regexpr format-regex-simple" [id]="'args-regex-'+arg.value.key" >{{this.clenupRegex(arg.value.regex)}}</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
     
 
 
-          <ng-template pTemplate>
-              <div class="console-widget-output">
-                  <div class="console-widget-label">Output</div>
-                  <div class="console-widget-output-scroll" id="console-bottom-scroll">
-                      <pre class="console-widget-output-text" #output>{{outputText}}</pre>
-                  </div>
-                  <div class="console-widget-output-stdin">
-                      <button pButton class="p-button-danger" icon="pi pi-refresh" (click)="clearOutput()" title="Clear output"
-                        pTooltip="Pulisci output"></button>
-                      <input #sdtinInput class="console-widget-output-stdin-input" (keydown)="sendOnEnter($event)"
-                        placeholder="Input del programma" />
-                      <button pButton icon="pi pi-send" (click)="sendStdin()" title="Send" pTooltip="Invia"></button>
-                </div>
-              </div>
-          </ng-template>
-
-
-
-      </p-splitter>
-
-
-
-    </div>
-
-</div>

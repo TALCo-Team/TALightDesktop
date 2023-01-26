@@ -3,7 +3,7 @@ import { ControlValueAccessor } from '@angular/forms';
 import { EditorComponent } from 'ngx-monaco-editor-v2';
 import { noop } from 'rxjs';
 import { FsNodeFile } from 'src/app/services/fs-service/fs.service';
-import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
+import { ThemeService } from 'src/app/services/theme-service/theme.service';
 
 @Component({
   selector: 'tal-monaco-editor-widget',
@@ -13,7 +13,7 @@ import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.ser
 export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit, OnChanges {
   @ViewChild("monacoEditor") public monacoEditor!: EditorComponent;
   public editorOptions: any;
-  private innerValue: string = '';
+  
   
   @Input("selectedFile") private _selectedFile: FsNodeFile | null = null;
   @Input("language") public language: string = "";
@@ -21,10 +21,10 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
   
   
   
-  @Output('onChange') public onChange = new EventEmitter<Event>();
-  @Output('onInput') public onInput = new EventEmitter<InputEvent>();
-
+  @Output('onChange') public onChange = new EventEmitter<FsNodeFile>();
   
+  public binEncoder = new TextEncoder(); // always utf-8
+  public binDecoder = new TextDecoder("utf-8");
 
   constructor(
     private readonly themeService: ThemeService,
@@ -35,11 +35,19 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
     this.themeService.themeChanged.subscribe((theme) => {
       this.updateEditorOptions();
     });
-
+    
     
     this.updateEditorOptions();
   }
 
+
+  ngAfterViewInit() {
+    //this.monacoEditor.registerOnChange((event:any)=>{ this.change(event) })
+    //this.monacoEditor.registerOnTouched((event:any)=>{ this.input(event) })
+
+    // this returns null
+  }
+  
   ngOnChanges(): void {
     this.updateEditorOptions();
   }
@@ -63,35 +71,61 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
   }
 
   // CodeEditorControls
-  private onTouchedCallback: () => void = noop;
-  private onChangeCallback: (_: any) => void = noop;
+  private onTouchedCallback: (_?: any) => void = noop;
+  private onChangeCallback: (_?: any) => void = noop;
+
+  public getFileContent():string{
+    if(!this._selectedFile){return ""}
+    let content = this._selectedFile.content
+    if (content instanceof ArrayBuffer){
+      content = this.binDecoder.decode(content)
+      this._selectedFile.content = content
+    }
+    return content
+  }
+
+  public setFileContent(text:string){
+    if(!this._selectedFile){return;}
+    this._selectedFile.content = text
+  }
+
+  
+
 
   // get accessor
   public get value(): string {
-    return this.innerValue;
+    console.log("MonacoEditor:value:get")
+    return this.getFileContent(); 
   }
 
   // Set accessor including call the onchange callback
-  public set value(v: string) {
-    if (v !== this.innerValue) {
-      this.innerValue = v;
-      this.onChangeCallback(v);
+  public set value(text: string) {
+    console.log("MonacoEditor:value:set")
+    if(!this._selectedFile){return;}
+    let content=this.getFileContent()
+    console.log("MonacoEditor:value:old:new",content,text)
+    if (text !== content) {
+      console.log("MonacoEditor:value:set:changed")
+      this.setFileContent(text);
+      this.didChange()
+      
     }
   }
   // From ControlValueAccessor interface
-  public writeValue(value: any) {
-    if (value !== this.innerValue) {
-      this.innerValue = value;
-      this.onChangeCallback(value);
+  public writeValue(text: any) {
+    console.log("MonacoEditor:value:writeValue")
+    if (text !== this.value) {
+      this.value = text;
     }
   }
 
   
-  public change(event:Event): void {
-    this.onChange.emit(event);
-  }
-  public input(event:InputEvent): void {
-    this.onInput.emit(event);
+  public didChange(): void {
+    console.log("monacoEditor:didChange")
+    this.onChangeCallback();
+    this.onTouchedCallback();
+    if(!this.selectedFile){return;}
+    this.onChange.emit(this.selectedFile);
   }
 
   // From ControlValueAccessor interface

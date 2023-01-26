@@ -1,5 +1,10 @@
 <div class="tal-code-editor-execbar">
-    <h3>{{selectedFile?.name}}</h3>
-    <button pButton icon="pi pi-play" (click)="onRunClick()" >RUN</button>
-    <button pButton icon="pi pi-play" (click)="onConnectClick()" >API CONNECT</button>
+    <div class="tal-code-editor-execbar-left">
+        <h3>{{selectedFile?.name}}</h3>
+    </div>
+
+    <div class="tal-code-editor-execbar-right">
+        <button pButton icon="pi pi-play" (click)="onRunClick()" title="Run locally"></button>
+        <button pButton icon="pi pi-cloud-upload" (click)="onConnectClick()" title="Verify solution with TALight server"></button>
+    </div>
 </div>

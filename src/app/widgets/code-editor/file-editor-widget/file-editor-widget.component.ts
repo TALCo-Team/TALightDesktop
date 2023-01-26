@@ -1,8 +1,8 @@
-import { Component, ElementRef, EventEmitter, Input, NgZone, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
-import { ControlValueAccessor } from '@angular/forms';
-import { noop } from 'rxjs';
+import { Component, ElementRef, EventEmitter, Input,  OnInit, Output, ViewChild } from '@angular/core';
+import { encode } from 'base64-arraybuffer';
+import { marked } from 'marked';
 import { FsNodeFile } from 'src/app/services/fs-service/fs.service';
-import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
+import { ThemeService } from 'src/app/services/theme-service/theme.service';
 import { MonacoEditorWidgetComponent } from '../monaco-editor-widget/monaco-editor-widget.component';
 
 // Editor UI
@@ -13,6 +13,7 @@ export enum EditorType{
   Markdown,
   Image,
   Browser,
+  Unknown,
   Default = Browser,
 }
 
@@ -58,10 +59,12 @@ export class FileAssociation{
   
   match(file:FsNodeFile){
     let parts = file.name.split(".")
+    console.log('FileAssociation:match:',parts)
     if (parts.length > 1){
-      let ext = parts.splice(0,-1)[0]
+      let ext = parts.splice(-1)[0]
+      console.log('FileAssociation:ext:',ext)
       if(this.pattern==ext) { return true } 
-      if(this.pattern.match(ext)){ return true } 
+      if(ext.match(this.pattern)){ return true } 
     } else {
       //TODO: mime-magic matching
     }
@@ -97,6 +100,7 @@ export class FileAssociationChoiceList{
   }
   match(file:FsNodeFile){
     let matches = FileAssociation.matchAll(file, this.associations)
+    console.log('FileAssociationChoiceList:match:',matches)
     if(matches.length == 0){return null}
     let bestMatch = matches[0]
     return bestMatch;
@@ -116,22 +120,32 @@ export class FileEditorWidgetComponent implements OnInit {
   public editorType = EditorType.None
   public editorOption?:EditorOptions
 
+  public binEncoder = new TextEncoder(); // always utf-8
+  public binDecoder = new TextDecoder("utf-8");
+
 
   fileAssocList = new FileAssociationChoiceList([
     //Code
-    new FileAssociation('.py', EditorType.Code, new EditorOptionsMonaco('python')),
-    new FileAssociation('.csv', EditorType.Code, new EditorOptionsMonaco('csv')),
-    new FileAssociation('.json', EditorType.Code, new EditorOptionsMonaco('json')),
-    new FileAssociation('.txt', EditorType.Code, new EditorOptionsMonaco('text')),
-    new FileAssociation('.js', EditorType.Code, new EditorOptionsMonaco('javascript')),
-    new FileAssociation('.yaml', EditorType.Code, new EditorOptionsMonaco('yaml')),
-    new FileAssociation('.md', EditorType.Code, new EditorOptionsMonaco('markdown')),
+    new FileAssociation('py', EditorType.Code, new EditorOptionsMonaco('python')),
+    new FileAssociation('csv', EditorType.Code, new EditorOptionsMonaco('csv')),
+    new FileAssociation('json', EditorType.Code, new EditorOptionsMonaco('json')),
+    new FileAssociation('txt', EditorType.Code, new EditorOptionsMonaco('text')),
+    new FileAssociation('js', EditorType.Code, new EditorOptionsMonaco('javascript')),
+    new FileAssociation('yaml', EditorType.Code, new EditorOptionsMonaco('yaml')),
+    
+    //Markdown
+    new FileAssociation('md', EditorType.Markdown, new EditorOptionsMonaco('markdown')),
 
     //Archive
-    new FileAssociation('.tar', EditorType.Archive),
+    new FileAssociation('tar', EditorType.Archive),
+    new FileAssociation('zip', EditorType.Archive),
 
     //PDF
-    new FileAssociation('.pdf', EditorType.Browser, new EditorOptionsBrowser(true,'application/pdf')),
+    new FileAssociation('pdf', EditorType.Browser, new EditorOptionsBrowser(true,'application/pdf')),
+
+    //Images
+    new FileAssociation('png', EditorType.Browser, new EditorOptionsBrowser(true,'image/png')),
+    new FileAssociation('jpg', EditorType.Browser, new EditorOptionsBrowser(true,'image/jpg')),
 
     //Other
     new FileAssociation('.*', EditorType.Browser, new EditorOptionsBrowser(true),-10),
@@ -140,9 +154,11 @@ export class FileEditorWidgetComponent implements OnInit {
   @Input("selectedFile") private _selectedFile: FsNodeFile | null = null;
   @ViewChild("monacoEditor") public monacoEditor!: MonacoEditorWidgetComponent;
   @ViewChild("browserEditor") public browserEditor!: ElementRef;
+  @ViewChild("imageViewer") public imageViewer!: ElementRef;
+  @ViewChild("markdownPreview") public markdownPreview!: ElementRef;
+  
 
-  @Output('onChange') public onChange = new EventEmitter<Event>();
-  @Output('onInput') public onInput = new EventEmitter<InputEvent>();
+  @Output('onChange') public onChange = new EventEmitter<FsNodeFile>();
 
   constructor(
     private readonly themeService: ThemeService, 
@@ -187,24 +203,46 @@ export class FileEditorWidgetComponent implements OnInit {
 
   public async openEditor(){
     if (!this.selectedFile){return}
-
+    console.log('openEditor:', this.editorType.toString())
     switch(this.editorType){
+      case EditorType.Markdown:
+        let markdownBox = this.markdownPreview.nativeElement as HTMLDivElement;
+        if(this.selectedFile.content instanceof ArrayBuffer){
+          this.selectedFile.content = this.binDecoder.decode(this.selectedFile.content)
+        }
+        markdownBox.innerHTML = await marked( this.selectedFile.content )
+        break;
       case EditorType.Code: 
         let monacoOptions = this.editorOption as EditorOptionsMonaco;
+        if(this.selectedFile.content instanceof ArrayBuffer){
+          this.selectedFile.content = this.binDecoder.decode(this.selectedFile.content)
+        }
         this.monacoEditor.selectedFile = this.selectedFile
         this.monacoEditor.language = monacoOptions.language;
+        this.monacoEditor.updateEditorOptions()
         break;
       case EditorType.Browser: 
         let browserOptions = this.editorOption as EditorOptionsBrowser;
         let iframe = this.browserEditor.nativeElement as HTMLIFrameElement;
-        let header = 'data:'+browserOptions.mime+';base64'
+        let header = 'data:'+browserOptions.mime+';'
         let body;
         if(this.selectedFile.content instanceof ArrayBuffer){
-          body = btoa(String.fromCharCode(...new Uint8Array(this.selectedFile.content)));
+          console.log('openEditor:Browser:',Array.from(new Uint8Array(this.selectedFile.content) ) )
+          body = encode(this.selectedFile.content)
         }else{
           body = btoa(this.selectedFile.content)
         }
-        iframe.src = header + ',' + body
+        let daraurl = header + 'base64,' + body
+
+        /*
+        let id = 'doclink'
+        let filename = this.selectedFile.name
+        let link = `<a id="${id}" download="${filename}" href="${daraurl}"></a>`
+        let script = `<script>document.getElementById('${id}').click()</script>`
+        let template = `<html><body>${link}${script}</body></html>`
+        */
+        
+        iframe.src = daraurl
         
         break;
     }
@@ -212,20 +250,14 @@ export class FileEditorWidgetComponent implements OnInit {
 
   public shouldHide(editorType: EditorType){
     return this.editorType !== editorType;
-
   }
 
   
 
   //MonacoEditor
 
-  public monacoEditorDidChange(event:Event){
-    this.onChange.emit(event)
+  public monacoEditorDidChange(file:FsNodeFile){
+    this.onChange.emit(file)
   }
-
-  public monacoEditorDidInput(event:InputEvent){
-    this.onInput.emit(event)
-  }
-
 
 }
