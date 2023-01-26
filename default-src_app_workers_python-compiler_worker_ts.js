@@ -162,6 +162,10 @@ class PyodideWorker {
       this.needSync = false;
       console.log('syncFS: do!');
       this.fs.syncfs(err => {
+        if (err) {
+          console.log('syncFS: error while syncing, retrying');
+          this.needSync = true;
+        }
         this.isSync = false;
         if (this.needSync) {
           this.needSync = false;
@@ -476,15 +480,18 @@ class PyodideWorker {
     let fullpath = request.message.args[0];
     let data = request.message.contents[0];
     let content;
+    let options = {
+      encoding: "binary"
+    };
     if (data instanceof ArrayBuffer) {
-      content = new DataView(data);
+      content = new Uint8Array(data);
+      options.encoding = "utf8";
     } else {
       content = data;
     }
     console.log("writeFile: ", fullpath);
-    let res = this.fs.writeFile(this.mount + fullpath, content, {
-      encoding: "utf8"
-    });
+    console.log("writeFile:content: ", content);
+    let res = this.fs.writeFile(this.mount + fullpath, content, options);
     console.log("writeFile:res: ", res);
     this.syncFS();
     return response;
@@ -499,13 +506,15 @@ class PyodideWorker {
       encoding: 'utf8'
     };
     if (request.message.args.length == 2 && request.message.args[1] == 'binary') {
-      opts = {};
+      opts = {
+        encoding: 'binary'
+      };
     }
     console.log("readFile: ", fullpath);
     let content = this.fs.readFile(this.mount + fullpath, opts);
     console.log('readFile:content:\n', content.length);
     if (content instanceof Uint8Array) {
-      console.log('readFile:content: BUFFER');
+      console.log('readFile:content: BUFFER', content);
       response.message.contents = [content.buffer];
     } else {
       console.log('readFile:content: STRING');
