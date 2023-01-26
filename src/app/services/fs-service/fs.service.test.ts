@@ -20,7 +20,7 @@ export class IndexeddbFsDriver implements FsServiceDriver {
     return true;
   }
 
-  async readFile(fullpath:string, binary: boolean): Promise<string|null>{
+  async readFile(fullpath:string, binary: boolean=true): Promise<string|null>{
     if (!(await this.fs.exists(fullpath)) ) {return null;}
     return this.fs.readFile(fullpath);
   }

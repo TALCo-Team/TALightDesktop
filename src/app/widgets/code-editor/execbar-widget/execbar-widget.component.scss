@@ -1,7 +1,27 @@
+:host{
+    width:100%;
+    height:100%;
+}
+
 .tal-code-editor-execbar{
     display:flex;
     align-items: center;
+    flex-direction: row;
     justify-content: space-between;
-    padding:0.5rem 0.5rem 0.5rem 2rem;
+    padding:5px;
     width:100%;
+    background-color: rgba($color: #000000, $alpha: 0.1);
+
+    .tal-code-editor-execbar-left, .tal-code-editor-execbar-right{
+        display: flex;
+    }
+
+    button{
+        height:30px;
+        width:30px;
+        min-width:30px;
+        margin:5px;
+        margin-right:0px;
+    }
 }
+

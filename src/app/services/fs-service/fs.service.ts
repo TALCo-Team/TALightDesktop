@@ -214,7 +214,7 @@ export interface FsServiceDriver {
 
   writeFile(fullpath:string, content:string|ArrayBuffer): Promise<number>;
 
-  readFile(fullpath:string, binary: boolean): Promise<string|ArrayBuffer|null>;
+  readFile(fullpath:string, binary?: boolean): Promise<string|ArrayBuffer|null>;
 
   readDirectory(fullpath:string): Promise<FsNodeFolder|null>;
 
