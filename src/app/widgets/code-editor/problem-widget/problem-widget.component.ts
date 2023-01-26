@@ -18,16 +18,10 @@ export class ServiceMenuEntry {
   styleUrls: ['./problem-widget.component.scss'],
 })
 export class ProblemWidgetComponent {
-
-  @Output('input') public onInput = new EventEmitter<InputEvent>();
-  @Output('stdin') public onStdin = new EventEmitter<string>(); 
-  @Output('problemListUpdate') public onProblemListUpdate = new EventEmitter<Map<string, Meta>>();
-  @Output('problemChanged') public onProblemSelected = new EventEmitter<ProblemDescriptor>();
-  @Output('serviceChanged') public onServiceSelected = new EventEmitter<ServiceDescriptor>();
-  @Output('attachments') public onAttachments = new EventEmitter<ArrayBuffer>();
-
-  @ViewChild("output") public output!: ElementRef;
-  @ViewChild("sdtinInput") public sdtinInput!: ElementRef;
+  @Output('onProblemListUpdate') public onProblemListUpdate = new EventEmitter<Map<string, Meta>>();
+  @Output('onProblemChanged') public onProblemSelected = new EventEmitter<ProblemDescriptor>();
+  @Output('onServiceChanged') public onServiceSelected = new EventEmitter<ServiceDescriptor>();
+  @Output('onAttachments') public onAttachments = new EventEmitter<ArrayBuffer>();
 
   public outputText: string = "";
 
@@ -78,19 +72,6 @@ export class ProblemWidgetComponent {
       return text.replace(/\((.*)\)/,'$1').replace(/\|/g,' OR ')
     })
     return text
-  }
-
-  print(content: string, end = "\n") {
-    this.zone.run(() => this.outputText += content + end);
-
-    // Scroll #console-bottom-scroll to bottom
-    setTimeout(() => {
-      const scrollEl = document.getElementById("console-bottom-scroll");
-      if (scrollEl) {
-        scrollEl.scrollTop = scrollEl.scrollHeight;
-        console.log(scrollEl.scrollTop, scrollEl.scrollHeight)
-      }
-    });
   }
 
   async onApiError(message: string) {
@@ -243,27 +224,6 @@ export class ProblemWidgetComponent {
     let req = this.api.GetAttachment(problem.name, onAttachment, onAttachmentInfo, onData);
     req.onError = (error) => { this.onApiError(error) };
 
-  }
-
-
-  public testOutput() {
-    this.print("python main.py\n")
-    this.apiProblemList()
-  }
-
-
-  public sendStdin() {
-    let msg = this.sdtinInput.nativeElement.value ?? ""
-    msg = msg.trim()
-    console.log("sendStdin:", this.sdtinInput)
-    if (msg == "") { return }
-
-    this.sdtinInput.nativeElement.value = ""
-    this.onStdin.emit(msg);
-  }
-
-  public sendOnEnter(event: KeyboardEvent) {
-    if (event.key == 'Enter') { this.sendStdin(); }
   }
 
 }

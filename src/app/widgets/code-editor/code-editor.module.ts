@@ -14,6 +14,7 @@ import { ExecbarWidgetComponent } from './execbar-widget/execbar-widget.componen
 import { ProblemWidgetComponent } from './problem-widget/problem-widget.component';
 import { DropdownModule } from 'primeng/dropdown';
 import { MonacoEditorWidgetComponent } from './monaco-editor-widget/monaco-editor-widget.component';
+import { OutputWidgetComponent } from './output-widget/output-widget.component';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { MonacoEditorWidgetComponent } from './monaco-editor-widget/monaco-edito
     CodeEditorComponent,
     ExecbarWidgetComponent,
     ProblemWidgetComponent,
-    MonacoEditorWidgetComponent
+    MonacoEditorWidgetComponent,
+    OutputWidgetComponent,
   ],
   imports: [
     CommonModule,

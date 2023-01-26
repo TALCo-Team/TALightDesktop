@@ -1,11 +1,15 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
+import { Commands } from 'src/app/services/api-service/api.commands';
+import { ApiService } from 'src/app/services/api-service/api.service';
 
 import { FsService, FsNodeFile, Tar } from 'src/app/services/fs-service/fs.service';
 import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
+import { PyodideDriver } from 'src/app/services/python-compiler-service/pydiode-driver';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 import { FileExplorerWidgetComponent } from 'src/app/widgets/code-editor/file-explorer-widget/file-explorer-widget.component';
 import { ExecbarWidgetComponent } from '../execbar-widget/execbar-widget.component';
 import { FileEditorWidgetComponent } from '../file-editor-widget/file-editor-widget.component';
+import { OutputWidgetComponent } from '../output-widget/output-widget.component';
 import { ProblemWidgetComponent } from '../problem-widget/problem-widget.component';
 
 @Component({
@@ -18,19 +22,20 @@ export class CodeEditorComponent implements OnInit {
   public selectedProblem?: ProblemDescriptor;
   public selectedService?: ServiceDescriptor;
   public driver;
-  public fs;
+  public cmdConnect?:Commands.Connect;
 
   @ViewChild("fileExplorer") public fileExplorer!: FileExplorerWidgetComponent;
   @ViewChild("fileEditor") public fileEditor!: FileEditorWidgetComponent;
   @ViewChild("execBar") public execBar!: ExecbarWidgetComponent;
   @ViewChild("problemWidget") public problemWidget!: ProblemWidgetComponent;
+  @ViewChild("outputWidget") public outputWidget!: OutputWidgetComponent;
   
   constructor(
-    private _fs: FsService,
+    private fs: FsService,
     private python:PythonCompilerService,
+    private api:ApiService,
   ) {
-    this.fs = _fs;
-    this.driver = this.fs.getDriver('pyodide')
+    this.driver = python.driver
   }
 
   ngOnInit(): void {
@@ -39,18 +44,23 @@ export class CodeEditorComponent implements OnInit {
   }
   
 
+  
   public onStdout(data:string){
-    //alert("STDOUT: "+data)
-    this.problemWidget.print(data)
+    this.outputWidget!.print(data);
+    //TODO: if API connect then:
+    if(!this.cmdConnect){return;}
+    this.cmdConnect.sendBinary(data + "\n"); //lo \n va aggiunto all'output del bot python
   }
+
 
   public onStderr(data:string){
     //alert("STDERR: "+data)
-    this.problemWidget.print(data)
+    this.outputWidget.print(data)
   }
 
   public onStdin(msg:string){
-    this.problemWidget.print(msg)
+    this.outputWidget.print(msg)
+    this.python.driver?.sendStdin(msg)
   }
 
   public onProblemChanged(selectedProblem: ProblemDescriptor){
@@ -69,24 +79,6 @@ export class CodeEditorComponent implements OnInit {
     if(!this.selectedProblem){return;}
     let name = this.selectedProblem.name
 
-    /*
-    let path = "/data/"+name+".tar"
-    
-    await this.driver?.writeFile(path,data)
-    this.fileWidget.refreshRoot()    
-    
-    await this.extractTar(path)
-  }
-
-  async extractTar(path:string){
-    let exists = await this.driver?.exists(path)
-    let basedir = path.split("/").slice(0,-1).join("/") + "/"
-    let filename = path.split("/").splice(-1)[0]
-    let basename = filename.split(".").slice(0,-1).join('.')
-    let extractdir = basedir + basename + "/"
-    await this.driver?.createDirectory(extractdir)
-    let data = await this.driver?.readFile(path, true)
-    */
     if (!(data instanceof ArrayBuffer ) ) {return;}
     Tar.unpack(data, async (files,folders) => {
       
@@ -126,7 +118,7 @@ export class CodeEditorComponent implements OnInit {
     this.fileEditor.selectedFile = this.selectedFile 
   }
 
-  public editorDidChange(event: Event){
+  public editorDidChange(file: FsNodeFile){
     console.log("editorDidChange:")
     this.saveFile()
   }
@@ -137,29 +129,125 @@ export class CodeEditorComponent implements OnInit {
   }
 
   public saveFile(){
-    if ( this.selectedFile ){ // && this.needSave ){
+    if ( this.selectedFile ){ 
       console.log("saveFile:\n", this.selectedFile.path, "\n", this.fileEditor)
       this.driver?.writeFile(this.selectedFile.path, this.selectedFile.content)
+    } else {
+      console.log("saveFile:failed")
     }
   }
 
-  public runProject(){
-    this.problemWidget.print("python main.py\n")
-    this.saveFile();
-     
- 
-    this.python.runProject().then(()=>{
+  public async runProject(useAPI = false){
+    this.outputWidget.clearOutput()
+    
+    let config = await this.python.readPythonConfig()
+    if (!config){return false}
 
+    this.outputWidget.print("RUN: "+config.MAIN)
+    this.saveFile();
+    
+    this.python.runProject().then(()=>{
+      this.fileExplorer.refreshRoot()
     })
+
+    return true
   }
 
-  public testConnectAPI(){
-    this.problemWidget.print("python free_sum_mysimplebot.py\n")
+
+//-------------- API CONNECT
+  public runConnectAPI(){
+    this.outputWidget.clearOutput()
     this.saveFile();
     
  
-    this.python.testConnectAPI(this.problemWidget).then(()=>{
-
+    this.apiConnect().then(()=>{
+      //TODO: on success, new files are downloaded 
+      this.fileExplorer.refreshRoot()
     })
   }
+  
+
+  async apiConnect() {
+    console.log("apiConnect")
+    if(!this.selectedService){return false}
+    console.log("apiConnect:service:OK")
+    let config = await this.python.readPythonConfig()
+    if (!config){return false}
+    console.log("apiConnect:config:OK")
+
+    let problem = this.selectedService.parent.name;
+    let service = this.selectedService.name;
+    let args = this.selectedService.exportArgs();
+    let tty = undefined
+    let token = undefined
+    let files = this.selectedService.exportFiles();
+    
+    console.log("apiConnect:params:problem",problem)
+    console.log("apiConnect:params:service",service)
+    console.log("apiConnect:params:args",args)
+    console.log("apiConnect:params:tty",tty)
+    console.log("apiConnect:params:token",token)
+    console.log("apiConnect:params:files",files)
+
+    
+    let onConnectionStart = () => {this.didConnectStart()};
+    let onConnectionBegin = (msg: string[]) => {this.didConnectBegin(msg)};
+    let onConnectionClose = (msg: string[]) => {this.didConnectClose(msg)};
+    let onData = (data: string)=>{ this.didConnectData(data)};
+
+    this.cmdConnect = await this.api.Connect(
+      problem, 
+      service, 
+      args,
+      tty,
+      token,
+      files,
+      onConnectionBegin,
+      onConnectionStart,
+      onConnectionClose,
+      onData
+    );
+    this.cmdConnect.onError = (error)=>{this.didConnectError(error)};
+
+    console.log("apiConnect:params:packages",config.PACKAGES)
+    await this.python.installPackages(config.PACKAGES)
+    this.outputWidget.print("TEST: "+config.MAIN)
+    await this.driver?.executeFile(config.MAIN)
+    
+    
+    console.log("apiConnect:DONE")
+    
+
+    return true
+  }
+
+  async didConnectError(error: string){
+    console.log("apiConnect:didConnectError:",error)
+    this.cmdConnect = undefined
+  }
+
+  async didConnectStart(){
+    console.log("apiConnect:didConnectStart")
+  }
+
+  async didConnectBegin(message: string[]){
+    console.log("apiConnect:didConnectBegin:", message)
+  }
+
+  async didConnectClose(message: string[]){
+    console.log("apiConnect:didConnectionClose:",message)
+    this.cmdConnect = undefined
+  }
+
+  async didConnectData(data: string){
+    console.log("apiConnect:didConnectData:",data)
+    this.onStdin(data)
+  }
+
+
+  //--------------
+
+
+
+
 }

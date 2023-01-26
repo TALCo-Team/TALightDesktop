@@ -406,7 +406,7 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     return resultPromise;
   }
 
-  async readFile(fullpath: string, binary: boolean): Promise<string|ArrayBuffer> {
+  async readFile(fullpath: string, binary: boolean=true): Promise<string|ArrayBuffer> {
     let message: PyodideMessage = {
       uid: this.requestUID(),
       type: PyodideMessageType.ReadFile,

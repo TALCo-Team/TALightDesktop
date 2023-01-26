@@ -123,7 +123,7 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   public selectFile(file: FsNodeFile) {
     console.log('selectFile',file)
-    this.driver?.readFile(file.path, false).then((content)=>{
+    this.driver?.readFile(file.path).then((content)=>{
       file.content = content ?? "";
       this.selectedFile = file;
       this.onSelectFile?.emit(file);
@@ -361,10 +361,13 @@ export class FileExplorerWidgetComponent implements OnInit {
       for(let i = 0; i<target.files.length; i++){
         let file = target.files[i]
         let content = await file.arrayBuffer();
-        let path = (!this.selectedFolder?"/":this.selectedFolder.path)
+        console.log("upload:content:", new Uint8Array(content))
+        let path = (!this.selectedFolder?"/":this.selectedFolder.path) + file.name
+        console.log('upload:', path, content)
         await this.driver?.writeFile(path, content)
       }
     }
+    this.refreshRoot()
     return true;
   }
 
@@ -411,7 +414,7 @@ export class FileExplorerWidgetComponent implements OnInit {
     })
   }
 
-  public triggerDownload(filename:string, content:ArrayBuffer|string, mime="octet/stream"){
+  public triggerDownload(filename:string, content:ArrayBuffer|string, mime="application/octet-stream"){
     let a = document.createElement("a");
     
     const blob = new Blob([content], {type: mime});

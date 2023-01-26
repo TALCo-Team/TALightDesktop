@@ -57,7 +57,7 @@ export class ServiceDescriptor {
       this.key = this.getKey()
     }
 
-    getKey(){
+    public getKey(){
       let key = this.name.trim()
       key = key.toLowerCase().trim()
       key = key.replace(" ","-")
@@ -65,6 +65,19 @@ export class ServiceDescriptor {
       key = key.replace("-+","-")
       key = key.replace("_+","_")
       return this.parent.getKey() + "_" + key
+    }
+
+    public exportArgs(){
+      let args:any = {}
+      this.args.forEach(arg=>{
+        args[arg.name]=arg.value
+      })
+      return args;
+    }
+
+    public exportFiles(){
+      //TODO: files
+      return []
     }
 }
 
