@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
 import { IndexeddbFsDriver } from './fs.service.test';
 
+export class FsNodeList extends Array<FsNodeFile|FsNodeFolder>{};
+
 @Injectable({
   providedIn: 'root'
 })
 export class FsService {
   public drivers = new Map<string,FsServiceDriver>();
+  public static EmptyFolder = {name:"", path: "/", files:[], folders:[]} as FsNodeFolder
+  public static EmptyFile = {name:"", path: "/", content:""} as FsNodeFile
   
   constructor(){
      //TODO: Remove test driver FS from constructor

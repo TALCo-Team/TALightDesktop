@@ -1,93 +1,173 @@
-<div class="tal-problem-widget-api">
+<div class="tal-problem-widget">
   <!-- ROW:title -->
   <!--
-  <div class="tal-problem-widget-api-args-row">
+  <div class="tal-problem-widget-args-row">
     <div class="tal-problem-widget-label">Problem</div>
   </div>
   -->
 
   <!-- API: PROBLEMS and SERVICES -->
-  <div class="tal-problem-widget-api-row tal-problem-widget-api-problem">
-      <button pButton class="p-button-danger" icon="pi pi-refresh"
-                      title="Refresh" pTooltip="Refresh"
-                      (click)="reloadProblemList()"></button>
-      <p-dropdown placeholder="Seleziona un problema" class="tal-problem-widget-problem-selector" 
-                  [options]="servicesMenu" [(ngModel)]="selectedService"
-                  (onChange)="didSelectService()" [style]="{'height': '55px', 'padding': 0}">
-            
-            
-            <ng-template let-option pTemplate="selectedItem">
-              <div class="tal-problem-widget-problem-selected">
-                <span class="problem-label">{{option.problem}}</span>
-                <span class="service-label">{{option.service}}</span>
-              </div>
-            </ng-template>
-            
+  <div class="tal-problem-widget-row tal-problem-widget-problem">
+    <button pButton class="p-button-danger" icon="pi pi-refresh" title="Refresh" pTooltip="Refresh"
+      (click)="reloadProblemList()" *ngIf="!isLoading()"></button>
 
-            <ng-template let-option pTemplate="item">
-              <div class="tal-problem-widget-problem-item">
-                <span class="problem-label">{{option.problem}}</span>
-                <span class="service-label">{{option.service}}</span>
-              </div>
-            </ng-template>
+    <button pButton class="p-button-danger" icon="pi pi-spin pi-spinner" title="Refresh" pTooltip="Refresh" disabled
+      *ngIf="isLoading()"></button>
 
 
-      </p-dropdown>
-      <button pButton class="p-button-help" icon="pi pi-download" (click)="apiDownloadAttachment()"
-              title="Download Attachments" pTooltip="Scarica allegati"></button>
-  </div>
-
-  <!-- ROW:title -->
-  <div class="tal-problem-widget-api-args-row">
-    <div class="tal-problem-widget-label">Arguments</div>
-  </div>
-
-  <!-- API: ARGS -->
-  <div class="tal-problem-widget-api-row tal-problem-widget-api-args">
-    <!-- ROW: empty -->
-    <div class="tal-problem-widget-api-args-row stretch-flex" *ngIf="!selectedArgs || selectedArgs.size==0">
-      <div class="tal-problem-widget-api-args-row-no-params">
-        <div>No arguments found.</div>
-      </div>
-    </div>
+    <p-dropdown #problemDropdown
+                placeholder="Seleziona un problema" 
+                class="tal-problem-widget-problem-selector" 
+                scrollHeight="50rem"
+                [overlayOptions]="dropdownOptions"
+                panelStyleClass="tal-problem-widget-problem-selector-panel"
+                [options]="servicesMenu"
+                [(ngModel)]="selectedService" 
+                [autoDisplayFirst]="true"
+                (onChange)="didSelectService()">
     
-    <!-- ROW: arg -->
-    <div class="tal-problem-widget-api-args-row" *ngFor="let arg of selectedArgs | keyvalue; "> 
-      <div class="tal-problem-widget-api-args-subrow">
-        <!-- CELL: info -->
-        <div class="tal-problem-widget-api-args-row-info">
-          <i #argsIcons class="pi pi-info-circle" [id]="'args-icon-'+arg.value.key" (click)="toggleShowRegex(arg.value,$event)" style="cursor: pointer;" [pTooltip]="arg.value.regex+''"></i>
+      <ng-template let-option pTemplate="selectedItem">
+        <div class="tal-problem-widget-problem-selected">
+          <span class="problem-label">{{option.problem}}</span>
+          <span class="service-label">{{option.service}}</span>
         </div>
-        <!-- CELL: name -->
-        <div class="tal-problem-widget-api-args-row-name">{{arg.value.name}}</div>
+      </ng-template>
 
-        <!-- CELL: field -->
-        <div class="tal-problem-widget-api-args-row-field">
-          <input  pInputText type="text" 
-                  class="top-bar-url-input p-inputtext-sm" 
-                  [(ngModel)]="arg.value.value" 
-                  [placeholder]="arg.value.default" 
-                  (change)="argDidChange(arg.value,$event)" 
-                  (blur)="argDidChange(arg.value,$event)" 
-                  (focus)="argDidFocus(arg.value,$event)">
+      <ng-template let-option pTemplate="item">
+        <div class="tal-problem-widget-problem-item">
+          <span class="problem-label">{{option.problem}}</span>
+          <span class="service-label">{{option.service}}</span>
         </div>
+      </ng-template>
+    </p-dropdown>
 
-        <!-- CELL: reset -->
-        <div class="tal-problem-widget-api-args-row-actions">
-          <button pButton class="p-button" icon="pi pi-trash" (click)="argDidReset(arg.value,$event)"
-            title="Reset to default" pTooltip="Reset to default"></button>
+
+    <button pButton class="p-button-help" icon="pi pi-download" (click)="apiDownloadAttachment()"
+      title="Download Attachments" pTooltip="Scarica allegati"></button>
+
+  </div>
+
+  <div class="tal-problem-widget-args-row">
+    <p-tabView>
+      <p-tabPanel header="Arguments">
+
+        <!-- ROW:title -->
+        <ng-template pTemplate="header" class="tal-problem-widget-args-row">
+          <div class="tal-problem-widget-label">Arguments</div>
+        </ng-template>
+
+
+        <!-- API: ARGS -->
+        <div class="tal-problem-widget-row tal-problem-widget-args">
+          <!-- ROW: empty -->
+          <div class="tal-problem-widget-args-row stretch-flex" *ngIf="!selectedArgs || selectedArgs.size==0">
+            <div class="tal-problem-widget-args-row-no-params">
+              <div>No arguments found.</div>
+            </div>
+          </div>
+
+          <!-- ROW: arg -->
+          <div class="tal-problem-widget-args-row" *ngFor="let arg of selectedArgs | keyvalue; ">
+            <div class="tal-problem-widget-args-subrow">
+              <!-- CELL: info -->
+              <div class="tal-problem-widget-args-row-info">
+                <i #argsIcons class="pi pi-info-circle" [id]="'args-icon-'+arg.value.key"
+                  (click)="toggleShowRegex(arg.value,$event)" style="cursor: pointer;"
+                  [pTooltip]="arg.value.regex+''"></i>
+              </div>
+              <!-- CELL: name -->
+              <div class="tal-problem-widget-args-row-name">{{arg.value.name}}</div>
+
+              <!-- CELL: field -->
+              <div class="tal-problem-widget-args-row-field">
+                <input pInputText type="text" class="top-bar-url-input p-inputtext-sm" [(ngModel)]="arg.value.value"
+                  [placeholder]="arg.value.default" (change)="argDidChange(arg.value,$event)"
+                  (blur)="argDidChange(arg.value,$event)" (focus)="argDidFocus(arg.value,$event)">
+              </div>
+
+              <!-- CELL: reset -->
+              <div class="tal-problem-widget-args-row-actions">
+                <button pButton class="p-button" icon="pi pi-trash" (click)="argDidReset(arg.value,$event)"
+                  title="Reset to default" pTooltip="Reset to default"></button>
+              </div>
+            </div>
+
+            <!-- regex -->
+            <div class="tal-problem-widget-args-subrow" [id]="'args-regex-panel-'+arg.value.key"
+              style="display:none; cursor: pointer;" (dblclick)="toggleRegexFormat(arg.value,$event)">
+              <div class="tal-problem-widget-args-subrow-regexpr format-regex-simple"
+                [id]="'args-regex-'+arg.value.key">{{this.clenupRegex(arg.value.regex)}}</div>
+            </div>
+          </div>
+
         </div>
-      </div>
+      </p-tabPanel>
 
-      <!-- regex -->
-      <div class="tal-problem-widget-api-args-subrow" [id]="'args-regex-panel-'+arg.value.key" style="display:none; cursor: pointer;" (dblclick)="toggleRegexFormat(arg.value,$event)" >
-        <div class="tal-problem-widget-api-args-subrow-regexpr format-regex-simple" [id]="'args-regex-'+arg.value.key" >{{this.clenupRegex(arg.value.regex)}}</div>
-      </div>
-    </div>
+      <p-tabPanel header="Files" [selected]="true">
+        <!-- ROW:title -->
+        <ng-template pTemplate="header" class="tal-problem-widget-args-row">
+          <div class="tal-problem-widget-label">Files</div>
+        </ng-template>
 
+        <!-- API: ARGS -->
+        <div class="tal-problem-widget-row tal-problem-widget-args">
+          <!-- ROW: empty -->
+          <div class="tal-problem-widget-args-row stretch-flex" *ngIf="!selectedFiles || selectedFiles.size==0">
+            <div class="tal-problem-widget-args-row-no-params">
+              <div>No files found.</div>
+            </div>
+          </div>
+
+
+          <!-- ROW: arg -->
+          <div class="tal-problem-widget-args-row" *ngFor="let file of selectedFiles | keyvalue; ">
+              <div class="tal-problem-widget-args-subrow">
+                <!-- CELL: info -->
+                <div class="tal-problem-widget-args-row-info">
+                    <i #argsIcons class="pi pi-file"></i>
+                </div>
+                <!-- CELL: name -->
+                <div class="tal-problem-widget-args-row-name">{{file.value.name}}</div>
+
+                <!-- CELL: field -->
+                <div class="tal-problem-widget-args-row-field">
+                    <p-dropdown placeholder="Select a file" 
+                                [id]="'file-dropdown-'+file.value.key"
+                                (onChange)="fileDidChange(file.value,$event)"
+                                [overlayOptions]="dropdownOptions"
+                                styleClass="tal-problem-widget-files-dropdown"
+                                panelStyleClass="tal-problem-widget-files-dropdown-panel"
+                                [options]="fslist">
+      
+                        <ng-template pTemplate="selectedItem" let-option>
+                            <div class="tal-problem-widget-files-selected">
+                              <div>{{option.path}}</div>
+                            </div>
+                        </ng-template>
+        
+        
+                        <ng-template pTemplate="item" let-option>
+                            <div class="tal-problem-widget-files-item">
+                              <div>{{option.path}}</div>
+                            </div>
+                        </ng-template>
+
+
+                    </p-dropdown>
+                </div>
+
+                <!-- CELL: reset -->
+                <div class="tal-problem-widget-args-row-actions">
+                    <button pButton class="p-button" icon="pi pi-trash" 
+                            (click)="fileDidReset(file.value,$event)"
+                            title="Reset to default" 
+                            pTooltip="Reset to default"></button>
+                </div>
+
+              </div>
+          </div>
+        </div>
+      </p-tabPanel>
+    </p-tabView>
   </div>
 </div>
-
-    
-
-

@@ -72,7 +72,7 @@ print("100 0")`
   async runProject(){
     let config = await this.readPythonConfig()
     if (!config){return null;}
-    await this.driver?.installPackages(config.PACKAGES)
+    await this.driver?.installPackages(config.PIP_PACKAGES)
     let result = await this.driver?.executeFile(config!.MAIN)
     console.log(result)
     return result    
@@ -91,11 +91,31 @@ print("100 0")`
 
 class PythonConfig {
   MAIN = "main.py"
-  DEBUG = ""
+  DEBUG = false
   DOWNLOAD_ATTACHMENT_AUTO = true
-  DEFAULT_PROJECT="3SAT"
-  PACKAGES: string[] = ["numpy"]
+  PROJECT_NAME="My 3SAT"
+
+  TAL_SERVERS = [
+    "ws://localhost:8008/", 
+    "wss://ta.di.univr.it/sfide",
+    "wss://ta.di.univr.it/rtel",
+  ]
+  TAL_SERVER = ""
+  TAL_PROBLEM = ""
+  TAL_SERVICE = ""
+  
+  PIP_PACKAGES: string[] = ["numpy"]
+
+  DIR_PROJECT = '/.talight/'
+  DIR_ATTACHMENTS = '/data/'
+  DIR_RESULTS = '/results/'
+  DIR_ARGSFILE = '/files/'
+
+
+  CONFIG_NAME = 'taglight.json'
+  PATH_CONFIG = this.DIR_PROJECT + this.CONFIG_NAME
 }
+
 
 export interface PythonCompiler{
   installPackages(packages: string[]): Promise<string>;

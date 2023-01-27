@@ -15,6 +15,7 @@ import { ProblemWidgetComponent } from './problem-widget/problem-widget.componen
 import { DropdownModule } from 'primeng/dropdown';
 import { MonacoEditorWidgetComponent } from './monaco-editor-widget/monaco-editor-widget.component';
 import { OutputWidgetComponent } from './output-widget/output-widget.component';
+import {TabViewModule} from 'primeng/tabview';
 
 @NgModule({
   declarations: [
@@ -36,6 +37,7 @@ import { OutputWidgetComponent } from './output-widget/output-widget.component';
     SharedModule,
     TooltipModule,
     DropdownModule,
+    TabViewModule,
   ],
   exports: [
     FileExplorerWidgetComponent,

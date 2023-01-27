@@ -13,6 +13,7 @@
     display: flex;
     flex-direction: column;
     height:100%;   
+    max-width: 100%;
 }
 
     
@@ -21,13 +22,12 @@
     flex-grow: 2;
 }
 
-
-
-.tal-output-widget-terminal, .tal-output-widget{
+.tal-output-widget{
     width:100%;
     height:100%;
     display: flex;
     flex-direction: column;  
+    max-width: 100%;
 }
 
 .tal-output-widget-label{
@@ -39,6 +39,7 @@
     overflow-y: auto;
     flex-wrap: wrap;
     flex-grow: 2;
+    word-wrap: break-word;
     display: flex;
     margin-bottom: auto;
     padding:0.5rem;
@@ -64,12 +65,8 @@
     flex-direction: row;
 
     input{
-        margin:0 0.5rem;
-        padding:0 0.5rem;
+        margin:0 5px;
+        padding:0 5px;
     }
 }
 
-
-button{
-    border-radius: 5px;
-}
