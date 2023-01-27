@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { EventEmitter, Injectable } from '@angular/core';
 import { Packets } from '../api-service/api.packets';
-import { Meta } from '../api-service/api.service';
+import { ApiService, Meta } from '../api-service/api.service';
 
 
 export class RawMap extends Map<string, Meta>{};
@@ -9,6 +9,7 @@ export class ProblemMap extends Map<string, ProblemDescriptor>{};
 export class ServiceMap extends Map<string, ServiceDescriptor>{};
 export class ParamsMap extends ServiceMap{};
 export class ArgsMap extends Map<string, ArgDescriptor>{};
+export class FilesMap extends Map<string, FileDescriptor>{};
 
 export class ProblemDescriptor {
   public key;
@@ -41,13 +42,19 @@ export class ServiceDescriptor {
   public key;
   public args = new ArgsMap();
   public evaluator;
-  public files;
+  public files = new FilesMap();
+  public filesOrder
   constructor( public name:string, 
                service:Packets.Service,
                public parent:ProblemDescriptor,
     ){
       this.evaluator = service.evaluator
-      this.files = service.files
+      
+      this.filesOrder = service.files ?? []
+      this.filesOrder.forEach(name =>{
+        let file = new FileDescriptor(name,this)
+        this.files.set(file.name,file)
+      })
       service.args!.forEach((arg,argName)=>{
         //console.log('ServiceDescriptor:constructor:arg', arg)
         let argDesc = new ArgDescriptor(argName,arg,this)
@@ -75,9 +82,15 @@ export class ServiceDescriptor {
       return args;
     }
 
-    public exportFiles(){
-      //TODO: files
-      return []
+    public exportFilesPaths(){
+      let fileList = new Array<string>();
+      this.filesOrder.forEach((name)=>{
+        let file = this.files.get(name)
+        let value = file?.value ?? ""
+        fileList.push(value)
+      })
+
+      return fileList
     }
 }
 
@@ -109,6 +122,29 @@ export class ArgDescriptor{
   }
 }
 
+export class FileDescriptor{
+  public key;
+  public value:string=""; 
+
+  constructor(
+    public name:string, 
+    public parent: ServiceDescriptor
+    ){
+    this.key = this.getKey()
+  }
+
+  getKey(){
+    let key = this.name.trim()
+    key = key.toLowerCase().trim()
+    key = key.replace(" ","-")
+    key = key.replace("[^a-z0-9_-]","")
+    key = key.replace("-+","-")
+    key = key.replace("_+","_")
+    return this.parent.getKey() + "_" + key
+  }
+}
+
+
 
 
 @Injectable({
@@ -123,17 +159,39 @@ export class ProblemManagerService {
   services=new ServiceMap();
   savedParams=new ParamsMap();
   
-  updateProblems(problemMap: RawMap){
+
+  public onProblemsChanged = new EventEmitter<boolean>();
+  public onError = new EventEmitter<any>();
+    
+  constructor(
+    public api:ApiService
+  ){}
+
+
+  updateProblems(){
+    this.selectedProblem=undefined;
+    this.selectedService=undefined;
     this.problemList=[];
     this.problems.clear();
-    problemMap.forEach(( problem, name )=>{
-      let problemDesc = new ProblemDescriptor(name, problem)
-      this.problemList.push(problemDesc)
-      this.problems.set(problemDesc.key,problemDesc);
-      problemDesc.services.forEach((serviceDesc)=>{
-        this.services.set(serviceDesc.key, serviceDesc)
+    this.services.clear();
+    this.onProblemsChanged.emit(true)
+
+    let req = this.api.problemList((problemMap) => {
+      console.log('apiProblemList:problemList:', problemMap)
+      problemMap.forEach(( problem, name )=>{
+        let problemDesc = new ProblemDescriptor(name, problem)
+        this.problemList.push(problemDesc)
+        this.problems.set(problemDesc.key,problemDesc);
+        problemDesc.services.forEach((serviceDesc)=>{
+          this.services.set(serviceDesc.key, serviceDesc)
+        })
       })
-    })
+      this.onProblemsChanged.emit(false)
+    });
+    req.onError = (error) => { 
+      this.onProblemsChanged.emit(false)
+      this.onError.emit(error) 
+    };
   }
 
   

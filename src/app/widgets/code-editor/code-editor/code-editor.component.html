@@ -6,7 +6,10 @@
     
     <ng-template pTemplate>
       <div class="tal-editor-files">
-        <tal-file-explorer-widget #fileExplorer (onSelectFile)="selectFile($event)"></tal-file-explorer-widget>
+        <tal-file-explorer-widget #fileExplorer 
+          (onUpdateRoot)="onUpdateRoot($event)"
+          (onSelectFile)="selectFile($event)">
+        </tal-file-explorer-widget>
       </div>
     </ng-template>
 
@@ -36,7 +39,7 @@
 
 
     <ng-template pTemplate>
-      <p-splitter [style]="{'height': '100%'}" [panelSizes]="[15,50]" [minSizes]="[12,20]" layout="vertical">
+      <p-splitter id="tal-problem-column" [style]="{'height': '100%'}" [panelSizes]="[15,50]" [minSizes]="[12,20]" layout="vertical">
 
         <ng-template pTemplate>
           <tal-problem-widget #problemWidget 

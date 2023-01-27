@@ -150,7 +150,7 @@ export class FileEditorWidgetComponent implements OnInit {
     //Other
     new FileAssociation('.*', EditorType.Browser, new EditorOptionsBrowser(true),-10),
   ])
-
+  
   @Input("selectedFile") private _selectedFile: FsNodeFile | null = null;
   @ViewChild("monacoEditor") public monacoEditor!: MonacoEditorWidgetComponent;
   @ViewChild("browserEditor") public browserEditor!: ElementRef;

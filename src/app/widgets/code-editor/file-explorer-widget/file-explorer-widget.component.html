@@ -2,19 +2,19 @@
   <div class="tal-editor-files-header">
     <div class="tal-editor-files-left-bar">
       <button pButton icon="pi pi-file" title="Nuovo file"
-        (click)="closeAllContextMenus($event); addNewItem(root, 'file')" pTooltip="Nuovo file"></button>
+        (click)="closeAllContextMenus($event); addNewItem(fsroot, 'file')" pTooltip="Nuovo file"></button>
       <button pButton icon="pi pi-folder" title="Nuova cartella"
-        (click)="closeAllContextMenus($event); addNewItem(root, 'folder')" pTooltip="Nuova cartella"></button>
+        (click)="closeAllContextMenus($event); addNewItem(fsroot, 'folder')" pTooltip="Nuova cartella"></button>
     </div>
     <div class="tal-editor-files-right-bar">
-      <button pButton icon="pi pi-sync" title="Refresh" (click)="closeAllContextMenus($event); syncFilesystem(root)"
+      <button pButton icon="pi pi-sync" title="Refresh" (click)="closeAllContextMenus($event); syncFilesystem(fsroot)"
         pTooltip="Aggiorna"></button>    
     </div>
   </div>
 
 
   <div class="tal-editor-files-body">
-    <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: root }"></ng-container>
+    <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: fsroot }"></ng-container>
   </div>
 
 

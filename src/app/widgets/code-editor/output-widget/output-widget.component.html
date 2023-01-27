@@ -7,7 +7,7 @@
     <div class="tal-output-widget-stdin">
         <button pButton class="p-button-danger" icon="pi pi-trash" (click)="clearOutput()" title="Clear output"
           pTooltip="Pulisci output"></button>
-        <input #sdtinInput class="tal-output-widget-stdin-input" (keydown)="sendOnEnter($event)"
+        <input pInput #sdtinInput class="tal-output-widget-stdin-input" (keydown)="sendOnEnter($event)"
           placeholder="Input del programma" />
         <button pButton icon="pi pi-send" (click)="sendStdin()" title="Send" pTooltip="Invia"></button>
   </div>
