@@ -17365,14 +17365,6 @@
   height: 100% !important;
 }ngx-monaco-editor div.editor-container {
   height: 100% !important;
-}.field-validation-editing {
-  border: 3px solid orange;
-}.field-validation-error {
-  border: 3px solid darkred;
-}.field-validation-ok {
-  border: 3px solid green;
-}.field-validation-default {
-  border: 0px;
 }div.tal-center-page {
   display: flex;
   flex-direction: column;
@@ -17427,6 +17419,16 @@
   margin-right: 0.5rem;
 }.p-overlaypanel-content {
   padding: 0 !important;
+}button {
+  height: 30px;
+  min-height: 30px;
+  max-height: 30px;
+  width: 30px;
+  min-width: 30px;
+  max-width: 30px;
+}::ng-deep .p-dialog-footer button {
+  min-width: -moz-fit-content;
+  min-width: fit-content;
 }
 
 /*# sourceMappingURL=styles.css.map*/
