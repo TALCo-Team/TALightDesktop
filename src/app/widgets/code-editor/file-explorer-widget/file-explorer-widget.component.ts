@@ -3,7 +3,6 @@ import { Component, ElementRef, EventEmitter, Input, OnInit, Output, QueryList, 
 import { ConfirmationService } from 'primeng/api';
 import { OverlayPanel } from 'primeng/overlaypanel';
 import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver, Tar } from 'src/app/services/fs-service/fs.service';
-import { FsServiceTest } from 'src/app/services/fs-service/fs.service.test';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 
 
@@ -16,11 +15,8 @@ export class FileExplorerWidgetComponent implements OnInit {
   public driver?: FsServiceDriver;
   public rootDir = "/"
   public driverName = 'pyodide'
-  public emptyNode = {name:"", path: this.rootDir, files:[], folders:[]}
   public showHidden = false
-
-  @Input("root") root: FsNodeFolder = this.emptyNode;
-
+  public fsroot = FsService.EmptyFolder
   
   public editingValue: string = "";
   public editingItem: FsNodeFile | FsNodeFolder | null = null;
@@ -41,8 +37,10 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   @ViewChildren(OverlayPanel) public panels?: QueryList<OverlayPanel>;
 
-  @Output("change") public change = new EventEmitter<FsNodeFolder>();
+  @Output("onUpdateRoot") public onUpdateRoot = new EventEmitter<FsNodeFolder>();
+
   @Output("onSelectFile") public onSelectFile = new EventEmitter<FsNodeFile>();
+  
   
   @Output("showHiddenChanged") public showHiddenChanged = new EventEmitter<boolean>(); 
 
@@ -60,7 +58,6 @@ export class FileExplorerWidgetComponent implements OnInit {
   ngOnInit() {
     this.bindCollapseEvent();
     
-    let test = new FsServiceTest(this.fs, this.driverName)
     //this.rootDir = this.driver?.rootDir ?? this.rootDir;
     this.driver?.ready().then((ready)=>{
       //alert('ready!');
@@ -69,18 +66,15 @@ export class FileExplorerWidgetComponent implements OnInit {
         this.refreshRoot();
         //alert('ready!');
       })
-      
     })
-
-    
-
   }
 
   refreshRoot(){
     this.driver?.scanDirectory(this.rootDir).then((folder)=>{
-      this.root = folder ?? this.emptyNode;
+      this.fsroot = folder ?? FsService.EmptyFolder
+
       this.bindCollapseEvent();
-      this.change?.emit(this.root);
+      this.onUpdateRoot?.emit(this.fsroot);
     });
     
   }
@@ -138,7 +132,20 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   public openSettings(){
-    //TODO: 
+    this.showHidden = true
+    console.log("openSettings")
+    let projectFolder = this.fsroot.folders.find((item)=>{
+      return item.path + "/" == this.python.projectFolder
+    })
+    if(!projectFolder){return}
+    console.log("openSettings:projectFolder:",projectFolder)
+    let configFile = projectFolder.files.find((file)=>{
+      return file.path == this.python.configPath
+    })
+    if(!configFile){return}
+    console.log("openSettings:configFile:",configFile)
+    
+    this.selectFile(configFile);
   }
   
 
@@ -171,7 +178,7 @@ export class FileExplorerWidgetComponent implements OnInit {
         this.editingValue = this.editingValue.trim();
         if (this.editingValue.length > 0) {
           this.editingItem.name = this.editingValue;
-          this.change?.emit(this.root);
+          this.onUpdateRoot?.emit(this.fsroot);
         }
       }
     }
@@ -199,6 +206,7 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   /** DELETE METHODS **/
   public deleteFileClick(event: Event, file: FsNodeFile) {
+    if(!this.fsroot){return}
     if (event.target) {
       this.confirmationService.confirm({
         target: event.target,
@@ -206,7 +214,7 @@ export class FileExplorerWidgetComponent implements OnInit {
         icon: 'pi pi-exclamation-triangle',
         accept: () => {
           //confirm action
-          this.deleteFile(this.root, file);
+          this.deleteFile(this.fsroot, file);
         },
         reject: () => {
           //reject action
@@ -240,7 +248,7 @@ export class FileExplorerWidgetComponent implements OnInit {
         icon: 'pi pi-exclamation-triangle',
         accept: () => {
           //confirm action
-          this.deleteFolder(this.root, folder);
+          this.deleteFolder(this.fsroot, folder);
         },
         reject: () => {
           //reject action
@@ -401,7 +409,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   public export() {
-    let items = this.fs.treeToList(this.root)
+    let items = this.fs.treeToList(this.fsroot)
     if(items.length == 0 ) {
       console.log("export: No files found to be exported")
     }
@@ -428,9 +436,4 @@ export class FileExplorerWidgetComponent implements OnInit {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   }
-
-
-
-
-
 }

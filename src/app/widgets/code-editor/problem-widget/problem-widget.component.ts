@@ -1,8 +1,13 @@
-import { Component, EventEmitter, Output, ViewChild, NgZone, ElementRef } from '@angular/core';
+import { Component, EventEmitter, Output, NgZone, Input, ViewChild, ElementRef } from '@angular/core';
+import { Dropdown } from 'primeng/dropdown';
+import { Subscription } from 'rxjs';
 import { ApiService, Meta } from 'src/app/services/api-service/api.service';
-import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
-import { ProblemDescriptor, ServiceDescriptor, ArgsMap, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
-
+import { FsNodeFolder, FsNodeFile, FsService } from 'src/app/services/fs-service/fs.service';
+import { ProblemDescriptor, ServiceDescriptor, ArgsMap, ArgDescriptor, FilesMap, ProblemManagerService, FileDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
+import { PyodideDriver } from 'src/app/services/python-compiler-service/pydiode-driver';
+import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
+import { PrimeNGConfig, OverlayOptions } from 'primeng/api';
+import { A } from '@tauri-apps/api/cli-3e179c0b';
 
 export class ServiceMenuEntry {
   constructor(
@@ -18,36 +23,57 @@ export class ServiceMenuEntry {
   styleUrls: ['./problem-widget.component.scss'],
 })
 export class ProblemWidgetComponent {
-  @Output('onProblemListUpdate') public onProblemListUpdate = new EventEmitter<Map<string, Meta>>();
   @Output('onProblemChanged') public onProblemSelected = new EventEmitter<ProblemDescriptor>();
   @Output('onServiceChanged') public onServiceSelected = new EventEmitter<ServiceDescriptor>();
   @Output('onAttachments') public onAttachments = new EventEmitter<ArrayBuffer>();
+  
+  @Input('fslist') public fslist!: Array<FsNodeFile|FsNodeFolder>;
 
-  public outputText: string = "";
+  @ViewChild("problemDropdown") public problemDropdown!: Dropdown
+  public dropdownOptions: OverlayOptions;
 
   servicesMenu = new Array<ServiceMenuEntry>();
+
   selectedProblem?: ProblemDescriptor;
   selectedService?: ServiceMenuEntry;
   selectedArgs?: ArgsMap;
+  selectedFiles?: FilesMap;
+  selectedFile?: FileDescriptor;
+
+  driver?:PyodideDriver
+  
   regexFormat = true;
   showRegex = true;
+  loading = false
 
+  problemSub: Subscription
 
   constructor( public zone: NgZone,
                public api: ApiService,
-               public pm: ProblemManagerService){}
+               public pm: ProblemManagerService,
+               public python: PythonCompilerService,)
+  {
+    this.driver = python.driver;
+    this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.updateProblemsUI(clear) })
+
+    // https://primefaces.org/primeng/overlay
+    //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
+    this.dropdownOptions = {appendTo:'body'}
+  }
   
   ngOnInit() {
-    this.apiProblemList();
+    this.reloadProblemList();
   }
 
-  ngOnDestroy() {}
-
-
-  clearOutput() {
-    this.zone.run(() => this.outputText = "")
+  ngOnDestroy() {
+    this.problemSub?.unsubscribe()
   }
 
+  isLoading(){
+    return this.loading;
+  }
+
+//args
   clenupRegex(re:RegExp){
     let text = re+""
     text = text.replace(/\/(.*)\//,'$1')
@@ -74,10 +100,6 @@ export class ProblemWidgetComponent {
     return text
   }
 
-  async onApiError(message: string) {
-    console.log("API Error: ", message)
-  }
-  
   async argDidFocus(arg:ArgDescriptor,event:Event){
     console.log('argDidFocus:',arg,event)
     let idPanel = 'args-regex-panel-' + arg.key
@@ -129,6 +151,55 @@ export class ProblemWidgetComponent {
     this.argDidChange(arg,event)
   }
 
+
+//files
+  async fileDidFocus(file:FileDescriptor,event:Event){
+    console.log('fileDidFocus:',file.key,event)
+  }
+
+  async fileDidChange(file:FileDescriptor,event:any){
+    console.log('fileDidChange:',file.key,event)
+
+    if(!("value" in event)){return;}
+    console.log('fileDidChange:value:found',event.value)
+    let value = event.value
+    if(!("path" in value )){return;}
+    console.log('fileDidChange:path:found',value.path)
+    let path = value.path
+    
+    
+    let idDropdown = 'file-dropdown-' + file.key
+    let dropdown = document.getElementById(idDropdown)
+    if(!(dropdown instanceof HTMLElement)) {return}
+    console.log('fileDidChange:dropdown:found',dropdown)
+    
+    if (path == ""){
+      dropdown.style.color = ""
+      file.value = ""
+      return
+    }
+
+    let pathExist = await this.driver?.exists(path)
+    console.log('fileDidChange:pathExist:',pathExist)
+    if(!pathExist){
+      dropdown.style.color = "red"
+      file.value = ""
+    }else{
+      dropdown.style.color = "green"
+      file.value = path
+    }
+  }
+  
+  async fileDidReset(file:FileDescriptor,event:Event){
+    console.log('fileDidReset:',file.key,event)
+    let idDropdown = 'file-dropdown-' + file.key
+    let dropdown = document.getElementById(idDropdown)
+    if(!(dropdown instanceof HTMLInputElement)) {return}
+    dropdown.value = ""
+    dropdown.style.color = ""
+  }
+
+//UI
   async toggleShowRegex(arg:ArgDescriptor,event:Event){
     let idPanel = 'args-regex-panel-' + arg.key
     let panel = document.getElementById(idPanel)
@@ -154,11 +225,26 @@ export class ProblemWidgetComponent {
     this.selectedProblem = undefined;
     this.selectedService = undefined;
     this.selectedArgs = undefined;
-    this.servicesMenu = []
-    this.apiProblemList()
+    this.selectedFiles = undefined;
+    
+    this.zone.run(() => { 
+      this.servicesMenu = []
+      this.loading = true
+    }) 
+
+    console.log
+    this.pm.updateProblems()
   }
 
-  async updateProblemsUI() {
+  async updateProblemsUI(clear:boolean) {
+
+    this.zone.run(() => { 
+      this.servicesMenu = []
+      this.loading = true
+    }) 
+
+    if(clear) return
+    
     let menuServices = new Array<ServiceMenuEntry>();
     this.pm.problemList.forEach((problemDesc)=>{      
       problemDesc.services.forEach((serviceDesc)=>{
@@ -168,27 +254,20 @@ export class ProblemWidgetComponent {
         menuServices.push(serviceEntry)
       })
     })
-
     console.log('updateProblemsUI:menuServices:', menuServices)
     
     this.zone.run(() => { 
       this.servicesMenu = menuServices
-    })
-    
+      this.loading = false
+    }) 
   }
 
-  
-  async apiProblemList() {
-    let req = this.api.problemList(async (problemList) => {
-      console.log('apiProblemList:problemList:', problemList)
-      this.pm.updateProblems(problemList)
-      this.onProblemListUpdate.emit(problemList)
-      await this.updateProblemsUI()
-    });
-    req.onError = (error) => { this.onApiError(error) };
-  }
 
-  
+
+//API 
+  async onApiError(message: string) {
+    console.log("API Error: ", message)
+  }
 
   async didSelectProblem() {
     console.log('didSelectProblem:', this.selectedProblem)
@@ -203,6 +282,7 @@ export class ProblemWidgetComponent {
     let serviceDesc = this.selectedService!.descriptor
     this.pm.selectService(serviceDesc)
     this.selectedArgs = serviceDesc.args
+    this.selectedFiles = serviceDesc.files
     console.log('didSelectService:selectedArgs:', this.selectedArgs)
     this.onServiceSelected.emit(serviceDesc)
   }

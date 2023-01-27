@@ -1,8 +1,8 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { Commands } from 'src/app/services/api-service/api.commands';
 import { ApiService } from 'src/app/services/api-service/api.service';
 
-import { FsService, FsNodeFile, Tar } from 'src/app/services/fs-service/fs.service';
+import { FsService, FsNodeFile, Tar, FsNodeFolder, FsNodeList } from 'src/app/services/fs-service/fs.service';
 import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { PyodideDriver } from 'src/app/services/python-compiler-service/pydiode-driver';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
@@ -18,17 +18,27 @@ import { ProblemWidgetComponent } from '../problem-widget/problem-widget.compone
   styleUrls: ['./code-editor.component.scss']
 })
 export class CodeEditorComponent implements OnInit {
+  public binEncoder = new TextEncoder(); // always utf-8
+  public binDecoder = new TextDecoder("utf-8");
+
+  public cmdConnect?:Commands.Connect;
+  
   public selectedFile?: FsNodeFile;
   public selectedProblem?: ProblemDescriptor;
   public selectedService?: ServiceDescriptor;
   public driver;
-  public cmdConnect?:Commands.Connect;
 
+  public fsroot = FsService.EmptyFolder;
+  public fslist: FsNodeList = [];
+  public fslistfile: FsNodeFile[] = [];
+  
   @ViewChild("fileExplorer") public fileExplorer!: FileExplorerWidgetComponent;
   @ViewChild("fileEditor") public fileEditor!: FileEditorWidgetComponent;
   @ViewChild("execBar") public execBar!: ExecbarWidgetComponent;
   @ViewChild("problemWidget") public problemWidget!: ProblemWidgetComponent;
   @ViewChild("outputWidget") public outputWidget!: OutputWidgetComponent;
+
+
   
   constructor(
     private fs: FsService,
@@ -43,7 +53,12 @@ export class CodeEditorComponent implements OnInit {
     this.python.driver?.subscribeStderr(true,(msg)=>{this.onStderr(msg)})
   }
   
-
+  public onUpdateRoot(fsroot:FsNodeFolder){
+    this.fsroot = fsroot;
+    this.fslist = this.fs.treeToList(fsroot);
+    this.fslistfile = this.fslist.filter( item=>"content" in item ) as FsNodeFile[]
+    this.problemWidget.fslist = this.fslistfile
+  }
   
   public onStdout(data:string){
     this.outputWidget!.print(data);
@@ -180,7 +195,24 @@ export class CodeEditorComponent implements OnInit {
     let args = this.selectedService.exportArgs();
     let tty = undefined
     let token = undefined
-    let files = this.selectedService.exportFiles();
+    let filePaths = this.selectedService.exportFilesPaths();
+    let files =  new Array<string>();
+
+    console.log("apiConnect:params:problem:items:", this.fslistfile)
+    for(let idx in filePaths){
+      let path = filePaths[idx];
+      console.log("apiConnect:params:problem:path:", path)
+      
+      let found = this.fslistfile.find(item => item.path == path)
+      console.log("apiConnect:params:problem:found:", found)
+      let content = found ? found.content : ""
+
+      if(content instanceof ArrayBuffer){
+        content = this.binDecoder.decode(content)
+      }
+      files.push(content)
+    }
+
     
     console.log("apiConnect:params:problem",problem)
     console.log("apiConnect:params:service",service)
@@ -209,8 +241,8 @@ export class CodeEditorComponent implements OnInit {
     );
     this.cmdConnect.onError = (error)=>{this.didConnectError(error)};
 
-    console.log("apiConnect:params:packages",config.PACKAGES)
-    await this.python.installPackages(config.PACKAGES)
+    console.log("apiConnect:params:packages",config.PIP_PACKAGES)
+    await this.python.installPackages(config.PIP_PACKAGES)
     this.outputWidget.print("TEST: "+config.MAIN)
     await this.driver?.executeFile(config.MAIN)
     

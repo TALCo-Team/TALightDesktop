@@ -9,41 +9,53 @@ div.tal-topbar{
     display:flex;
     align-items: center;
     justify-content: space-between;
-    padding:1rem;
+    padding: 5px;
+}
 
+.tal-brand{
+    height: 30px;
+    h1{
+        font-size: 25px;
+    }
 }
 
 
 .tal-buttons{
-    height: 47px;
+    height: 30px;
     display: flex;
     align-items: center;
-    
-    .p-button{
-        width:47px;
-        height:47px;
-    }
-
 }
 
-.p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item:hover{
-    background-color: fuchsia !important;
+::ng-deep {
+    .top-bar-url-input{
+        .p-autocomplete {
+            height: 30px;
+        }
+
+        .p-autocomplete-label, .p-autocomplete-item{
+            height: 30px;
+            padding: 5px!important;
+            margin: 5px!important;
+        }
+    }
 }
 
 .top-bar-url-input{
     margin: 5px;
-
+    height: 30px;
 
 
     .url-item{
         display: flex;
         justify-content: space-between;
         align-items: center;
-        height:16px;
+        height:16px !important;
 
-        .p-button{
-            width:16px;
-            height:16px;
+        button{
+            width:16px !important;
+            height:16px !important;
+            max-height:16px !important;
+            min-height:16px !important;
             margin: 0;
             display: none;
             background-color: darkred;
