@@ -48,6 +48,7 @@ var PyodideMessageType;
 })(PyodideMessageType || (PyodideMessageType = {}));
 class PyodideWorker {
   constructor(root, mount) {
+    var _this = this;
     this.requestQueueStdout = new Map();
     this.requestQueueStderr = new Map();
     this.binEncoder = new TextEncoder(); // always utf-8
@@ -69,9 +70,14 @@ class PyodideWorker {
     this.readyResolver = value => {
       readyResolver(value);
     };
-    addEventListener("message", payload => {
-      this.onData(payload.data);
-    });
+    addEventListener("message", /*#__PURE__*/function () {
+      var _ref = (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* (payload) {
+        _this.onData(payload.data);
+      });
+      return function (_x) {
+        return _ref.apply(this, arguments);
+      };
+    }());
     this.initPydiode().then(() => {
       this.load(this.root, this.mount);
       this.fs.syncfs(true, () => {
@@ -81,44 +87,69 @@ class PyodideWorker {
     });
   }
   initPydiode() {
-    var _this = this;
+    var _this2 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("loadPyodide: ...");
       let options = {
         stdin: () => {
-          return _this.onStdin();
+          return _this2.onStdin();
         },
         stdout: msg => {
-          _this.onStdout(msg);
+          _this2.onStdout(msg);
         },
         stderr: msg => {
-          _this.onStderr(msg);
+          _this2.onStderr(msg);
         }
       };
       //console.log(loadPyodide)
-      _this.pyodide = yield loadPyodide(options);
-      _this.fs = _this.pyodide.FS;
-      yield _this.pyodide.loadPackage(["micropip"]);
-      _this.micropip = _this.pyodide.pyimport("micropip");
+      _this2.pyodide = yield loadPyodide(options);
+      _this2.fs = _this2.pyodide.FS;
+      yield _this2.pyodide.loadPackage(["micropip"]);
+      _this2.micropip = _this2.pyodide.pyimport("micropip");
       console.log("loadPyodide: done");
       //console.log(pyodide)
+      _this2.setCustomHooks();
     })();
   }
-
-  load(root, mount) {
-    var _this2 = this;
+  setCustomHooks() {
+    var _this3 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
-      _this2.root = root;
-      _this2.mount = mount;
+      let oldInput = _this3.pyodide.globals.input;
+      console.log("setCustomHooks:oldInput:", oldInput);
+      let localThis = _this3;
+      _this3.pyodide.globals.set('input', /*#__PURE__*/function () {
+        var _ref2 = (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* (prompt) {
+          localThis.onStdout(prompt);
+          console.log("setCustomHooks:scrivo sulla consolle!!!!");
+          let stdinResolver;
+          let promise = new Promise((resolve, reject) => {
+            stdinResolver = resolve;
+          });
+          localThis.stdinResolver = message => {
+            stdinResolver(message);
+          };
+          return promise;
+        });
+        return function (_x2) {
+          return _ref2.apply(this, arguments);
+        };
+      }());
+    })();
+  }
+  load(root, mount) {
+    var _this4 = this;
+    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+      _this4.root = root;
+      _this4.mount = mount;
       console.log("PyodideFsWorker: load");
-      _this2.fs.mkdir(_this2.mount);
-      _this2.fs.mount(_this2.fs.filesystems.IDBFS, {
+      _this4.fs.mkdir(_this4.mount);
+      _this4.fs.mount(_this4.fs.filesystems.IDBFS, {
         root: root
-      }, _this2.mount);
+      }, _this4.mount);
       console.log("PyodideFsWorker: load: done");
-      console.log(_this2.fs.mounts);
-      console.log(_this2.fs.root);
-      console.log(_this2.fs.root.mount);
+      console.log(_this4.fs.mounts);
+      console.log(_this4.fs.root);
+      console.log(_this4.fs.root.mount);
     })();
   }
   toString(data) {
@@ -179,29 +210,13 @@ class PyodideWorker {
     }
   }
   onStdin() {
-    let cnt = this.stdinBuffer.length;
-    let msg = "";
-    if (cnt > 0) {
-      let items = this.stdinBuffer.splice(0, cnt);
-      msg = items.join("");
-    }
+    console.log('PyodideWorker:onStdin:');
+    let len = this.stdinBuffer.length;
+    let items = this.stdinBuffer.splice(0, len);
+    let msg = items.join("");
+    console.log('PyodideWorker:onStdin:', msg);
     return msg;
-    /*
-    else{
-      //onStdin
-      let stdinResolver: PromiseResolver<string>;
-      let stdinPromise =  new Promise<string>((resolve, reject) => {
-        stdinResolver = resolve;
-      })
-      this.stdinResolver = (value)=>{
-        stdinResolver(value);
-        this.stdinResolver = undefined;
-      }
-      return stdinPromise
-    }
-    */
   }
-
   onStdout(msg) {
     console.log("stdout: " + msg);
     this.requestQueueStdout.forEach((request, uid) => {
@@ -328,8 +343,8 @@ class PyodideWorker {
     let response = this.responseFromRequest(request);
     let code = request.message.contents[0];
     console.log("executeCode:\n", code); //,res)
-    const result = this.pyodide.runPython(code);
-    response.message.contents = [result];
+    const result = this.pyodide.runPythonAsync(code);
+    response.message.contents = ["true"];
     return response;
   }
   executeFile(request) {
@@ -339,9 +354,9 @@ class PyodideWorker {
     console.log("executeFile:", path); //,res)
     let rawContent = this.fs.readFile(path);
     let code = new TextDecoder().decode(rawContent.buffer);
-    let result = this.pyodide.runPython(code);
+    let result = this.pyodide.runPythonAsync(code);
     console.log("executeFile: result:\n", result);
-    response.message.contents = [result];
+    response.message.contents = ["true"];
     return response;
   }
   subscribeStdout(request) {
@@ -371,7 +386,7 @@ class PyodideWorker {
   sendStdin(request) {
     let response = this.responseFromRequest(request);
     let data = request.message.contents[0];
-    console.log("sendStdin:\n", data); //,res)
+    console.log("PyodideWorker:sendStdin:\n", data);
     if (this.stdinResolver) {
       this.stdinResolver(this.toString(data));
     } else {
@@ -387,9 +402,11 @@ class PyodideWorker {
     }
     //TODO: allow for multiple queries;
     let fullpath = request.message.args[0];
-    let res = this.fs.mkdir(this.mount + fullpath);
-    console.log('pydiode:mkdir:', res);
-    this.syncFS();
+    if (!this.internal_exists(this.mount + fullpath)) {
+      let res = this.fs.mkdir(this.mount + fullpath);
+      console.log('pydiode:mkdir:', res);
+      this.syncFS();
+    }
     response.message.args = [fullpath];
     return response;
   }
@@ -552,11 +569,15 @@ class PyodideWorker {
     let fullpath = request.message.args[0];
     console.log("exists: ", this.mount + fullpath);
     // https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.analyzePath
-    let res = this.fs.analyzePath(this.mount + fullpath);
-    console.log("exists:res:exists ", res["exists"]);
-    console.log("exists:res ", res);
-    response.message.args = [res["exists"] ? 'true' : 'false'];
+    let exists = this.internal_exists(this.mount + fullpath);
+    console.log("exists:", exists);
+    response.message.args = [exists ? 'true' : 'false'];
     return response;
+  }
+  internal_exists(path) {
+    let res = this.fs.analyzePath(path);
+    console.log("internal_file_exists:analyzePath", res);
+    return res["exists"];
   }
 }
 main();

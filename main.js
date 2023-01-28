@@ -2155,7 +2155,7 @@ class PyodideDriver {
     resolvePromise(res == 'true');
   }
   sendMessage(message) {
-    //alert('sendMessage:'+message.type);
+    console.log("PyodideDriver:sendMessage:" + message.type);
     let request = {
       uid: message.uid,
       timestamp: Date.now(),
@@ -2389,98 +2389,6 @@ class PyodideDriver {
     return 'uid-' + timestap + '-' + seed;
   }
 }
-/*
-}
-
-
-sendMessage(type: PyodideFsMessageType, args?:string[], contents?:string[], response?:(data:string)=>void){
-  if(!(args)){ args = []; }
-  if(!(contents)){ contents = []; }
-  
-  const uid = this.requestUID();
-
-  
-  
-  const message: PyodideFsMessage = {
-    type: type,
-    uid: uid,
-    args: args,
-    contents: contents
-  }
-  this.worker.postMessage(message);
-  let onData = (data:Event)=>{
-    if(response){response(data);}
-    if(this.worker.removeAllListeners){worker.removeAllListeners(uid)}
-  }
-  worker.addEventListener(uid, onData);
-}
-
-async createDirectory(fullpath:string): Promise<boolean>{
-  return false;
-}
-
-async writeFile(fullpath:string, content:string): Promise<number>{
-  return -1;
-}
-
-async readDirectory(fullpath:string):Promise<FsNode|null>{
-  return null;
-}
-
-
-
-async scanDirectory(path?:string, recursive=false, parent?:FsNode):Promise<FsNode>{
-  if(!path){path='./'}
-  return {name:path,path:path,isFolder:false, depth:-1};
-}
-
-
-
-/*
-sendMessages(){
-  this.pycs.worker.onmessage = ({ data }) => {
-    console.log(`page got message: ${data}`);
-  }
-  
-  const messageInstall: PythonCompilerMessageInterface = {
-    type: PythonCompilerMessageInterfaceType.PackageInstall,
-    packages: ['fake-traffic'],
-  }
-  this.pycs.worker.postMessage(messageInstall);
-
-  const messageToSend: PythonCompilerMessageInterface = {
-    type: PythonCompilerMessageInterfaceType.ExecuteCode,
-    code: `
-    import os
-    print(os.listdir('/'))
-    print(os.listdir('/mnt'))
-    import fox
-    import mainC
-`
-  }
-
-  this.pycs.worker.postMessage(messageToSend);
-
-}
-
-async createDirectory(fullpath:string): Promise<boolean>{
-  let res = await this.fs.createDirectory(fullpath);
-  return await this.fs.exists(fullpath);
-}
-
-async writeFile(fullpath:string, content:string): Promise<number>{
-  let res = await this.fs.writeFile(fullpath, content);
-  if (!(await this.fs.exists(fullpath)) ) {return -1;}
-  return res.data.length;
-}
-
-async readDirectory(fullpath:string):Promise<FsNode|null>{
-  if ( await this.fs.exists(fullpath) ) {
-    return this.scanDirectory(fullpath, false );
-  }
-  return null;
-}
-*/
 
 /***/ }),
 
@@ -2525,25 +2433,31 @@ class PythonCompilerService {
         console.log("createPythonProject:skipping");
         return true;
       }
-      let configContent = JSON.stringify(new PythonConfig(), null, 4);
+      let configContent = JSON.stringify(new ProjectConfig(), null, 4);
       console.log("createPythonProject:project:", _this.projectFolder);
       yield _this.driver?.createDirectory(_this.projectFolder);
       console.log("createPythonProject:config:", _this.configPath, configContent);
       yield _this.driver?.writeFile(_this.configPath, configContent);
-      let content = `print("asd") \ndata = 123 \nprint("data:", data)`;
-      console.log("createPythonProject:content:", content);
-      yield _this.driver?.writeFile('/main.py', content);
+      let mainContent = `print("Hello World!")`;
+      console.log("createPythonProject:content:", mainContent);
+      yield _this.driver?.writeFile('/main.py', mainContent);
       console.log("createPythonProject:data:");
       yield _this.driver?.createDirectory('/data/');
-      let bot = `import time
-def sleep(seconds):
-    start = now = time.time()
-    while now - start < seconds:
-        now = time.time()
+      yield _this.driver?.createDirectory('/examples/');
+      let inputExample = `# Esempio che mostra come utilizzare la funzione di input in ambiente asincrono
+nome = await input("Ciao, come ti chiami?")
+print(f'Ciao {nome}, posso farti una domanda ?')    
 
-sleep(2)
-print("100 0")`;
-      yield _this.driver?.writeFile('/free_sum_mysimplebot.py', bot);
+async def main():
+  while(True):
+    lati = await input("quanti lati ha un triangolo?")
+    if lati=="3": break;
+    print(f'No, mi dispiace non ha {lati} lati')    
+  print('Congratulazioni!')
+
+main()
+`;
+      yield _this.driver?.writeFile('/examples/input.py', inputExample);
       return true;
     })();
   }
@@ -2570,7 +2484,7 @@ print("100 0")`;
         return null;
       }
       yield _this3.driver?.installPackages(config.PIP_PACKAGES);
-      let result = yield _this3.driver?.executeFile(config.MAIN);
+      let result = yield _this3.driver?.executeFile(config.RUN);
       console.log(result);
       return result;
     })();
@@ -2596,9 +2510,9 @@ PythonCompilerService.ɵprov = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODU
   factory: PythonCompilerService.ɵfac,
   providedIn: 'root'
 });
-class PythonConfig {
+class ProjectConfig {
   constructor() {
-    this.MAIN = "main.py";
+    this.RUN = "/main.py";
     this.DEBUG = false;
     this.DOWNLOAD_ATTACHMENT_AUTO = true;
     this.PROJECT_NAME = "My 3SAT";
@@ -2606,13 +2520,14 @@ class PythonConfig {
     this.TAL_SERVER = "";
     this.TAL_PROBLEM = "";
     this.TAL_SERVICE = "";
-    this.PIP_PACKAGES = ["numpy"];
     this.DIR_PROJECT = '/.talight/';
     this.DIR_ATTACHMENTS = '/data/';
     this.DIR_RESULTS = '/results/';
     this.DIR_ARGSFILE = '/files/';
+    this.DIR_EXAMPLES = '/examples/';
     this.CONFIG_NAME = 'taglight.json';
     this.PATH_CONFIG = this.DIR_PROJECT + this.CONFIG_NAME;
+    this.PIP_PACKAGES = ["numpy"];
   }
 }
 
@@ -3319,12 +3234,21 @@ class CodeEditorComponent {
   runProject(useAPI = false) {
     var _this = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+      console.log("runProject: ");
       _this.outputWidget.clearOutput();
       let config = yield _this.python.readPythonConfig();
       if (!config) {
         return false;
       }
-      _this.outputWidget.print("RUN: " + config.MAIN);
+      console.log("runProject:config:ok");
+      console.log("runProject:main:", config.RUN);
+      let mainFile = _this.fslistfile.find(item => item.path == config.RUN);
+      if (!mainFile) {
+        return false;
+      }
+      console.log("runProject:main:ok");
+      _this.fileExplorer.selectFile(mainFile);
+      _this.outputWidget.print("RUN: " + config.RUN);
       _this.saveFile();
       _this.python.runProject().then(() => {
         //this.fileExplorer.refreshRoot()
@@ -3339,7 +3263,7 @@ class CodeEditorComponent {
     this.problemWidget.fslist = this.fslistfile;
   }
   onStdout(data) {
-    this.outputWidget.print(data);
+    this.outputWidget.print("> " + data);
     //TODO: if API connect then:
     if (!this.cmdConnect) {
       return;
@@ -3349,10 +3273,10 @@ class CodeEditorComponent {
 
   onStderr(data) {
     //alert("STDERR: "+data)
-    this.outputWidget.print(data);
+    this.outputWidget.print("[Err] " + data);
   }
   onStdin(msg) {
-    this.outputWidget.print(msg);
+    this.outputWidget.print("  ", msg + "\n");
     this.python.driver?.sendStdin(msg);
   }
   onProblemChanged(selectedProblem) {
@@ -3491,8 +3415,8 @@ class CodeEditorComponent {
       };
       console.log("apiConnect:params:packages", config.PIP_PACKAGES);
       yield _this3.python.installPackages(config.PIP_PACKAGES);
-      _this3.outputWidget.print("TEST: " + config.MAIN);
-      yield _this3.driver?.executeFile(config.MAIN);
+      _this3.outputWidget.print("TEST: " + config.RUN);
+      yield _this3.driver?.executeFile(config.RUN);
       console.log("apiConnect:DONE");
       return true;
     })();
@@ -3621,7 +3545,7 @@ ExecbarWidgetComponent.ɵcmp = /*@__PURE__*/ _angular_core__WEBPACK_IMPORTED_MOD
     } if (rf & 2) {
         _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵadvance"](3);
         _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵtextInterpolate"](ctx.selectedFile == null ? null : ctx.selectedFile.name);
-    } }, dependencies: [primeng_button__WEBPACK_IMPORTED_MODULE_2__.ButtonDirective], styles: ["[_nghost-%COMP%] {\n  width: 100%;\n  height: 100%;\n}\n\n.tal-code-editor-execbar[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  flex-direction: row;\n  justify-content: space-between;\n  padding: 5px;\n  width: 100%;\n  background-color: rgba(0, 0, 0, 0.1);\n}\n\n.tal-code-editor-execbar[_ngcontent-%COMP%]   .tal-code-editor-execbar-left[_ngcontent-%COMP%], .tal-code-editor-execbar[_ngcontent-%COMP%]   .tal-code-editor-execbar-right[_ngcontent-%COMP%] {\n  display: flex;\n}\n\n.tal-code-editor-execbar[_ngcontent-%COMP%]   button[_ngcontent-%COMP%] {\n  height: 30px;\n  width: 30px;\n  min-width: 30px;\n  margin-left: 5px;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImV4ZWNiYXItd2lkZ2V0LmNvbXBvbmVudC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0VBQ0ksV0FBQTtFQUNBLFlBQUE7QUFDSjs7QUFFQTtFQUNJLGFBQUE7RUFDQSxtQkFBQTtFQUNBLG1CQUFBO0VBQ0EsOEJBQUE7RUFDQSxZQUFBO0VBQ0EsV0FBQTtFQUNBLG9DQUFBO0FBQ0o7O0FBQ0k7RUFDSSxhQUFBO0FBQ1I7O0FBRUk7RUFDSSxZQUFBO0VBQ0EsV0FBQTtFQUNBLGVBQUE7RUFDQSxnQkFBQTtBQUFSIiwiZmlsZSI6ImV4ZWNiYXItd2lkZ2V0LmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiOmhvc3R7XG4gICAgd2lkdGg6MTAwJTtcbiAgICBoZWlnaHQ6MTAwJTtcbn1cblxuLnRhbC1jb2RlLWVkaXRvci1leGVjYmFye1xuICAgIGRpc3BsYXk6ZmxleDtcbiAgICBhbGlnbi1pdGVtczogY2VudGVyO1xuICAgIGZsZXgtZGlyZWN0aW9uOiByb3c7XG4gICAganVzdGlmeS1jb250ZW50OiBzcGFjZS1iZXR3ZWVuO1xuICAgIHBhZGRpbmc6NXB4O1xuICAgIHdpZHRoOjEwMCU7XG4gICAgYmFja2dyb3VuZC1jb2xvcjogcmdiYSgkY29sb3I6ICMwMDAwMDAsICRhbHBoYTogMC4xKTtcblxuICAgIC50YWwtY29kZS1lZGl0b3ItZXhlY2Jhci1sZWZ0LCAudGFsLWNvZGUtZWRpdG9yLWV4ZWNiYXItcmlnaHR7XG4gICAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgfVxuXG4gICAgYnV0dG9ue1xuICAgICAgICBoZWlnaHQ6MzBweDtcbiAgICAgICAgd2lkdGg6MzBweDtcbiAgICAgICAgbWluLXdpZHRoOjMwcHg7XG4gICAgICAgIG1hcmdpbi1sZWZ0OjVweDtcbiAgICB9XG59XG5cbiJdfQ== */"] });
+    } }, dependencies: [primeng_button__WEBPACK_IMPORTED_MODULE_2__.ButtonDirective], styles: ["[_nghost-%COMP%] {\n  width: 100%;\n  height: 100%;\n}\n\n.tal-code-editor-execbar[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  flex-direction: row;\n  justify-content: space-between;\n  padding: 5px;\n  width: 100%;\n  background-color: rgba(0, 0, 0, 0.1);\n}\n\n.tal-code-editor-execbar[_ngcontent-%COMP%]   .tal-code-editor-execbar-left[_ngcontent-%COMP%], .tal-code-editor-execbar[_ngcontent-%COMP%]   .tal-code-editor-execbar-right[_ngcontent-%COMP%] {\n  display: flex;\n}\n\n.tal-code-editor-execbar[_ngcontent-%COMP%]   .tal-code-editor-execbar-left[_ngcontent-%COMP%]   button[_ngcontent-%COMP%], .tal-code-editor-execbar[_ngcontent-%COMP%]   .tal-code-editor-execbar-right[_ngcontent-%COMP%]   button[_ngcontent-%COMP%] {\n  margin-left: 5px;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImV4ZWNiYXItd2lkZ2V0LmNvbXBvbmVudC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0VBQ0ksV0FBQTtFQUNBLFlBQUE7QUFDSjs7QUFFQTtFQUNJLGFBQUE7RUFDQSxtQkFBQTtFQUNBLG1CQUFBO0VBQ0EsOEJBQUE7RUFDQSxZQUFBO0VBQ0EsV0FBQTtFQUNBLG9DQUFBO0FBQ0o7O0FBQ0k7RUFDSSxhQUFBO0FBQ1I7O0FBQVE7RUFDSSxnQkFBQTtBQUVaIiwiZmlsZSI6ImV4ZWNiYXItd2lkZ2V0LmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiOmhvc3R7XG4gICAgd2lkdGg6MTAwJTtcbiAgICBoZWlnaHQ6MTAwJTtcbn1cblxuLnRhbC1jb2RlLWVkaXRvci1leGVjYmFye1xuICAgIGRpc3BsYXk6ZmxleDtcbiAgICBhbGlnbi1pdGVtczogY2VudGVyO1xuICAgIGZsZXgtZGlyZWN0aW9uOiByb3c7XG4gICAganVzdGlmeS1jb250ZW50OiBzcGFjZS1iZXR3ZWVuO1xuICAgIHBhZGRpbmc6NXB4O1xuICAgIHdpZHRoOjEwMCU7XG4gICAgYmFja2dyb3VuZC1jb2xvcjogcmdiYSgkY29sb3I6ICMwMDAwMDAsICRhbHBoYTogMC4xKTtcblxuICAgIC50YWwtY29kZS1lZGl0b3ItZXhlY2Jhci1sZWZ0LCAudGFsLWNvZGUtZWRpdG9yLWV4ZWNiYXItcmlnaHR7XG4gICAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICAgIGJ1dHRvbntcbiAgICAgICAgICAgIG1hcmdpbi1sZWZ0OjVweDtcbiAgICAgICAgfVxuICAgIH1cblxuICAgIFxufVxuXG4iXX0= */"] });
 
 
 /***/ }),
@@ -4912,7 +4836,7 @@ FileExplorerWidgetComponent.ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED
     }
   },
   dependencies: [_angular_common__WEBPACK_IMPORTED_MODULE_6__.NgForOf, _angular_common__WEBPACK_IMPORTED_MODULE_6__.NgIf, _angular_common__WEBPACK_IMPORTED_MODULE_6__.NgTemplateOutlet, _angular_forms__WEBPACK_IMPORTED_MODULE_7__.DefaultValueAccessor, _angular_forms__WEBPACK_IMPORTED_MODULE_7__.NgControlStatus, _angular_forms__WEBPACK_IMPORTED_MODULE_7__.NgModel, primeng_confirmdialog__WEBPACK_IMPORTED_MODULE_8__.ConfirmDialog, primeng_button__WEBPACK_IMPORTED_MODULE_9__.ButtonDirective, primeng_api__WEBPACK_IMPORTED_MODULE_4__.PrimeTemplate, primeng_overlaypanel__WEBPACK_IMPORTED_MODULE_5__.OverlayPanel, primeng_tooltip__WEBPACK_IMPORTED_MODULE_10__.Tooltip],
-  styles: [".tal-editor-files-tree[_ngcontent-%COMP%] {\n  height: 100%;\n  width: 100%;\n  background: var(--surface-50);\n  display: flex;\n  flex-direction: column;\n}\n.tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-header[_ngcontent-%COMP%], .tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-footer[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: row;\n  flex-wrap: nowrap;\n  justify-content: space-between;\n  min-width: -moz-fit-content;\n  min-width: fit-content;\n  padding: 5px;\n  background-color: rgba(0, 0, 0, 0.1);\n}\n.tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-header[_ngcontent-%COMP%]   .tal-editor-files-left-bar[_ngcontent-%COMP%], .tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-header[_ngcontent-%COMP%]   .tal-editor-files-right-bar[_ngcontent-%COMP%], .tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-footer[_ngcontent-%COMP%]   .tal-editor-files-left-bar[_ngcontent-%COMP%], .tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-footer[_ngcontent-%COMP%]   .tal-editor-files-right-bar[_ngcontent-%COMP%] {\n  justify-content: left;\n  flex-wrap: nowrap;\n  min-width: -moz-fit-content;\n  min-width: fit-content;\n}\n.tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-header[_ngcontent-%COMP%]   button[_ngcontent-%COMP%], .tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-footer[_ngcontent-%COMP%]   button[_ngcontent-%COMP%] {\n  margin-right: 5px;\n}\n.tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-body[_ngcontent-%COMP%] {\n  flex-grow: 1;\n  overflow-y: scroll;\n}\ndiv.tal-folder-row[_ngcontent-%COMP%], div.tal-file[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  width: 100%;\n  padding: 0 0.2rem;\n  margin: 0.2rem 0;\n  border-radius: 0.2rem;\n  cursor: pointer;\n}\ndiv.tal-folder-row[_ngcontent-%COMP%]:hover, div.tal-file[_ngcontent-%COMP%]:hover {\n  background-color: var(--surface-hover);\n}\ndiv.tal-folder-row[_ngcontent-%COMP%]:hover   div.tal-row-settings[_ngcontent-%COMP%], div.tal-file[_ngcontent-%COMP%]:hover   div.tal-row-settings[_ngcontent-%COMP%] {\n  opacity: 1 !important;\n}\ndiv.tal-file[_ngcontent-%COMP%] {\n  max-width: 100%;\n  border: solid 1px transparent;\n}\ndiv.tal-file.opened[_ngcontent-%COMP%] {\n  background-color: var(--surface-c);\n  border: solid 1px var(--surface-border);\n}\ndiv.tal-file[_ngcontent-%COMP%]   div.tal-file-title[_ngcontent-%COMP%] {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  overflow: hidden;\n}\ndiv.tal-file[_ngcontent-%COMP%]   div.tal-file-title[_ngcontent-%COMP%]   p[_ngcontent-%COMP%] {\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  font-size: 1rem;\n}\ndiv.tal-folder-row[_ngcontent-%COMP%] {\n  max-width: 100%;\n}\ndiv.tal-folder-row[_ngcontent-%COMP%]   div.tal-folder-title[_ngcontent-%COMP%] {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  overflow: hidden;\n}\ndiv.tal-folder-row[_ngcontent-%COMP%]   div.tal-folder-title[_ngcontent-%COMP%]   p[_ngcontent-%COMP%] {\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  font-size: 1rem;\n}\ndiv.tal-folder-row[_ngcontent-%COMP%]   div.tal-folder-title[_ngcontent-%COMP%]   i[_ngcontent-%COMP%]:first-child {\n  font-size: 0.8rem;\n  margin-right: 0.4rem;\n  color: var(--gray-500);\n}\ndiv.tal-folder-row[_ngcontent-%COMP%]   div.tal-folder-title[_ngcontent-%COMP%]   i[_ngcontent-%COMP%]:nth-child(2) {\n  font-size: 0.8rem;\n  margin-right: 0.2rem;\n}\ndiv.tal-row-settings[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  opacity: 0;\n}\ndiv.tal-row-settings[_ngcontent-%COMP%]   div.tal-row-button[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-items: center;\n  margin-left: 0.2rem;\n  padding: 0.4rem;\n  border-radius: 4px;\n  text-align: center;\n}\ndiv.tal-row-settings[_ngcontent-%COMP%]   div.tal-row-button[_ngcontent-%COMP%]   i[_ngcontent-%COMP%] {\n  font-size: 0.8rem;\n  color: var(--gray-500);\n}\ndiv.tal-row-settings[_ngcontent-%COMP%]   div.tal-row-button[_ngcontent-%COMP%]:hover {\n  background-color: var(--surface-100);\n}\ndiv.tal-row-settings[_ngcontent-%COMP%]   div.tal-row-button[_ngcontent-%COMP%]:hover   i[_ngcontent-%COMP%] {\n  color: var(--text-color);\n}\ndiv.tal-row-settings[_ngcontent-%COMP%]   div.tal-row-button[_ngcontent-%COMP%]:active {\n  background-color: var(--surface-200);\n}\ndiv.tal-folder-subtree.collapsed[_ngcontent-%COMP%]   div.tal-subfolder[_ngcontent-%COMP%] {\n  display: none;\n}\ndiv.tal-folder-subtree.collapsed[_ngcontent-%COMP%]   div.tal-folder-row[_ngcontent-%COMP%]   div.tal-folder-title[_ngcontent-%COMP%]   i.pi-chevron-down[_ngcontent-%COMP%] {\n  transform: rotate(-90deg);\n}\ndiv.tal-subfolder[_ngcontent-%COMP%] {\n  padding-left: 0.6rem;\n  border-left: solid 1px var(--surface-border);\n}\ninput.tal-item-input[_ngcontent-%COMP%] {\n  width: 100%;\n  border: none;\n  outline: none;\n  background-color: var(--surface-0);\n  font-size: 1rem;\n  padding: 0.2rem;\n  border-radius: 0.2rem;\n  color: var(--text-color);\n  border: 1px solid transparent;\n}\ninput.tal-item-input.error[_ngcontent-%COMP%] {\n  border: 1px solid var(--red-500);\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImZpbGUtZXhwbG9yZXItd2lkZ2V0LmNvbXBvbmVudC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0VBRUksWUFBQTtFQUNBLFdBQUE7RUFDQSw2QkFBQTtFQUNBLGFBQUE7RUFDQSxzQkFBQTtBQUFKO0FBRUk7RUFDRSxhQUFBO0VBQ0EsbUJBQUE7RUFDQSxpQkFBQTtFQUNBLDhCQUFBO0VBQ0EsMkJBQUE7RUFBQSxzQkFBQTtFQUNBLFlBQUE7RUFDQSxvQ0FBQTtBQUFOO0FBR007RUFDRSxxQkFBQTtFQUNBLGlCQUFBO0VBQ0EsMkJBQUE7RUFBQSxzQkFBQTtBQURSO0FBSU07RUFDSSxpQkFBQTtBQUZWO0FBT0k7RUFDSSxZQUFBO0VBQ0Esa0JBQUE7QUFMUjtBQVVBOztFQUVFLGFBQUE7RUFDQSxtQkFBQTtFQUNBLDhCQUFBO0VBQ0EsV0FBQTtFQUNBLGlCQUFBO0VBQ0EsZ0JBQUE7RUFDQSxxQkFBQTtFQUNBLGVBQUE7QUFQRjtBQVNFOztFQUNFLHNDQUFBO0FBTko7QUFRSTs7RUFDRSxxQkFBQTtBQUxOO0FBV0E7RUFDRSxlQUFBO0VBQ0EsNkJBQUE7QUFSRjtBQVVFO0VBQ0Usa0NBQUE7RUFDQSx1Q0FBQTtBQVJKO0FBV0k7RUFDRSxPQUFBO0VBQ0EsYUFBQTtFQUNBLG1CQUFBO0VBQ0EsZ0JBQUE7QUFUTjtBQVdNO0VBQ0UsbUJBQUE7RUFDQSxnQkFBQTtFQUNBLHVCQUFBO0VBQ0EsZUFBQTtBQVRSO0FBY0E7RUFDSSxlQUFBO0FBWEo7QUFhRTtFQUNFLE9BQUE7RUFDQSxhQUFBO0VBQ0EsbUJBQUE7RUFDQSxnQkFBQTtBQVhKO0FBYUk7RUFDRSxtQkFBQTtFQUNBLGdCQUFBO0VBQ0EsdUJBQUE7RUFDQSxlQUFBO0FBWE47QUFjSTtFQUNFLGlCQUFBO0VBQ0Esb0JBQUE7RUFDQSxzQkFBQTtBQVpOO0FBZUk7RUFDRSxpQkFBQTtFQUNBLG9CQUFBO0FBYk47QUFrQkE7RUFDRSxhQUFBO0VBQ0EsbUJBQUE7RUFDQSxVQUFBO0FBZkY7QUFpQkU7RUFDRSxhQUFBO0VBQ0EsbUJBQUE7RUFDQSxxQkFBQTtFQUNBLG1CQUFBO0VBQ0EsZUFBQTtFQUNBLGtCQUFBO0VBQ0Esa0JBQUE7QUFmSjtBQWlCSTtFQUNFLGlCQUFBO0VBQ0Esc0JBQUE7QUFmTjtBQWtCSTtFQUNFLG9DQUFBO0FBaEJOO0FBa0JNO0VBQ0Usd0JBQUE7QUFoQlI7QUFvQkk7RUFDRSxvQ0FBQTtBQWxCTjtBQTBCSTtFQUNFLGFBQUE7QUF2Qk47QUE0QlE7RUFDRSx5QkFBQTtBQTFCVjtBQWtDQTtFQUNFLG9CQUFBO0VBQ0EsNENBQUE7QUEvQkY7QUFrQ0E7RUFDSSxXQUFBO0VBQ0EsWUFBQTtFQUNBLGFBQUE7RUFDQSxrQ0FBQTtFQUNBLGVBQUE7RUFDQSxlQUFBO0VBQ0EscUJBQUE7RUFDQSx3QkFBQTtFQUNBLDZCQUFBO0FBL0JKO0FBaUNJO0VBQ0ksZ0NBQUE7QUEvQlIiLCJmaWxlIjoiZmlsZS1leHBsb3Jlci13aWRnZXQuY29tcG9uZW50LnNjc3MiLCJzb3VyY2VzQ29udGVudCI6WyIudGFsLWVkaXRvci1maWxlcy10cmVlIHtcbiAgICAvL3BhZGRpbmc6IDVweDtcbiAgICBoZWlnaHQ6IDEwMCU7XG4gICAgd2lkdGg6IDEwMCU7XG4gICAgYmFja2dyb3VuZDogdmFyKC0tc3VyZmFjZS01MCk7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBmbGV4LWRpcmVjdGlvbjogY29sdW1uO1xuXG4gICAgLnRhbC1lZGl0b3ItZmlsZXMtaGVhZGVyLCAudGFsLWVkaXRvci1maWxlcy1mb290ZXJ7XG4gICAgICBkaXNwbGF5OmZsZXg7XG4gICAgICBmbGV4LWRpcmVjdGlvbjogcm93O1xuICAgICAgZmxleC13cmFwOiBub3dyYXA7XG4gICAgICBqdXN0aWZ5LWNvbnRlbnQ6IHNwYWNlLWJldHdlZW47XG4gICAgICBtaW4td2lkdGg6IGZpdC1jb250ZW50O1xuICAgICAgcGFkZGluZzo1cHg7XG4gICAgICBiYWNrZ3JvdW5kLWNvbG9yOiByZ2JhKCRjb2xvcjogIzAwMDAwMCwgJGFscGhhOiAwLjEpO1xuICAgICAgXG4gICAgICBcbiAgICAgIC50YWwtZWRpdG9yLWZpbGVzLWxlZnQtYmFyLCAudGFsLWVkaXRvci1maWxlcy1yaWdodC1iYXJ7XG4gICAgICAgIGp1c3RpZnktY29udGVudDogbGVmdDtcbiAgICAgICAgZmxleC13cmFwOiBub3dyYXA7XG4gICAgICAgIG1pbi13aWR0aDogZml0LWNvbnRlbnQ7XG4gICAgICB9XG4gICAgICBcbiAgICAgIGJ1dHRvbntcbiAgICAgICAgICBtYXJnaW4tcmlnaHQ6NXB4O1xuICAgICAgfVxuICAgIH1cblxuXG4gICAgLnRhbC1lZGl0b3ItZmlsZXMtYm9keXtcbiAgICAgICAgZmxleC1ncm93OiAxO1xuICAgICAgICBvdmVyZmxvdy15OnNjcm9sbDtcbiAgICB9XG59XG5cblxuZGl2LnRhbC1mb2xkZXItcm93LFxuZGl2LnRhbC1maWxlIHtcbiAgZGlzcGxheTogZmxleDtcbiAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAganVzdGlmeS1jb250ZW50OiBzcGFjZS1iZXR3ZWVuO1xuICB3aWR0aDogMTAwJTtcbiAgcGFkZGluZzogMCAwLjJyZW07XG4gIG1hcmdpbjowLjJyZW0gMDtcbiAgYm9yZGVyLXJhZGl1czogMC4ycmVtO1xuICBjdXJzb3I6IHBvaW50ZXI7XG5cbiAgJjpob3ZlciB7XG4gICAgYmFja2dyb3VuZC1jb2xvcjogdmFyKC0tc3VyZmFjZS1ob3Zlcik7XG5cbiAgICBkaXYudGFsLXJvdy1zZXR0aW5ncyB7XG4gICAgICBvcGFjaXR5OiAxICFpbXBvcnRhbnQ7XG4gICAgfVxuICB9XG5cbn1cblxuZGl2LnRhbC1maWxlIHtcbiAgbWF4LXdpZHRoOiAxMDAlO1xuICBib3JkZXI6c29saWQgMXB4IHRyYW5zcGFyZW50O1xuXG4gICYub3BlbmVke1xuICAgIGJhY2tncm91bmQtY29sb3I6dmFyKC0tc3VyZmFjZS1jKTtcbiAgICBib3JkZXI6c29saWQgMXB4IHZhcigtLXN1cmZhY2UtYm9yZGVyKTtcbiAgfVxuXG4gICAgZGl2LnRhbC1maWxlLXRpdGxlIHtcbiAgICAgIGZsZXg6IDE7XG4gICAgICBkaXNwbGF5OiBmbGV4O1xuICAgICAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAgICAgIG92ZXJmbG93OiBoaWRkZW47XG5cbiAgICAgIHB7XG4gICAgICAgIHdoaXRlLXNwYWNlOm5vd3JhcDtcbiAgICAgICAgb3ZlcmZsb3c6aGlkZGVuO1xuICAgICAgICB0ZXh0LW92ZXJmbG93OmVsbGlwc2lzO1xuICAgICAgICBmb250LXNpemU6MXJlbTtcbiAgICAgIH1cbiAgICB9XG59XG5cbmRpdi50YWwtZm9sZGVyLXJvdyB7XG4gICAgbWF4LXdpZHRoOjEwMCU7XG4gICAgXG4gIGRpdi50YWwtZm9sZGVyLXRpdGxlIHtcbiAgICBmbGV4OiAxO1xuICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAgICBvdmVyZmxvdzogaGlkZGVuO1xuXG4gICAgcCB7XG4gICAgICB3aGl0ZS1zcGFjZTogbm93cmFwO1xuICAgICAgb3ZlcmZsb3c6IGhpZGRlbjtcbiAgICAgIHRleHQtb3ZlcmZsb3c6IGVsbGlwc2lzO1xuICAgICAgZm9udC1zaXplOjFyZW07XG4gICAgfVxuXG4gICAgaTpmaXJzdC1jaGlsZCB7XG4gICAgICBmb250LXNpemU6IDAuOHJlbTtcbiAgICAgIG1hcmdpbi1yaWdodDogMC40cmVtO1xuICAgICAgY29sb3I6IHZhcigtLWdyYXktNTAwKTtcbiAgICB9XG5cbiAgICBpOm50aC1jaGlsZCgyKSB7XG4gICAgICBmb250LXNpemU6IDAuOHJlbTtcbiAgICAgIG1hcmdpbi1yaWdodDogMC4ycmVtO1xuICAgIH1cbiAgfVxufVxuXG5kaXYudGFsLXJvdy1zZXR0aW5ncyB7XG4gIGRpc3BsYXk6IGZsZXg7XG4gIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gIG9wYWNpdHk6IDA7XG5cbiAgZGl2LnRhbC1yb3ctYnV0dG9uIHtcbiAgICBkaXNwbGF5OiBmbGV4O1xuICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAganVzdGlmeS1pdGVtczogY2VudGVyO1xuICAgIG1hcmdpbi1sZWZ0OiAwLjJyZW07XG4gICAgcGFkZGluZzogMC40cmVtO1xuICAgIGJvcmRlci1yYWRpdXM6IDRweDtcbiAgICB0ZXh0LWFsaWduOiBjZW50ZXI7XG5cbiAgICBpIHtcbiAgICAgIGZvbnQtc2l6ZTogMC44cmVtO1xuICAgICAgY29sb3I6IHZhcigtLWdyYXktNTAwKTtcbiAgICB9XG5cbiAgICAmOmhvdmVyIHtcbiAgICAgIGJhY2tncm91bmQtY29sb3I6IHZhcigtLXN1cmZhY2UtMTAwKTtcblxuICAgICAgaSB7XG4gICAgICAgIGNvbG9yOiB2YXIoLS10ZXh0LWNvbG9yKTtcbiAgICAgIH1cbiAgICB9XG5cbiAgICAmOmFjdGl2ZSB7XG4gICAgICBiYWNrZ3JvdW5kLWNvbG9yOiB2YXIoLS1zdXJmYWNlLTIwMCk7XG5cbiAgICB9XG4gIH1cbn1cblxuZGl2LnRhbC1mb2xkZXItc3VidHJlZSB7XG4gICYuY29sbGFwc2VkIHtcbiAgICBkaXYudGFsLXN1YmZvbGRlciB7XG4gICAgICBkaXNwbGF5OiBub25lO1xuICAgIH1cblxuICAgIGRpdi50YWwtZm9sZGVyLXJvdyB7XG4gICAgICBkaXYudGFsLWZvbGRlci10aXRsZSB7XG4gICAgICAgIGkucGktY2hldnJvbi1kb3duIHtcbiAgICAgICAgICB0cmFuc2Zvcm06IHJvdGF0ZSgtOTBkZWcpO1xuICAgICAgICB9XG4gICAgICB9XG5cbiAgICB9XG4gIH1cbn1cblxuZGl2LnRhbC1zdWJmb2xkZXIge1xuICBwYWRkaW5nLWxlZnQ6IDAuNnJlbTtcbiAgYm9yZGVyLWxlZnQ6IHNvbGlkIDFweCB2YXIoLS1zdXJmYWNlLWJvcmRlcik7XG59XG5cbmlucHV0LnRhbC1pdGVtLWlucHV0e1xuICAgIHdpZHRoOjEwMCU7XG4gICAgYm9yZGVyOm5vbmU7XG4gICAgb3V0bGluZTpub25lO1xuICAgIGJhY2tncm91bmQtY29sb3I6dmFyKC0tc3VyZmFjZS0wKTtcbiAgICBmb250LXNpemU6MXJlbTtcbiAgICBwYWRkaW5nOjAuMnJlbTtcbiAgICBib3JkZXItcmFkaXVzOjAuMnJlbTtcbiAgICBjb2xvcjp2YXIoLS10ZXh0LWNvbG9yKTtcbiAgICBib3JkZXI6MXB4IHNvbGlkIHRyYW5zcGFyZW50O1xuXG4gICAgJi5lcnJvcntcbiAgICAgICAgYm9yZGVyOjFweCBzb2xpZCB2YXIoLS1yZWQtNTAwKTtcbiAgICB9XG59Il19 */"]
+  styles: [".tal-editor-files-tree[_ngcontent-%COMP%] {\n  height: 100%;\n  width: 100%;\n  background: var(--surface-50);\n  display: flex;\n  flex-direction: column;\n}\n.tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-header[_ngcontent-%COMP%], .tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-footer[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: row;\n  flex-wrap: nowrap;\n  justify-content: space-between;\n  min-width: -moz-fit-content;\n  min-width: fit-content;\n  padding: 5px;\n  background-color: rgba(0, 0, 0, 0.1);\n}\n.tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-header[_ngcontent-%COMP%]   .tal-editor-files-left-bar[_ngcontent-%COMP%], .tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-footer[_ngcontent-%COMP%]   .tal-editor-files-left-bar[_ngcontent-%COMP%] {\n  flex-wrap: nowrap;\n  min-width: -moz-fit-content;\n  min-width: fit-content;\n}\n.tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-header[_ngcontent-%COMP%]   .tal-editor-files-left-bar[_ngcontent-%COMP%]   button[_ngcontent-%COMP%], .tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-footer[_ngcontent-%COMP%]   .tal-editor-files-left-bar[_ngcontent-%COMP%]   button[_ngcontent-%COMP%] {\n  margin-right: 5px;\n}\n.tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-header[_ngcontent-%COMP%]   .tal-editor-files-right-bar[_ngcontent-%COMP%], .tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-footer[_ngcontent-%COMP%]   .tal-editor-files-right-bar[_ngcontent-%COMP%] {\n  flex-wrap: nowrap;\n  min-width: -moz-fit-content;\n  min-width: fit-content;\n}\n.tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-header[_ngcontent-%COMP%]   .tal-editor-files-right-bar[_ngcontent-%COMP%]   button[_ngcontent-%COMP%], .tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-footer[_ngcontent-%COMP%]   .tal-editor-files-right-bar[_ngcontent-%COMP%]   button[_ngcontent-%COMP%] {\n  margin-left: 5px;\n}\n.tal-editor-files-tree[_ngcontent-%COMP%]   .tal-editor-files-body[_ngcontent-%COMP%] {\n  flex-grow: 1;\n  overflow-y: scroll;\n}\ndiv.tal-folder-row[_ngcontent-%COMP%], div.tal-file[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  width: 100%;\n  padding: 0 0.2rem;\n  margin: 0.2rem 0;\n  border-radius: 0.2rem;\n  cursor: pointer;\n}\ndiv.tal-folder-row[_ngcontent-%COMP%]:hover, div.tal-file[_ngcontent-%COMP%]:hover {\n  background-color: var(--surface-hover);\n}\ndiv.tal-folder-row[_ngcontent-%COMP%]:hover   div.tal-row-settings[_ngcontent-%COMP%], div.tal-file[_ngcontent-%COMP%]:hover   div.tal-row-settings[_ngcontent-%COMP%] {\n  opacity: 1 !important;\n}\ndiv.tal-file[_ngcontent-%COMP%] {\n  max-width: 100%;\n  border: solid 1px transparent;\n}\ndiv.tal-file.opened[_ngcontent-%COMP%] {\n  background-color: var(--surface-c);\n  border: solid 1px var(--surface-border);\n}\ndiv.tal-file[_ngcontent-%COMP%]   div.tal-file-title[_ngcontent-%COMP%] {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  overflow: hidden;\n}\ndiv.tal-file[_ngcontent-%COMP%]   div.tal-file-title[_ngcontent-%COMP%]   p[_ngcontent-%COMP%] {\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  font-size: 1rem;\n}\ndiv.tal-folder-row[_ngcontent-%COMP%] {\n  max-width: 100%;\n}\ndiv.tal-folder-row[_ngcontent-%COMP%]   div.tal-folder-title[_ngcontent-%COMP%] {\n  flex: 1;\n  display: flex;\n  align-items: center;\n  overflow: hidden;\n}\ndiv.tal-folder-row[_ngcontent-%COMP%]   div.tal-folder-title[_ngcontent-%COMP%]   p[_ngcontent-%COMP%] {\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  font-size: 1rem;\n}\ndiv.tal-folder-row[_ngcontent-%COMP%]   div.tal-folder-title[_ngcontent-%COMP%]   i[_ngcontent-%COMP%]:first-child {\n  font-size: 0.8rem;\n  margin-right: 0.4rem;\n  color: var(--gray-500);\n}\ndiv.tal-folder-row[_ngcontent-%COMP%]   div.tal-folder-title[_ngcontent-%COMP%]   i[_ngcontent-%COMP%]:nth-child(2) {\n  font-size: 0.8rem;\n  margin-right: 0.2rem;\n}\ndiv.tal-row-settings[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  opacity: 0;\n}\ndiv.tal-row-settings[_ngcontent-%COMP%]   div.tal-row-button[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-items: center;\n  margin-left: 0.2rem;\n  padding: 0.4rem;\n  border-radius: 4px;\n  text-align: center;\n}\ndiv.tal-row-settings[_ngcontent-%COMP%]   div.tal-row-button[_ngcontent-%COMP%]   i[_ngcontent-%COMP%] {\n  font-size: 0.8rem;\n  color: var(--gray-500);\n}\ndiv.tal-row-settings[_ngcontent-%COMP%]   div.tal-row-button[_ngcontent-%COMP%]:hover {\n  background-color: var(--surface-100);\n}\ndiv.tal-row-settings[_ngcontent-%COMP%]   div.tal-row-button[_ngcontent-%COMP%]:hover   i[_ngcontent-%COMP%] {\n  color: var(--text-color);\n}\ndiv.tal-row-settings[_ngcontent-%COMP%]   div.tal-row-button[_ngcontent-%COMP%]:active {\n  background-color: var(--surface-200);\n}\ndiv.tal-folder-subtree.collapsed[_ngcontent-%COMP%]   div.tal-subfolder[_ngcontent-%COMP%] {\n  display: none;\n}\ndiv.tal-folder-subtree.collapsed[_ngcontent-%COMP%]   div.tal-folder-row[_ngcontent-%COMP%]   div.tal-folder-title[_ngcontent-%COMP%]   i.pi-chevron-down[_ngcontent-%COMP%] {\n  transform: rotate(-90deg);\n}\ndiv.tal-subfolder[_ngcontent-%COMP%] {\n  padding-left: 0.6rem;\n  border-left: solid 1px var(--surface-border);\n}\ninput.tal-item-input[_ngcontent-%COMP%] {\n  width: 100%;\n  border: none;\n  outline: none;\n  background-color: var(--surface-0);\n  font-size: 1rem;\n  padding: 0.2rem;\n  border-radius: 0.2rem;\n  color: var(--text-color);\n  border: 1px solid transparent;\n}\ninput.tal-item-input.error[_ngcontent-%COMP%] {\n  border: 1px solid var(--red-500);\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImZpbGUtZXhwbG9yZXItd2lkZ2V0LmNvbXBvbmVudC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0VBRUksWUFBQTtFQUNBLFdBQUE7RUFDQSw2QkFBQTtFQUNBLGFBQUE7RUFDQSxzQkFBQTtBQUFKO0FBRUk7RUFDRSxhQUFBO0VBQ0EsbUJBQUE7RUFDQSxpQkFBQTtFQUNBLDhCQUFBO0VBQ0EsMkJBQUE7RUFBQSxzQkFBQTtFQUNBLFlBQUE7RUFDQSxvQ0FBQTtBQUFOO0FBR007RUFDRSxpQkFBQTtFQUNBLDJCQUFBO0VBQUEsc0JBQUE7QUFEUjtBQUVRO0VBQ0UsaUJBQUE7QUFBVjtBQUlNO0VBQ0UsaUJBQUE7RUFDQSwyQkFBQTtFQUFBLHNCQUFBO0FBRlI7QUFHUTtFQUNFLGdCQUFBO0FBRFY7QUFTSTtFQUNJLFlBQUE7RUFDQSxrQkFBQTtBQVBSO0FBWUE7O0VBRUUsYUFBQTtFQUNBLG1CQUFBO0VBQ0EsOEJBQUE7RUFDQSxXQUFBO0VBQ0EsaUJBQUE7RUFDQSxnQkFBQTtFQUNBLHFCQUFBO0VBQ0EsZUFBQTtBQVRGO0FBV0U7O0VBQ0Usc0NBQUE7QUFSSjtBQVVJOztFQUNFLHFCQUFBO0FBUE47QUFhQTtFQUNFLGVBQUE7RUFDQSw2QkFBQTtBQVZGO0FBWUU7RUFDRSxrQ0FBQTtFQUNBLHVDQUFBO0FBVko7QUFhSTtFQUNFLE9BQUE7RUFDQSxhQUFBO0VBQ0EsbUJBQUE7RUFDQSxnQkFBQTtBQVhOO0FBYU07RUFDRSxtQkFBQTtFQUNBLGdCQUFBO0VBQ0EsdUJBQUE7RUFDQSxlQUFBO0FBWFI7QUFnQkE7RUFDSSxlQUFBO0FBYko7QUFlRTtFQUNFLE9BQUE7RUFDQSxhQUFBO0VBQ0EsbUJBQUE7RUFDQSxnQkFBQTtBQWJKO0FBZUk7RUFDRSxtQkFBQTtFQUNBLGdCQUFBO0VBQ0EsdUJBQUE7RUFDQSxlQUFBO0FBYk47QUFnQkk7RUFDRSxpQkFBQTtFQUNBLG9CQUFBO0VBQ0Esc0JBQUE7QUFkTjtBQWlCSTtFQUNFLGlCQUFBO0VBQ0Esb0JBQUE7QUFmTjtBQW9CQTtFQUNFLGFBQUE7RUFDQSxtQkFBQTtFQUNBLFVBQUE7QUFqQkY7QUFtQkU7RUFDRSxhQUFBO0VBQ0EsbUJBQUE7RUFDQSxxQkFBQTtFQUNBLG1CQUFBO0VBQ0EsZUFBQTtFQUNBLGtCQUFBO0VBQ0Esa0JBQUE7QUFqQko7QUFtQkk7RUFDRSxpQkFBQTtFQUNBLHNCQUFBO0FBakJOO0FBb0JJO0VBQ0Usb0NBQUE7QUFsQk47QUFvQk07RUFDRSx3QkFBQTtBQWxCUjtBQXNCSTtFQUNFLG9DQUFBO0FBcEJOO0FBNEJJO0VBQ0UsYUFBQTtBQXpCTjtBQThCUTtFQUNFLHlCQUFBO0FBNUJWO0FBb0NBO0VBQ0Usb0JBQUE7RUFDQSw0Q0FBQTtBQWpDRjtBQW9DQTtFQUNJLFdBQUE7RUFDQSxZQUFBO0VBQ0EsYUFBQTtFQUNBLGtDQUFBO0VBQ0EsZUFBQTtFQUNBLGVBQUE7RUFDQSxxQkFBQTtFQUNBLHdCQUFBO0VBQ0EsNkJBQUE7QUFqQ0o7QUFtQ0k7RUFDSSxnQ0FBQTtBQWpDUiIsImZpbGUiOiJmaWxlLWV4cGxvcmVyLXdpZGdldC5jb21wb25lbnQuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbIi50YWwtZWRpdG9yLWZpbGVzLXRyZWUge1xuICAgIC8vcGFkZGluZzogNXB4O1xuICAgIGhlaWdodDogMTAwJTtcbiAgICB3aWR0aDogMTAwJTtcbiAgICBiYWNrZ3JvdW5kOiB2YXIoLS1zdXJmYWNlLTUwKTtcbiAgICBkaXNwbGF5OiBmbGV4O1xuICAgIGZsZXgtZGlyZWN0aW9uOiBjb2x1bW47XG5cbiAgICAudGFsLWVkaXRvci1maWxlcy1oZWFkZXIsIC50YWwtZWRpdG9yLWZpbGVzLWZvb3RlcntcbiAgICAgIGRpc3BsYXk6ZmxleDtcbiAgICAgIGZsZXgtZGlyZWN0aW9uOiByb3c7XG4gICAgICBmbGV4LXdyYXA6IG5vd3JhcDtcbiAgICAgIGp1c3RpZnktY29udGVudDogc3BhY2UtYmV0d2VlbjtcbiAgICAgIG1pbi13aWR0aDogZml0LWNvbnRlbnQ7XG4gICAgICBwYWRkaW5nOjVweDtcbiAgICAgIGJhY2tncm91bmQtY29sb3I6IHJnYmEoJGNvbG9yOiAjMDAwMDAwLCAkYWxwaGE6IDAuMSk7XG4gICAgICBcbiAgICAgIFxuICAgICAgLnRhbC1lZGl0b3ItZmlsZXMtbGVmdC1iYXJ7XG4gICAgICAgIGZsZXgtd3JhcDogbm93cmFwO1xuICAgICAgICBtaW4td2lkdGg6IGZpdC1jb250ZW50O1xuICAgICAgICBidXR0b257XG4gICAgICAgICAgbWFyZ2luLXJpZ2h0OjVweDtcbiAgICAgICAgfVxuICAgICAgfVxuXG4gICAgICAudGFsLWVkaXRvci1maWxlcy1yaWdodC1iYXJ7XG4gICAgICAgIGZsZXgtd3JhcDogbm93cmFwO1xuICAgICAgICBtaW4td2lkdGg6IGZpdC1jb250ZW50O1xuICAgICAgICBidXR0b257XG4gICAgICAgICAgbWFyZ2luLWxlZnQ6NXB4O1xuICAgICAgICB9XG4gICAgICB9XG4gICAgICBcbiAgICAgIFxuICAgIH1cblxuXG4gICAgLnRhbC1lZGl0b3ItZmlsZXMtYm9keXtcbiAgICAgICAgZmxleC1ncm93OiAxO1xuICAgICAgICBvdmVyZmxvdy15OnNjcm9sbDtcbiAgICB9XG59XG5cblxuZGl2LnRhbC1mb2xkZXItcm93LFxuZGl2LnRhbC1maWxlIHtcbiAgZGlzcGxheTogZmxleDtcbiAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAganVzdGlmeS1jb250ZW50OiBzcGFjZS1iZXR3ZWVuO1xuICB3aWR0aDogMTAwJTtcbiAgcGFkZGluZzogMCAwLjJyZW07XG4gIG1hcmdpbjowLjJyZW0gMDtcbiAgYm9yZGVyLXJhZGl1czogMC4ycmVtO1xuICBjdXJzb3I6IHBvaW50ZXI7XG5cbiAgJjpob3ZlciB7XG4gICAgYmFja2dyb3VuZC1jb2xvcjogdmFyKC0tc3VyZmFjZS1ob3Zlcik7XG5cbiAgICBkaXYudGFsLXJvdy1zZXR0aW5ncyB7XG4gICAgICBvcGFjaXR5OiAxICFpbXBvcnRhbnQ7XG4gICAgfVxuICB9XG5cbn1cblxuZGl2LnRhbC1maWxlIHtcbiAgbWF4LXdpZHRoOiAxMDAlO1xuICBib3JkZXI6c29saWQgMXB4IHRyYW5zcGFyZW50O1xuXG4gICYub3BlbmVke1xuICAgIGJhY2tncm91bmQtY29sb3I6dmFyKC0tc3VyZmFjZS1jKTtcbiAgICBib3JkZXI6c29saWQgMXB4IHZhcigtLXN1cmZhY2UtYm9yZGVyKTtcbiAgfVxuXG4gICAgZGl2LnRhbC1maWxlLXRpdGxlIHtcbiAgICAgIGZsZXg6IDE7XG4gICAgICBkaXNwbGF5OiBmbGV4O1xuICAgICAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAgICAgIG92ZXJmbG93OiBoaWRkZW47XG5cbiAgICAgIHB7XG4gICAgICAgIHdoaXRlLXNwYWNlOm5vd3JhcDtcbiAgICAgICAgb3ZlcmZsb3c6aGlkZGVuO1xuICAgICAgICB0ZXh0LW92ZXJmbG93OmVsbGlwc2lzO1xuICAgICAgICBmb250LXNpemU6MXJlbTtcbiAgICAgIH1cbiAgICB9XG59XG5cbmRpdi50YWwtZm9sZGVyLXJvdyB7XG4gICAgbWF4LXdpZHRoOjEwMCU7XG4gICAgXG4gIGRpdi50YWwtZm9sZGVyLXRpdGxlIHtcbiAgICBmbGV4OiAxO1xuICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAgICBvdmVyZmxvdzogaGlkZGVuO1xuXG4gICAgcCB7XG4gICAgICB3aGl0ZS1zcGFjZTogbm93cmFwO1xuICAgICAgb3ZlcmZsb3c6IGhpZGRlbjtcbiAgICAgIHRleHQtb3ZlcmZsb3c6IGVsbGlwc2lzO1xuICAgICAgZm9udC1zaXplOjFyZW07XG4gICAgfVxuXG4gICAgaTpmaXJzdC1jaGlsZCB7XG4gICAgICBmb250LXNpemU6IDAuOHJlbTtcbiAgICAgIG1hcmdpbi1yaWdodDogMC40cmVtO1xuICAgICAgY29sb3I6IHZhcigtLWdyYXktNTAwKTtcbiAgICB9XG5cbiAgICBpOm50aC1jaGlsZCgyKSB7XG4gICAgICBmb250LXNpemU6IDAuOHJlbTtcbiAgICAgIG1hcmdpbi1yaWdodDogMC4ycmVtO1xuICAgIH1cbiAgfVxufVxuXG5kaXYudGFsLXJvdy1zZXR0aW5ncyB7XG4gIGRpc3BsYXk6IGZsZXg7XG4gIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gIG9wYWNpdHk6IDA7XG5cbiAgZGl2LnRhbC1yb3ctYnV0dG9uIHtcbiAgICBkaXNwbGF5OiBmbGV4O1xuICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAganVzdGlmeS1pdGVtczogY2VudGVyO1xuICAgIG1hcmdpbi1sZWZ0OiAwLjJyZW07XG4gICAgcGFkZGluZzogMC40cmVtO1xuICAgIGJvcmRlci1yYWRpdXM6IDRweDtcbiAgICB0ZXh0LWFsaWduOiBjZW50ZXI7XG5cbiAgICBpIHtcbiAgICAgIGZvbnQtc2l6ZTogMC44cmVtO1xuICAgICAgY29sb3I6IHZhcigtLWdyYXktNTAwKTtcbiAgICB9XG5cbiAgICAmOmhvdmVyIHtcbiAgICAgIGJhY2tncm91bmQtY29sb3I6IHZhcigtLXN1cmZhY2UtMTAwKTtcblxuICAgICAgaSB7XG4gICAgICAgIGNvbG9yOiB2YXIoLS10ZXh0LWNvbG9yKTtcbiAgICAgIH1cbiAgICB9XG5cbiAgICAmOmFjdGl2ZSB7XG4gICAgICBiYWNrZ3JvdW5kLWNvbG9yOiB2YXIoLS1zdXJmYWNlLTIwMCk7XG5cbiAgICB9XG4gIH1cbn1cblxuZGl2LnRhbC1mb2xkZXItc3VidHJlZSB7XG4gICYuY29sbGFwc2VkIHtcbiAgICBkaXYudGFsLXN1YmZvbGRlciB7XG4gICAgICBkaXNwbGF5OiBub25lO1xuICAgIH1cblxuICAgIGRpdi50YWwtZm9sZGVyLXJvdyB7XG4gICAgICBkaXYudGFsLWZvbGRlci10aXRsZSB7XG4gICAgICAgIGkucGktY2hldnJvbi1kb3duIHtcbiAgICAgICAgICB0cmFuc2Zvcm06IHJvdGF0ZSgtOTBkZWcpO1xuICAgICAgICB9XG4gICAgICB9XG5cbiAgICB9XG4gIH1cbn1cblxuZGl2LnRhbC1zdWJmb2xkZXIge1xuICBwYWRkaW5nLWxlZnQ6IDAuNnJlbTtcbiAgYm9yZGVyLWxlZnQ6IHNvbGlkIDFweCB2YXIoLS1zdXJmYWNlLWJvcmRlcik7XG59XG5cbmlucHV0LnRhbC1pdGVtLWlucHV0e1xuICAgIHdpZHRoOjEwMCU7XG4gICAgYm9yZGVyOm5vbmU7XG4gICAgb3V0bGluZTpub25lO1xuICAgIGJhY2tncm91bmQtY29sb3I6dmFyKC0tc3VyZmFjZS0wKTtcbiAgICBmb250LXNpemU6MXJlbTtcbiAgICBwYWRkaW5nOjAuMnJlbTtcbiAgICBib3JkZXItcmFkaXVzOjAuMnJlbTtcbiAgICBjb2xvcjp2YXIoLS10ZXh0LWNvbG9yKTtcbiAgICBib3JkZXI6MXB4IHNvbGlkIHRyYW5zcGFyZW50O1xuXG4gICAgJi5lcnJvcntcbiAgICAgICAgYm9yZGVyOjFweCBzb2xpZCB2YXIoLS1yZWQtNTAwKTtcbiAgICB9XG59Il19 */"]
 });
 
 /***/ }),
@@ -5338,11 +5262,13 @@ function ProblemWidgetComponent_div_15_Template(rf, ctx) {
     const arg_r15 = ctx.$implicit;
     const ctx_r7 = _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵnextContext"]();
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵadvance"](3);
-    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵproperty"]("id", "args-icon-" + arg_r15.value.key)("pTooltip", arg_r15.value.regex + "");
-    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵadvance"](3);
+    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵproperty"]("id", "args-icon-" + arg_r15.value.key)("title", arg_r15.value.regex + "");
+    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵadvance"](2);
+    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵproperty"]("title", arg_r15.value.name);
+    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵadvance"](1);
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵtextInterpolate"](arg_r15.value.name);
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵproperty"]("ngModel", arg_r15.value.value)("placeholder", arg_r15.value.default);
+    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵproperty"]("ngModel", arg_r15.value.value)("placeholder", arg_r15.value.default)("title", arg_r15.value.name + ": " + arg_r15.value.regex);
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵadvance"](3);
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵproperty"]("id", "args-regex-panel-" + arg_r15.value.key);
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵadvance"](1);
@@ -5367,7 +5293,7 @@ function ProblemWidgetComponent_div_20_Template(rf, ctx) {
 }
 function ProblemWidgetComponent_div_21_ng_template_9_Template(rf, ctx) {
   if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](0, "div", 38)(1, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](0, "div", 39)(1, "div");
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵtext"](2);
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementEnd"]()();
   }
@@ -5379,7 +5305,7 @@ function ProblemWidgetComponent_div_21_ng_template_9_Template(rf, ctx) {
 }
 function ProblemWidgetComponent_div_21_ng_template_10_Template(rf, ctx) {
   if (rf & 1) {
-    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](0, "div", 39)(1, "div");
+    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](0, "div", 40)(1, "div");
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵtext"](2);
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementEnd"]()();
   }
@@ -5395,10 +5321,10 @@ function ProblemWidgetComponent_div_21_Template(rf, ctx) {
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](0, "div", 9)(1, "div", 25)(2, "div", 26);
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelement"](3, "i", 36, 28);
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](5, "div", 29);
+    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](5, "div", 37);
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵtext"](6);
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementEnd"]();
-    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](7, "div", 30)(8, "p-dropdown", 37);
+    _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](7, "div", 30)(8, "p-dropdown", 38);
     _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵlistener"]("onChange", function ProblemWidgetComponent_div_21_Template_p_dropdown_onChange_8_listener($event) {
       const restoredCtx = _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵrestoreView"](_r32);
       const file_r25 = restoredCtx.$implicit;
@@ -5755,7 +5681,7 @@ ProblemWidgetComponent.ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODU
   },
   decls: 23,
   vars: 15,
-  consts: [[1, "tal-problem-widget"], [1, "tal-problem-widget-row", "tal-problem-widget-problem"], ["pButton", "", "class", "p-button-danger tal-square-button", "icon", "pi pi-refresh", "title", "Refresh", "pTooltip", "Refresh", 3, "click", 4, "ngIf"], ["pButton", "", "class", "p-button-danger tal-square-button", "icon", "pi pi-spin pi-spinner", "title", "Refresh", "pTooltip", "Refresh", "disabled", "", 4, "ngIf"], ["placeholder", "Seleziona un problema", "scrollHeight", "50rem", "panelStyleClass", "tal-problem-widget-problem-selector-panel", 1, "tal-problem-widget-problem-selector", 3, "overlayOptions", "options", "ngModel", "autoDisplayFirst", "ngModelChange", "onChange"], ["problemDropdown", ""], ["pTemplate", "selectedItem"], ["pTemplate", "item"], ["pButton", "", "icon", "pi pi-download", "title", "Download Attachments", "pTooltip", "Scarica allegati", 1, "p-button-help", "tal-square-button", 3, "click"], [1, "tal-problem-widget-args-row"], ["header", "Arguments"], ["pTemplate", "header", "class", "tal-problem-widget-args-row"], [1, "tal-problem-widget-row", "tal-problem-widget-args"], ["class", "tal-problem-widget-args-row stretch-flex", 4, "ngIf"], ["class", "tal-problem-widget-args-row", 4, "ngFor", "ngForOf"], ["header", "Files", 3, "selected"], ["pButton", "", "icon", "pi pi-refresh", "title", "Refresh", "pTooltip", "Refresh", 1, "p-button-danger", "tal-square-button", 3, "click"], ["pButton", "", "icon", "pi pi-spin pi-spinner", "title", "Refresh", "pTooltip", "Refresh", "disabled", "", 1, "p-button-danger", "tal-square-button"], [1, "tal-problem-widget-problem-selected"], [1, "problem-label"], [1, "service-label"], [1, "tal-problem-widget-problem-item"], [1, "tal-problem-widget-label"], [1, "tal-problem-widget-args-row", "stretch-flex"], [1, "tal-problem-widget-args-row-no-params"], [1, "tal-problem-widget-args-subrow"], [1, "tal-problem-widget-args-row-info"], [1, "pi", "pi-info-circle", 2, "cursor", "pointer", 3, "id", "pTooltip", "click"], ["argsIcons", ""], [1, "tal-problem-widget-args-row-name"], [1, "tal-problem-widget-args-row-field"], ["pInputText", "", "type", "text", 1, "top-bar-url-input", "p-inputtext-sm", 3, "ngModel", "placeholder", "ngModelChange", "change", "blur", "focus"], [1, "tal-problem-widget-args-row-actions"], ["pButton", "", "icon", "pi pi-trash", "title", "Reset to default", "pTooltip", "Reset to default", 1, "tal-square-button", 3, "click"], [1, "tal-problem-widget-args-subrow", 2, "display", "none", "cursor", "pointer", 3, "id", "dblclick"], [1, "tal-problem-widget-args-subrow-regexpr", "format-regex-simple", 3, "id"], [1, "pi", "pi-file"], ["placeholder", "Select a file", "styleClass", "tal-problem-widget-files-dropdown", "panelStyleClass", "tal-problem-widget-files-dropdown-panel", 3, "id", "overlayOptions", "options", "onChange"], [1, "tal-problem-widget-files-selected"], [1, "tal-problem-widget-files-item"]],
+  consts: [[1, "tal-problem-widget"], [1, "tal-problem-widget-row", "tal-problem-widget-problem"], ["pButton", "", "class", "p-button-danger tal-square-button", "icon", "pi pi-refresh", "title", "Refresh", "pTooltip", "Refresh", 3, "click", 4, "ngIf"], ["pButton", "", "class", "p-button-danger tal-square-button", "icon", "pi pi-spin pi-spinner", "title", "Refresh", "pTooltip", "Refresh", "disabled", "", 4, "ngIf"], ["placeholder", "Seleziona un problema", "scrollHeight", "50rem", "panelStyleClass", "tal-problem-widget-problem-selector-panel", 1, "tal-problem-widget-problem-selector", 3, "overlayOptions", "options", "ngModel", "autoDisplayFirst", "ngModelChange", "onChange"], ["problemDropdown", ""], ["pTemplate", "selectedItem"], ["pTemplate", "item"], ["pButton", "", "icon", "pi pi-download", "title", "Download Attachments", "pTooltip", "Scarica allegati", 1, "p-button-help", "tal-square-button", 3, "click"], [1, "tal-problem-widget-args-row"], ["header", "Arguments"], ["pTemplate", "header", "class", "tal-problem-widget-args-row"], [1, "tal-problem-widget-row", "tal-problem-widget-args"], ["class", "tal-problem-widget-args-row stretch-flex", 4, "ngIf"], ["class", "tal-problem-widget-args-row", 4, "ngFor", "ngForOf"], ["header", "Files", 3, "selected"], ["pButton", "", "icon", "pi pi-refresh", "title", "Refresh", "pTooltip", "Refresh", 1, "p-button-danger", "tal-square-button", 3, "click"], ["pButton", "", "icon", "pi pi-spin pi-spinner", "title", "Refresh", "pTooltip", "Refresh", "disabled", "", 1, "p-button-danger", "tal-square-button"], [1, "tal-problem-widget-problem-selected"], [1, "problem-label"], [1, "service-label"], [1, "tal-problem-widget-problem-item"], [1, "tal-problem-widget-label"], [1, "tal-problem-widget-args-row", "stretch-flex"], [1, "tal-problem-widget-args-row-no-params"], [1, "tal-problem-widget-args-subrow"], [1, "tal-problem-widget-args-row-info"], [1, "pi", "pi-info-circle", 2, "cursor", "pointer", 3, "id", "title", "click"], ["argsIcons", ""], [1, "tal-problem-widget-args-row-name", 3, "title"], [1, "tal-problem-widget-args-row-field"], ["pInputText", "", "type", "text", 1, "top-bar-url-input", "p-inputtext-sm", 3, "ngModel", "placeholder", "title", "ngModelChange", "change", "blur", "focus"], [1, "tal-problem-widget-args-row-actions"], ["pButton", "", "icon", "pi pi-trash", "title", "Reset to default", "pTooltip", "Reset to default", 1, "tal-square-button", 3, "click"], [1, "tal-problem-widget-args-subrow", 2, "display", "none", "cursor", "pointer", 3, "id", "dblclick"], [1, "tal-problem-widget-args-subrow-regexpr", "format-regex-simple", 3, "id"], [1, "pi", "pi-file"], [1, "tal-problem-widget-args-row-name"], ["placeholder", "Select a file", "styleClass", "tal-problem-widget-files-dropdown", "panelStyleClass", "tal-problem-widget-files-dropdown-panel", 3, "id", "overlayOptions", "options", "onChange"], [1, "tal-problem-widget-files-selected"], [1, "tal-problem-widget-files-item"]],
   template: function ProblemWidgetComponent_Template(rf, ctx) {
     if (rf & 1) {
       _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](0, "div", 0)(1, "div", 1);
@@ -5779,7 +5705,7 @@ ProblemWidgetComponent.ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODU
       _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵtemplate"](12, ProblemWidgetComponent_ng_template_12_Template, 2, 0, "ng-template", 11);
       _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](13, "div", 12);
       _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵtemplate"](14, ProblemWidgetComponent_div_14_Template, 4, 0, "div", 13);
-      _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵtemplate"](15, ProblemWidgetComponent_div_15_Template, 14, 8, "div", 14);
+      _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵtemplate"](15, ProblemWidgetComponent_div_15_Template, 14, 10, "div", 14);
       _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵpipe"](16, "keyvalue");
       _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementEnd"]()();
       _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](17, "p-tabPanel", 15);
