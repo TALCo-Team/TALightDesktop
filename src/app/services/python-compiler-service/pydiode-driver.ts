@@ -267,7 +267,7 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
   }
 
   sendMessage<T>(message: PyodideMessage) {
-    //alert('sendMessage:'+message.type);
+    console.log("PyodideDriver:sendMessage:"+message.type)
     let request: PyodideRequest = {
       uid: message.uid,
       timestamp: Date.now(),
@@ -506,95 +506,4 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     return 'uid-' + timestap + '-' + seed;
   }
 }
-  /*
-}
- 
- 
-  sendMessage(type: PyodideFsMessageType, args?:string[], contents?:string[], response?:(data:string)=>void){
-    if(!(args)){ args = []; }
-    if(!(contents)){ contents = []; }
-    
-    const uid = this.requestUID();
- 
-    
-    
-    const message: PyodideFsMessage = {
-      type: type,
-      uid: uid,
-      args: args,
-      contents: contents
-    }
-    this.worker.postMessage(message);
-    let onData = (data:Event)=>{
-      if(response){response(data);}
-      if(this.worker.removeAllListeners){worker.removeAllListeners(uid)}
-    }
-    worker.addEventListener(uid, onData);
-  }
- 
-  async createDirectory(fullpath:string): Promise<boolean>{
-    return false;
-  }
- 
-  async writeFile(fullpath:string, content:string): Promise<number>{
-    return -1;
-  }
- 
-  async readDirectory(fullpath:string):Promise<FsNode|null>{
-    return null;
-  }
- 
   
- 
-  async scanDirectory(path?:string, recursive=false, parent?:FsNode):Promise<FsNode>{
-    if(!path){path='./'}
-    return {name:path,path:path,isFolder:false, depth:-1};
-  }
- 
- 
- 
-  /*
-  sendMessages(){
-    this.pycs.worker.onmessage = ({ data }) => {
-      console.log(`page got message: ${data}`);
-    }
-    
-    const messageInstall: PythonCompilerMessageInterface = {
-      type: PythonCompilerMessageInterfaceType.PackageInstall,
-      packages: ['fake-traffic'],
-    }
-    this.pycs.worker.postMessage(messageInstall);
- 
-    const messageToSend: PythonCompilerMessageInterface = {
-      type: PythonCompilerMessageInterfaceType.ExecuteCode,
-      code: `
-      import os
-      print(os.listdir('/'))
-      print(os.listdir('/mnt'))
-      import fox
-      import mainC
-  `
-    }
- 
-    this.pycs.worker.postMessage(messageToSend);
- 
-  }
- 
-  async createDirectory(fullpath:string): Promise<boolean>{
-    let res = await this.fs.createDirectory(fullpath);
-    return await this.fs.exists(fullpath);
-  }
- 
-  async writeFile(fullpath:string, content:string): Promise<number>{
-    let res = await this.fs.writeFile(fullpath, content);
-    if (!(await this.fs.exists(fullpath)) ) {return -1;}
-    return res.data.length;
-  }
- 
-  async readDirectory(fullpath:string):Promise<FsNode|null>{
-    if ( await this.fs.exists(fullpath) ) {
-      return this.scanDirectory(fullpath, false );
-    }
-    return null;
-  }
-  */
