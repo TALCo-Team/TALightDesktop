@@ -8,10 +8,10 @@
 
   <!-- API: PROBLEMS and SERVICES -->
   <div class="tal-problem-widget-row tal-problem-widget-problem">
-    <button pButton class="p-button-danger" icon="pi pi-refresh" title="Refresh" pTooltip="Refresh"
+    <button pButton class="p-button-danger tal-square-button" icon="pi pi-refresh" title="Refresh" pTooltip="Refresh"
       (click)="reloadProblemList()" *ngIf="!isLoading()"></button>
 
-    <button pButton class="p-button-danger" icon="pi pi-spin pi-spinner" title="Refresh" pTooltip="Refresh" disabled
+    <button pButton class="p-button-danger tal-square-button" icon="pi pi-spin pi-spinner" title="Refresh" pTooltip="Refresh" disabled
       *ngIf="isLoading()"></button>
 
 
@@ -42,7 +42,7 @@
     </p-dropdown>
 
 
-    <button pButton class="p-button-help" icon="pi pi-download" (click)="apiDownloadAttachment()"
+    <button pButton class="p-button-help tal-square-button" icon="pi pi-download" (click)="apiDownloadAttachment()"
       title="Download Attachments" pTooltip="Scarica allegati"></button>
 
   </div>
@@ -87,7 +87,7 @@
 
               <!-- CELL: reset -->
               <div class="tal-problem-widget-args-row-actions">
-                <button pButton class="p-button" icon="pi pi-trash" (click)="argDidReset(arg.value,$event)"
+                <button pButton class="tal-square-button" icon="pi pi-trash" (click)="argDidReset(arg.value,$event)"
                   title="Reset to default" pTooltip="Reset to default"></button>
               </div>
             </div>
@@ -158,7 +158,7 @@
 
                 <!-- CELL: reset -->
                 <div class="tal-problem-widget-args-row-actions">
-                    <button pButton class="p-button" icon="pi pi-trash" 
+                    <button pButton class="tal-square-button" icon="pi pi-trash" 
                             (click)="fileDidReset(file.value,$event)"
                             title="Reset to default" 
                             pTooltip="Reset to default"></button>
