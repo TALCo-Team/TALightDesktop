@@ -12,9 +12,9 @@ import { Commands } from '../api-service/api.commands';
 })
 export class PythonCompilerService {
   public driverName = 'pyodide';
-  public projectFolder = "/.talight"
+  public projectFolder = "/.talight/"
   public configName = "talight.json"
-  public configPath = this.projectFolder + "/" + this.configName
+  public configPath = this.projectFolder + this.configName
   
   public driver?: PyodideDriver;
   public worker: Worker = new Worker(new URL('../../workers/python-compiler.worker', import.meta.url));

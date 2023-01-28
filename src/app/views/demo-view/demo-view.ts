@@ -89,8 +89,38 @@ export class DemoViewComponent implements OnInit {
     req.onError = this.onApiError;
 
   }
+  
 
   async apiConnect() {
+    let problem_name = "sum_testAPI";
+    let service = "free_sum";
+
+    let onConnectionBegin = (onConnectionBegin: string[]) => {console.log("Connection Begin -> " + onConnectionBegin); };
+    let onConnectionStart = () => {console.log("Connection Start")};
+    let onConnectionClose = (onConnectionClose: string[]) => {console.log(onConnectionClose)};
+    
+    let onData = (data: string)=>{
+      this.output += ''+data
+      console.log("Binary data: "+data);
+      this.refreshOutput();
+    };
+
+    let req = this.api.Connect(problem_name, service, undefined, undefined, undefined, undefined, onConnectionBegin, onConnectionStart, onConnectionClose, onData);
+    req.onError = this.onApiError;
+
+    this.cmdConnect = req;
+
+    this.sendBinary();
+  }
+
+
+
+
+
+
+  //OLD
+
+  async apiConnectOld() {
     let problem_name = "sum_testAPI";
     let service = "free_sum";
 
