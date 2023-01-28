@@ -12,9 +12,9 @@ import { Commands } from '../api-service/api.commands';
 })
 export class PythonCompilerService {
   public driverName = 'pyodide';
-  public projectFolder = "/.talight/"
+  public projectFolder = "/.talight"
   public configName = "talight.json"
-  public configPath = this.projectFolder + this.configName
+  public configPath = this.projectFolder + "/" + this.configName
   
   public driver?: PyodideDriver;
   public worker: Worker = new Worker(new URL('../../workers/python-compiler.worker', import.meta.url));
@@ -27,19 +27,29 @@ export class PythonCompilerService {
   }
 
   async createPythonProject(){
-    
+    console.log("createPythonProject")
     if (!this.driver) {return false}
 
     if (await this.driver.exists(this.configPath)){
-      console.log("createPythonProject: Skipping, config file already present")
+      console.log("createPythonProject:skipping")
       return true;
     }
-  
+    
+
+
     let configContent = JSON.stringify(new PythonConfig(), null, 4)
+    
+    
+    
+    console.log("createPythonProject:project:",this.projectFolder)
+    await this.driver?.createDirectory(this.projectFolder);
+    console.log("createPythonProject:config:",this.configPath, configContent)
     await this.driver?.writeFile(this.configPath, configContent );
     let content = `print("asd") \ndata = 123 \nprint("data:", data)`;
-    await this.driver?.createDirectory(this.projectFolder);
+
+    console.log("createPythonProject:content:",content)
     await this.driver?.writeFile('/main.py', content);
+    console.log("createPythonProject:data:")
     await this.driver?.createDirectory('/data/');
 
     let bot = `import time
