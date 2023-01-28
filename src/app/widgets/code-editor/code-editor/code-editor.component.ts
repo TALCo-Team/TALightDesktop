@@ -53,6 +53,24 @@ export class CodeEditorComponent implements OnInit {
     this.python.driver?.subscribeStderr(true,(msg)=>{this.onStderr(msg)})
   }
   
+
+  public async runProject(useAPI = false){
+    this.outputWidget.clearOutput()
+    
+    let config = await this.python.readPythonConfig()
+    if (!config){return false}
+
+    this.outputWidget.print("RUN: "+config.MAIN)
+    this.saveFile();
+    
+    this.python.runProject().then(()=>{
+      //this.fileExplorer.refreshRoot()
+    })
+
+    return true
+  }
+
+
   public onUpdateRoot(fsroot:FsNodeFolder){
     this.fsroot = fsroot;
     this.fslist = this.fs.treeToList(fsroot);
@@ -77,6 +95,8 @@ export class CodeEditorComponent implements OnInit {
     this.outputWidget.print(msg)
     this.python.driver?.sendStdin(msg)
   }
+
+  
 
   public onProblemChanged(selectedProblem: ProblemDescriptor){
     console.log("onProblemChanged:",selectedProblem)
@@ -152,22 +172,6 @@ export class CodeEditorComponent implements OnInit {
     }
   }
 
-  public async runProject(useAPI = false){
-    this.outputWidget.clearOutput()
-    
-    let config = await this.python.readPythonConfig()
-    if (!config){return false}
-
-    this.outputWidget.print("RUN: "+config.MAIN)
-    this.saveFile();
-    
-    this.python.runProject().then(()=>{
-      this.fileExplorer.refreshRoot()
-    })
-
-    return true
-  }
-
 
 //-------------- API CONNECT
   public runConnectAPI(){
@@ -177,7 +181,7 @@ export class CodeEditorComponent implements OnInit {
  
     this.apiConnect().then(()=>{
       //TODO: on success, new files are downloaded 
-      this.fileExplorer.refreshRoot()
+      //this.fileExplorer.refreshRoot()
     })
   }
   

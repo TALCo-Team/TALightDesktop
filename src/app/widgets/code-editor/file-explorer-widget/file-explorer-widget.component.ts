@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, OnInit, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, NgZone, OnInit, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
 
 import { ConfirmationService } from 'primeng/api';
 import { OverlayPanel } from 'primeng/overlaypanel';
@@ -48,6 +48,7 @@ export class FileExplorerWidgetComponent implements OnInit {
     private confirmationService: ConfirmationService, 
     private fs:FsService,
     private python: PythonCompilerService,
+    private zone: NgZone
     ) {
     //this.driver = fs.getDriver('pyodide');
     this.driver = fs.getDriver(this.driverName);
@@ -70,12 +71,13 @@ export class FileExplorerWidgetComponent implements OnInit {
     })
   }
 
-  refreshRoot(){
+  refreshRoot(onDone?:()=>void){
     this.driver?.scanDirectory(this.rootDir).then((folder)=>{
       this.fsroot = folder ?? FsService.EmptyFolder
 
       this.bindCollapseEvent();
       this.onUpdateRoot?.emit(this.fsroot);
+      if(onDone){onDone()}
     });
     
   }
@@ -133,7 +135,11 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   public openSettings(){
-    this.showHidden = true
+    if(!this.showHidden){
+      this.showHidden = true
+      this.refreshRoot(()=>{this.openSettings()})
+    }
+
     console.log("openSettings")
     let projectFolder = this.fsroot.folders.find((item)=>{
       return item.path + "/" == this.python.projectFolder
@@ -145,13 +151,15 @@ export class FileExplorerWidgetComponent implements OnInit {
     })
     if(!configFile){return}
     console.log("openSettings:configFile:",configFile)
-    
+        
     this.selectFile(configFile);
+        
   }
   
 
   public toggleHidden(){
     this.showHidden = !this.showHidden;
+    this.refreshRoot()
   }
 
   public isVisibile(fsitem: FsNodeFile|FsNodeFolder){

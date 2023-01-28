@@ -1,13 +1,13 @@
 <div class="tal-editor-files-tree">
   <div class="tal-editor-files-header">
     <div class="tal-editor-files-left-bar">
-      <button pButton icon="pi pi-file" title="Nuovo file"
+      <button pButton icon="pi pi-file" class="tal-square-button" title="Nuovo file"
         (click)="closeAllContextMenus($event); addNewItem(fsroot, 'file')" pTooltip="Nuovo file"></button>
-      <button pButton icon="pi pi-folder" title="Nuova cartella"
+      <button pButton icon="pi pi-folder" class="tal-square-button" title="Nuova cartella"
         (click)="closeAllContextMenus($event); addNewItem(fsroot, 'folder')" pTooltip="Nuova cartella"></button>
     </div>
     <div class="tal-editor-files-right-bar">
-      <button pButton icon="pi pi-sync" title="Refresh" (click)="closeAllContextMenus($event); syncFilesystem(fsroot)"
+      <button pButton icon="pi pi-sync" class="tal-square-button" title="Refresh" (click)="closeAllContextMenus($event); syncFilesystem(fsroot)"
         pTooltip="Aggiorna"></button>    
     </div>
   </div>
@@ -20,23 +20,23 @@
 
   <div class="tal-editor-files-footer">
     <div class="tal-editor-files-left-bar">
-      <button pButton class="p-button p-button-secondary" icon="pi pi-save" title="Salva/Esporta"
+      <button pButton class="p-button-secondary tal-square-button" icon="pi pi-save" title="Salva/Esporta"
         (click)="closeAllContextMenus($event); export()" pTooltip="Esporta"></button>
       
-      <button pButton class="p-button p-button-secondary" icon="pi pi-upload" title="Upload/Importa"
+      <button pButton class="p-button-secondary tal-square-button" icon="pi pi-upload" title="Upload/Importa"
         (click)="fileUpload.click()" pTooltip="Upload/Import"></button>
       <input #fileUpload type="file" style="display: none;" (change)="upload($event)"/>
     </div>
 
     <div class="tal-editor-files-right-bar">
 
-      <button pButton icon="pi pi-eye" *ngIf="showHidden" title="Toggle show hidden files"
+      <button pButton icon="pi pi-eye" class="tal-square-button" *ngIf="showHidden" title="Toggle show hidden files"
         (click)="closeAllContextMenus($event); toggleHidden()" pTooltip="Mostra file nascosti"></button>
 
-      <button pButton icon="pi pi-eye-slash" *ngIf="!showHidden" title="Toggle show hidden files"
+      <button pButton icon="pi pi-eye-slash" class="tal-square-button" *ngIf="!showHidden" title="Toggle show hidden files"
         (click)="closeAllContextMenus($event); toggleHidden()" pTooltip="Nascondi file nascosti"></button>
 
-      <button pButton icon="pi pi-cog" title="Settings"
+      <button pButton icon="pi pi-cog" class="tal-square-button" title="Settings"
         (click)="closeAllContextMenus($event); openSettings()" pTooltip="Settings"></button>
       
     </div>

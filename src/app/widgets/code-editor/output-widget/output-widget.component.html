@@ -5,11 +5,11 @@
         <pre class="tal-output-widget-text" #output>{{outputText}}</pre>
     </div>
     <div class="tal-output-widget-stdin">
-        <button pButton class="p-button-danger" icon="pi pi-trash" (click)="clearOutput()" title="Clear output"
+        <button pButton class="p-button-danger tal-square-button" icon="pi pi-trash" (click)="clearOutput()" title="Clear output"
           pTooltip="Pulisci output"></button>
         <input pInput #sdtinInput class="tal-output-widget-stdin-input" (keydown)="sendOnEnter($event)"
           placeholder="Input del programma" />
-        <button pButton icon="pi pi-send" (click)="sendStdin()" title="Send" pTooltip="Invia"></button>
+        <button pButton icon="pi pi-send" class="tal-square-button" (click)="sendStdin()" title="Send" pTooltip="Invia"></button>
   </div>
 </div>
 

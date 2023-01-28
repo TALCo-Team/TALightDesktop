@@ -15,12 +15,12 @@
             <ng-template let-url pTemplate="item">
                 <div class="url-item">
                     <div class="url-item-label">{{url}}</div>
-                    <button pButton icon="pi pi-trash" pTooltip="Remove URL" (click)="removeURL(url, $event)"></button>
+                    <button pButton icon="pi pi-trash" class="tal-square-button" pTooltip="Remove URL" (click)="removeURL(url, $event)"></button>
                 </div>
             </ng-template>
 
         </p-autoComplete>        
 
-        <button pButton icon="pi {{changeThemIcon}}" (click)="toggleTheme()"></button>
+        <button pButton icon="pi {{changeThemIcon}}" class="tal-square-button" (click)="toggleTheme()"></button>
     </div>
 </div>
