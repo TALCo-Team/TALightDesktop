@@ -2507,9 +2507,9 @@ class PythonCompilerService {
   constructor(fs) {
     this.fs = fs;
     this.driverName = 'pyodide';
-    this.projectFolder = "/.talight/";
+    this.projectFolder = "/.talight";
     this.configName = "talight.json";
-    this.configPath = this.projectFolder + this.configName;
+    this.configPath = this.projectFolder + "/" + this.configName;
     this.worker = new Worker(__webpack_require__.tu(new URL(/* worker import */ __webpack_require__.p + __webpack_require__.u(1), __webpack_require__.b)));
     this.driver = new _pydiode_driver__WEBPACK_IMPORTED_MODULE_1__.PyodideDriver();
     this.fs.registerDriver(this.driverName, this.driver);
@@ -2517,18 +2517,23 @@ class PythonCompilerService {
   createPythonProject() {
     var _this = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+      console.log("createPythonProject");
       if (!_this.driver) {
         return false;
       }
       if (yield _this.driver.exists(_this.configPath)) {
-        console.log("createPythonProject: Skipping, config file already present");
+        console.log("createPythonProject:skipping");
         return true;
       }
       let configContent = JSON.stringify(new PythonConfig(), null, 4);
+      console.log("createPythonProject:project:", _this.projectFolder);
+      yield _this.driver?.createDirectory(_this.projectFolder);
+      console.log("createPythonProject:config:", _this.configPath, configContent);
       yield _this.driver?.writeFile(_this.configPath, configContent);
       let content = `print("asd") \ndata = 123 \nprint("data:", data)`;
-      yield _this.driver?.createDirectory(_this.projectFolder);
+      console.log("createPythonProject:content:", content);
       yield _this.driver?.writeFile('/main.py', content);
+      console.log("createPythonProject:data:");
       yield _this.driver?.createDirectory('/data/');
       let bot = `import time
 def sleep(seconds):
@@ -4409,6 +4414,7 @@ class FileExplorerWidgetComponent {
 
   ngOnInit() {
     this.bindCollapseEvent();
+    //alert('init!');
     //this.rootDir = this.driver?.rootDir ?? this.rootDir;
     this.driver?.ready().then(ready => {
       //alert('ready!');
