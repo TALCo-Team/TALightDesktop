@@ -55,12 +55,21 @@ export class CodeEditorComponent implements OnInit {
   
 
   public async runProject(useAPI = false){
+    console.log("runProject: ")
     this.outputWidget.clearOutput()
     
     let config = await this.python.readPythonConfig()
     if (!config){return false}
+    console.log("runProject:config:ok")
 
-    this.outputWidget.print("RUN: "+config.MAIN)
+
+    console.log("runProject:main:", config!.RUN)
+    let mainFile = this.fslistfile.find( item => item.path == config!.RUN)
+    if (!mainFile){return false}
+    console.log("runProject:main:ok")
+    this.fileExplorer.selectFile(mainFile)
+
+    this.outputWidget.print("RUN: "+config.RUN)
     this.saveFile();
     
     this.python.runProject().then(()=>{
@@ -79,7 +88,7 @@ export class CodeEditorComponent implements OnInit {
   }
   
   public onStdout(data:string){
-    this.outputWidget!.print(data);
+    this.outputWidget!.print("> "+data);
     //TODO: if API connect then:
     if(!this.cmdConnect){return;}
     this.cmdConnect.sendBinary(data + "\n"); //lo \n va aggiunto all'output del bot python
@@ -88,11 +97,11 @@ export class CodeEditorComponent implements OnInit {
 
   public onStderr(data:string){
     //alert("STDERR: "+data)
-    this.outputWidget.print(data)
+    this.outputWidget.print("[Err] "+data)
   }
 
   public onStdin(msg:string){
-    this.outputWidget.print(msg)
+    this.outputWidget.print("  ",msg+"\n")
     this.python.driver?.sendStdin(msg)
   }
 
@@ -247,8 +256,8 @@ export class CodeEditorComponent implements OnInit {
 
     console.log("apiConnect:params:packages",config.PIP_PACKAGES)
     await this.python.installPackages(config.PIP_PACKAGES)
-    this.outputWidget.print("TEST: "+config.MAIN)
-    await this.driver?.executeFile(config.MAIN)
+    this.outputWidget.print("TEST: "+config.RUN)
+    await this.driver?.executeFile(config.RUN)
     
     
     console.log("apiConnect:DONE")

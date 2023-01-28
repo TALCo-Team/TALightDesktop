@@ -29,7 +29,7 @@ async function main() {
 
 // Worker definition 
 //TODO: import claees from pydiode-fsdriver
-type PromiseResolver<T> = (value: T | PromiseLike<T>) => void;
+type PromiseResolver<T> = (value: T ) => void;
 
 
 export interface FsNode {
@@ -108,7 +108,7 @@ class PyodideWorker{
   isSync = false;
   needSync = false;
   stdinBuffer = new Array<string>();
-
+  
   constructor(root:string, mount:string ){
     this.root = root;
     this.mount = mount;
@@ -124,7 +124,7 @@ class PyodideWorker{
     this.readyResolver = (value)=>{ readyResolver(value) }
 
     
-    addEventListener("message", ( payload:any ) => { this.onData(payload.data) })
+    addEventListener("message", async ( payload:any ) => { this.onData(payload.data) })
 
    
 
@@ -155,6 +155,26 @@ class PyodideWorker{
     
     console.log("loadPyodide: done")
     //console.log(pyodide)
+
+    this.setCustomHooks()
+  }
+
+  async setCustomHooks(){
+    let oldInput = this.pyodide.globals.input;
+    console.log("setCustomHooks:oldInput:",oldInput)
+
+    let localThis = this;
+    this.pyodide.globals.set('input', async function (prompt:string) {
+      localThis.onStdout(prompt)
+      console.log("setCustomHooks:scrivo sulla consolle!!!!")
+      let stdinResolver: PromiseResolver<string>;      
+      let promise =  new Promise<string>((resolve, reject) => {
+        stdinResolver = resolve;
+      })
+      localThis.stdinResolver = (message:string)=>{ stdinResolver(message) }
+
+      return promise;
+    });
   }
 
   async load(root:string, mount:string)
@@ -230,27 +250,12 @@ class PyodideWorker{
   }
 
   onStdin(){
-    let cnt = this.stdinBuffer.length
-    let msg = "";
-    if(cnt > 0){
-      let items = this.stdinBuffer.splice(0,cnt)
-      msg = items.join("")
-    }
+    console.log('PyodideWorker:onStdin:');
+    let len = this.stdinBuffer.length    
+    let items = this.stdinBuffer.splice(0,len)
+    let msg = items.join("")
+    console.log('PyodideWorker:onStdin:', msg);
     return msg
-    /*
-    else{
-      //onStdin
-      let stdinResolver: PromiseResolver<string>;
-      let stdinPromise =  new Promise<string>((resolve, reject) => {
-        stdinResolver = resolve;
-      })
-      this.stdinResolver = (value)=>{ 
-        stdinResolver(value); 
-        this.stdinResolver = undefined; 
-      }
-      return stdinPromise
-    }
-    */
   }
 
   onStdout(msg:string){
@@ -357,8 +362,8 @@ class PyodideWorker{
     let response = this.responseFromRequest(request); 
     let code = request.message.contents[0];
     console.log("executeCode:\n",code)//,res)
-    const result = this.pyodide.runPython(code);
-    response.message.contents = [result]
+    const result = this.pyodide.runPythonAsync(code);
+    response.message.contents = ["true"]
     return response;
   }
 
@@ -371,11 +376,11 @@ class PyodideWorker{
     let rawContent = this.fs.readFile(path) as Uint8Array
     let code = new TextDecoder().decode(rawContent.buffer);
 
-    let result = this.pyodide.runPython(code)
+    let result = this.pyodide.runPythonAsync(code)
     
 
     console.log("executeFile: result:\n",result)
-    response.message.contents = [result]
+    response.message.contents = ["true"]
     return response
   }
 
@@ -408,7 +413,7 @@ class PyodideWorker{
   sendStdin(request:PyodideRequest){
     let response = this.responseFromRequest(request); 
     let data = request.message.contents[0];
-    console.log("sendStdin:\n",data)//,res)
+    console.log("PyodideWorker:sendStdin:\n",data)
     if (this.stdinResolver){
       this.stdinResolver(this.toString(data))
     }else{
@@ -425,9 +430,11 @@ class PyodideWorker{
     }
     //TODO: allow for multiple queries;
     let fullpath = request.message.args[0];
-    let res = this.fs.mkdir(this.mount + fullpath);
-    console.log('pydiode:mkdir:',res)
-    this.syncFS()
+    if(!this.internal_exists(this.mount + fullpath)){
+      let res = this.fs.mkdir(this.mount + fullpath);
+      console.log('pydiode:mkdir:',res)
+      this.syncFS()
+    }
     response.message.args = [fullpath];
     return response;
   }
@@ -606,11 +613,16 @@ class PyodideWorker{
     let fullpath = request.message.args[0];
     console.log("exists: ", this.mount + fullpath)
     // https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.analyzePath
-    let res = this.fs.analyzePath(this.mount + fullpath)
-    console.log("exists:res:exists ", res["exists"])
-    console.log("exists:res ", res)
-    response.message.args = [res["exists"]?'true':'false']
+    let exists = this.internal_exists(this.mount + fullpath)
+    console.log("exists:", exists)
+    response.message.args = [exists?'true':'false']
     return response;
+  }
+
+  internal_exists(path:string){
+    let res = this.fs.analyzePath(path)
+    console.log("internal_file_exists:analyzePath", res)
+    return res["exists"]
   }
 }
   

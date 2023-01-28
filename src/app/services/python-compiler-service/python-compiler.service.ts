@@ -37,7 +37,7 @@ export class PythonCompilerService {
     
 
 
-    let configContent = JSON.stringify(new PythonConfig(), null, 4)
+    let configContent = JSON.stringify(new ProjectConfig(), null, 4)
     
     
     
@@ -45,23 +45,29 @@ export class PythonCompilerService {
     await this.driver?.createDirectory(this.projectFolder);
     console.log("createPythonProject:config:",this.configPath, configContent)
     await this.driver?.writeFile(this.configPath, configContent );
-    let content = `print("asd") \ndata = 123 \nprint("data:", data)`;
+    let mainContent = `print("Hello World!")`;
 
-    console.log("createPythonProject:content:",content)
-    await this.driver?.writeFile('/main.py', content);
+    console.log("createPythonProject:content:", mainContent)
+    await this.driver?.writeFile('/main.py', mainContent);
     console.log("createPythonProject:data:")
     await this.driver?.createDirectory('/data/');
+    await this.driver?.createDirectory('/examples/');
 
-    let bot = `import time
-def sleep(seconds):
-    start = now = time.time()
-    while now - start < seconds:
-        now = time.time()
+    let inputExample = `# Esempio che mostra come utilizzare la funzione di input in ambiente asincrono
+nome = await input("Ciao, come ti chiami?")
+print(f'Ciao {nome}, posso farti una domanda ?')    
 
-sleep(2)
-print("100 0")`
+async def main():
+  while(True):
+    lati = await input("quanti lati ha un triangolo?")
+    if lati=="3": break;
+    print(f'No, mi dispiace non ha {lati} lati')    
+  print('Congratulazioni!')
 
-    await this.driver?.writeFile('/free_sum_mysimplebot.py', bot);
+main()
+`
+
+    await this.driver?.writeFile('/examples/input.py', inputExample);
     return true
   }
 
@@ -74,7 +80,7 @@ print("100 0")`
     }
     
     let configContent = await this.driver?.readFile(this.configPath, false ) as string;
-    let config = JSON.parse(configContent) as PythonConfig
+    let config = JSON.parse(configContent) as ProjectConfig
     return config
   }
 
@@ -83,7 +89,7 @@ print("100 0")`
     let config = await this.readPythonConfig()
     if (!config){return null;}
     await this.driver?.installPackages(config.PIP_PACKAGES)
-    let result = await this.driver?.executeFile(config!.MAIN)
+    let result = await this.driver?.executeFile(config!.RUN)
     console.log(result)
     return result    
   }
@@ -96,11 +102,10 @@ print("100 0")`
     this.driver?.executeFile(fullpath)
   }
 
-
 }
 
-class PythonConfig {
-  MAIN = "main.py"
+class ProjectConfig {
+  RUN = "/main.py"
   DEBUG = false
   DOWNLOAD_ATTACHMENT_AUTO = true
   PROJECT_NAME="My 3SAT"
@@ -113,17 +118,18 @@ class PythonConfig {
   TAL_SERVER = ""
   TAL_PROBLEM = ""
   TAL_SERVICE = ""
-  
-  PIP_PACKAGES: string[] = ["numpy"]
 
   DIR_PROJECT = '/.talight/'
   DIR_ATTACHMENTS = '/data/'
   DIR_RESULTS = '/results/'
   DIR_ARGSFILE = '/files/'
+  DIR_EXAMPLES = '/examples/'
 
 
   CONFIG_NAME = 'taglight.json'
   PATH_CONFIG = this.DIR_PROJECT + this.CONFIG_NAME
+
+  PIP_PACKAGES: string[] = ["numpy"]
 }
 
 

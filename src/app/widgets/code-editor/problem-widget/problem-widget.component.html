@@ -73,15 +73,15 @@
               <div class="tal-problem-widget-args-row-info">
                 <i #argsIcons class="pi pi-info-circle" [id]="'args-icon-'+arg.value.key"
                   (click)="toggleShowRegex(arg.value,$event)" style="cursor: pointer;"
-                  [pTooltip]="arg.value.regex+''"></i>
+                  [title]="arg.value.regex+''"></i>
               </div>
               <!-- CELL: name -->
-              <div class="tal-problem-widget-args-row-name">{{arg.value.name}}</div>
+              <div class="tal-problem-widget-args-row-name" [title]="arg.value.name">{{arg.value.name}}</div>
 
               <!-- CELL: field -->
               <div class="tal-problem-widget-args-row-field">
                 <input pInputText type="text" class="top-bar-url-input p-inputtext-sm" [(ngModel)]="arg.value.value"
-                  [placeholder]="arg.value.default" (change)="argDidChange(arg.value,$event)"
+                  [placeholder]="arg.value.default" [title]="arg.value.name +': '+arg.value.regex" (change)="argDidChange(arg.value,$event)"
                   (blur)="argDidChange(arg.value,$event)" (focus)="argDidFocus(arg.value,$event)">
               </div>
 

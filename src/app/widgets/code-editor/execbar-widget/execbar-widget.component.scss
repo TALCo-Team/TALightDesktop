@@ -14,13 +14,11 @@
 
     .tal-code-editor-execbar-left, .tal-code-editor-execbar-right{
         display: flex;
+        button{
+            margin-left:5px;
+        }
     }
 
-    button{
-        height:30px;
-        width:30px;
-        min-width:30px;
-        margin-left:5px;
-    }
+    
 }
 
