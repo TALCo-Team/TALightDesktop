@@ -57,7 +57,8 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   ngOnInit() {
     this.bindCollapseEvent();
-    
+    //alert('init!');
+
     //this.rootDir = this.driver?.rootDir ?? this.rootDir;
     this.driver?.ready().then((ready)=>{
       //alert('ready!');
