@@ -9,7 +9,8 @@
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "PyodideMessageType": () => (/* binding */ PyodideMessageType)
+/* harmony export */   "PyodideMessageType": () => (/* binding */ PyodideMessageType),
+/* harmony export */   "PyodideState": () => (/* binding */ PyodideState)
 /* harmony export */ });
 /* harmony import */ var _home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./node_modules/@angular-builders/custom-webpack/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js */ 8046);
 
@@ -29,12 +30,23 @@ function _main() {
   });
   return _main.apply(this, arguments);
 }
+var PyodideState;
+(function (PyodideState) {
+  PyodideState["Init"] = "Init";
+  PyodideState["Ready"] = "Ready";
+  PyodideState["Run"] = "Run";
+  PyodideState["Stdin"] = "Stdin";
+  PyodideState["Success"] = "Success";
+  PyodideState["Error"] = "Error";
+})(PyodideState || (PyodideState = {}));
 var PyodideMessageType;
 (function (PyodideMessageType) {
   PyodideMessageType["Ready"] = "Ready";
   PyodideMessageType["InstallPackages"] = "InstallPackages";
   PyodideMessageType["ExecuteFile"] = "ExecuteFile";
   PyodideMessageType["ExecuteCode"] = "ExecuteCode";
+  PyodideMessageType["SubscribeNotify"] = "SubscribeNotify";
+  PyodideMessageType["SubscribeState"] = "SubscribeState";
   PyodideMessageType["SubscribeStdout"] = "SubscribeStdout";
   PyodideMessageType["SubscribeStderr"] = "SubscribeStderr";
   PyodideMessageType["SendStdin"] = "SendStdin";
@@ -49,6 +61,8 @@ var PyodideMessageType;
 class PyodideWorker {
   constructor(root, mount) {
     var _this = this;
+    this.requestQueueNotify = new Map();
+    this.requestQueueState = new Map();
     this.requestQueueStdout = new Map();
     this.requestQueueStderr = new Map();
     this.binEncoder = new TextEncoder(); // always utf-8
@@ -82,6 +96,7 @@ class PyodideWorker {
       this.load(this.root, this.mount);
       this.fs.syncfs(true, () => {
         this.isReady = true;
+        this.sendState(PyodideState.Ready);
         this.readyResolver(this.isReady);
       });
     });
@@ -95,10 +110,10 @@ class PyodideWorker {
           return _this2.onStdin();
         },
         stdout: msg => {
-          _this2.onStdout(msg);
+          _this2.sendStdout(msg);
         },
         stderr: msg => {
-          _this2.onStderr(msg);
+          _this2.sendStderr(msg);
         }
       };
       //console.log(loadPyodide)
@@ -119,7 +134,9 @@ class PyodideWorker {
       let localThis = _this3;
       _this3.pyodide.globals.set('input', /*#__PURE__*/function () {
         var _ref2 = (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* (prompt) {
-          localThis.onStdout(prompt);
+          if (prompt && prompt.trim().length > 0) {
+            localThis.sendStdout(prompt);
+          }
           console.log("setCustomHooks:scrivo sulla consolle!!!!");
           let stdinResolver;
           let promise = new Promise((resolve, reject) => {
@@ -128,6 +145,10 @@ class PyodideWorker {
           localThis.stdinResolver = message => {
             stdinResolver(message);
           };
+          if (localThis.stdinBuffer.length > 0) {
+            let line = localThis.stdinBuffer.shift();
+            localThis.stdinResolver(line);
+          }
           return promise;
         });
         return function (_x2) {
@@ -210,14 +231,48 @@ class PyodideWorker {
     }
   }
   onStdin() {
+    //TOD: unused??
     console.log('PyodideWorker:onStdin:');
-    let len = this.stdinBuffer.length;
-    let items = this.stdinBuffer.splice(0, len);
-    let msg = items.join("");
-    console.log('PyodideWorker:onStdin:', msg);
-    return msg;
+    if (this.stdinBuffer.length > 0) {}
+    let item = this.stdinBuffer.shift();
+    console.log('PyodideWorker:onStdin:', item);
+    return item;
   }
-  onStdout(msg) {
+  execCode(code) {
+    console.log("execCode:", code);
+    this.stdinBuffer = [];
+    try {
+      this.pyodide.runPythonAsync(code).then(result => {
+        console.log(result);
+        this.sendState(PyodideState.Success, result);
+        console.log("execCode: result:\n", result);
+      });
+    } catch (error) {
+      this.sendState(PyodideState.Error, error);
+    }
+  }
+  sendNotify(title, msg, kind = "") {
+    console.log("notify: ", msg);
+    this.requestQueueNotify.forEach((request, uid) => {
+      let response = this.responseFromRequest(request);
+      response.message.args = [title, msg, kind];
+      console.log("notify:uid:\n", response); //,res)
+      postMessage(response);
+    });
+  }
+  sendState(state, content) {
+    console.log("state: ", state);
+    this.requestQueueState.forEach((request, uid) => {
+      let response = this.responseFromRequest(request);
+      response.message.args = [state];
+      if (content) {
+        response.message.contents.push(JSON.stringify(content));
+      }
+      console.log("state:uid:\n", response); //,res)
+      postMessage(response);
+    });
+  }
+  sendStdout(msg) {
     console.log("stdout: " + msg);
     this.requestQueueStdout.forEach((request, uid) => {
       let response = this.responseFromRequest(request);
@@ -226,7 +281,7 @@ class PyodideWorker {
       postMessage(response);
     });
   }
-  onStderr(msg) {
+  sendStderr(msg) {
     console.log("stderr: " + msg);
     this.requestQueueStderr.forEach((request, uid) => {
       let response = this.responseFromRequest(request);
@@ -241,6 +296,16 @@ class PyodideWorker {
     switch (request.message.type) {
       case PyodideMessageType.Ready:
         this.ready(request);
+        break;
+      case PyodideMessageType.SubscribeNotify:
+        action = request => {
+          return this.subscribeNotify(request);
+        };
+        break;
+      case PyodideMessageType.SubscribeState:
+        action = request => {
+          return this.subscribeState(request);
+        };
         break;
       case PyodideMessageType.SubscribeStdout:
         action = request => {
@@ -341,9 +406,15 @@ class PyodideWorker {
   }
   executeCode(request) {
     let response = this.responseFromRequest(request);
-    let code = request.message.contents[0];
+    let rawContent = request.message.contents[0];
+    let code;
+    if (rawContent instanceof ArrayBuffer) {
+      code = new TextDecoder().decode(rawContent);
+    } else {
+      code = rawContent;
+    }
     console.log("executeCode:\n", code); //,res)
-    const result = this.pyodide.runPythonAsync(code);
+    this.execCode(code);
     response.message.contents = ["true"];
     return response;
   }
@@ -354,9 +425,33 @@ class PyodideWorker {
     console.log("executeFile:", path); //,res)
     let rawContent = this.fs.readFile(path);
     let code = new TextDecoder().decode(rawContent.buffer);
-    let result = this.pyodide.runPythonAsync(code);
-    console.log("executeFile: result:\n", result);
+    this.stdinBuffer = [];
+    this.execCode(code);
     response.message.contents = ["true"];
+    return response;
+  }
+  subscribeNotify(request) {
+    let response = this.responseFromRequest(request);
+    let enable = request.message.args[0] == 'true';
+    if (enable) {
+      this.requestQueueStdout.set(request.uid, request);
+    } else {
+      this.requestQueueStdout.delete(request.uid);
+    }
+    console.log("subscribeNotify:\n", enable); //,res)
+    response.message.args = [enable ? 'true' : 'false'];
+    return response;
+  }
+  subscribeState(request) {
+    let response = this.responseFromRequest(request);
+    let enable = request.message.args[0] == 'true';
+    if (enable) {
+      this.requestQueueStdout.set(request.uid, request);
+    } else {
+      this.requestQueueStdout.delete(request.uid);
+    }
+    console.log("subscribeState:\n", enable); //,res)
+    response.message.args = [enable ? 'true' : 'false'];
     return response;
   }
   subscribeStdout(request) {
@@ -389,6 +484,7 @@ class PyodideWorker {
     console.log("PyodideWorker:sendStdin:\n", data);
     if (this.stdinResolver) {
       this.stdinResolver(this.toString(data));
+      this.stdinResolver = undefined;
     } else {
       this.stdinBuffer.push(this.toString(data));
     }
