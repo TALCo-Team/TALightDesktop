@@ -253,12 +253,11 @@ class PyodideWorker{
   }
 
   onStdin(){
-    console.log('PyodideWorker:onStdin:');
-    let len = this.stdinBuffer.length    
-    let items = this.stdinBuffer.splice(0,len)
-    let msg = items.join("")
-    console.log('PyodideWorker:onStdin:', msg);
-    return msg
+    //TOD: unused??
+    console.log('PyodideWorker:onStdin:');   
+    let item = this.stdinBuffer.shift()
+    console.log('PyodideWorker:onStdin:', item);
+    return item
   }
 
   onStdout(msg:string){

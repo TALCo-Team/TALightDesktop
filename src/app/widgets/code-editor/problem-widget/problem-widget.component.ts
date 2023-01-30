@@ -6,14 +6,21 @@ import { FsNodeFolder, FsNodeFile, FsService } from 'src/app/services/fs-service
 import { ProblemDescriptor, ServiceDescriptor, ArgsMap, ArgDescriptor, FilesMap, ProblemManagerService, FileDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { PyodideDriver } from 'src/app/services/python-compiler-service/pydiode-driver';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
-import { PrimeNGConfig, OverlayOptions } from 'primeng/api';
-import { A } from '@tauri-apps/api/cli-3e179c0b';
+import { OverlayOptions } from 'primeng/api';
+
 
 export class ServiceMenuEntry {
   constructor(
-    public problem = "",
-    public service = "",
+    public name = "",
     public descriptor: ServiceDescriptor,
+  ){}
+}
+
+
+export class ProblemMenuEntry {
+  constructor(
+    public name = "",
+    public descriptor: ProblemDescriptor,
   ){}
 }
 
@@ -32,6 +39,7 @@ export class ProblemWidgetComponent {
   @ViewChild("problemDropdown") public problemDropdown!: Dropdown
   public dropdownOptions: OverlayOptions;
 
+  problemMenu = new Array<ServiceMenuEntry>();
   servicesMenu = new Array<ServiceMenuEntry>();
 
   selectedProblem?: ProblemDescriptor;
