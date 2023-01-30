@@ -164,8 +164,8 @@ class PyodideWorker{
     console.log("setCustomHooks:oldInput:",oldInput)
 
     let localThis = this;
-    this.pyodide.globals.set('input', async function (prompt:string) {
-      localThis.onStdout(prompt)
+    this.pyodide.globals.set('input', async function (prompt?:string) {
+      if (prompt && prompt.trim().length>0){localThis.onStdout(prompt)}
       console.log("setCustomHooks:scrivo sulla consolle!!!!")
       let stdinResolver: PromiseResolver<string>;      
       let promise =  new Promise<string>((resolve, reject) => {
@@ -416,6 +416,7 @@ class PyodideWorker{
     console.log("PyodideWorker:sendStdin:\n",data)
     if (this.stdinResolver){
       this.stdinResolver(this.toString(data))
+      this.stdinResolver=undefined
     }else{
       this.stdinBuffer.push(this.toString(data))
     }
