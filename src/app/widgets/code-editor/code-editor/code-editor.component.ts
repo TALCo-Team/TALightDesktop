@@ -3,13 +3,14 @@ import { Commands } from 'src/app/services/api-service/api.commands';
 import { ApiService } from 'src/app/services/api-service/api.service';
 
 import { FsService, FsNodeFile, Tar, FsNodeFolder, FsNodeList } from 'src/app/services/fs-service/fs.service';
+import { NotificationManagerService, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
 import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { PyodideDriver } from 'src/app/services/python-compiler-service/pydiode-driver';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 import { FileExplorerWidgetComponent } from 'src/app/widgets/code-editor/file-explorer-widget/file-explorer-widget.component';
 import { ExecbarWidgetComponent } from '../execbar-widget/execbar-widget.component';
 import { FileEditorWidgetComponent } from '../file-editor-widget/file-editor-widget.component';
-import { OutputWidgetComponent } from '../output-widget/output-widget.component';
+import { OutputType, OutputWidgetComponent } from '../output-widget/output-widget.component';
 import { ProblemWidgetComponent } from '../problem-widget/problem-widget.component';
 
 @Component({
@@ -31,7 +32,7 @@ export class CodeEditorComponent implements OnInit {
   public fsroot = FsService.EmptyFolder;
   public fslist: FsNodeList = [];
   public fslistfile: FsNodeFile[] = [];
-  
+
   @ViewChild("fileExplorer") public fileExplorer!: FileExplorerWidgetComponent;
   @ViewChild("fileEditor") public fileEditor!: FileEditorWidgetComponent;
   @ViewChild("execBar") public execBar!: ExecbarWidgetComponent;
@@ -44,6 +45,7 @@ export class CodeEditorComponent implements OnInit {
     private fs: FsService,
     private python:PythonCompilerService,
     private api:ApiService,
+    private nm: NotificationManagerService,
   ) {
     this.driver = python.driver
   }
@@ -52,33 +54,6 @@ export class CodeEditorComponent implements OnInit {
     this.python.driver?.subscribeStdout(true,(msg)=>{this.onStdout(msg)})
     this.python.driver?.subscribeStderr(true,(msg)=>{this.onStderr(msg)})
   }
-  
-
-  public async runProject(useAPI = false){
-    console.log("runProject: ")
-    this.outputWidget.clearOutput()
-    
-    let config = await this.python.readPythonConfig()
-    if (!config){return false}
-    console.log("runProject:config:ok")
-
-
-    console.log("runProject:main:", config!.RUN)
-    let mainFile = this.fslistfile.find( item => item.path == config!.RUN)
-    if (!mainFile){return false}
-    console.log("runProject:main:ok")
-    this.fileExplorer.selectFile(mainFile)
-
-    this.outputWidget.print("RUN: "+config.RUN)
-    this.saveFile();
-    
-    this.python.runProject().then(()=>{
-      //this.fileExplorer.refreshRoot()
-    })
-
-    return true
-  }
-
 
   public onUpdateRoot(fsroot:FsNodeFolder){
     this.fsroot = fsroot;
@@ -88,24 +63,25 @@ export class CodeEditorComponent implements OnInit {
   }
   
   public onStdout(data:string){
-    this.outputWidget!.print("> "+data);
+    console.log("onStdout:")
+    this.outputWidget!.print(data);
     //TODO: if API connect then:
     if(!this.cmdConnect){return;}
     this.cmdConnect.sendBinary(data + "\n"); //lo \n va aggiunto all'output del bot python
   }
 
-
   public onStderr(data:string){
+    console.log("onStderr:")
     //alert("STDERR: "+data)
-    this.outputWidget.print("[Err] "+data)
+    this.nm.sendNotification("ERROR:",data,NotificationType.Error)
+    this.outputWidget.print(data, OutputType.STDERR)
   }
 
-  public onStdin(msg:string){
-    this.outputWidget.print("  ",msg+"\n")
+  public sendStdin(msg:string){
+    console.log("sendStdin:")
+    this.outputWidget.print(msg,OutputType.STDIN)
     this.python.driver?.sendStdin(msg)
   }
-
-  
 
   public onProblemChanged(selectedProblem: ProblemDescriptor){
     console.log("onProblemChanged:",selectedProblem)
@@ -174,7 +150,7 @@ export class CodeEditorComponent implements OnInit {
 
   public saveFile(){
     if ( this.selectedFile ){ 
-      console.log("saveFile:\n", this.selectedFile.path, "\n", this.fileEditor)
+      console.log("saveFile:", this.selectedFile.path, this.fileEditor)
       this.driver?.writeFile(this.selectedFile.path, this.selectedFile.content)
     } else {
       console.log("saveFile:failed")
@@ -182,12 +158,35 @@ export class CodeEditorComponent implements OnInit {
   }
 
 
-//-------------- API CONNECT
+  //-------------- API CONNECT
+  public async runProject(useAPI = false){
+    console.log("runProject:")
+    this.outputWidget.clearOutput()
+    
+    let config = await this.python.readPythonConfig()
+    if (!config){return false}
+    console.log("runProject:config:ok")
+
+
+    console.log("runProject:main:", config!.RUN)
+    let mainFile = this.fslistfile.find( item => item.path == config!.RUN)
+    if (!mainFile){return false}
+    console.log("runProject:main:ok")
+    this.fileExplorer.selectFile(mainFile)
+
+    this.outputWidget.print("RUN: "+config.RUN, OutputType.SYSTEM)
+    this.saveFile();
+    
+    await this.python.runProject()
+    return true
+  }
+
+
   public runConnectAPI(){
     this.outputWidget.clearOutput()
     this.saveFile();
     
- 
+    
     this.apiConnect().then(()=>{
       //TODO: on success, new files are downloaded 
       //this.fileExplorer.refreshRoot()
@@ -195,13 +194,26 @@ export class CodeEditorComponent implements OnInit {
   }
   
 
-  async apiConnect() {
+  async apiConnect(){
     console.log("apiConnect")
-    if(!this.selectedService){return false}
-    console.log("apiConnect:service:OK")
+
+    if(!this.selectedService){
+      this.outputWidget.print("No problem selected", OutputType.STDERR)
+      return false
+    }
+    console.log("apiConnect:service:ok")
+
     let config = await this.python.readPythonConfig()
     if (!config){return false}
-    console.log("apiConnect:config:OK")
+    console.log("apiConnect:config:ok")
+    
+
+    console.log("apiConnect:runProject")
+    this.saveFile();
+    await this.python.runProject()
+    this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
+    console.log("apiConnect:runProject:running")
+
 
     let problem = this.selectedService.parent.name;
     let service = this.selectedService.name;
@@ -253,21 +265,13 @@ export class CodeEditorComponent implements OnInit {
       onData
     );
     this.cmdConnect.onError = (error)=>{this.didConnectError(error)};
-
-    console.log("apiConnect:params:packages",config.PIP_PACKAGES)
-    await this.python.installPackages(config.PIP_PACKAGES)
-    this.outputWidget.print("TEST: "+config.RUN)
-    await this.driver?.executeFile(config.RUN)
-    
-    
     console.log("apiConnect:DONE")
-    
 
     return true
   }
 
   async didConnectError(error: string){
-    console.log("apiConnect:didConnectError:",error)
+    console.log("apiConnect:didConnectError:", error)
     this.cmdConnect = undefined
   }
 
@@ -285,14 +289,7 @@ export class CodeEditorComponent implements OnInit {
   }
 
   async didConnectData(data: string){
-    console.log("apiConnect:didConnectData:",data)
-    this.onStdin(data)
+    console.log("apiConnect:didConnectData:", data)
+    this.sendStdin(data)
   }
-
-
-  //--------------
-
-
-
-
 }

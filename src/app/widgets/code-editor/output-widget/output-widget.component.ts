@@ -2,14 +2,22 @@ import { Component, EventEmitter, Output, ViewChild, NgZone, ElementRef } from '
 import { ApiService, Meta } from 'src/app/services/api-service/api.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { ProblemDescriptor, ServiceDescriptor, ArgsMap, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
+import {ScrollPanelModule} from 'primeng/scrollpanel';
 
-
-export class ServiceMenuEntry {
+export class OutputMessage{
   constructor(
-    public problem = "",
-    public service = "",
-    public descriptor: ServiceDescriptor,
+    public content: string,
+    public type: OutputType,
+    public index: number = -1,
+    public timestamp: number = Date.now()
   ){}
+}
+
+export enum OutputType{
+  STDIN='stdin',
+  STDOUT='stdout',
+  STDERR='stderr',
+  SYSTEM='system',
 }
 
 @Component({
@@ -18,46 +26,43 @@ export class ServiceMenuEntry {
   styleUrls: ['./output-widget.component.scss'],
 })
 export class OutputWidgetComponent {
-
   @Output('onInput') public onInput = new EventEmitter<InputEvent>();
   @Output('onStdin') public onStdin = new EventEmitter<string>(); 
 
   @ViewChild("output") public output!: ElementRef;
   @ViewChild("sdtinInput") public sdtinInput!: ElementRef;
 
-  public outputText: string = "";
+  public outputLines = new Array<OutputMessage>();
 
   constructor( public zone: NgZone){}
   
   ngOnInit() {}
 
   ngOnDestroy() {}
-
-
+  
   clearOutput() {
-    this.zone.run(() => this.outputText = "")
+    this.zone.run(() => this.outputLines = [])
+  }
+  
+  public print(content: string, outputType = OutputType.STDOUT) {
+    let msg = new OutputMessage(content, outputType, this.outputLines.length)
+    this.zone.run(() => this.outputLines.push(msg));
+    this.scrollToBottom()
   }
 
-
-  public print(content: string, end = "\n") {
-    this.zone.run(() => this.outputText += content + end);
-
-    // Scroll #console-bottom-scroll to bottom
-    setTimeout(() => {
-      const scrollEl = document.getElementById("tal-output-widget-scroll-id");
-      if (scrollEl) {
-        scrollEl.scrollTop = scrollEl.scrollHeight;
-        console.log(scrollEl.scrollTop, scrollEl.scrollHeight)
-      }
-    });
+  public iconForType(message: OutputMessage){
+    let icon=''
+    let idx = message.index
+    if( idx > 0 && this.outputLines[idx-1].type == message.type){return icon;}
+    switch(message.type){
+      default:
+      case OutputType.STDIN:  icon='pi-angle-left'; break;
+      case OutputType.STDOUT: icon='pi-angle-right'; break;
+      case OutputType.STDERR: icon='pi-exclamation-triangle'; break;
+      case OutputType.SYSTEM: icon='pi-info-circle'; break;
+    }
+    return icon;
   }
-
-
-
-  public testOutput() {
-    this.print("python main.py\n")
-  }
-
 
   public sendStdin() {
     let msg = this.sdtinInput.nativeElement.value ?? ""
@@ -73,6 +78,17 @@ export class OutputWidgetComponent {
     if (event.key == 'Enter') { this.sendStdin(); }
   }
 
+
+  public scrollToBottom(){
+    // Scroll #console-bottom-scroll to bottom
+    setTimeout(() => {
+      const scrollEl = document.getElementById("tal-output-widget-scroll-id");
+      if (scrollEl) {
+        scrollEl.scrollTop = scrollEl.scrollHeight;
+        console.log(scrollEl.scrollTop, scrollEl.scrollHeight)
+      }
+    });
+  }
 }
 
 

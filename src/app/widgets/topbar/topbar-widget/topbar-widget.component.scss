@@ -8,7 +8,7 @@ div.tal-topbar{
     width:100%;
     display:flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: row;
     padding: 5px;
 }
 
@@ -17,13 +17,47 @@ div.tal-topbar{
     h1{
         font-size: 25px;
     }
+    display: flex;
+    flex-grow: 1;
+    //background-color: aqua;
+}
+
+.tal-message-box{
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    flex-grow: 10;
+
+    .tal-message-box-main{
+        width: 100%;
+        height: 100%;
+        flex-direction: column;
+        
+        .tal-message-col{
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+        }
+        
+        .tal-message-box-title{
+            font-weight: bold;
+        }
+    }
+    
 }
 
 
-.tal-buttons{
+
+.tal-bar-url{
+    //background-color: green;
     height: 30px;
     display: flex;
+    flex-direction: row;
     align-items: center;
+    justify-content: end;
+    flex-grow: 1;
+    
+    
 }
 
 ::ng-deep {
