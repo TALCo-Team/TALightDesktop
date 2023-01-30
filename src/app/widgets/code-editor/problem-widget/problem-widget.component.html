@@ -7,80 +7,58 @@
   -->
 
   <!-- API: PROBLEMS and SERVICES -->
-  <div class="tal-problem-widget-row tal-problem-widget-problem">
+  <div class="tal-problem-widget-row tal-problem-widget-row-problem">
+    <p-dropdown #problemDropdown
+                placeholder="Seleziona un problema" 
+                class="tal-problem-widget-problem-selector" 
+                scrollHeight="50rem"
+                [overlayOptions]="dropdownOptions"
+                panelStyleClass="tal-problem-widget-problem-selector-panel"
+                [options]="problemsMenu"
+                [(ngModel)]="selectedProblem" 
+                optionLabel="name"
+                (onChange)="didSelectProblem()">
     
-    <div class="tal-problem-widget-row tal-problem-widget-problem-dropdowns">
-      <p-dropdown #problemDropdown
-                  placeholder="Seleziona un problema" 
-                  class="tal-problem-widget-problem-selector" 
-                  scrollHeight="50rem"
-                  [overlayOptions]="dropdownOptions"
-                  panelStyleClass="tal-problem-widget-problem-selector-panel"
-                  [options]="problemMenu"
-                  [(ngModel)]="selectedProblem" 
-                  [autoDisplayFirst]="true"
-                  optionLabel="name"
-                  optionValue="key"
-                  (onChange)="didSelectProblem()">
-      
-        <ng-template let-option pTemplate="selectedItem">
-          <div class="tal-problem-widget-problem-selected">
-            <span class="problem-label">{{option.problem}}</span>
-            <span class="service-label">{{option.service}}</span>
-          </div>
-        </ng-template>
+                <ng-template let-option pTemplate="selectedItem">
+                  <div class="tal-problem-widget-problem-selected">{{cleanupName(option.name)}}</div>
+                </ng-template>
 
-        <ng-template let-option pTemplate="item">
-          <div class="tal-problem-widget-problem-item">
-            <span class="problem-label">{{option.problem}}</span>
-            <span class="service-label">{{option.service}}</span>
-          </div>
-        </ng-template>
-        
-      </p-dropdown>
+                <ng-template let-option pTemplate="item">
+                  <div class="tal-problem-widget-problem-item">{{cleanupName(option.name)}}</div>
+                </ng-template>
 
+    </p-dropdown>
 
-      <p-dropdown #serviceDropdown
-                  placeholder="Seleziona un problema" 
-                  class="tal-problem-widget-service-selector" 
-                  scrollHeight="50rem"
-                  [overlayOptions]="dropdownOptions"
-                  panelStyleClass="tal-problem-widget-service-selector-panel"
-                  [options]="servicesMenu"
-                  [(ngModel)]="selectedService" 
-                  [autoDisplayFirst]="true"
-                  optionLabel="name"
-                  optionValue="key"
-                  (onChange)="didSelectService()">
-      
-        <ng-template let-option pTemplate="selectedItem">
-          <div class="tal-problem-widget-problem-selected">
-            <span class="problem-label">{{option.problem}}</span>
-            <span class="service-label">{{option.service}}</span>
-          </div>
-        </ng-template>
-
-        <ng-template let-option pTemplate="item">
-          <div class="tal-problem-widget-problem-item">
-            <span class="problem-label">{{option.problem}}</span>
-            <span class="service-label">{{option.service}}</span>
-          </div>
-        </ng-template>
-        
-      </p-dropdown>
-    </div>
-
-
-    <div class="tal-problem-widget-row tal-problem-widget-problem">
-      <button pButton class="p-button-danger tal-square-button" icon="pi pi-refresh" title="Refresh" pTooltip="Refresh"
+    <button pButton class="p-button-danger tal-square-button" icon="pi pi-refresh" title="Refresh" pTooltip="Refresh"
       (click)="reloadProblemList()" *ngIf="!isLoading()"></button>
 
-      <button pButton class="p-button-help tal-square-button" icon="pi pi-download" (click)="apiDownloadAttachment()"
-        title="Download Attachments" pTooltip="Scarica allegati"></button>
+    <button pButton class="p-button-danger tal-square-button" icon="pi pi-spin pi-spinner" title="Refresh" pTooltip="Refresh" disabled
+      *ngIf="isLoading()"></button>
+  </div>
 
-      <button pButton class="p-button-danger tal-square-button" icon="pi pi-spin pi-spinner" title="Refresh" pTooltip="Refresh" disabled
-        *ngIf="isLoading()"></button>
-    </div>
+  <div class="tal-problem-widget-row tal-problem-widget-row-service">
+    <p-dropdown #serviceDropdown
+                placeholder="Seleziona un servizio" 
+                class="tal-problem-widget-service-selector" 
+                scrollHeight="50rem"
+                [overlayOptions]="dropdownOptions"
+                panelStyleClass="tal-problem-widget-service-selector-panel"
+                [options]="servicesMenu"
+                [(ngModel)]="selectedService" 
+                optionLabel="name"
+                (onChange)="didSelectService()">
+    
+                <ng-template let-option pTemplate="selectedItem">
+                  <div class="tal-problem-widget-problem-selected">{{cleanupName(option.name)}}</div>
+                </ng-template>
+
+                <ng-template let-option pTemplate="item">
+                  <div class="tal-problem-widget-problem-item">{{cleanupName(option.name)}}</div>
+                </ng-template>
+    </p-dropdown>
+
+    <button pButton class="p-button-help tal-square-button" icon="pi pi-download" (click)="apiDownloadAttachment()"
+      title="Download Attachments" pTooltip="Scarica allegati"></button>
 
   </div>
 

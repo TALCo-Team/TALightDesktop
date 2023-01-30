@@ -7,6 +7,7 @@ import { ProblemDescriptor, ServiceDescriptor, ArgsMap, ArgDescriptor, FilesMap,
 import { PyodideDriver } from 'src/app/services/python-compiler-service/pydiode-driver';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 import { OverlayOptions } from 'primeng/api';
+import { A } from '@tauri-apps/api/path-e12e0e34';
 
 
 export class ServiceMenuEntry {
@@ -36,14 +37,15 @@ export class ProblemWidgetComponent {
   
   @Input('fslist') public fslist!: Array<FsNodeFile|FsNodeFolder>;
 
-  @ViewChild("problemDropdown") public problemDropdown!: Dropdown
+  @ViewChild("problemDropdown") public problemDropdown!: ElementRef
+  @ViewChild("serviceDropdown") public serviceDropdown!: ElementRef
   public dropdownOptions: OverlayOptions;
 
-  problemMenu = new Array<ServiceMenuEntry>();
-  servicesMenu = new Array<ServiceMenuEntry>();
+  problemsMenu = new Array<ProblemDescriptor>();
+  servicesMenu = new Array<ServiceDescriptor>();
 
   selectedProblem?: ProblemDescriptor;
-  selectedService?: ServiceMenuEntry;
+  selectedService?: ServiceDescriptor;
   selectedArgs?: ArgsMap;
   selectedFiles?: FilesMap;
   selectedFile?: FileDescriptor;
@@ -62,7 +64,7 @@ export class ProblemWidgetComponent {
                public python: PythonCompilerService,)
   {
     this.driver = python.driver;
-    this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.updateProblemsUI(clear) })
+    this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.problemsDidChange(clear) })
 
     // https://primefaces.org/primeng/overlay
     //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
@@ -89,6 +91,11 @@ export class ProblemWidgetComponent {
     text = text.replace(/\((.*)\)/,'$1')
     text = text.replace(/\|/g,' OR ')
     return text;
+  }
+
+  cleanupName(name:string){
+    var pattern = new RegExp('[-_. ]+','g');
+    return name.replace(pattern, " ")
   }
 
   readableRegex(re:RegExp){
@@ -235,39 +242,35 @@ export class ProblemWidgetComponent {
     this.selectedArgs = undefined;
     this.selectedFiles = undefined;
     
-    this.zone.run(() => { 
-      this.servicesMenu = []
-      this.loading = true
-    }) 
+
+    this.problemsMenu = []
+    this.servicesMenu = []
+    this.loading = true
+
 
     console.log
     this.pm.updateProblems()
   }
 
-  async updateProblemsUI(clear:boolean) {
+  async problemsDidChange(clear:boolean) {
 
-    this.zone.run(() => { 
-      this.servicesMenu = []
-      this.loading = true
-    }) 
+    this.problemsMenu = []
+    this.servicesMenu = []
+    this.loading = true
+
 
     if(clear) return
     
-    let menuServices = new Array<ServiceMenuEntry>();
+    let problemsMenu = new Array<ProblemDescriptor>(); // [...this.pm.problemList] // ez ?
     this.pm.problemList.forEach((problemDesc)=>{      
-      problemDesc.services.forEach((serviceDesc)=>{
-        var pattern = new RegExp('[-_ ]+','g');
-        var serviceLabel = serviceDesc.name.replace(pattern, " ")
-        let serviceEntry = new ServiceMenuEntry(problemDesc.name,serviceLabel,serviceDesc)
-        menuServices.push(serviceEntry)
-      })
+      problemsMenu.push(problemDesc)
     })
-    console.log('updateProblemsUI:menuServices:', menuServices)
+    problemsMenu = problemsMenu.sort((a,b)=>a>b?1:a<b?-1:0)
+    console.log('updateProblemsUI:problemsMenu:', problemsMenu)
     
-    this.zone.run(() => { 
-      this.servicesMenu = menuServices
-      this.loading = false
-    }) 
+    this.problemsMenu = problemsMenu
+    this.loading = false
+
   }
 
 
@@ -281,26 +284,35 @@ export class ProblemWidgetComponent {
     console.log('didSelectProblem:', this.selectedProblem)
     if (!this.selectedProblem){return}
     this.pm.selectProblem(this.selectedProblem)
-    this.onProblemSelected.emit(this.selectedProblem)
+    
+
+    let servicesMenu = new Array<ServiceDescriptor>();
+    this.selectedProblem.services.forEach((serviceDesc)=>{
+      servicesMenu.push(serviceDesc)
+    })
+    servicesMenu = servicesMenu.sort((a,b)=>a>b?1:a<b?-1:0)
+    this.servicesMenu = servicesMenu
+    console.log('didSelectProblem:servicesMenu:', servicesMenu)
+    this.servicesMenu = servicesMenu
+    
+
+    //this.onProblemSelected.emit(this.selectedProblem)
   }
 
   async didSelectService() {
     console.log('didSelectService:', this.selectedService)
     if (!this.selectedService){return}
-    let serviceDesc = this.selectedService!.descriptor
-    this.pm.selectService(serviceDesc)
-    this.selectedArgs = serviceDesc.args
-    this.selectedFiles = serviceDesc.files
+    this.pm.selectService(this.selectedService)
+    this.selectedArgs = this.selectedService.args
+    this.selectedFiles = this.selectedService.files
     console.log('didSelectService:selectedArgs:', this.selectedArgs)
-    this.onServiceSelected.emit(serviceDesc)
+    this.onServiceSelected.emit(this.selectedService)
   }
 
   async apiDownloadAttachment() {
-    console.log('apiDownloadAttachment:', this.selectedService)
-    if (!this.selectedService) { return }
-    let problem = this.selectedService.descriptor.parent;
-    if(!problem) {return;}
-    
+    console.log('apiDownloadAttachment:', this.selectedProblem)
+    if (!this.selectedProblem) { return }
+
     let onAttachment = () => { console.log("Attachment packet received") };
     let onAttachmentInfo = (info: any) => { console.log('apiDownloadAttachment:info:', info) };
 
@@ -309,7 +321,7 @@ export class ProblemWidgetComponent {
       this.onAttachments.emit(data);
     };
 
-    let req = this.api.GetAttachment(problem.name, onAttachment, onAttachmentInfo, onData);
+    let req = this.api.GetAttachment(this.selectedProblem.name, onAttachment, onAttachmentInfo, onData);
     req.onError = (error) => { this.onApiError(error) };
 
   }

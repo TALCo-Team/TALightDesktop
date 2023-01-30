@@ -198,6 +198,7 @@ export class ProblemManagerService {
   
   selectProblem(selectedProblem: ProblemDescriptor){
     this.selectedProblem = selectedProblem;
+    this.selectedService = undefined
   }
   
 
@@ -210,7 +211,6 @@ export class ProblemManagerService {
       this.savedParams.set(name,selectedService);
       this.selectedService = selectedService;
     }
-    this.selectedProblem = this.selectedService?.parent;
   }
 
 

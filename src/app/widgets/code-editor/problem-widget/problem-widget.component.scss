@@ -7,11 +7,10 @@
 
 ::ng-deep {
     
-    .tal-problem-widget-problem{
+    .tal-problem-widget-row-problem,.tal-problem-widget-row-service{
         .p-dropdown {
             height: 30px;
-            margin-left: 5px;
-            margin-right: 5px;
+            margin: 0px 5px;
         }
         .p-dropdown-label{
             height: 30px;
@@ -22,8 +21,7 @@
     .tal-problem-widget-args-subrow{
         .p-dropdown {
             height: 22px;
-            margin-left: 5px;
-            margin-right: 5px;
+            margin: 0px 5px;
         }
         .p-dropdown-label{
             height: 22px;
@@ -97,14 +95,14 @@
     height:100%;
 
 
-    .tal-problem-widget-problem{
+    .tal-problem-widget-row-problem, .tal-problem-widget-row-service{
         display: flex;
         flex-direction: row;
         align-items: center;
         padding: 5px;
         
 
-        .tal-problem-widget-problem-selector {
+        .tal-problem-widget-problem-selector, .tal-problem-widget-service-selector {
             flex-grow: 2;
             display: flex;
             align-items: center;   

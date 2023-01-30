@@ -93,19 +93,19 @@ export class CodeEditorComponent implements OnInit {
   public onProblemChanged(selectedProblem: ProblemDescriptor){
     console.log("onProblemChanged:",selectedProblem)
     this.selectedProblem=selectedProblem;
+    this.selectedService=undefined;
   }
 
   public onServiceChanged(selectedService: ServiceDescriptor){
     console.log("onServiceChanged:",selectedService)
     this.selectedService=selectedService;
-    this.selectedProblem=selectedService.parent;
+
   }
 
   async onAttachments(data: ArrayBuffer){
     console.log("onAttachments:",data)
     if(!this.selectedProblem){return;}
-    let name = this.selectedProblem.name
-
+    
     if (!(data instanceof ArrayBuffer ) ) {return;}
     Tar.unpack(data, async (files,folders) => {
       
