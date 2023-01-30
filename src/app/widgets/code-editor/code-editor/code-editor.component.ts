@@ -272,6 +272,7 @@ export class CodeEditorComponent implements OnInit {
 
   async didConnectError(error: string){
     console.log("apiConnect:didConnectError:", error)
+    this.outputWidget.print("API Error: "+error,OutputType.STDERR)
     this.cmdConnect = undefined
   }
 
