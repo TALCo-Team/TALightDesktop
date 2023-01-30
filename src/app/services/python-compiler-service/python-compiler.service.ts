@@ -1,10 +1,6 @@
 import { Injectable } from '@angular/core';
 import { PyodideDriver, PyodideRequest } from './pydiode-driver';
 import { FsService } from '../fs-service/fs.service';
-import { ApiService } from '../api-service/api.service';
-import { Commands } from '../api-service/api.commands';
-
-
 
 
 @Injectable({
@@ -30,29 +26,30 @@ export class PythonCompilerService {
     console.log("createPythonProject")
     if (!this.driver) {return false}
 
-    if (await this.driver.exists(this.configPath)){
-      console.log("createPythonProject:skipping")
-      return true;
+    let writeConfig = false
+    let config = await this.readPythonConfig();
+    if (!config){
+      config = new ProjectConfig()
+      writeConfig = true
     }
     
+    
+    //Starter files
+    let folders = [
+      config.DIR_PROJECT,
+      config.DIR_ATTACHMENTS,
+    ]
+    if(config.CREATE_EXAMPLES){ folders.push(config.DIR_EXAMPLES)}
+    
+    for(let i = 0; i < folders.length; i++){
+      console.log("createPythonProject:createDirectory:",folders[i])
+      await this.driver?.createDirectory(folders[i]);
+    }
 
-
-    let configContent = JSON.stringify(new ProjectConfig(), null, 4)
+    //TODO: load from external asset bundle
+    let files: string[][] = []
     
-    
-    
-    console.log("createPythonProject:project:",this.projectFolder)
-    await this.driver?.createDirectory(this.projectFolder);
-    console.log("createPythonProject:config:",this.configPath, configContent)
-    await this.driver?.writeFile(this.configPath, configContent );
     let mainContent = `print("Hello World!")`;
-
-    console.log("createPythonProject:content:", mainContent)
-    await this.driver?.writeFile('/main.py', mainContent);
-    console.log("createPythonProject:data:")
-    await this.driver?.createDirectory('/data/');
-    await this.driver?.createDirectory('/examples/');
-
     let inputExample = `# Esempio che mostra come utilizzare la funzione di input in ambiente asincrono
 nome = await input("Ciao, come ti chiami?")
 print(f'Ciao {nome}, posso farti una domanda ?')    
@@ -66,11 +63,10 @@ async def main():
 
 main()
 `
-await this.driver?.writeFile('/examples/input.py', inputExample);
 
     let sumExample = `# Example: sum -> free sum
 while True:
-    line = input()
+    line = await input()
     #print(f"# BOT: line={line}")
     if line[0] == '#':   # this is a commented line (sent by the service server)
         if '# WE HAVE FINISHED' == line:
@@ -78,21 +74,49 @@ while True:
     else:
         n = int(line)
         print(f"{n} 0")
-`
+` 
+    
+    if(writeConfig){ 
+      let configContent = JSON.stringify(config, null, 4)
+      files.unshift([config.PATH_CONFIG, configContent])
+    }
 
-    await this.driver?.writeFile('/examples/sum.py', sumExample);
+    files.push([config.RUN, mainContent])
+    
+
+    let examples = [
+      [config.DIR_EXAMPLES + 'input.py', inputExample],
+      [config.DIR_EXAMPLES + 'sum.py', sumExample],
+    ]
+    if(config.CREATE_EXAMPLES){ files = files.concat(examples) }
+
+    
+    
+    
+    for(let i=0; i < files.length; i++){
+      let path = files[i][0]
+      let content = files[i][1]
+      console.log("createPythonProject:files:", path, content)
+      if(await this.driver.exists(path)){
+        console.log("createPythonProject:files:SKIP:", path)
+        continue;
+      }
+      await this.driver?.writeFile(path, content);  
+    }
+
     return true
   }
 
   async readPythonConfig(){
     if (!this.driver) {return null}
 
-    if (!await this.driver.exists(this.configPath)){
+    let defaultConfig = new ProjectConfig()
+    if (!await this.driver.exists(defaultConfig.PATH_CONFIG)){
       console.log("readPythonConfig: config file doesn't exisit!")
       return null;
     }
     
-    let configContent = await this.driver?.readFile(this.configPath, false ) as string;
+    let configContent = await this.driver?.readFile(defaultConfig.PATH_CONFIG, false ) as string;
     let config = JSON.parse(configContent) as ProjectConfig
     return config
   }
@@ -119,30 +143,35 @@ while True:
 
 class ProjectConfig {
   RUN = "/main.py"
-  DEBUG = false
-  DOWNLOAD_ATTACHMENT_AUTO = true
-  PROJECT_NAME="My 3SAT"
-
-  TAL_SERVERS = [
-    "ws://localhost:8008/", 
+  DEBUG = false //TODO
+  PROJECT_NAME="My solution" //TODO
+  PREFERED_LANG="it"
+  
+  TAL_SERVERS = [ //TODO
+    "ws://localhost:8008/",
     "wss://ta.di.univr.it/sfide",
     "wss://ta.di.univr.it/rtel",
   ]
-  TAL_SERVER = ""
-  TAL_PROBLEM = ""
-  TAL_SERVICE = ""
+  TAL_SERVER = "" //TODO
+  TAL_PROBLEM = "" //TODO
+  TAL_SERVICE = "" //TODO
 
   DIR_PROJECT = '/.talight/'
   DIR_ATTACHMENTS = '/data/'
-  DIR_RESULTS = '/results/'
-  DIR_ARGSFILE = '/files/'
+  DIR_RESULTS = '/results/' //TODO
+  DIR_ARGSFILE = '/files/' //TODO
   DIR_EXAMPLES = '/examples/'
+  CREATE_EXAMPLES = true
 
+  //TODO: hotkey manager service
+  HOTKEY_RUN = "f8"
+  HOTKEY_TEST = "f9"
+  HOTKEY_SAVE = "ctrl+s"
 
-  CONFIG_NAME = 'taglight.json'
+  CONFIG_NAME = 'talight.json'
   PATH_CONFIG = this.DIR_PROJECT + this.CONFIG_NAME
 
-  PIP_PACKAGES: string[] = ["numpy"]
+  PIP_PACKAGES: string[] = []
 }
 
 

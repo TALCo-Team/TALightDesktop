@@ -52,6 +52,9 @@
     .tal-output-widget-inner-row-stdin{
         background-color: rgba($color: green, $alpha: 0.1);
     }
+    .tal-output-widget-inner-row-stdinapi{
+        background-color: rgba($color: lime, $alpha: 0.1);
+    }
     .tal-output-widget-inner-row-stdout{
         background-color: rgba($color: deepskyblue, $alpha: 0.1);
     }

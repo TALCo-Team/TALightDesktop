@@ -15,6 +15,7 @@ export class OutputMessage{
 
 export enum OutputType{
   STDIN='stdin',
+  STDINAPI='stdinapi',
   STDOUT='stdout',
   STDERR='stderr',
   SYSTEM='system',
@@ -56,10 +57,11 @@ export class OutputWidgetComponent {
     if( idx > 0 && this.outputLines[idx-1].type == message.type){return icon;}
     switch(message.type){
       default:
-      case OutputType.STDIN:  icon='pi-angle-left'; break;
-      case OutputType.STDOUT: icon='pi-angle-right'; break;
-      case OutputType.STDERR: icon='pi-exclamation-triangle'; break;
-      case OutputType.SYSTEM: icon='pi-info-circle'; break;
+      case OutputType.STDIN:     icon='pi-angle-left'; break;
+      case OutputType.STDINAPI:  icon='pi-cloud-download'; break;
+      case OutputType.STDOUT:    icon='pi-angle-right'; break;
+      case OutputType.STDERR:    icon='pi-exclamation-triangle'; break;
+      case OutputType.SYSTEM:    icon='pi-info-circle'; break;
     }
     return icon;
   }
@@ -68,10 +70,11 @@ export class OutputWidgetComponent {
     let msg = this.sdtinInput.nativeElement.value ?? ""
     msg = msg.trim()
     console.log("sendStdin:", this.sdtinInput)
+    console.log("sendStdin:msg", msg)
     if (msg == "") { return }
 
     this.sdtinInput.nativeElement.value = ""
-    this.onStdin.emit(msg);
+    this.onStdin.emit(msg+"\n");
   }
 
   public sendOnEnter(event: KeyboardEvent) {
