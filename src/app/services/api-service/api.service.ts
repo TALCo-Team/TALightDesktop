@@ -26,7 +26,7 @@ export class ApiService {
   public onApiStateChange = new EventEmitter<ApiState>();
 
   constructor(){
-    this._url = 'wss://ta.di.univr.it/sfide'
+    this._url = 'ws://localhost:8008/'
     this.urlCache = [
       'wss://ta.di.univr.it/sfide',
       'ws://localhost:8008/',
