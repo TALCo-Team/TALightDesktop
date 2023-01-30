@@ -1,60 +1,54 @@
-import { Component, ElementRef, EventEmitter, Input, OnInit, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
-import { removeFileDecorator } from 'indexeddb-fs/dist/framework/parts';
+import { Component, ElementRef, EventEmitter, Input, NgZone, OnInit, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
+
 import { ConfirmationService } from 'primeng/api';
 import { OverlayPanel } from 'primeng/overlaypanel';
-import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver } from 'src/app/services/fs-service/fs.service';
-import { FsServiceTest } from 'src/app/services/fs-service/fs.service.test';
+import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver, Tar } from 'src/app/services/fs-service/fs.service';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 
-export interface TalFile extends FsNodeFile {
-  content: string;
-}
-
-export interface TalFolder extends FsNodeFolder {
-
-}
 
 @Component({
-  selector: 'tal-editor-files-widget',
-  templateUrl: './editor-files-widget.component.html',
-  styleUrls: ['./editor-files-widget.component.scss']
+  selector: 'tal-file-explorer-widget',
+  templateUrl: './file-explorer-widget.component.html',
+  styleUrls: ['./file-explorer-widget.component.scss']
 })
-export class EditorFilesWidgetComponent implements OnInit {
+export class FileExplorerWidgetComponent implements OnInit {
   public driver?: FsServiceDriver;
   public rootDir = "/"
-  //public driverName = 'example'
   public driverName = 'pyodide'
-  public emptyNode = {name:"", path: this.rootDir, files:[], folders:[]}
   public showHidden = false
-
-  @Input("root") root: TalFolder = this.emptyNode;
-
+  public fsroot = FsService.EmptyFolder
   
   public editingValue: string = "";
-  public editingItem: TalFile | TalFolder | null = null;
-  public editingItemFolder: TalFolder | null = null;
+  public editingItem: FsNodeFile | FsNodeFolder | null = null;
+  public editingItemFolder: FsNodeFolder | null = null;
   public editingItemError: boolean = false;
 
   public newItemValue: string = "";
   public newItemType: "file" | "folder" = "file";
-  public newItemFolder: TalFolder | null = null;
+  public newItemFolder: FsNodeFolder | null = null;
   public newItemError: boolean = false;
 
-  public openedFile: TalFile | null = null;
+  public selectedFile: FsNodeFile | null = null;
+  public selectedFolder: FsNodeFolder | null = null;
+  
 
   @ViewChild("nameEditing") public nameEditingElement?: ElementRef;
   @ViewChild("newItemName") public newItemNameElement?: ElementRef;
 
   @ViewChildren(OverlayPanel) public panels?: QueryList<OverlayPanel>;
 
-  @Output("change") public change = new EventEmitter<TalFolder>();
-  @Output("open") public open = new EventEmitter<TalFile>();
+  @Output("onUpdateRoot") public onUpdateRoot = new EventEmitter<FsNodeFolder>();
+
+  @Output("onSelectFile") public onSelectFile = new EventEmitter<FsNodeFile>();
+  
+  
   @Output("showHiddenChanged") public showHiddenChanged = new EventEmitter<boolean>(); 
 
   constructor(
     private confirmationService: ConfirmationService, 
     private fs:FsService,
     private python: PythonCompilerService,
+    private zone: NgZone
     ) {
     //this.driver = fs.getDriver('pyodide');
     this.driver = fs.getDriver(this.driverName);
@@ -64,8 +58,8 @@ export class EditorFilesWidgetComponent implements OnInit {
 
   ngOnInit() {
     this.bindCollapseEvent();
-    
-    let test = new FsServiceTest(this.fs, this.driverName)
+    //alert('init!');
+
     //this.rootDir = this.driver?.rootDir ?? this.rootDir;
     this.driver?.ready().then((ready)=>{
       //alert('ready!');
@@ -74,18 +68,16 @@ export class EditorFilesWidgetComponent implements OnInit {
         this.refreshRoot();
         //alert('ready!');
       })
-      
     })
-
-    
-
   }
 
-  refreshRoot(){
+  refreshRoot(onDone?:()=>void){
     this.driver?.scanDirectory(this.rootDir).then((folder)=>{
-      this.root = folder ?? this.emptyNode;
+      this.fsroot = folder ?? FsService.EmptyFolder
+
       this.bindCollapseEvent();
-      this.change?.emit(this.root);
+      this.onUpdateRoot?.emit(this.fsroot);
+      if(onDone){onDone()}
     });
     
   }
@@ -126,27 +118,57 @@ export class EditorFilesWidgetComponent implements OnInit {
     }
   }
 
-  public openFile(file: TalFile) {
+  public selectFile(file: FsNodeFile) {
+    console.log('selectFile',file)
     this.driver?.readFile(file.path).then((content)=>{
       file.content = content ?? "";
-      this.openedFile = file;
-      this.open?.emit(file);
+      this.selectedFile = file;
+      this.onSelectFile?.emit(file);
     })
     
   }
 
-  public toggleHidden(){
-    this.showHidden = !this.showHidden;
-    
+  public selectFolder(folder: FsNodeFolder) {
+    if (this.selectedFolder == folder){
+      this.selectedFolder == null;
+    }
   }
 
-  public isVisibile(fsitem: TalFile|TalFolder){
+  public openSettings(){
+    if(!this.showHidden){
+      this.showHidden = true
+      this.refreshRoot(()=>{this.openSettings()})
+    }
+
+    console.log("openSettings")
+    let projectFolder = this.fsroot.folders.find((item)=>{
+      return item.path + "/" == this.python.projectFolder
+    })
+    if(!projectFolder){return}
+    console.log("openSettings:projectFolder:",projectFolder)
+    let configFile = projectFolder.files.find((file)=>{
+      return file.path == this.python.configPath
+    })
+    if(!configFile){return}
+    console.log("openSettings:configFile:",configFile)
+        
+    this.selectFile(configFile);
+        
+  }
+  
+
+  public toggleHidden(){
+    this.showHidden = !this.showHidden;
+    this.refreshRoot()
+  }
+
+  public isVisibile(fsitem: FsNodeFile|FsNodeFolder){
     let isHidden = fsitem.name.startsWith('.');
     return this.showHidden || ( !this.showHidden && !isHidden ) 
   }
 
   /** EDITING METHODS  **/
-  public startEditing(folder: TalFolder, item: TalFile | TalFolder) {
+  public startEditing(folder: FsNodeFolder, item: FsNodeFile | FsNodeFolder) {
     this.editingItem = item;
     this.editingValue = item.name;
     this.editingItemFolder = folder;
@@ -165,7 +187,7 @@ export class EditorFilesWidgetComponent implements OnInit {
         this.editingValue = this.editingValue.trim();
         if (this.editingValue.length > 0) {
           this.editingItem.name = this.editingValue;
-          this.change?.emit(this.root);
+          this.onUpdateRoot?.emit(this.fsroot);
         }
       }
     }
@@ -192,7 +214,8 @@ export class EditorFilesWidgetComponent implements OnInit {
   /***************/
 
   /** DELETE METHODS **/
-  public deleteFileClick(event: Event, file: TalFile) {
+  public deleteFileClick(event: Event, file: FsNodeFile) {
+    if(!this.fsroot){return}
     if (event.target) {
       this.confirmationService.confirm({
         target: event.target,
@@ -200,7 +223,7 @@ export class EditorFilesWidgetComponent implements OnInit {
         icon: 'pi pi-exclamation-triangle',
         accept: () => {
           //confirm action
-          this.deleteFile(this.root, file);
+          this.deleteFile(this.fsroot, file);
         },
         reject: () => {
           //reject action
@@ -209,7 +232,7 @@ export class EditorFilesWidgetComponent implements OnInit {
     }
   }
 
-  private deleteFile(currentFolder: TalFolder, file: TalFile) {
+  private deleteFile(currentFolder: FsNodeFolder, file: FsNodeFile) {
     this.driver?.delete(file.path).then(()=>{
       this.refreshRoot();
     })
@@ -226,7 +249,7 @@ export class EditorFilesWidgetComponent implements OnInit {
     */
   }
 
-  public deleteFolderClick(event: Event, folder: TalFolder) {
+  public deleteFolderClick(event: Event, folder: FsNodeFolder) {
     if (event.target) {
       this.confirmationService.confirm({
         target: event.target,
@@ -234,7 +257,7 @@ export class EditorFilesWidgetComponent implements OnInit {
         icon: 'pi pi-exclamation-triangle',
         accept: () => {
           //confirm action
-          this.deleteFolder(this.root, folder);
+          this.deleteFolder(this.fsroot, folder);
         },
         reject: () => {
           //reject action
@@ -243,7 +266,7 @@ export class EditorFilesWidgetComponent implements OnInit {
     }
   }
 
-  private deleteFolder(currentFolder: TalFolder, folder: TalFolder) {
+  private deleteFolder(currentFolder: FsNodeFolder, folder: FsNodeFolder) {
     this.driver?.delete(folder.path).then(()=>{
       this.refreshRoot();
     })
@@ -262,7 +285,7 @@ export class EditorFilesWidgetComponent implements OnInit {
   /***************/
 
   /** CREATE METHODS **/
-  public syncFilesystem(folder: TalFolder) {
+  public syncFilesystem(folder: FsNodeFolder) {
     setTimeout(() => { 
       //this.refreshRoot();
       this.python.createPythonProject().then(()=>{
@@ -273,7 +296,7 @@ export class EditorFilesWidgetComponent implements OnInit {
   }
 
 
-  public addNewItem(folder: TalFolder, type: "file" | "folder") {
+  public addNewItem(folder: FsNodeFolder, type: "file" | "folder") {
     this.newItemValue = "";
     this.newItemFolder = folder;
     this.newItemType = type;
@@ -297,14 +320,21 @@ export class EditorFilesWidgetComponent implements OnInit {
       if (this.newItemValue.length > 0) {
         if (this.newItemFolder) {
           if (this.newItemType === "file") {
+            let path = this.newItemFolder.path + "/" + this.newItemValue
+            this.driver?.writeFile(path, "").then(()=>{
+              this.refreshRoot()
+            })
+            /*
             this.newItemFolder.files.push({
               name: this.newItemValue,
               content: ""
             } as TalFile );
+            */
           } else {
             this.driver?.createDirectory("./"+this.newItemValue).then(()=>{
-
+              this.refreshRoot()
             })
+            
             this.newItemFolder.folders.push({
               name: this.newItemValue,
               path: "./"+this.newItemValue,
@@ -312,10 +342,10 @@ export class EditorFilesWidgetComponent implements OnInit {
               folders: []
             });
 
-            this.bindCollapseEvent();
+            //this.bindCollapseEvent();
           }
-
-          this.change?.emit(this.root);
+          //this.refreshRoot()
+          //this.change?.emit(this.root);
         }
       }
     }
@@ -336,8 +366,83 @@ export class EditorFilesWidgetComponent implements OnInit {
     }
   }
   /***************/
+  async upload(event:Event) {
+    if (!( event.target instanceof HTMLInputElement )){ return false; }
+    let target = event.target as HTMLInputElement
+    if(!target.files || target.files.length == 0){ return false; }
+
+    if(target.files.length == 1 && target.files[0].name.endsWith('.tal.tar') ){
+      let content = await target.files[0].arrayBuffer();
+      await this.importProject(content)
+    }else{
+      for(let i = 0; i<target.files.length; i++){
+        let file = target.files[i]
+        let content = await file.arrayBuffer();
+        console.log("upload:content:", new Uint8Array(content))
+        let path = (!this.selectedFolder?"/":this.selectedFolder.path) + file.name
+        console.log('upload:', path, content)
+        await this.driver?.writeFile(path, content)
+      }
+    }
+    this.refreshRoot()
+    return true;
+  }
+
+  async importProject(tarball:ArrayBuffer) {
+    Tar.unpack(tarball, async (files, folders)=>{
+      console.log("extractTar:unpack:files",files)
+      console.log("extractTar:unpack:folders",folders)
+  
+      for(var idx in folders){
+        console.log("extractTar:createDirectory:")
+        let folder = folders[idx]
+        let path = folder.path
+        console.log("extractTar:createDirectory:",path)
+        await this.driver?.createDirectory(path)
+      }
+      console.log("extractTar:createDirectory:DONE")
+      for(var idx in files){
+        console.log("extractTar:writeFile:")
+        let file = files[idx]
+        let path = file.path
+        let content = file.content
+        console.log("extractTar:writeFile:",path,content)
+        await this.driver?.writeFile(path, content)
+      }
+      console.log("extractTar:writeFile:DONE")
+      this.refreshRoot()
+    })
+    console.log("import:data:",tarball)
+        
+    return true
+  }
 
   public export() {
-    // TODO: export
+    let items = this.fs.treeToList(this.fsroot)
+    if(items.length == 0 ) {
+      console.log("export: No files found to be exported")
+    }
+
+    console.log("export:items:",items)
+    Tar.pack(items, (tarball:ArrayBuffer)=>{
+      let tarname = "tal-project-"+ Date.now()+".tal.tar"
+      console.log('export:tarball:',tarname,tarball)
+      this.triggerDownload(tarname, tarball, "application/x-tar")
+    })
+  }
+
+  public triggerDownload(filename:string, content:ArrayBuffer|string, mime="application/octet-stream"){
+    let a = document.createElement("a");
+    
+    const blob = new Blob([content], {type: mime});
+    let url = window.URL.createObjectURL(blob);
+    
+    a.style.display = "none";
+    a.download = filename;
+    a.href = url;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   }
 }

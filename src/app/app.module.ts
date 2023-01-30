@@ -15,12 +15,13 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { SplitterModule } from 'primeng/splitter';
-import { ConsoleModule } from './widgets/console/console.module';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { CodeEditorModule } from './widgets/code-editor/code-editor.module';
 import { SelectProblemViewComponent } from './views/select-problem-view/select-problem-view.component';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { TopbarModule } from './widgets/topbar/topbar.module';
+
 
 @NgModule({
   declarations: [
@@ -39,13 +40,15 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     InputSwitchModule,
     DropdownModule,
     FileUploadModule,
+    FormsModule,
+    InputTextModule,
     TooltipModule,
     ScrollPanelModule,
     SelectButtonModule,
     SplitterModule,
     RadioButtonModule,
-    ConsoleModule,
-    CodeEditorModule
+    CodeEditorModule,
+    TopbarModule
   ],
   providers: [],
   bootstrap: [AppComponent]

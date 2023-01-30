@@ -1,0 +1,32 @@
+
+:host{
+    width:100%;
+    height:100%;
+ 
+}
+
+div.tal-editor{
+    flex:1;
+    width:100%;
+    height:100%;
+}
+
+div.tal-editor-files{
+    width:100%;
+}
+
+div.tal-code-editor-container{
+    display:flex;
+    flex-direction: column;
+    width:100%;
+
+    div.tal-code-editor-header{
+        display:flex;
+        width:100%;
+    }
+    
+    div.tal-code-editor{
+        flex:1;
+        width:100%;
+    }
+}

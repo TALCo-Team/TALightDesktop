@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ConsoleWidgetComponent } from './console-widget.component';
+import { OutputWidgetComponent } from './output-widget.component';
 
-describe('ConsoleWidgetComponent', () => {
-  let component: ConsoleWidgetComponent;
-  let fixture: ComponentFixture<ConsoleWidgetComponent>;
+describe('OutputWidgetComponent', () => {
+  let component: OutputWidgetComponent;
+  let fixture: ComponentFixture<OutputWidgetComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ConsoleWidgetComponent]
+      declarations: [OutputWidgetComponent]
     })
       .compileComponents();
 
-    fixture = TestBed.createComponent(ConsoleWidgetComponent);
+    fixture = TestBed.createComponent(OutputWidgetComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

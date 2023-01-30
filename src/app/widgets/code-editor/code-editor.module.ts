@@ -1,29 +1,50 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CodeEditorWidgetComponent } from './code-editor-widget/code-editor-widget.component';
-import { EditorFilesWidgetComponent } from './editor-files-widget/editor-files-widget.component';
+import { FileExplorerWidgetComponent } from './file-explorer-widget/file-explorer-widget.component';
+import { CodeEditorComponent } from './code-editor/code-editor.component';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { FormsModule } from '@angular/forms';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, SharedModule } from 'primeng/api';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SplitterModule } from 'primeng/splitter';
+import { TooltipModule } from 'primeng/tooltip';
+import { FileEditorWidgetComponent } from './file-editor-widget/file-editor-widget.component';
+import { ExecbarWidgetComponent } from './execbar-widget/execbar-widget.component';
+import { ProblemWidgetComponent } from './problem-widget/problem-widget.component';
+import { DropdownModule } from 'primeng/dropdown';
+import { MonacoEditorWidgetComponent } from './monaco-editor-widget/monaco-editor-widget.component';
+import { OutputWidgetComponent } from './output-widget/output-widget.component';
+import {TabViewModule} from 'primeng/tabview';
+import {ScrollPanelModule} from 'primeng/scrollpanel';
 
 @NgModule({
   declarations: [
-    CodeEditorWidgetComponent,
-    EditorFilesWidgetComponent
+    FileExplorerWidgetComponent,
+    FileEditorWidgetComponent,
+    CodeEditorComponent,
+    ExecbarWidgetComponent,
+    ProblemWidgetComponent,
+    MonacoEditorWidgetComponent,
+    OutputWidgetComponent,
   ],
   imports: [
     CommonModule,
     FormsModule,
     MonacoEditorModule,
     ConfirmDialogModule,
-    OverlayPanelModule
+    OverlayPanelModule,
+    SplitterModule,
+    SharedModule,
+    TooltipModule,
+    DropdownModule,
+    TabViewModule,
+    ScrollPanelModule,
   ],
   exports: [
-    CodeEditorWidgetComponent,
-    EditorFilesWidgetComponent
+    FileExplorerWidgetComponent,
+    CodeEditorComponent
   ],
-  providers: [ConfirmationService],
+  providers: [ ConfirmationService ],
 })
 export class CodeEditorModule { }

@@ -1,31 +1,59 @@
 <div class="tal-editor-files-tree">
   <div class="tal-editor-files-header">
-    <button pButton class="p-button-secondary" icon="pi pi-download" title="Esporta tutto"
-      (click)="closeAllContextMenus($event); export()"></button>
-    <button pButton icon="pi pi-file" title="Nuovo file"
-      (click)="closeAllContextMenus($event); addNewItem(root, 'file')"></button>
-      <button pButton icon="pi pi-folder" title="Nuova cartella"
-      (click)="closeAllContextMenus($event); addNewItem(root, 'folder')"></button>
-      <button pButton icon="pi pi-sync" title="Refresh"
-      (click)="closeAllContextMenus($event); syncFilesystem(root)"></button>
+    <div class="tal-editor-files-left-bar">
+      <button pButton icon="pi pi-file" class="tal-square-button" title="Nuovo file"
+        (click)="closeAllContextMenus($event); addNewItem(fsroot, 'file')" pTooltip="Nuovo file"></button>
+      <button pButton icon="pi pi-folder" class="tal-square-button" title="Nuova cartella"
+        (click)="closeAllContextMenus($event); addNewItem(fsroot, 'folder')" pTooltip="Nuova cartella"></button>
+    </div>
+    <div class="tal-editor-files-right-bar">
+      <button pButton icon="pi pi-sync" class="tal-square-button" title="Refresh" (click)="closeAllContextMenus($event); syncFilesystem(fsroot)"
+        pTooltip="Aggiorna"></button>    
+    </div>
+  </div>
 
-      
-      <button pButton icon="pi pi-eye" *ngIf="showHidden" title="Toggle show hidden files"
-      (click)="closeAllContextMenus($event); toggleHidden()"></button>
-      <button pButton icon="pi pi-eye-slash" *ngIf="!showHidden" title="Toggle show hidden files"
-      (click)="closeAllContextMenus($event); toggleHidden()"></button>
-  </div>
+
   <div class="tal-editor-files-body">
-    <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: root }"></ng-container>
+    <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: fsroot }"></ng-container>
   </div>
+
+
+  <div class="tal-editor-files-footer">
+    <div class="tal-editor-files-left-bar">
+      <button pButton class="p-button-secondary tal-square-button" icon="pi pi-save" title="Salva/Esporta"
+        (click)="closeAllContextMenus($event); export()" pTooltip="Esporta"></button>
+      
+      <button pButton class="p-button-secondary tal-square-button" icon="pi pi-upload" title="Upload/Importa"
+        (click)="fileUpload.click()" pTooltip="Upload/Import"></button>
+      <input #fileUpload type="file" style="display: none;" (change)="upload($event)"/>
+    </div>
+
+    <div class="tal-editor-files-right-bar">
+
+      <button pButton icon="pi pi-eye" class="tal-square-button" *ngIf="showHidden" title="Toggle show hidden files"
+        (click)="closeAllContextMenus($event); toggleHidden()" pTooltip="Mostra file nascosti"></button>
+
+      <button pButton icon="pi pi-eye-slash" class="tal-square-button" *ngIf="!showHidden" title="Toggle show hidden files"
+        (click)="closeAllContextMenus($event); toggleHidden()" pTooltip="Nascondi file nascosti"></button>
+
+      <button pButton icon="pi pi-cog" class="tal-square-button" title="Settings"
+        (click)="closeAllContextMenus($event); openSettings()" pTooltip="Settings"></button>
+      
+    </div>
+
+    
+  </div>
+
+
+
 </div>
 
 <ng-template #TalFolder let-folder>
   <div class="tal-folder">
     <ng-container *ngFor="let subfolder of folder.folders">
       <div *ngIf="isVisibile(subfolder)" class="tal-folder-subtree">
-        <div class="tal-folder-row" (contextmenu)="closeAllContextMenus($event); folderOverlayPanel.show($event)">
-          <div class="tal-folder-title collapse-toggle"
+        <div class="tal-folder-row" (contextmenu)="closeAllContextMenus($event); folderOverlayPanel.show($event)" [class.opened]="subfolder===selectedFolder">
+          <div class="tal-folder-title collapse-toggle" (click)="closeAllContextMenus($event); selectFolder(subfolder)"
             (dblclick)="closeAllContextMenus($event); startEditing(folder, subfolder)">
             <i class="pi pi-chevron-down"></i>
             <ng-container *ngIf="editingItem!=subfolder;else ItemEditingTemplate">
@@ -77,15 +105,15 @@
     </ng-container>
 
     <ng-container *ngFor="let file of folder.files">
-      <div *ngIf="isVisibile(file)" class="tal-file" (contextmenu)="closeAllContextMenus($event); fileOverlayPanel.show($event)"
-        [class.opened]="file===openedFile">
-        <div class="tal-file-title" (click)="closeAllContextMenus($event); openFile(file)"
+      <div *ngIf="isVisibile(file)" class="tal-file"
+        (contextmenu)="closeAllContextMenus($event); fileOverlayPanel.show($event)" [class.opened]="file===selectedFile">
+        <div class="tal-file-title" (click)="closeAllContextMenus($event); selectFile(file)"
           (dblclick)="closeAllContextMenus($event); startEditing(folder, file)">
           <ng-container *ngIf="editingItem!=file;else ItemEditingTemplate">
             <p>{{file.name}}</p>
           </ng-container>
         </div>
-        <div class="tal-row-settings">
+        <div class="tal-row-settings" *ngIf="editingItem!=file">
           <div class="tal-row-button" (click)="fileOverlayPanel.show($event)">
             <i class="pi pi-ellipsis-h"></i>
           </div>

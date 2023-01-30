@@ -1,10 +1,10 @@
-import { TaligthSocket } from "./api.socket";
+import { TALightSocket } from "./api.socket";
 import { Packets } from "./api.packets";
 
 export namespace Commands{
 
     export class Command{
-      public tal: TaligthSocket;
+      public tal: TALightSocket;
       public url?:string;
       public debug=false; 
       public onReciveHandshake?:(message:Packets.Reply.Handshake)=>void;
@@ -16,7 +16,7 @@ export namespace Commands{
   
       constructor(url:string, decodeBinary?:boolean){
         this.url = url;
-        this.tal = new TaligthSocket(this.url);
+        this.tal = new TALightSocket(this.url);
         if(decodeBinary === false) {this.tal.decode = decodeBinary;}
 
         this.tal.onError = (error)=>{ this.didError(error); };
@@ -37,10 +37,10 @@ export namespace Commands{
       }
 
       public log(...args:string[]){
-        let message = this.constructor.name+": " + (args).join(" ")
-        console.log(message);
+        let prefix = this.constructor.name+": "
+        console.log(prefix, ...args);
 
-        if (this.debug) alert(message);
+        if (this.debug) alert(prefix + (args).join(" ") );
       }
       
       public didClose(){
@@ -49,7 +49,7 @@ export namespace Commands{
       }
   
       public didError(error:any){
-        this.log("didError "+error);
+        this.log("didError ",error);
         if (this.onError){ this.onError(error);}
       }
 
@@ -79,7 +79,7 @@ export namespace Commands{
     }
 
     export class ProblemList extends Command{
-      public onRecieveGameList?:(message:Packets.Reply.MetaList)=>void
+      public onRecieveProblemList?:(message:Packets.Reply.MetaList)=>void
       
       public override didReciveHandshake( handshake: Packets.Reply.Handshake){
         super.didReciveHandshake(handshake);
@@ -91,12 +91,12 @@ export namespace Commands{
       public override didRecive(payload:Packets.PacketsPayload){
         super.didRecive(payload);
         let message = payload.getMessage(Packets.Reply.MetaList);
-        if (message){ this.didReciveGameList(message); }
+        if (message){ this.didReciveProblemList(message); }
       }
         
-      public didReciveGameList(message:Packets.Reply.MetaList){
-        this.log("didRecieveGameList");
-        if (this.onRecieveGameList) { this.onRecieveGameList(message); }
+      public didReciveProblemList(message:Packets.Reply.MetaList){
+        this.log("onRecieveProblemList");
+        if (this.onRecieveProblemList) { this.onRecieveProblemList(message); }
       }
     }
 
@@ -184,11 +184,12 @@ export namespace Commands{
       
       public didRecieveConnectStop(message: Packets.Reply.ConnectStop){
         this.log("didRecieveStart");
-        if (this.onReciveConnectStop ) { this.sendConnectStop(); this.onReciveConnectStop(message); }
+        if (this.onReciveConnectStop ) { if(this.tal.isOpen()) {this.sendConnectStop();} this.tal.closeConnection(); this.onReciveConnectStop(message); }
       }
 
       public sendConnectStop() {
         this.tal.send(new Packets.Request.ConnectStop());
+        //this.tal.closeConnection();
       }
     }
 

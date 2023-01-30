@@ -20,7 +20,7 @@ export class IndexeddbFsDriver implements FsServiceDriver {
     return true;
   }
 
-  async readFile(fullpath:string): Promise<string|null>{
+  async readFile(fullpath:string, binary: boolean=true): Promise<string|null>{
     if (!(await this.fs.exists(fullpath)) ) {return null;}
     return this.fs.readFile(fullpath);
   }
@@ -66,6 +66,7 @@ export class IndexeddbFsDriver implements FsServiceDriver {
       let childNode:FsNodeFile = {
         name: element.name,
         path: element.fullPath,
+        content: ""
         //depth: depth + 1,
       }
       rootNode.files.push(childNode);

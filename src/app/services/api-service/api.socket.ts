@@ -2,8 +2,8 @@ import { WebSocketSubject } from 'rxjs/webSocket';
 import { Packets } from './api.packets';
 
 
-export class TaligthSocket{
-  public url = 'ws://localhost:8088';
+export class TALightSocket{
+  public url = 'ws://localhost:8008';
   public ws?:WebSocketSubject<any>;
   
   public decode = true;
@@ -48,12 +48,12 @@ export class TaligthSocket{
   public closeConnection(){
     this.ws!.unsubscribe();
     this.ws!.complete();
-    console.log("TalightSocket:closeConnection");
+    console.log("TALightSocket:closeConnection");
   }
   
   public send(request: Packets.Request.Message){
     if (!this.isOpen()) {
-      this.didError("TalightSocket:send: unable to send, socket is null")
+      this.didError("TALightSocket:send: unable to send, socket is null")
       return false
     } 
     
@@ -66,23 +66,23 @@ export class TaligthSocket{
   public sendBinary(data: string) {
     let payload = this.binEncoder.encode(data);
     if (!this.isOpen()) {
-      this.didError("TalightSocket:sendBinary: unable to send, socket is null")
+      this.didError("TALightSocket:sendBinary: unable to send, socket is null")
       return false
     } 
-    console.log("TalightSocket:sendBinary: sending payload \n"+payload);
+    console.log("TALightSocket:sendBinary: sending payload \n"+payload);
     this.ws!.next(payload.buffer);
     return true;
   }
   
   public didRecieve(payload:MessageEvent){ // Called whenever there is a message from the server.
     let data = payload.data;
-    console.log("TalightSocket:didRecieve:type: "+payload.constructor.name+"<"+payload.data.constructor.name+">" )
+    console.log("TALightSocket:didRecieve:type: "+payload.constructor.name+"<"+payload.data.constructor.name+">" )
 
     if(typeof data === "object" && data instanceof ArrayBuffer) {
       if(this.decode) {
         if (data.byteLength == 0) {return}
         data = this.binDecoder.decode(data);
-        console.log("TalightSocket:didRecieve:binary:\n"+data)
+        console.log("TALightSocket:didRecieve:binary:\n"+data)
         if(this.onReciveBinary){ this.onReciveBinary( data );}
       } 
       else {
@@ -90,15 +90,15 @@ export class TaligthSocket{
       }
     } else{
       let packetsPayload = new Packets.PacketsPayload(data)
-      console.log("TalightSocket:didRecieve:packets: "+packetsPayload.packetTypes)
+      console.log("TALightSocket:didRecieve:packets: "+packetsPayload.packetTypes)
       if(this.onRecive){ this.onRecive( packetsPayload ); }
       
     }
   }
 
-  public didError(err:string) { 
-    let errorMsg = JSON.stringify(err);
-    if (this.onError) { this.onError(errorMsg );}
+  public didError(error:any) { 
+    //let errorMsg = JSON.stringify(err);
+    if (this.onError) { this.onError(error );}
   }
 
   public didClose() { 

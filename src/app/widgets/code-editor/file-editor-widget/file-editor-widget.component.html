@@ -1,0 +1,71 @@
+<div class="tal-file-editor-switch">
+
+    <div [hidden]="shouldHide(EditorType.Unknown)" class="tal-file-editor-case-unknown tal-file-editor-case ">
+        <div class="tal-center-page">
+            <p class="tal-placeholder-message">Formato file sconosciuto.</p>
+        </div>
+    </div>
+
+    <div [hidden]="shouldHide(EditorType.None)" class="tal-file-editor-case-none tal-file-editor-case ">
+        <div class="tal-center-page">
+            <p class="tal-placeholder-message">Seleziona o crea un file</p>
+        </div>
+    </div>
+
+    <div [hidden]="shouldHide(EditorType.Image)" class="tal-file-editor-case-image tal-file-editor-case ">
+        <div class="tal-file-editor-image">
+            <img #imageViewer/>
+        </div>
+    </div>
+
+    <div [hidden]="shouldHide(EditorType.Code)" class="tal-file-editor-case-code tal-file-editor-case ">
+        <div class="tal-file-editor-code">
+            <tal-monaco-editor-widget class="tal-file-editor-monaco-widget"
+                #monacoEditor
+                (onChange)="monacoEditorDidChange($event)">
+            </tal-monaco-editor-widget>
+        </div>
+    </div>
+
+    <div [hidden]="shouldHide(EditorType.Markdown)" class="tal-file-editor-case-markdown tal-file-editor-case ">
+        <div class="tal-markdown-preview">
+            <div #markdownPreview class="tal-markdown-preview-content" ></div>
+        </div>
+    </div>
+    
+
+    <div [hidden]="shouldHide(EditorType.Browser)" class="tal-file-editor-case-browser tal-file-editor-case ">
+        <div class="tal-browser-viewer">
+            <iframe #browserEditor class="tal-browser-viewer-iframe" ></iframe>
+        </div>
+    </div>
+
+    
+
+    <div [hidden]="shouldHide(EditorType.Archive)" class="tal-file-editor-case-archive tal-file-editor-case ">
+        <div class="tal-archive-viewer tal-center-page">
+            <div class="tal-placeholder-message">{{selectedFile?.name}}</div>
+            <div class="tal-placeholder-message">
+                TODO: file preview
+                <ul>
+                    <li>fileA.zip</li>
+                    <li>main.py</li>
+                    <li>.talight/talight.json</li>
+                </ul>
+                
+            </div>
+            <div class="tal-placeholder-message">
+                <button #untarButton pButton 
+                    class="tal-square-button"
+                    label="Decompress"
+                    [title]="'Untar: '+selectedFile?.name"
+                    onclick="alert('TODO: Decompress')"
+                    ></button>
+            </div>
+        </div>
+    </div>
+
+    
+</div>
+
+

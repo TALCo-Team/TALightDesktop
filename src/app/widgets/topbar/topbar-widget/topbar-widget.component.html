@@ -1,0 +1,39 @@
+<div class="tal-topbar">
+    <div class="tal-brand">
+        <h1>TALight Desktop</h1>
+    </div>
+
+    
+    <div class="tal-message-box">
+        <div #messageBox *ngIf="!!currentNotification" class="tal-message-box-main tal-message-box-{{currentNotification.type}}" >
+            <div class="tal-message-col">
+                <i class="pi {{iconForNotification()}} tal-message-row tal-message-row-icon"></i>
+            </div>
+            <div class="tal-message-col">
+                <div class="tal-message-row tal-message-row-title">{{currentNotification.title}}</div>
+                <div class="tal-message-row tal-message-row-message">{{currentNotification.message}}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tal-bar-url">
+
+        <i #statusDot class="pi pi-circle-fill" pTooltip="Status"></i>
+
+        <p-autoComplete #urlInput class="top-bar-url-input p-inputtext-sm"
+            (placeholder)="urlCache"  [(ngModel)]="url"
+            (change)="changeURL($event)" (onSelect)="changeURL($event)" (onBlur)="changeURL($event)" [suggestions]="urlCache"
+            (completeMethod)="filterSuggestions($event)" [dropdown]="true">
+
+            <ng-template let-url pTemplate="item">
+                <div class="url-item">
+                    <div class="url-item-label">{{url}}</div>
+                    <button pButton icon="pi pi-trash" class="tal-square-button" pTooltip="Remove URL" (click)="removeURL(url, $event)"></button>
+                </div>
+            </ng-template>
+
+        </p-autoComplete>        
+
+        <button pButton icon="pi {{changeThemIcon}}" class="tal-square-button" (click)="toggleTheme()"></button>
+    </div>
+</div>

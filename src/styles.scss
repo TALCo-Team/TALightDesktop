@@ -33,6 +33,19 @@ p-terminal {
   }
 }
 
+p-splitter{
+  div.p-splitter-panel-nested{
+    height: 100%;
+    overflow: auto;
+  }
+}
+
+p-dropdown{
+  .p-dropdown{
+    width:100%;
+  }
+}
+
 ngx-monaco-editor{
   height:100% !important;
 
@@ -41,11 +54,7 @@ ngx-monaco-editor{
   }
 }
 
-p-splitter{
-  .p-splitter-panel{
-    width:10%;
-  }
-}
+
 
 div.tal-center-page {
   display: flex;
@@ -100,6 +109,7 @@ div.tal-center-page {
     button {
       margin-top: 2rem;
       align-self: flex-end;
+      
     }
   }
 }
@@ -131,4 +141,22 @@ div.tal-contextmenu-container{
 
 .p-overlaypanel-content{
   padding:0 !important;
+}
+
+
+
+.tal-square-button{
+  height:30px;
+  min-height:30px;
+  max-height:30px;
+
+  width:30px;
+  min-width:30px;
+  max-width:30px;
+}
+
+
+::ng-deep .p-dialog-footer button{
+  min-width: fit-content;
+
 }

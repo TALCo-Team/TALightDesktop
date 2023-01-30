@@ -1,24 +1,47 @@
-div.tal-editor-files-tree {
-  padding: 1rem;
-  height: 100%;
-  width: 100%;
-  background: var(--surface-50);
+.tal-editor-files-tree {
+    //padding: 5px;
+    height: 100%;
+    width: 100%;
+    background: var(--surface-50);
+    display: flex;
+    flex-direction: column;
 
-  div.tal-editor-files-header{
-    display:flex;
-    flex-direction: row-reverse;
-    
+    .tal-editor-files-header, .tal-editor-files-footer{
+      display:flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      min-width: fit-content;
+      padding:5px;
+      background-color: rgba($color: #000000, $alpha: 0.1);
+      
+      
+      .tal-editor-files-left-bar{
+        flex-wrap: nowrap;
+        min-width: fit-content;
+        button{
+          margin-right:5px;
+        }
+      }
 
-    button{
-      width:100%;
-      margin-bottom:1rem;
-      height:1.8rem;
-      margin: 2px;
+      .tal-editor-files-right-bar{
+        flex-wrap: nowrap;
+        min-width: fit-content;
+        button{
+          margin-left:5px;
+        }
+      }
+      
+      
     }
-  }
 
-  div.tal-editor-files-body {}
+
+    .tal-editor-files-body{
+        flex-grow: 1;
+        overflow-y:scroll;
+    }
 }
+
 
 div.tal-folder-row,
 div.tal-file {

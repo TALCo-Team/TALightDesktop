@@ -1,11 +1,7 @@
 import { Component, NgZone, OnInit } from '@angular/core';
-import { Child, Command, open as ShellOpen } from '@tauri-apps/api/shell'
-import { open as DialogOpen } from '@tauri-apps/api/dialog';
 import { ApiService, Meta } from 'src/app/services/api-service/api.service';
-import { Packets } from 'src/app/services/api-service/api.packets';
-import { ReplaySubject } from 'rxjs';
 import { Commands } from 'src/app/services/api-service/api.commands';
-import { ConsoleModule } from 'src/app/widgets/console/console.module';
+
 @Component({
   selector: 'app-demo-view',
   templateUrl: './demo-view.component.html',
@@ -93,10 +89,11 @@ export class DemoViewComponent implements OnInit {
     req.onError = this.onApiError;
 
   }
+  
 
   async apiConnect() {
-    let problem_name = "piastrelle";
-    let service = "synopsis";
+    let problem_name = "sum_testAPI";
+    let service = "free_sum";
 
     let onConnectionBegin = (onConnectionBegin: string[]) => {console.log("Connection Begin -> " + onConnectionBegin); };
     let onConnectionStart = () => {console.log("Connection Start")};
@@ -112,6 +109,57 @@ export class DemoViewComponent implements OnInit {
     req.onError = this.onApiError;
 
     this.cmdConnect = req;
+
+    this.sendBinary();
   }
+
+
+
+
+
+
+  //OLD
+
+  async apiConnectOld() {
+    let problem_name = "sum_testAPI";
+    let service = "free_sum";
+
+    let onConnectionBegin = (onConnectionBegin: string[]) => {console.log("Connection Begin -> " + onConnectionBegin); };
+    let onConnectionStart = () => {console.log("Connection Start")};
+    let onConnectionClose = (onConnectionClose: string[]) => {console.log(onConnectionClose)};
+    
+    let onData = (data: string)=>{
+      this.output += ''+data
+      console.log("Binary data: "+data);
+      this.refreshOutput();
+    };
+
+    let req = this.api.Connect(problem_name, service, undefined, undefined, undefined, undefined, onConnectionBegin, onConnectionStart, onConnectionClose, onData);
+    req.onError = this.onApiError;
+
+    this.cmdConnect = req;
+
+    this.sendBinary();
+  }
+
+  async sendBinary() {
+    setTimeout(() => {this.cmdConnect?.sendBinary("100 0\n");}, 1500);
+    //setTimeout(() => {this.cmdConnect?.sendConnectStop();}, 2500);
+    /*
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 2500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 3500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 4500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 5500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 6500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 7500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 8500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 9500);
+    setTimeout(async () => {this.cmdConnect?.sendBinary("100 0");}, 10500);
+    */
+
+    setTimeout(() => {console.log("this.cmdConnect!.tal.isOpen()");
+    console.log(this.cmdConnect!.tal.isOpen());}, 2500);
+  }
+
 
 }
