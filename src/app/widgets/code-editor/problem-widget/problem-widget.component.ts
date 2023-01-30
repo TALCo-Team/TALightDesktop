@@ -211,7 +211,7 @@ export class ProblemWidgetComponent {
     let idRegex = 'args-regex-'+arg.key;
     let regex = document.getElementById(idRegex)
     if(!(regex instanceof HTMLElement)) {return}
-    let content;
+    
     if(regex.classList.contains('format-regex-simple')){
       regex.classList.remove('format-regex-simple')
       regex.innerText = arg.regex + ""

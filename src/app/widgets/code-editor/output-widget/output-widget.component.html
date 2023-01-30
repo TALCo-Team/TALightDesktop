@@ -1,15 +1,25 @@
 
 <div class="tal-output-widget">
-    <div class="tal-output-widget-label">Output</div>
-    <div class="tal-output-widget-scroll" id="tal-output-widget-scroll-id">
-        <pre class="tal-output-widget-text" #output>{{outputText}}</pre>
-    </div>
-    <div class="tal-output-widget-stdin">
-        <button pButton class="p-button-danger tal-square-button" icon="pi pi-trash" (click)="clearOutput()" title="Clear output"
-          pTooltip="Pulisci output"></button>
-        <input pInput #sdtinInput class="tal-output-widget-stdin-input" (keydown)="sendOnEnter($event)"
-          placeholder="Input del programma" />
-        <button pButton icon="pi pi-send" class="tal-square-button" (click)="sendStdin()" title="Send" pTooltip="Invia"></button>
+  <div class="tal-output-widget-row tal-output-widget-row-label">Output</div>
+
+  <div class="tal-output-widget-row tal-output-widget-row-scroll">
+      <p-scrollPanel class="tal-output-widget-pscroll" id="tal-output-widget-scroll-id">
+          <div class="tal-output-widget-inner-row tal-output-widget-inner-row-{{line.type}}" *ngFor="let line of outputLines">
+              <div class="tal-output-widget-icon">
+                  <i class="pi {{iconForType(line)}}"></i>
+              </div>
+              <div class="tal-output-widget-text">{{line.content}}</div>
+          </div>
+      </p-scrollPanel>
   </div>
+
+  <div class="tal-output-widget-row tal-output-widget-row-stdin">
+      <button pButton class="p-button-danger tal-square-button" icon="pi pi-trash" (click)="clearOutput()" title="Clear output"
+        pTooltip="Pulisci output"></button>
+      <input pInput #sdtinInput class="tal-output-widget-stdin-input" (keydown)="sendOnEnter($event)"
+        placeholder="Input del programma" />
+      <button pButton icon="pi pi-send" class="tal-square-button" (click)="sendStdin()" title="Send" pTooltip="Invia"></button>
+  </div>
+
 </div>
 
