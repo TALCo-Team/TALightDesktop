@@ -1,9 +1,10 @@
 import { Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
 import { AutoComplete } from 'primeng/autocomplete';
 import { ApiService, ApiState } from 'src/app/services/api-service/api.service';
+import { NotificationManagerService, NotificationMessage, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
-import { domainToASCII } from 'url';
+
 
 @Component({
   selector: 'tal-topbar-widget',
@@ -14,6 +15,9 @@ export class TopbarWidgetComponent implements OnInit {
 
   @ViewChild("urlInput") public urlInput?: AutoComplete;
   @ViewChild("statusDot") public statusDot?: ElementRef;
+  @ViewChild("messageBox") public messageBox?: ElementRef;
+  
+  
   
   
 
@@ -24,17 +28,21 @@ export class TopbarWidgetComponent implements OnInit {
   urlInputClass = ""
   subApiState
   subProblemError
+  subOnNotify
+  currentNotification?:NotificationMessage
 
   constructor( public readonly themeService: ThemeService, 
                public api: ApiService,
                public zone: NgZone,
                public pm: ProblemManagerService,
+               public nm: NotificationManagerService
              ) {
     this.url = api.url;
     this.lastUrl=this.url+"";
     this.urlCache = [...this.api.urlCache]
     this.subApiState = this.api.onApiStateChange.subscribe((state:ApiState)=>{this.updateState(state)})
     this.subProblemError = this.pm.onError.subscribe((_)=>{this.stateBad()})
+    this.subOnNotify = this.nm.onNotification.subscribe((msg:NotificationMessage): void=>{this.showNotification(msg)})
   }
 
   ngOnInit(): void {}
@@ -46,6 +54,36 @@ export class TopbarWidgetComponent implements OnInit {
   public toggleTheme() {
     this.themeService.toggleTheme();
   }
+
+  public iconForNotification(){
+    let icon = "pi-info"
+    switch(this.currentNotification?.type){
+      default:
+      case NotificationType.System:
+      case NotificationType.Debug:
+      case NotificationType.Info:
+        icon = "pi-info"
+        break;
+      case NotificationType.Warning:
+      case NotificationType.Error:
+        icon = "pi-error"
+    }
+    return icon
+  }
+
+  showNotification(msg:NotificationMessage, timeout=3){
+    let box = this.messageBox?.nativeElement as HTMLElement
+    box.style.display = "flex"
+    this.currentNotification=msg
+    setTimeout(()=>{this.hideNotification()}, timeout * 1000)
+  }
+
+  hideNotification(){
+    let box = this.messageBox?.nativeElement as HTMLElement
+    box.style.display = "none"
+    this.currentNotification=undefined
+  }
+  
 
   filterSuggestions(event:any) {
     let query = event.query.replace(this.escapeRegEx, '\\$&')

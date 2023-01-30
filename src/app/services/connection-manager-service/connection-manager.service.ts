@@ -25,26 +25,6 @@ export class ConnectionManagerService {
     }
   }
 
-  /*
-  public async connect(url: string): Promise<boolean> {
-    this._url = url;
-    
-    // TODO: connect to server
-    // Add the below lines to the connect method
-    // this.isConnected = true;
-    // this.router.navigate(['/home']);
-
-    // TO REMOVE: Temporary return true
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        this._isConnected = true;
-        this.router.navigate(['/home']);
-        resolve(true);
-      }, 2000);
-    });
-  }
-  */
-
   public disconnect(): void {
     this._isConnected = false;
     this.router.navigate(['/home']);
