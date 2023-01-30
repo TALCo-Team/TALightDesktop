@@ -165,6 +165,9 @@ class PyodideWorker{
 
     let localThis = this;
     this.pyodide.globals.set('input', async function (prompt?:string) {
+      if(localThis.stdinBuffer.length>0){
+        return localThis.stdinBuffer.shift()
+      }
       if (prompt && prompt.trim().length>0){localThis.onStdout(prompt)}
       console.log("setCustomHooks:scrivo sulla consolle!!!!")
       let stdinResolver: PromiseResolver<string>;      
