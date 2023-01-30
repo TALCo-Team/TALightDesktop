@@ -16,6 +16,8 @@ export enum PyodideMessageType {
   InstallPackages = 'InstallPackages',
   ExecuteFile = 'ExecuteFile',
   ExecuteCode = 'ExecuteCode',
+  SubscribeNotify = 'SubscribeNotify',
+  SubscribeState  = 'SubscribeState',
   SubscribeStdout = 'SubscribeStdout',
   SubscribeStderr = 'SubscribeStderr',
   SendStdin = 'SendStdin',
@@ -65,6 +67,8 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
 
   onStdout?: stdCallback
   onStderr?: stdCallback
+  onState?: stdCallback
+  onNotify?: stdCallback
 
   constructor() {
     //alert('driver built!');
@@ -99,6 +103,8 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
         case PyodideMessageType.ExecuteCode:     this.didReceiveExecuteCode(msgSent, msgRecived, resolvePromise); break;
         case PyodideMessageType.ExecuteFile:     this.didReceiveExecuteFile(msgSent, msgRecived, resolvePromise); break;
 
+        case PyodideMessageType.SubscribeNotify: this.didReceiveSubscribeNotify(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
+        case PyodideMessageType.SubscribeState:  this.didReceiveSubscribeState(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
         case PyodideMessageType.SubscribeStdout: this.didReceiveSubscribeStdout(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
         case PyodideMessageType.SubscribeStderr: this.didReceiveSubscribeStderr(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
         case PyodideMessageType.SendStdin:       this.didReceiveSendStdin(msgSent, msgRecived, resolvePromise); break;
@@ -123,7 +129,6 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
   didReceiveReady(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
     console.log("didReceiveReady: ")
     let ready = msgRecived.args[0]
-    ///alert(111)
     resolvePromise(ready == 'true'?true:false)
   }
 
@@ -155,6 +160,32 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     console.log(msgRecived.contents)
 
     resolvePromise(this.toString(msgRecived.contents[0]))
+  } 
+
+  didReceiveSubscribeNotify(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveSubscribeNotify: ")
+    if (msgRecived.args.length == 1){ 
+      let result = msgRecived.args[0] == 'true'
+      resolvePromise(result); 
+    }
+    if ( this.onNotify && msgRecived.contents.length > 0){
+      console.log(msgRecived.contents)
+      let content = msgRecived.contents[0]
+      this.onNotify(this.toString(content))
+    }
+  } 
+
+  didReceiveSubscribeState(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveSubscribeState: ")
+    if (msgRecived.args.length == 1){ 
+      let result = msgRecived.args[0] == 'true'
+      resolvePromise(result); 
+    }
+    if ( this.onState && msgRecived.contents.length > 0){
+      console.log(msgRecived.contents)
+      let content = msgRecived.contents[0]
+      this.onState(this.toString(content))
+    }
   } 
 
   didReceiveSubscribeStdout(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
@@ -339,6 +370,42 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     }
     
     let resultPromise = this.sendMessage<string>(message);
+
+    return resultPromise;
+  }
+
+  subscribeNotify(enable=true, onNotify?:stdCallback){
+    let message: PyodideMessage = {
+      uid: this.requestUID(),
+      type: PyodideMessageType.SubscribeNotify,
+      args: [enable?'true':'false'],
+      contents: [],
+    }
+    if (onNotify && enable){
+      this.onNotify = (msg:string)=>{onNotify(msg)}
+    }else{
+      this.onNotify = undefined;
+    }
+
+    let resultPromise = this.sendMessage<boolean>(message);
+
+    return resultPromise;
+  }
+
+  subscribeState(enable=true, onState?:stdCallback){
+    let message: PyodideMessage = {
+      uid: this.requestUID(),
+      type: PyodideMessageType.SubscribeState,
+      args: [enable?'true':'false'],
+      contents: [],
+    }
+    if (onState && enable){
+      this.onState = (msg:string)=>{onState(msg)}
+    }else{
+      this.onState = undefined;
+    }
+
+    let resultPromise = this.sendMessage<boolean>(message);
 
     return resultPromise;
   }

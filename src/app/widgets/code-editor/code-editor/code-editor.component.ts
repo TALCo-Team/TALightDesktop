@@ -77,16 +77,15 @@ export class CodeEditorComponent implements OnInit {
     this.outputWidget.print(data, OutputType.STDERR)
   }
 
-  public sendStdin(msg:string){
+  public sendStdin(msg:string, fromAPI=false){
     console.log("sendStdin:")
     let msgs = msg.split("\n");
     if(msgs[msgs.length - 1] === "") {msgs.pop();}
     console.log("sendStdin:split: ", msgs)
 
     for(let i = 0; i < msgs.length; i++){
-      let msg = msgs[i] + "\n";
-      this.outputWidget.print(msg,OutputType.STDIN)
-      this.python.driver?.sendStdin(msg)
+      this.outputWidget.print(msgs[i],fromAPI?OutputType.STDINAPI:OutputType.STDIN)
+      this.python.driver?.sendStdin(msgs[i])
     }
   }
 
@@ -105,11 +104,12 @@ export class CodeEditorComponent implements OnInit {
   async onAttachments(data: ArrayBuffer){
     console.log("onAttachments:",data)
     if(!this.selectedProblem){return;}
-    
+    console.log("onAttachments:selectedProblem:",this.selectedProblem)
     if (!(data instanceof ArrayBuffer ) ) {return;}
-    Tar.unpack(data, async (files,folders) => {
-      
+    console.log("onAttachments:data:",data)
 
+    console.log("extractTar:unpack:")
+    Tar.unpack(data, async (files,folders) => {
       console.log("extractTar:unpack:folders",folders)
       for(var idx in folders){
         console.log("extractTar:createDirectory:")
@@ -135,7 +135,7 @@ export class CodeEditorComponent implements OnInit {
       
       this.fileExplorer.refreshRoot()
     });
-   
+    
   }
 
   public selectFile(file: FsNodeFile) {
@@ -298,6 +298,6 @@ export class CodeEditorComponent implements OnInit {
 
   async didConnectData(data: string){
     console.log("apiConnect:didConnectData:", data)
-    this.sendStdin(data)
+    this.sendStdin(data, true)
   }
 }

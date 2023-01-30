@@ -26,7 +26,7 @@
                 <ng-template let-option pTemplate="item">
                   <div class="tal-problem-widget-problem-item">{{cleanupName(option.name)}}</div>
                 </ng-template>
-
+                
     </p-dropdown>
 
     <button pButton class="p-button-danger tal-square-button" icon="pi pi-refresh" title="Refresh" pTooltip="Refresh"
@@ -36,13 +36,13 @@
       *ngIf="isLoading()"></button>
   </div>
 
-  <div class="tal-problem-widget-row tal-problem-widget-row-service">
+  <div class="tal-problem-widget-row tal-problem-widget-row-problem">
     <p-dropdown #serviceDropdown
                 placeholder="Seleziona un servizio" 
-                class="tal-problem-widget-service-selector" 
+                class="tal-problem-widget-problem-selector" 
                 scrollHeight="50rem"
                 [overlayOptions]="dropdownOptions"
-                panelStyleClass="tal-problem-widget-service-selector-panel"
+                panelStyleClass="tal-problem-widget-problem-selector-panel"
                 [options]="servicesMenu"
                 [(ngModel)]="selectedService" 
                 optionLabel="name"

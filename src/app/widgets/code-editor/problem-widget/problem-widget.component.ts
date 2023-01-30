@@ -95,7 +95,9 @@ export class ProblemWidgetComponent {
 
   cleanupName(name:string){
     var pattern = new RegExp('[-_. ]+','g');
-    return name.replace(pattern, " ")
+    name = name.replace(pattern, " ")
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+    return name
   }
 
   readableRegex(re:RegExp){
@@ -265,7 +267,7 @@ export class ProblemWidgetComponent {
     this.pm.problemList.forEach((problemDesc)=>{      
       problemsMenu.push(problemDesc)
     })
-    problemsMenu = problemsMenu.sort((a,b)=>a>b?1:a<b?-1:0)
+    problemsMenu = problemsMenu.sort((a,b)=>a.name.toLowerCase()>b.name.toLowerCase()?1:a.name.toLowerCase()<b.name.toLowerCase()?-1:0)
     console.log('updateProblemsUI:problemsMenu:', problemsMenu)
     
     this.problemsMenu = problemsMenu
@@ -281,6 +283,10 @@ export class ProblemWidgetComponent {
   }
 
   async didSelectProblem() {
+    this.selectedService = undefined;
+    this.selectedArgs = undefined;
+    this.selectedFiles = undefined;
+    
     console.log('didSelectProblem:', this.selectedProblem)
     if (!this.selectedProblem){return}
     this.pm.selectProblem(this.selectedProblem)
@@ -290,13 +296,12 @@ export class ProblemWidgetComponent {
     this.selectedProblem.services.forEach((serviceDesc)=>{
       servicesMenu.push(serviceDesc)
     })
-    servicesMenu = servicesMenu.sort((a,b)=>a>b?1:a<b?-1:0)
+    servicesMenu = servicesMenu.sort((a,b)=>a.name.toLowerCase()>b.name.toLowerCase()?1:a.name.toLowerCase()<b.name.toLowerCase()?-1:0)
     this.servicesMenu = servicesMenu
     console.log('didSelectProblem:servicesMenu:', servicesMenu)
     this.servicesMenu = servicesMenu
     
-
-    //this.onProblemSelected.emit(this.selectedProblem)
+    this.onProblemSelected.emit(this.selectedProblem)
   }
 
   async didSelectService() {
@@ -306,7 +311,7 @@ export class ProblemWidgetComponent {
     this.selectedArgs = this.selectedService.args
     this.selectedFiles = this.selectedService.files
     console.log('didSelectService:selectedArgs:', this.selectedArgs)
-    this.onServiceSelected.emit(this.selectedService)
+    this.onServiceSelected.emit(this.selectedService)   
   }
 
   async apiDownloadAttachment() {
