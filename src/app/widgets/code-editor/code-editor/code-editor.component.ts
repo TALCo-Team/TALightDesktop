@@ -79,8 +79,15 @@ export class CodeEditorComponent implements OnInit {
 
   public sendStdin(msg:string){
     console.log("sendStdin:")
-    this.outputWidget.print(msg,OutputType.STDIN)
-    this.python.driver?.sendStdin(msg)
+    let msgs = msg.split("\n");
+    if(msgs[msgs.length - 1] === "") {msgs.pop();}
+    console.log("sendStdin:split: ", msgs)
+
+    for(let i = 0; i < msgs.length; i++){
+      let msg = msgs[i] + "\n";
+      this.outputWidget.print(msg,OutputType.STDIN)
+      this.python.driver?.sendStdin(msg)
+    }
   }
 
   public onProblemChanged(selectedProblem: ProblemDescriptor){
