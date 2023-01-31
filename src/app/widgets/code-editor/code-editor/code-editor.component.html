@@ -21,6 +21,7 @@
 
           <div class="tal-code-editor-header">
             <tal-execbar-widget #execBar 
+              (onStop)="stopAll()"
               (onRun)="runProject()"
               (onConnect)="runConnectAPI()"
               [selectedFile]="selectedFile">

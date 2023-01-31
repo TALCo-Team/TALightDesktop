@@ -5,7 +5,7 @@ import { ApiService } from 'src/app/services/api-service/api.service';
 import { FsService, FsNodeFile, Tar, FsNodeFolder, FsNodeList } from 'src/app/services/fs-service/fs.service';
 import { NotificationManagerService, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
 import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
-import { PyodideDriver } from 'src/app/services/python-compiler-service/pydiode-driver';
+import { PyodideState } from 'src/app/services/python-compiler-service/pydiode-driver';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 import { FileExplorerWidgetComponent } from 'src/app/widgets/code-editor/file-explorer-widget/file-explorer-widget.component';
 import { ExecbarWidgetComponent } from '../execbar-widget/execbar-widget.component';
@@ -28,6 +28,8 @@ export class CodeEditorComponent implements OnInit {
   public selectedProblem?: ProblemDescriptor;
   public selectedService?: ServiceDescriptor;
   public driver;
+  public pyodideState = PyodideState.Unknown
+  public pyodideStateContent? = ""
 
   public fsroot = FsService.EmptyFolder;
   public fslist: FsNodeList = [];
@@ -51,8 +53,14 @@ export class CodeEditorComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.python.driver?.subscribeStdout(true,(msg)=>{this.onStdout(msg)})
-    this.python.driver?.subscribeStderr(true,(msg)=>{this.onStderr(msg)})
+    this.python.driver?.subscribeNotify(true,(msg)=>{this.didNotify(msg)})
+    this.python.driver?.subscribeState(true,(state:PyodideState,content?:string)=>{this.didStateChange(state,content)})
+    this.python.driver?.subscribeStdout(true,(msg)=>{this.didStdout(msg)})
+    this.python.driver?.subscribeStderr(true,(msg)=>{this.didStderr(msg)})
+  }
+
+  ngAfterViewInit(){
+    this.outputWidget.enableStdin(false); 
   }
 
   public onUpdateRoot(fsroot:FsNodeFolder){
@@ -62,7 +70,23 @@ export class CodeEditorComponent implements OnInit {
     this.problemWidget.fslist = this.fslistfile
   }
   
-  public onStdout(data:string){
+  public didNotify(data:string){
+    console.log("didNotify:")
+    this.outputWidget!.print(data);
+    //TODO: if API connect then:
+    if(!this.cmdConnect){return;}
+    this.cmdConnect.sendBinary(data + "\n"); //lo \n va aggiunto all'output del bot python
+  }
+
+  public didStateChange(state:PyodideState,content?:string){
+    console.log("didStateChange:")
+    //this.outputWidget!.print(state,OutputType.SYSTEM);
+    this.pyodideState=state
+    this.pyodideStateContent=content
+    this.outputWidget.didStateChange(state,content)
+  }
+
+  public didStdout(data:string){
     console.log("onStdout:")
     this.outputWidget!.print(data);
     //TODO: if API connect then:
@@ -70,7 +94,7 @@ export class CodeEditorComponent implements OnInit {
     this.cmdConnect.sendBinary(data + "\n"); //lo \n va aggiunto all'output del bot python
   }
 
-  public onStderr(data:string){
+  public didStderr(data:string){
     console.log("onStderr:")
     //alert("STDERR: "+data)
     this.nm.sendNotification("ERROR:",data,NotificationType.Error)
@@ -86,6 +110,9 @@ export class CodeEditorComponent implements OnInit {
     for(let i = 0; i < msgs.length; i++){
       this.outputWidget.print(msgs[i],fromAPI?OutputType.STDINAPI:OutputType.STDIN)
       this.python.driver?.sendStdin(msgs[i])
+    }
+    if (fromAPI || this.pyodideState != PyodideState.Stdin ){
+      this.outputWidget.enableStdin(false)
     }
   }
 
@@ -164,6 +191,14 @@ export class CodeEditorComponent implements OnInit {
     }
   }
 
+  async stopAll(){
+    console.log("stopAll:")
+
+    if(this.cmdConnect){this.cmdConnect.tal.closeConnection()}
+    console.log("stopAll:cmdConnect:DONE")
+    await this.driver?.stopExecution()
+    console.log("stopAll:cmdConnect:DONE")
+  }
 
   //-------------- API CONNECT
   public async runProject(useAPI = false){
@@ -200,7 +235,7 @@ export class CodeEditorComponent implements OnInit {
     })
   }
   
-
+  
   async apiConnect(){
     console.log("apiConnect")
 
@@ -281,6 +316,13 @@ export class CodeEditorComponent implements OnInit {
     console.log("apiConnect:didConnectError:", error)
     this.outputWidget.print("API Error: "+error,OutputType.STDERR)
     this.cmdConnect = undefined
+    this.outputWidget.enableStdin(false)
+
+    //TODO: stop pyodide gracefully -> stopExecution ( keyboard interrupt ) seams ineffetive
+    this.python.driver?.stopExecution()
+    alert("**WORK IN PROGRESS**\nPurtroppo qualcosa è andato storto con le API e pyodide è rimasto appeso.\nPer il momento mi tocca fare il reload della pagina.")
+    window.location.reload()
+    
   }
 
   async didConnectStart(){
