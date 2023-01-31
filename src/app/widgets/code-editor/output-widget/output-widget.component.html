@@ -1,6 +1,11 @@
 
 <div class="tal-output-widget">
-  <div class="tal-output-widget-row tal-output-widget-row-label">Output</div>
+    <div class="tal-output-widget-row tal-output-widget-title">
+        <div class="tal-output-widget-row-label">Output</div>
+        <div class="tal-output-widget-row-icon">
+            <i #pyodideIcon class="pi {{pyodideStateIcon}}" [pTooltip]="pyodideStateTooltip" [style]="'font-size:100%; color:' + pyodideStateColor"></i>
+        </div>
+    </div>
 
   <div class="tal-output-widget-row tal-output-widget-row-scroll">
       <p-scrollPanel class="tal-output-widget-pscroll" id="tal-output-widget-scroll-id">
@@ -16,9 +21,13 @@
   <div class="tal-output-widget-row tal-output-widget-row-stdin">
       <button pButton class="p-button-danger tal-square-button" icon="pi pi-trash" (click)="clearOutput()" title="Clear output"
         pTooltip="Pulisci output"></button>
-      <input pInput #sdtinInput class="tal-output-widget-stdin-input" (keydown)="sendOnEnter($event)"
-        placeholder="Input del programma" />
-      <button pButton icon="pi pi-send" class="tal-square-button" (click)="sendStdin()" title="Send" pTooltip="Invia"></button>
+      <input pInput #sdtinInput 
+             class="tal-output-widget-stdin-input" 
+             (focus)="focusStdin()"
+             (blur)="blurStdin()"
+             (keydown)="sendOnEnter($event)"
+             placeholder="Input del programma" />
+      <button pButton #sdtinButton icon="pi pi-send" class="tal-output-widget-stdin-button  tal-square-button" (click)="sendStdin()" title="Send" pTooltip="Invia"></button>
   </div>
 
 </div>

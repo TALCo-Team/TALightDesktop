@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Example: sum -> free sum
 while True:
     line = await input()
