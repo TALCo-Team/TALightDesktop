@@ -8,14 +8,25 @@ type UID = string; // should I ?
 type PromiseResolver<T> = (value: T | PromiseLike<T>) => void;
 
 type stdCallback = (data:string)=>void;
+type stateCallback = (state:PyodideState, content?:string)=>void;
+type notifyCallback = (title:string, msg:string, kind:string)=>void;
 
-
+export enum PyodideState {
+  Unknown = 'Unknown',
+  Loading = 'Loading',
+  Ready = 'Ready',
+  Run = 'Run',
+  Stdin = 'Stdin',
+  Success = 'Success',
+  Error = 'Error',
+}
 
 export enum PyodideMessageType {
   Ready = 'Ready',
   InstallPackages = 'InstallPackages',
   ExecuteFile = 'ExecuteFile',
   ExecuteCode = 'ExecuteCode',
+  StopExecution = 'StopExecution',
   SubscribeNotify = 'SubscribeNotify',
   SubscribeState  = 'SubscribeState',
   SubscribeStdout = 'SubscribeStdout',
@@ -67,8 +78,8 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
 
   onStdout?: stdCallback
   onStderr?: stdCallback
-  onState?: stdCallback
-  onNotify?: stdCallback
+  onState?: stateCallback
+  onNotify?: notifyCallback
 
   constructor() {
     //alert('driver built!');
@@ -102,6 +113,7 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
         case PyodideMessageType.InstallPackages: this.didReceiveInstallPackages(msgSent, msgRecived, resolvePromise); break;
         case PyodideMessageType.ExecuteCode:     this.didReceiveExecuteCode(msgSent, msgRecived, resolvePromise); break;
         case PyodideMessageType.ExecuteFile:     this.didReceiveExecuteFile(msgSent, msgRecived, resolvePromise); break;
+        case PyodideMessageType.StopExecution:     this.didReceiveStopExecution(msgSent, msgRecived, resolvePromise); break;
 
         case PyodideMessageType.SubscribeNotify: this.didReceiveSubscribeNotify(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
         case PyodideMessageType.SubscribeState:  this.didReceiveSubscribeState(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
@@ -162,16 +174,25 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     resolvePromise(this.toString(msgRecived.contents[0]))
   } 
 
+  didReceiveStopExecution(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveStopExecution: ",msgRecived.args )
+    if (msgSent.args.length != 1){ 
+      resolvePromise(false); 
+    }
+
+    resolvePromise(true)
+  } 
+
   didReceiveSubscribeNotify(msgSent:PyodideMessage, msgRecived:PyodideMessage, resolvePromise:PromiseResolver<boolean> ){
     console.log("didReceiveSubscribeNotify: ")
     if (msgRecived.args.length == 1){ 
       let result = msgRecived.args[0] == 'true'
       resolvePromise(result); 
     }
-    if ( this.onNotify && msgRecived.contents.length > 0){
+    if ( this.onNotify && msgRecived.contents.length > 1){
       console.log(msgRecived.contents)
-      let content = msgRecived.contents[0]
-      this.onNotify(this.toString(content))
+      let [title, msg, kind] = msgRecived.contents
+      this.onNotify(this.toString(title), this.toString(msg), this.toString(kind))
     }
   } 
 
@@ -183,8 +204,12 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     }
     if ( this.onState && msgRecived.contents.length > 0){
       console.log(msgRecived.contents)
-      let content = msgRecived.contents[0]
-      this.onState(this.toString(content))
+      let state = msgRecived.contents[0] as PyodideState
+      let content;
+      if(msgRecived.contents.length>1){
+        content = this.toString(msgRecived.contents[1])
+      }
+      this.onState(state,content)
     }
   } 
 
@@ -374,7 +399,20 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     return resultPromise;
   }
 
-  subscribeNotify(enable=true, onNotify?:stdCallback){
+  async stopExecution(signal: number=2): Promise<boolean> {
+    let message: PyodideMessage = {
+      uid: this.requestUID(),
+      type: PyodideMessageType.StopExecution,
+      args: [signal.toString()],
+      contents: [],
+    }
+    
+    let resultPromise = this.sendMessage<boolean>(message);
+
+    return resultPromise;
+  }
+
+  subscribeNotify(enable=true, onNotify?:notifyCallback){
     let message: PyodideMessage = {
       uid: this.requestUID(),
       type: PyodideMessageType.SubscribeNotify,
@@ -382,7 +420,7 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
       contents: [],
     }
     if (onNotify && enable){
-      this.onNotify = (msg:string)=>{onNotify(msg)}
+      this.onNotify = (title: string, msg:string, kind:string="")=>{onNotify(title,msg,kind)}
     }else{
       this.onNotify = undefined;
     }
@@ -392,7 +430,7 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     return resultPromise;
   }
 
-  subscribeState(enable=true, onState?:stdCallback){
+  subscribeState(enable=true, onState?:stateCallback){
     let message: PyodideMessage = {
       uid: this.requestUID(),
       type: PyodideMessageType.SubscribeState,
@@ -400,7 +438,7 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
       contents: [],
     }
     if (onState && enable){
-      this.onState = (msg:string)=>{onState(msg)}
+      this.onState = (state: PyodideState, content?:any)=>{onState(state,content)}
     }else{
       this.onState = undefined;
     }
