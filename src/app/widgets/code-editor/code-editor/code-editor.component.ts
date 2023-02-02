@@ -1,12 +1,15 @@
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Commands } from 'src/app/services/api-service/api.commands';
 import { ApiService } from 'src/app/services/api-service/api.service';
 
 import { FsService, FsNodeFile, Tar, FsNodeFolder, FsNodeList } from 'src/app/services/fs-service/fs.service';
 import { NotificationManagerService, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
-import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
-import { PyodideState } from 'src/app/services/python-compiler-service/pydiode-driver';
-import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
+import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
+
+import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
+import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
+
+import { PyodideState, PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 import { FileExplorerWidgetComponent } from 'src/app/widgets/code-editor/file-explorer-widget/file-explorer-widget.component';
 import { ExecbarWidgetComponent } from '../execbar-widget/execbar-widget.component';
 import { FileEditorWidgetComponent } from '../file-editor-widget/file-editor-widget.component';
@@ -24,6 +27,8 @@ export class CodeEditorComponent implements OnInit {
 
   public cmdConnect?:Commands.Connect;
   
+  public currentProject?:ProjectEnvironment;
+
   public selectedFile?: FsNodeFile;
   public selectedProblem?: ProblemDescriptor;
   public selectedService?: ServiceDescriptor;
@@ -40,15 +45,19 @@ export class CodeEditorComponent implements OnInit {
   @ViewChild("execBar") public execBar!: ExecbarWidgetComponent;
   @ViewChild("problemWidget") public problemWidget!: ProblemWidgetComponent;
   @ViewChild("outputWidget") public outputWidget!: OutputWidgetComponent;
-
-
   
   constructor(
     private fs: FsService,
     private python:PythonCompilerService,
     private api:ApiService,
     private nm: NotificationManagerService,
+    private pm: ProjectManagerService,
   ) {
+    if(!pm.currentProject ){
+      let project = pm.createProject('My Solution', '/mnt','/');
+      pm.currentProject = project;
+    }
+
     this.driver = python.driver
   }
 
@@ -224,7 +233,7 @@ export class CodeEditorComponent implements OnInit {
   }
 
 
-  public runConnectAPI(){
+  public async runConnectAPI(){
     this.outputWidget.clearOutput()
     this.saveFile();
     
@@ -249,14 +258,6 @@ export class CodeEditorComponent implements OnInit {
     if (!config){return false}
     console.log("apiConnect:config:ok")
     
-
-    console.log("apiConnect:runProject")
-    this.saveFile();
-    await this.python.runProject()
-    this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
-    console.log("apiConnect:runProject:running")
-
-
     let problem = this.selectedService.parent.name;
     let service = this.selectedService.name;
     let args = this.selectedService.exportArgs();
@@ -308,6 +309,12 @@ export class CodeEditorComponent implements OnInit {
     );
     this.cmdConnect.onError = (error)=>{this.didConnectError(error)};
     console.log("apiConnect:DONE")
+
+    console.log("apiConnect:runProject")
+    this.saveFile();
+    await this.python.runProject()
+    this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
+    console.log("apiConnect:runProject:running")
 
     return true
   }

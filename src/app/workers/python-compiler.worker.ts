@@ -309,12 +309,6 @@ class PyodideWorker{
     }).catch( (error:any)=>{
       console.log("execCode: error:\n", error)
       this.sendState(PyodideState.Error, error)
-    }).catch( (error:any)=>{
-      console.log("execCode: error:\n", error)
-      this.sendState(PyodideState.Error, error)
-    }).catch( (error:any)=>{
-      console.log("execCode: error:\n", error)
-      this.sendState(PyodideState.Error, error)
     })
   }
 

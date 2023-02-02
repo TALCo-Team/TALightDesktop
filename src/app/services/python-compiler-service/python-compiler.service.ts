@@ -60,10 +60,9 @@ async def main():
     print(f'No, mi dispiace non ha {lati} lati')    
   print('Congratulazioni!')
 
-main()
-`
+main()`
 
-    let sumExample = `# Example: sum -> free sum
+    let freesumExample = `# Example: sum -> free sum
 while True:
     line = await input()
     #print(f"# BOT: line={line}")
@@ -72,8 +71,17 @@ while True:
             exit(0)   # exit upon termination of the service server
     else:
         n = int(line)
-        print(f"{n} 0")
-` 
+        print(f"{n} 0")`
+
+    let sumExample = `# Example: sfilde: somma, sovle
+cnt = int(input())
+for i in range(cnt):
+    line = input()
+    #print("line:", line)
+    nums = line.split(" ")
+    a = int(nums[0])
+    b = int(nums[1])
+    print(a+b)`    
     
     if(writeConfig){ 
       let configContent = JSON.stringify(config, null, 4)
@@ -85,6 +93,7 @@ while True:
 
     let examples = [
       [config.DIR_EXAMPLES + 'input.py', inputExample],
+      [config.DIR_EXAMPLES + 'freesum.py', freesumExample],
       [config.DIR_EXAMPLES + 'sum.py', sumExample],
     ]
     if(config.CREATE_EXAMPLES){ files = files.concat(examples) }
