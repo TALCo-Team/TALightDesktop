@@ -151,6 +151,7 @@ export namespace Commands{
   
       constructor(url:string, problem_name:string, service:string, args?:{}, tty?:boolean, token?:string, files?:string[]){
         super(url);
+        files = files?.filter(file=>file.trim()!="")
         this.msg = new Packets.Request.ConnectBegin(problem_name, service, args, tty, token, files);
       }
 
@@ -173,18 +174,22 @@ export namespace Commands{
       }
 
       public didRecieveConnectBegin(message: Packets.Reply.ConnectBegin){
-        this.log("didRecieveJoin");
+        this.log("didRecieveConnectBegin");
         if (this.onReciveConnectBegin ) { this.onReciveConnectBegin(message); }
       }
 
       public didRecieveConnectStart(message: Packets.Reply.ConnectStart){
-        this.log("didRecieveUpdate");
+        this.log("didRecieveConnectStart");
         if (this.onReciveConnectStart ) { this.onReciveConnectStart(message); }
       }
       
       public didRecieveConnectStop(message: Packets.Reply.ConnectStop){
-        this.log("didRecieveStart");
-        if (this.onReciveConnectStop ) { if(this.tal.isOpen()) {this.sendConnectStop();} this.tal.closeConnection(); this.onReciveConnectStop(message); }
+        this.log("didRecieveConnectStop");
+        /* download result files */
+        
+        if (this.onReciveConnectStop ) { 
+          this.onReciveConnectStop(message); 
+        }
       }
 
       public sendConnectStop() {

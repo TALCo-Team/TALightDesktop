@@ -1,2 +1,2 @@
 #!/bin/bash
-rtal -s wss://ta.di.univr.it/sfide connect somma solve -- tal-test.py
+rtal -s wss://ta.di.univr.it/sfide connect somma solve -- ./tal-test.py -f ./empty

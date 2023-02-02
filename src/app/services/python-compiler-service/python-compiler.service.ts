@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { PyodideDriver, PyodideRequest } from './pydiode-driver';
+import { PyodideDriver } from './pydiode-driver';
 import { FsService } from '../fs-service/fs.service';
+import { ProjectConfig } from '../project-manager-service/project-manager.types';
 
 
 @Injectable({
@@ -8,13 +9,11 @@ import { FsService } from '../fs-service/fs.service';
 })
 export class PythonCompilerService {
   public driverName = 'pyodide';
-  public projectFolder = "/.talight/"
-  public configName = "talight.json"
-  public configPath = this.projectFolder + this.configName
+  public projectFolder = ProjectConfig.defaultConfig.DIR_PROJECT
+  public configName = ProjectConfig.defaultConfig.CONFIG_NAME
+  public configPath = ProjectConfig.defaultConfig.CONFIG_PATH
   
   public driver?: PyodideDriver;
-  public worker: Worker = new Worker(new URL('../../workers/python-compiler.worker', import.meta.url));
-  
   
 
   constructor( private fs:FsService) { 
@@ -61,10 +60,9 @@ async def main():
     print(f'No, mi dispiace non ha {lati} lati')    
   print('Congratulazioni!')
 
-main()
-`
+main()`
 
-    let sumExample = `# Example: sum -> free sum
+    let freesumExample = `# Example: sum -> free sum
 while True:
     line = await input()
     #print(f"# BOT: line={line}")
@@ -73,12 +71,21 @@ while True:
             exit(0)   # exit upon termination of the service server
     else:
         n = int(line)
-        print(f"{n} 0")
-` 
+        print(f"{n} 0")`
+
+    let sumExample = `# Example: sfilde: somma, sovle
+cnt = int(input())
+for i in range(cnt):
+    line = input()
+    #print("line:", line)
+    nums = line.split(" ")
+    a = int(nums[0])
+    b = int(nums[1])
+    print(a+b)`    
     
     if(writeConfig){ 
       let configContent = JSON.stringify(config, null, 4)
-      files.unshift([config.PATH_CONFIG, configContent])
+      files.unshift([config.CONFIG_PATH, configContent])
     }
 
     files.push([config.RUN, mainContent])
@@ -86,6 +93,7 @@ while True:
 
     let examples = [
       [config.DIR_EXAMPLES + 'input.py', inputExample],
+      [config.DIR_EXAMPLES + 'freesum.py', freesumExample],
       [config.DIR_EXAMPLES + 'sum.py', sumExample],
     ]
     if(config.CREATE_EXAMPLES){ files = files.concat(examples) }
@@ -111,12 +119,12 @@ while True:
     if (!this.driver) {return null}
 
     let defaultConfig = new ProjectConfig()
-    if (!await this.driver.exists(defaultConfig.PATH_CONFIG)){
+    if (!await this.driver.exists(defaultConfig.CONFIG_PATH)){
       console.log("readPythonConfig: config file doesn't exisit!")
       return null;
     }
     
-    let configContent = await this.driver?.readFile(defaultConfig.PATH_CONFIG, false ) as string;
+    let configContent = await this.driver?.readFile(defaultConfig.CONFIG_PATH, false ) as string;
     let config = JSON.parse(configContent) as ProjectConfig
     return config
   }
@@ -141,49 +149,27 @@ while True:
 
 }
 
-class ProjectConfig {
-  RUN = "/main.py"
-  DEBUG = false //TODO
-  PROJECT_NAME="My solution" //TODO
-  PREFERED_LANG="it"
-  
-  TAL_SERVERS = [ //TODO
-    "ws://localhost:8008/",
-    "wss://ta.di.univr.it/sfide",
-    "wss://ta.di.univr.it/rtel",
-  ]
-  TAL_SERVER = "" //TODO
-  TAL_PROBLEM = "" //TODO
-  TAL_SERVICE = "" //TODO
 
-  DIR_PROJECT = '/.talight/'
-  DIR_ATTACHMENTS = '/data/'
-  DIR_RESULTS = '/results/' //TODO
-  DIR_ARGSFILE = '/files/' //TODO
-  DIR_EXAMPLES = '/examples/'
-  CREATE_EXAMPLES = true
-
-  //TODO: hotkey manager service
-  HOTKEY_RUN = "f8"
-  HOTKEY_TEST = "f9"
-  HOTKEY_SAVE = "ctrl+s"
-
-  CONFIG_NAME = 'talight.json'
-  PATH_CONFIG = this.DIR_PROJECT + this.CONFIG_NAME
-
-  PIP_PACKAGES: string[] = []
+export enum PyodideState {
+  Unknown = 'Unknown',
+  Loading = 'Loading',
+  Ready = 'Ready',
+  Run = 'Run',
+  Stdin = 'Stdin',
+  Success = 'Success',
+  Error = 'Error',
 }
 
 
 export interface PythonCompiler{
   installPackages(packages: string[]): Promise<string>;
-
   executeCode(code: string): Promise<string>;
-
   executeFile(fullpath: string): Promise<string>;
+  stopExecution(signal?: number): Promise<boolean>;
+  subscribeNotify(enable?:boolean, onNotify?:(title:string, msg:string, kind:string)=>void ): Promise<boolean>;
+  subscribeState(enable?:boolean, onState?:(state:PyodideState, content?:string)=>void ): Promise<boolean>;
+  subscribeStdout(enable?:boolean, onStdout?:(data:string)=>void): Promise<boolean>;
+  subscribeStderr(enable?:boolean, onStderr?:(data:string)=>void): Promise<boolean>;
+  sendStdin(msg:string): Promise<boolean> ;
 }
-
-
-
-
 
