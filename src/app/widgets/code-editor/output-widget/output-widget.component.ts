@@ -1,9 +1,5 @@
 import { Component, EventEmitter, Output, ViewChild, NgZone, ElementRef } from '@angular/core';
-import { ApiService, Meta } from 'src/app/services/api-service/api.service';
-import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
-import { ProblemDescriptor, ServiceDescriptor, ArgsMap, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.service';
-import {ScrollPanelModule} from 'primeng/scrollpanel';
-import { PyodideState } from 'src/app/services/python-compiler-service/pydiode-driver';
+import { PyodideState } from 'src/app/services/python-compiler-service/python-compiler.service';
 
 export class OutputMessage{
   constructor(
@@ -136,7 +132,7 @@ export class OutputWidgetComponent {
     ipt.disabled = !enable
     this.enableHighlight(enable)
   }
-
+  
   public enableHighlight(enable=true, color?:string){
     let ipt = this.sdtinInput.nativeElement as HTMLInputElement
 

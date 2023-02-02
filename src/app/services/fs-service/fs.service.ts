@@ -212,6 +212,10 @@ export interface FsNodeFile extends FsNode {
 export interface FsServiceDriver {
   rootDir:string;
   
+  mount(path: string): Promise<boolean>;
+  
+  unmount(path: string): Promise<boolean>;
+
   ready(): Promise<boolean>;
 
   createDirectory(fullpath:string): Promise<boolean>;
