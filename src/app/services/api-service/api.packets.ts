@@ -173,6 +173,18 @@ export namespace Packets{
         this.files = files;
       }
     }
+    export class BinaryHeader extends Message {
+      public name:string = "";
+      public size:number = 0;
+      public hash:bigint = 0n;
+
+      constructor(name:string, size:number, hash:bigint) {
+        super();
+        this.name = name;
+        this.size = size;
+        this.hash = hash;
+      }
+    }
     export class ConnectStop extends Message {
 
     }
