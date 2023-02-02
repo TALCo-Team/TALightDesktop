@@ -148,6 +148,7 @@ export class ApiService {
     onConnectStart?:()=>void,
     onConnectStop?:(message:string[])=>void,
     onData?: (data:string)=>void,
+    onResultFile?:(message:ArrayBuffer)=>void,
     onError?:(data:string)=>void
   ){
     this.stateMaybe()
@@ -187,6 +188,12 @@ export class ApiService {
       this.stateGood();
       if(onData) { onData(message)} 
     }
+
+    cmdConnect.onReciveUndecodedBinary = (message) => { 
+      this.stateGood();
+      if(onResultFile) { onResultFile( message )} 
+    }
+    
     cmdConnect.onError = (error) => { 
       this.stateBad();
       if(onError) {onError(error)} 
