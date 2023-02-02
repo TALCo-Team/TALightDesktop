@@ -82,14 +82,14 @@ export class ServiceDescriptor {
     }
 
     public exportFilesPaths(){
-      let fileList = new Array<string>();
+      let fileArgs = new Map<string,string>();
       this.filesOrder.forEach((name)=>{
         let file = this.files.get(name)
-        let value = file?.value ?? ""
-        fileList.push(value)
+        if(!file || file.value==""){return}
+        fileArgs.set(name,file.value)
       })
 
-      return fileList
+      return fileArgs
     }
 }
 

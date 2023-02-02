@@ -143,7 +143,7 @@ export class ApiService {
     args?:{}, 
     tty?:boolean, 
     token?:string, 
-    files?:string[],
+    files?:Map<string, string>,
     onConnectBegin?:(message:string[] )=>void,
     onConnectStart?:()=>void,
     onConnectStop?:(message:string[])=>void,
