@@ -76,7 +76,9 @@ export class CodeEditorComponent implements OnInit {
     this.fsroot = fsroot;
     this.fslist = this.fs.treeToList(fsroot);
     this.fslistfile = this.fslist.filter( item=>"content" in item ) as FsNodeFile[]
-    this.problemWidget.fslist = this.fslistfile
+    let filePathList = new Array<{path:string}>()
+    this.fslistfile.forEach(item=>filePathList.push({path:item.path}))
+    this.problemWidget.filePathList = filePathList
   }
   
   public didNotify(data:string){
@@ -208,7 +210,7 @@ export class CodeEditorComponent implements OnInit {
     await this.driver?.stopExecution()
     console.log("stopAll:cmdConnect:DONE")
   }
-
+  
   //-------------- API CONNECT
   public async runProject(useAPI = false){
     console.log("runProject:")
@@ -264,22 +266,19 @@ export class CodeEditorComponent implements OnInit {
     let tty = undefined
     let token = undefined
     let filePaths = this.selectedService.exportFilesPaths();
-    let files =  new Array<string>();
+    let files =  new Map<string,string>();
 
-    console.log("apiConnect:params:problem:items:", this.fslistfile)
-    for(let idx in filePaths){
-      let path = filePaths[idx];
-      console.log("apiConnect:params:problem:path:", path)
-      
-      let found = this.fslistfile.find(item => item.path == path)
+    filePaths.forEach((fileArgPath, fileArgName)=>{
+      console.log("apiConnect:params:problem:path:", fileArgName, fileArgPath)
+      let found = this.fslistfile.find(item => item.path == fileArgPath)
       console.log("apiConnect:params:problem:found:", found)
-      let content = found ? found.content : ""
-
+      if(!found){return}
+      let content = found.content
       if(content instanceof ArrayBuffer){
         content = this.binDecoder.decode(content)
       }
-      files.push(content)
-    }
+      files.set(fileArgName, content)
+    })
 
     
     console.log("apiConnect:params:problem",problem)

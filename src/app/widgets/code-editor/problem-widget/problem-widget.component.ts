@@ -7,6 +7,7 @@ import { PyodideDriver } from 'src/app/services/python-compiler-service/pydiode-
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 import { OverlayOptions } from 'primeng/api';
 import { ServiceDescriptor, ProblemDescriptor, ArgsMap, FilesMap, FileDescriptor, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
+import { Dropdown } from 'primeng/dropdown';
 
 
 export class ServiceMenuEntry {
@@ -34,8 +35,6 @@ export class ProblemWidgetComponent {
   @Output('onServiceChanged') public onServiceSelected = new EventEmitter<ServiceDescriptor>();
   @Output('onAttachments') public onAttachments = new EventEmitter<ArrayBuffer>();
   
-  @Input('fslist') public fslist!: Array<FsNodeFile|FsNodeFolder>;
-
   @ViewChild("problemDropdown") public problemDropdown!: ElementRef
   @ViewChild("serviceDropdown") public serviceDropdown!: ElementRef
   public dropdownOptions: OverlayOptions;
@@ -48,6 +47,8 @@ export class ProblemWidgetComponent {
   selectedArgs?: ArgsMap;
   selectedFiles?: FilesMap;
   selectedFile?: FileDescriptor;
+
+  filePathList = new Array<{path:string}>();
 
   driver?:PyodideDriver
   
@@ -80,6 +81,10 @@ export class ProblemWidgetComponent {
 
   isLoading(){
     return this.loading;
+  }
+
+  refreshFilePathList(){
+    this.filePathList = [...this.filePathList]
   }
 
 //args
@@ -175,14 +180,16 @@ export class ProblemWidgetComponent {
 
   async fileDidChange(file:FileDescriptor,event:any){
     console.log('fileDidChange:',file.key,event)
-
+    
     if(!("value" in event)){return;}
     console.log('fileDidChange:value:found',event.value)
-    let value = event.value
+    let path = event.value
+    
+    /*
     if(!("path" in value )){return;}
     console.log('fileDidChange:path:found',value.path)
     let path = value.path
-    
+    */
     
     let idDropdown = 'file-dropdown-' + file.key
     let dropdown = document.getElementById(idDropdown)
@@ -210,9 +217,12 @@ export class ProblemWidgetComponent {
     console.log('fileDidReset:',file.key,event)
     let idDropdown = 'file-dropdown-' + file.key
     let dropdown = document.getElementById(idDropdown)
-    if(!(dropdown instanceof HTMLInputElement)) {return}
-    dropdown.value = ""
-    dropdown.style.color = ""
+    console.log('fileDidReset:', dropdown)
+    if(!(dropdown instanceof Dropdown)) {return}
+    dropdown.clear(event)
+    file.value = ""
+    
+    this.refreshFilePathList()
   }
 
 //UI
@@ -311,6 +321,8 @@ export class ProblemWidgetComponent {
     this.selectedFiles = this.selectedService.files
     console.log('didSelectService:selectedArgs:', this.selectedArgs)
     this.onServiceSelected.emit(this.selectedService)   
+
+    this.refreshFilePathList()
   }
 
   async apiDownloadAttachment() {

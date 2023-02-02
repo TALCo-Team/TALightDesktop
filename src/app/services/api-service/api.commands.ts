@@ -36,10 +36,10 @@ export namespace Commands{
         this.tal.sendBinary(data);
       }
 
-      public log(...args:string[]){
+      public log(...args:any[]){
         let prefix = this.constructor.name+": "
         console.log(prefix, ...args);
-
+        
         if (this.debug) alert(prefix + (args).join(" ") );
       }
       
@@ -143,16 +143,19 @@ export namespace Commands{
     }  
     
     export class Connect extends Command{ 
-      public onReciveConnectBegin?:(message:Packets.Reply.ConnectBegin )=>void;
+      files = new Map<string,string>()
+
+      public onReciveConnectBegin?:(message:Packets.Reply.ConnectBegin)=>void;
       public onReciveConnectStart?:(message:Packets.Reply.ConnectStart)=>void;
       public onReciveConnectStop?:(message:Packets.Reply.ConnectStop)=>void;
       
       private msg:Packets.Request.ConnectBegin;
   
-      constructor(url:string, problem_name:string, service:string, args?:{}, tty?:boolean, token?:string, files?:string[]){
+      constructor(url:string, problem_name:string, service:string, args?:{}, tty?:boolean, token?:string, files?:Map<string,string>){
         super(url);
-        files = files?.filter(file=>file.trim()!="")
-        this.msg = new Packets.Request.ConnectBegin(problem_name, service, args, tty, token, files);
+        if(files){this.files = files}
+        let fileArgNames = [...this.files.keys()]
+        this.msg = new Packets.Request.ConnectBegin(problem_name, service, args, tty, token, fileArgNames);
       }
 
       public override didReciveHandshake(handshake: Packets.Reply.Handshake){
@@ -184,7 +187,7 @@ export namespace Commands{
       }
       
       public didRecieveConnectStop(message: Packets.Reply.ConnectStop){
-        this.log("didRecieveConnectStop");
+        this.log("didRecieveConnectStop",message);
         /* download result files */
         
         if (this.onReciveConnectStop ) { 
