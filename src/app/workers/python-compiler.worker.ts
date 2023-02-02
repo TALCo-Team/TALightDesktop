@@ -45,7 +45,8 @@ export interface FsNodeFile extends FsNode {
 }
 
 export enum PyodideState {
-  Init = 'Init',
+  Unknown = 'Unknown',
+  Loading = 'Loading',
   Ready = 'Ready',
   Run = 'Run',
   Stdin = 'Stdin',
@@ -54,10 +55,13 @@ export enum PyodideState {
 }
 
 export enum PyodideMessageType {
-  Ready = 'Ready',
+  Ready = 'Ready', // Deprecated -> SubscribeState
+  Mount = 'Mount', //TODO
+  Unmount = 'Unmount', //TODO
   InstallPackages = 'InstallPackages',
   ExecuteFile = 'ExecuteFile',
   ExecuteCode = 'ExecuteCode',
+  StopExecution = 'StopExecution',
   SubscribeNotify = 'SubscribeNotify',
   SubscribeState = 'SubscribeState',
   SubscribeStdout = 'SubscribeStdout',
@@ -119,6 +123,10 @@ class PyodideWorker{
   isSync = false;
   needSync = false;
   stdinBuffer = new Array<string>();
+  lastState = PyodideState.Unknown
+  lastResult?:any
+  interruptBuffer = new Uint8Array(1);
+  interruptTimer:any
   
   constructor(root:string, mount:string ){
     this.root = root;
@@ -136,17 +144,29 @@ class PyodideWorker{
 
     
     addEventListener("message", async ( payload:any ) => { this.onData(payload.data) })
-
    
+    //Send Init event, but outside the constructor
+    setTimeout(()=>{this.sendState(PyodideState.Loading)})
 
+  
     this.initPydiode().then(()=>{
       this.load(this.root, this.mount);
       this.fs.syncfs(true,()=>{
+        
+        this.interruptBuffer[0]=0
+        this.pyodide.setInterruptBuffer(this.interruptBuffer)
+        this.interruptTimer = setInterval(()=>{this.pyodide.checkInterrupt()},10)
+        
         this.isReady = true;
         this.sendState(PyodideState.Ready)
         this.readyResolver(this.isReady);
+        
       });
-    })
+    }).catch( (error:any)=>{
+      this.sendState(PyodideState.Error, error)
+    });
+
+
   }
 
   async initPydiode(){
@@ -178,6 +198,8 @@ class PyodideWorker{
     let localThis = this;
     this.pyodide.globals.set('input', async function (prompt?:string) {
       if (prompt && prompt.trim().length>0){localThis.sendStdout(prompt)}
+
+      localThis.sendState(PyodideState.Stdin)
       console.log("setCustomHooks:scrivo sulla consolle!!!!")
       let stdinResolver: PromiseResolver<string>;      
       let promise =  new Promise<string>((resolve, reject) => {
@@ -268,6 +290,7 @@ class PyodideWorker{
 
   onStdin(){
     //TOD: unused??
+    // localThis.sendState(PyodideState.Stdin)
     console.log('PyodideWorker:onStdin:');   
     if (this.stdinBuffer.length > 0){}
     let item = this.stdinBuffer.shift()
@@ -275,62 +298,62 @@ class PyodideWorker{
     return item
   }
 
-  execCode(code:string){
+  execCodeAsync(code:string){
     console.log("execCode:",code)
+    this.interruptBuffer[0] = 0;
     this.stdinBuffer = []
 
-    try{
-      this.pyodide.runPythonAsync(code).then( (result:any)=>{
-        console.log(result)
-        this.sendState(PyodideState.Success, result)
-        console.log("execCode: result:\n",result)
-      });
-    }catch(error:any){
-      this.sendState(PyodideState.Error,error)
-    }
-    
-    
+    this.pyodide.runPythonAsync(code).then( (result:any)=>{
+      console.log("execCode: result:\n",result)
+      this.sendState(PyodideState.Success, result)
+    }).catch( (error:any)=>{
+      console.log("execCode: error:\n", error)
+      this.sendState(PyodideState.Error, error)
+    })
   }
 
   sendNotify(title: string, msg:string, kind:string=""){
-    console.log("notify: ",msg)
+    console.log("sendNotify: ",msg)
     this.requestQueueNotify.forEach(( request:PyodideRequest, uid:string )=>{
       let response = this.responseFromRequest(request); 
-      response.message.args = [title, msg, kind]
-      console.log("notify:uid:\n",response)//,res)
+      response.message.contents = [title, msg, kind]
+      console.log("sendNotify:uid:\n",response)//,res)
       postMessage(response)
     })
   }
 
-  sendState(state: PyodideState, content?:any){
-    console.log("state: ",state)
+  sendState(state?: PyodideState, content?:any){
+    if(!state){ state = this.lastState } //Resend the same state, used onSubscribe
+    else { this.lastState = state }
+    
+    console.log("sendState: ",state)
     this.requestQueueState.forEach(( request:PyodideRequest, uid:string )=>{
       let response = this.responseFromRequest(request); 
-      response.message.args = [state]
+      response.message.contents = [state ?? PyodideState.Unknown]
       if(content){
-        response.message.contents.push(JSON.stringify(content))
+        response.message.contents.push(content)
       }
-      console.log("state:uid:\n",response)//,res)
+      console.log("sendState:uid:\n",response)
       postMessage(response)
     })
   }
 
   sendStdout(msg:string){
-    console.log("stdout: "+msg)
+    console.log("sendStdout: "+msg)
     this.requestQueueStdout.forEach(( request:PyodideRequest, uid:string )=>{
       let response = this.responseFromRequest(request); 
       response.message.contents = [msg]
-      console.log("stdout:uid:\n",response)//,res)
+      console.log("sendStdout:uid:\n",response)//,res)
       postMessage(response)
     })
   }
 
   sendStderr(msg:string){
-    console.log("stderr: "+msg)
+    console.log("sendStderr: "+msg)
     this.requestQueueStderr.forEach(( request:PyodideRequest, uid:string )=>{
       let response = this.responseFromRequest(request); 
       response.message.contents = [msg]
-      console.log("stderr:uid:\n",response)//,res)
+      console.log("sendStderr:uid:\n",response)//,res)
       postMessage(response)
     })
   }
@@ -355,7 +378,6 @@ class PyodideWorker{
       case PyodideMessageType.SubscribeStderr:
         action=(request)=>{return this.subscribeStderr(request)};
         break;
-      
       case PyodideMessageType.SendStdin:
         action=(request)=>{return this.sendStdin(request)};
         break;
@@ -367,6 +389,9 @@ class PyodideWorker{
         break;
       case PyodideMessageType.ExecuteFile:
         action=(request)=>{return this.executeFile(request)};
+        break;
+      case PyodideMessageType.StopExecution:
+        action=(request)=>{return this.stopExecution(request)};
         break;
       case PyodideMessageType.CreateDirectory:
         action=(request)=>{return this.createDirectory(request)};
@@ -432,12 +457,26 @@ class PyodideWorker{
       code = rawContent
     }
     console.log("executeCode:\n",code)//,res)
-    this.execCode(code)
+    this.execCodeAsync(code)
 
 
     response.message.contents = ["true"]
     
     return response;
+  }
+
+  stopExecution(request:PyodideRequest){
+    let response = this.responseFromRequest(request); 
+    let wasRunning = this.lastState == PyodideState.Run || this.lastState == PyodideState.Stdin
+    
+    let arg = request.message.args[0] ?? "2"
+    let signal = parseInt(arg); // 2 stands for SIGINT.
+    if(isNaN(signal)){signal = 2}
+    
+    setTimeout(()=>{this.interruptBuffer[0] = signal})
+
+    response.message.contents = [wasRunning?"true":"false"]
+    return response
   }
 
   executeFile(request:PyodideRequest){
@@ -450,7 +489,7 @@ class PyodideWorker{
     let code = new TextDecoder().decode(rawContent.buffer);
 
     this.stdinBuffer = []
-    this.execCode(code)
+    this.execCodeAsync(code)
 
     response.message.contents = ["true"]
     return response
@@ -460,9 +499,9 @@ class PyodideWorker{
     let response = this.responseFromRequest(request); 
     let enable = request.message.args[0] == 'true';
     if (enable){
-      this.requestQueueStdout.set(request.uid, request)
+      this.requestQueueNotify.set(request.uid, request)
     } else{
-      this.requestQueueStdout.delete(request.uid)
+      this.requestQueueNotify.delete(request.uid)
     }
     console.log("subscribeNotify:\n", enable)//,res)
     response.message.args = [enable?'true':'false']
@@ -473,9 +512,10 @@ class PyodideWorker{
     let response = this.responseFromRequest(request); 
     let enable = request.message.args[0] == 'true';
     if (enable){
-      this.requestQueueStdout.set(request.uid, request)
-    } else{
-      this.requestQueueStdout.delete(request.uid)
+      this.requestQueueState.set(request.uid, request)
+      setTimeout(()=>{this.sendState(PyodideState.Loading)})
+    } else {
+      this.requestQueueState.delete(request.uid)
     }
     console.log("subscribeState:\n", enable)//,res)
     response.message.args = [enable?'true':'false']
@@ -512,6 +552,7 @@ class PyodideWorker{
     let response = this.responseFromRequest(request); 
     let data = request.message.contents[0];
     console.log("PyodideWorker:sendStdin:\n",data)
+    this.sendState(PyodideState.Run)
     if (this.stdinResolver){
       this.stdinResolver(this.toString(data))
       this.stdinResolver=undefined
@@ -519,6 +560,7 @@ class PyodideWorker{
       this.stdinBuffer.push(this.toString(data))
     }
     response.message.args = ['true']
+    
     return response;
   }
 
@@ -544,8 +586,6 @@ class PyodideWorker{
     let pattern =  new RegExp("^"+this.mount); 
     return path.replace(pattern,"/").replace(/\/\/+/,"/");
   }
-
-  
 
   readDirectory(request:PyodideRequest):PyodideResponse{
     let response = this.responseFromRequest(request); 
@@ -728,6 +768,4 @@ class PyodideWorker{
 
 
 
-
 main()
-

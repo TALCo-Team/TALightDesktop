@@ -33,7 +33,21 @@
 
     }
 
+    .tal-output-widget-title{
+        display: flex;
+        justify-content: space-between;
+        align-content: center;
+    }
+
+    .tal-output-widget-row-icon{
+        display: flex;
+        font-size: 1.2rem;
+        
+        padding:5px;
+    }
+
     .tal-output-widget-row-label{
+        display: flex;
         padding:5px;
         font-weight:600;
     }
@@ -99,8 +113,15 @@
         margin: 0px 5px;
         padding: 0px 5px;
     }
-    
 
+    .tal-output-widget-stdin-input:disabled{
+        //background-color: darkgray;
+    }
+
+    .tal-output-widget-stdin-input:disabled, .tal-output-widget-stdin-button:disabled{
+        //background-color: darkgray;
+    }
+    
     .tal-output-widget-text{
         display: flex;
         width: 100%;

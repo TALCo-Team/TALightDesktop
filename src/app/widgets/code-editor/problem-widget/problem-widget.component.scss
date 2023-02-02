@@ -7,7 +7,7 @@
 
 ::ng-deep {
     
-    .tal-problem-widget-row-problem,.tal-problem-widget-row-service{
+    .tal-problem-widget-row-problem, .tal-problem-widget-row-service{
         .p-dropdown {
             height: 30px;
             margin-right: 5px;
@@ -93,13 +93,12 @@
     flex-direction: column;
     height:100%;
 
-
+    
     .tal-problem-widget-row-problem, .tal-problem-widget-row-service{
         display: flex;
         flex-direction: row;
         align-items: center;
         padding: 5px;
-        
 
         .tal-problem-widget-problem-selector, .tal-problem-widget-service-selector {
             flex-grow: 2;
@@ -108,6 +107,11 @@
         }
 
     }
+
+    .tal-problem-widget-row-problem:first-child{
+        padding-bottom: 0px;
+    }
+
 
     .tal-problem-widget-label{
         padding:0.5rem;
