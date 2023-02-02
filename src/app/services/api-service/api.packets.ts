@@ -173,7 +173,9 @@ export namespace Packets{
         this.files = files;
       }
     }
-    export class ConnectStop extends Message {}
+    export class ConnectStop extends Message {
+
+    }
   }
 
 
@@ -214,12 +216,26 @@ export namespace Packets{
       public status = {"Ok": [""], "Err": ""};
     }
 
+
+
+    export class Result {
+      Ok: string[]|null = null
+      Err: string = ""
+      constructor(data:any){
+        if("Ok" in data){this.Err = data["Ok"]}
+        if("Err" in data){this.Err = data["Err"]}
+      }
+      
+      success(){ return this.Err == "" }
+    }
     /*
     Attachment { status: Result<(), String> },
     ConnectBegin { status: Result<Vec<String>, String> },
     ConnectStart { status: Result<(), String> },
     ConnectStop { status: Result<Vec<String>, String> }
     */
+
+    
   }
 }
 

@@ -152,7 +152,12 @@
                                 [overlayOptions]="dropdownOptions"
                                 styleClass="tal-problem-widget-files-dropdown"
                                 panelStyleClass="tal-problem-widget-files-dropdown-panel"
-                                [options]="fslist">
+                                [options]="filePathList"
+                                optionValue="path"
+                                optionLabel="path"
+                                dataKey="path"
+                                [(ngModel)]="file.value.value"
+                                [showClear]="true">
       
                         <ng-template pTemplate="selectedItem" let-option>
                             <div class="tal-problem-widget-files-selected">
@@ -172,13 +177,14 @@
                 </div>
 
                 <!-- CELL: reset -->
+                <!--
                 <div class="tal-problem-widget-args-row-actions">
                     <button pButton class="tal-square-button" icon="pi pi-trash" 
                             (click)="fileDidReset(file.value,$event)"
                             title="Reset to default" 
                             pTooltip="Reset to default"></button>
                 </div>
-
+                -->
               </div>
           </div>
         </div>
