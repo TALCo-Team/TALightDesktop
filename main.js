@@ -372,8 +372,12 @@ var Commands;
     class Connect extends Command {
         constructor(url, problem_name, service, args, tty, token, files) {
             super(url);
-            files = files?.filter(file => file.trim() != "");
-            this.msg = new _api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Request.ConnectBegin(problem_name, service, args, tty, token, files);
+            this.files = new Map();
+            if (files) {
+                this.files = files;
+            }
+            let fileArgNames = [...this.files.keys()];
+            this.msg = new _api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Request.ConnectBegin(problem_name, service, args, tty, token, fileArgNames);
         }
         didReciveHandshake(handshake) {
             super.didReciveHandshake(handshake);
@@ -408,7 +412,7 @@ var Commands;
             }
         }
         didRecieveConnectStop(message) {
-            this.log("didRecieveConnectStop");
+            this.log("didRecieveConnectStop", message);
             /* download result files */
             if (this.onReciveConnectStop) {
                 this.onReciveConnectStop(message);
@@ -914,6 +918,20 @@ var Packets;
             }
         }
         Reply.ConnectStop = ConnectStop;
+        class Result {
+            constructor(data) {
+                this.Ok = null;
+                this.Err = "";
+                if ("Ok" in data) {
+                    this.Err = data["Ok"];
+                }
+                if ("Err" in data) {
+                    this.Err = data["Err"];
+                }
+            }
+            success() { return this.Err == ""; }
+        }
+        Reply.Result = Result;
         /*
         Attachment { status: Result<(), String> },
         ConnectBegin { status: Result<Vec<String>, String> },
@@ -1943,13 +1961,15 @@ class ServiceDescriptor {
         return args;
     }
     exportFilesPaths() {
-        let fileList = new Array();
+        let fileArgs = new Map();
         this.filesOrder.forEach((name) => {
             let file = this.files.get(name);
-            let value = file?.value ?? "";
-            fileList.push(value);
+            if (!file || file.value == "") {
+                return;
+            }
+            fileArgs.set(name, file.value);
         });
-        return fileList;
+        return fileArgs;
     }
 }
 class ArgDescriptor {
@@ -3668,7 +3688,11 @@ class CodeEditorComponent {
     this.fsroot = fsroot;
     this.fslist = this.fs.treeToList(fsroot);
     this.fslistfile = this.fslist.filter(item => "content" in item);
-    this.problemWidget.fslist = this.fslistfile;
+    let filePathList = new Array();
+    this.fslistfile.forEach(item => filePathList.push({
+      path: item.path
+    }));
+    this.problemWidget.filePathList = filePathList;
   }
   didNotify(data) {
     console.log("didNotify:");
@@ -3858,19 +3882,20 @@ class CodeEditorComponent {
       let tty = undefined;
       let token = undefined;
       let filePaths = _this5.selectedService.exportFilesPaths();
-      let files = new Array();
-      console.log("apiConnect:params:problem:items:", _this5.fslistfile);
-      for (let idx in filePaths) {
-        let path = filePaths[idx];
-        console.log("apiConnect:params:problem:path:", path);
-        let found = _this5.fslistfile.find(item => item.path == path);
+      let files = new Map();
+      filePaths.forEach((fileArgPath, fileArgName) => {
+        console.log("apiConnect:params:problem:path:", fileArgName, fileArgPath);
+        let found = _this5.fslistfile.find(item => item.path == fileArgPath);
         console.log("apiConnect:params:problem:found:", found);
-        let content = found ? found.content : "";
+        if (!found) {
+          return;
+        }
+        let content = found.content;
         if (content instanceof ArrayBuffer) {
           content = _this5.binDecoder.decode(content);
         }
-        files.push(content);
-      }
+        files.set(fileArgName, content);
+      });
       console.log("apiConnect:params:problem", problem);
       console.log("apiConnect:params:service", service);
       console.log("apiConnect:params:args", args);
@@ -5769,16 +5794,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./node_modules/@angular-builders/custom-webpack/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js */ 8046);
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/core */ 3991);
+/* harmony import */ var primeng_dropdown__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! primeng/dropdown */ 5081);
 /* harmony import */ var src_app_services_api_service_api_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! src/app/services/api-service/api.service */ 6986);
 /* harmony import */ var src_app_services_problem_manager_service_problem_manager_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! src/app/services/problem-manager-service/problem-manager.service */ 1941);
 /* harmony import */ var src_app_services_python_compiler_service_python_compiler_service__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! src/app/services/python-compiler-service/python-compiler.service */ 4793);
-/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @angular/common */ 7774);
-/* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @angular/forms */ 5645);
-/* harmony import */ var primeng_button__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! primeng/button */ 540);
-/* harmony import */ var primeng_api__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! primeng/api */ 2898);
-/* harmony import */ var primeng_tooltip__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! primeng/tooltip */ 5166);
-/* harmony import */ var primeng_dropdown__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! primeng/dropdown */ 5081);
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @angular/common */ 7774);
+/* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @angular/forms */ 5645);
+/* harmony import */ var primeng_button__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! primeng/button */ 540);
+/* harmony import */ var primeng_api__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! primeng/api */ 2898);
+/* harmony import */ var primeng_tooltip__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! primeng/tooltip */ 5166);
 /* harmony import */ var primeng_tabview__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! primeng/tabview */ 1078);
+
 
 
 
@@ -6004,17 +6030,13 @@ function ProblemWidgetComponent_div_26_Template(rf, ctx) {
       const file_r30 = restoredCtx.$implicit;
       const ctx_r36 = _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵnextContext"]();
       return _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵresetView"](ctx_r36.fileDidChange(file_r30.value, $event));
+    })("ngModelChange", function ProblemWidgetComponent_div_26_Template_p_dropdown_ngModelChange_8_listener($event) {
+      const restoredCtx = _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵrestoreView"](_r37);
+      const file_r30 = restoredCtx.$implicit;
+      return _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵresetView"](file_r30.value.value = $event);
     });
     _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtemplate"](9, ProblemWidgetComponent_div_26_ng_template_9_Template, 3, 1, "ng-template", 4);
     _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtemplate"](10, ProblemWidgetComponent_div_26_ng_template_10_Template, 3, 1, "ng-template", 5);
-    _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementEnd"]()();
-    _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementStart"](11, "div", 32)(12, "button", 33);
-    _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵlistener"]("click", function ProblemWidgetComponent_div_26_Template_button_click_12_listener($event) {
-      const restoredCtx = _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵrestoreView"](_r37);
-      const file_r30 = restoredCtx.$implicit;
-      const ctx_r38 = _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵnextContext"]();
-      return _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵresetView"](ctx_r38.fileDidReset(file_r30.value, $event));
-    });
     _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementEnd"]()()()();
   }
   if (rf & 2) {
@@ -6023,7 +6045,7 @@ function ProblemWidgetComponent_div_26_Template(rf, ctx) {
     _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵadvance"](6);
     _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtextInterpolate"](file_r30.value.name);
     _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵproperty"]("id", "file-dropdown-" + file_r30.value.key)("overlayOptions", ctx_r13.dropdownOptions)("options", ctx_r13.fslist);
+    _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵproperty"]("id", "file-dropdown-" + file_r30.value.key)("overlayOptions", ctx_r13.dropdownOptions)("options", ctx_r13.filePathList)("ngModel", file_r30.value.value)("showClear", true);
   }
 }
 class ServiceMenuEntry {
@@ -6049,6 +6071,7 @@ class ProblemWidgetComponent {
     this.onAttachments = new _angular_core__WEBPACK_IMPORTED_MODULE_4__.EventEmitter();
     this.problemsMenu = new Array();
     this.servicesMenu = new Array();
+    this.filePathList = new Array();
     this.regexFormat = true;
     this.showRegex = true;
     this.loading = false;
@@ -6070,6 +6093,9 @@ class ProblemWidgetComponent {
   }
   isLoading() {
     return this.loading;
+  }
+  refreshFilePathList() {
+    this.filePathList = [...this.filePathList];
   }
   //args
   clenupRegex(re) {
@@ -6174,12 +6200,12 @@ class ProblemWidgetComponent {
         return;
       }
       console.log('fileDidChange:value:found', event.value);
-      let value = event.value;
-      if (!("path" in value)) {
-        return;
-      }
-      console.log('fileDidChange:path:found', value.path);
-      let path = value.path;
+      let path = event.value;
+      /*
+      if(!("path" in value )){return;}
+      console.log('fileDidChange:path:found',value.path)
+      let path = value.path
+      */
       let idDropdown = 'file-dropdown-' + file.key;
       let dropdown = document.getElementById(idDropdown);
       if (!(dropdown instanceof HTMLElement)) {
@@ -6203,15 +6229,18 @@ class ProblemWidgetComponent {
     })();
   }
   fileDidReset(file, event) {
+    var _this4 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log('fileDidReset:', file.key, event);
       let idDropdown = 'file-dropdown-' + file.key;
       let dropdown = document.getElementById(idDropdown);
-      if (!(dropdown instanceof HTMLInputElement)) {
+      console.log('fileDidReset:', dropdown);
+      if (!(dropdown instanceof primeng_dropdown__WEBPACK_IMPORTED_MODULE_5__.Dropdown)) {
         return;
       }
-      dropdown.value = "";
-      dropdown.style.color = "";
+      dropdown.clear(event);
+      file.value = "";
+      _this4.refreshFilePathList();
     })();
   }
   //UI
@@ -6226,7 +6255,7 @@ class ProblemWidgetComponent {
     })();
   }
   toggleRegexFormat(arg, event) {
-    var _this4 = this;
+    var _this5 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       let idRegex = 'args-regex-' + arg.key;
       let regex = document.getElementById(idRegex);
@@ -6238,39 +6267,39 @@ class ProblemWidgetComponent {
         regex.innerText = arg.regex + "";
       } else {
         regex.classList.add('format-regex-simple');
-        regex.innerText = _this4.clenupRegex(arg.regex);
+        regex.innerText = _this5.clenupRegex(arg.regex);
       }
     })();
   }
   reloadProblemList() {
-    var _this5 = this;
-    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
-      _this5.selectedProblem = undefined;
-      _this5.selectedService = undefined;
-      _this5.selectedArgs = undefined;
-      _this5.selectedFiles = undefined;
-      _this5.problemsMenu = [];
-      _this5.servicesMenu = [];
-      _this5.loading = true;
-      console.log;
-      _this5.pm.updateProblems();
-    })();
-  }
-  problemsDidChange(clear) {
     var _this6 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+      _this6.selectedProblem = undefined;
+      _this6.selectedService = undefined;
+      _this6.selectedArgs = undefined;
+      _this6.selectedFiles = undefined;
       _this6.problemsMenu = [];
       _this6.servicesMenu = [];
       _this6.loading = true;
+      console.log;
+      _this6.pm.updateProblems();
+    })();
+  }
+  problemsDidChange(clear) {
+    var _this7 = this;
+    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+      _this7.problemsMenu = [];
+      _this7.servicesMenu = [];
+      _this7.loading = true;
       if (clear) return;
       let problemsMenu = new Array(); // [...this.pm.problemList] // ez ?
-      _this6.pm.problemList.forEach(problemDesc => {
+      _this7.pm.problemList.forEach(problemDesc => {
         problemsMenu.push(problemDesc);
       });
       problemsMenu = problemsMenu.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 0);
       console.log('updateProblemsUI:problemsMenu:', problemsMenu);
-      _this6.problemsMenu = problemsMenu;
-      _this6.loading = false;
+      _this7.problemsMenu = problemsMenu;
+      _this7.loading = false;
     })();
   }
   //API 
@@ -6280,46 +6309,47 @@ class ProblemWidgetComponent {
     })();
   }
   didSelectProblem() {
-    var _this7 = this;
+    var _this8 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
-      _this7.selectedService = undefined;
-      _this7.selectedArgs = undefined;
-      _this7.selectedFiles = undefined;
-      console.log('didSelectProblem:', _this7.selectedProblem);
-      if (!_this7.selectedProblem) {
+      _this8.selectedService = undefined;
+      _this8.selectedArgs = undefined;
+      _this8.selectedFiles = undefined;
+      console.log('didSelectProblem:', _this8.selectedProblem);
+      if (!_this8.selectedProblem) {
         return;
       }
-      _this7.pm.selectProblem(_this7.selectedProblem);
+      _this8.pm.selectProblem(_this8.selectedProblem);
       let servicesMenu = new Array();
-      _this7.selectedProblem.services.forEach(serviceDesc => {
+      _this8.selectedProblem.services.forEach(serviceDesc => {
         servicesMenu.push(serviceDesc);
       });
       servicesMenu = servicesMenu.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 0);
-      _this7.servicesMenu = servicesMenu;
+      _this8.servicesMenu = servicesMenu;
       console.log('didSelectProblem:servicesMenu:', servicesMenu);
-      _this7.servicesMenu = servicesMenu;
-      _this7.onProblemSelected.emit(_this7.selectedProblem);
+      _this8.servicesMenu = servicesMenu;
+      _this8.onProblemSelected.emit(_this8.selectedProblem);
     })();
   }
   didSelectService() {
-    var _this8 = this;
+    var _this9 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
-      console.log('didSelectService:', _this8.selectedService);
-      if (!_this8.selectedService) {
+      console.log('didSelectService:', _this9.selectedService);
+      if (!_this9.selectedService) {
         return;
       }
-      _this8.pm.selectService(_this8.selectedService);
-      _this8.selectedArgs = _this8.selectedService.args;
-      _this8.selectedFiles = _this8.selectedService.files;
-      console.log('didSelectService:selectedArgs:', _this8.selectedArgs);
-      _this8.onServiceSelected.emit(_this8.selectedService);
+      _this9.pm.selectService(_this9.selectedService);
+      _this9.selectedArgs = _this9.selectedService.args;
+      _this9.selectedFiles = _this9.selectedService.files;
+      console.log('didSelectService:selectedArgs:', _this9.selectedArgs);
+      _this9.onServiceSelected.emit(_this9.selectedService);
+      _this9.refreshFilePathList();
     })();
   }
   apiDownloadAttachment() {
-    var _this9 = this;
+    var _this10 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
-      console.log('apiDownloadAttachment:', _this9.selectedProblem);
-      if (!_this9.selectedProblem) {
+      console.log('apiDownloadAttachment:', _this10.selectedProblem);
+      if (!_this10.selectedProblem) {
         return;
       }
       let onAttachment = () => {
@@ -6330,11 +6360,11 @@ class ProblemWidgetComponent {
       };
       let onData = data => {
         console.log("apiDownloadAttachment:onData:", data);
-        _this9.onAttachments.emit(data);
+        _this10.onAttachments.emit(data);
       };
-      let req = _this9.api.GetAttachment(_this9.selectedProblem.name, onAttachment, onAttachmentInfo, onData);
+      let req = _this10.api.GetAttachment(_this10.selectedProblem.name, onAttachment, onAttachmentInfo, onData);
       req.onError = error => {
-        _this9.onApiError(error);
+        _this10.onApiError(error);
       };
     })();
   }
@@ -6356,9 +6386,6 @@ ProblemWidgetComponent.ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODU
       _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵqueryRefresh"](_t = _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵloadQuery"]()) && (ctx.serviceDropdown = _t.first);
     }
   },
-  inputs: {
-    fslist: "fslist"
-  },
   outputs: {
     onProblemSelected: "onProblemChanged",
     onServiceSelected: "onServiceChanged",
@@ -6366,7 +6393,7 @@ ProblemWidgetComponent.ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODU
   },
   decls: 28,
   vars: 16,
-  consts: [[1, "tal-problem-widget"], [1, "tal-problem-widget-row", "tal-problem-widget-row-problem"], ["placeholder", "Seleziona un problema", "scrollHeight", "50rem", "panelStyleClass", "tal-problem-widget-problem-selector-panel", "optionLabel", "name", 1, "tal-problem-widget-problem-selector", 3, "overlayOptions", "options", "ngModel", "ngModelChange", "onChange"], ["problemDropdown", ""], ["pTemplate", "selectedItem"], ["pTemplate", "item"], ["pButton", "", "class", "p-button-danger tal-square-button", "icon", "pi pi-refresh", "title", "Refresh", "pTooltip", "Refresh", 3, "click", 4, "ngIf"], ["pButton", "", "class", "p-button-danger tal-square-button", "icon", "pi pi-spin pi-spinner", "title", "Refresh", "pTooltip", "Refresh", "disabled", "", 4, "ngIf"], ["placeholder", "Seleziona un servizio", "scrollHeight", "50rem", "panelStyleClass", "tal-problem-widget-problem-selector-panel", "optionLabel", "name", 1, "tal-problem-widget-problem-selector", 3, "overlayOptions", "options", "ngModel", "ngModelChange", "onChange"], ["serviceDropdown", ""], ["pButton", "", "icon", "pi pi-download", "title", "Download Attachments", "pTooltip", "Scarica allegati", 1, "p-button-help", "tal-square-button", 3, "click"], [1, "tal-problem-widget-args-row"], ["header", "Arguments"], ["pTemplate", "header", "class", "tal-problem-widget-args-row"], [1, "tal-problem-widget-row", "tal-problem-widget-args"], ["class", "tal-problem-widget-args-row stretch-flex", 4, "ngIf"], ["class", "tal-problem-widget-args-row", 4, "ngFor", "ngForOf"], ["header", "Files"], [1, "tal-problem-widget-problem-selected"], [1, "tal-problem-widget-problem-item"], ["pButton", "", "icon", "pi pi-refresh", "title", "Refresh", "pTooltip", "Refresh", 1, "p-button-danger", "tal-square-button", 3, "click"], ["pButton", "", "icon", "pi pi-spin pi-spinner", "title", "Refresh", "pTooltip", "Refresh", "disabled", "", 1, "p-button-danger", "tal-square-button"], [1, "tal-problem-widget-label"], [1, "tal-problem-widget-args-row", "stretch-flex"], [1, "tal-problem-widget-args-row-no-params"], [1, "tal-problem-widget-args-subrow"], [1, "tal-problem-widget-args-row-info"], [1, "pi", "pi-info-circle", 2, "cursor", "pointer", 3, "id", "title", "click"], ["argsIcons", ""], [1, "tal-problem-widget-args-row-name", 3, "title"], [1, "tal-problem-widget-args-row-field"], ["pInputText", "", "type", "text", 1, "top-bar-url-input", "p-inputtext-sm", 3, "ngModel", "placeholder", "title", "ngModelChange", "change", "blur", "focus"], [1, "tal-problem-widget-args-row-actions"], ["pButton", "", "icon", "pi pi-trash", "title", "Reset to default", "pTooltip", "Reset to default", 1, "tal-square-button", 3, "click"], [1, "tal-problem-widget-args-subrow", 2, "display", "none", "cursor", "pointer", 3, "id", "dblclick"], [1, "tal-problem-widget-args-subrow-regexpr", "format-regex-simple", 3, "id"], [1, "pi", "pi-file"], [1, "tal-problem-widget-args-row-name"], ["placeholder", "Select a file", "styleClass", "tal-problem-widget-files-dropdown", "panelStyleClass", "tal-problem-widget-files-dropdown-panel", 3, "id", "overlayOptions", "options", "onChange"], [1, "tal-problem-widget-files-selected"], [1, "tal-problem-widget-files-item"]],
+  consts: [[1, "tal-problem-widget"], [1, "tal-problem-widget-row", "tal-problem-widget-row-problem"], ["placeholder", "Seleziona un problema", "scrollHeight", "50rem", "panelStyleClass", "tal-problem-widget-problem-selector-panel", "optionLabel", "name", 1, "tal-problem-widget-problem-selector", 3, "overlayOptions", "options", "ngModel", "ngModelChange", "onChange"], ["problemDropdown", ""], ["pTemplate", "selectedItem"], ["pTemplate", "item"], ["pButton", "", "class", "p-button-danger tal-square-button", "icon", "pi pi-refresh", "title", "Refresh", "pTooltip", "Refresh", 3, "click", 4, "ngIf"], ["pButton", "", "class", "p-button-danger tal-square-button", "icon", "pi pi-spin pi-spinner", "title", "Refresh", "pTooltip", "Refresh", "disabled", "", 4, "ngIf"], ["placeholder", "Seleziona un servizio", "scrollHeight", "50rem", "panelStyleClass", "tal-problem-widget-problem-selector-panel", "optionLabel", "name", 1, "tal-problem-widget-problem-selector", 3, "overlayOptions", "options", "ngModel", "ngModelChange", "onChange"], ["serviceDropdown", ""], ["pButton", "", "icon", "pi pi-download", "title", "Download Attachments", "pTooltip", "Scarica allegati", 1, "p-button-help", "tal-square-button", 3, "click"], [1, "tal-problem-widget-args-row"], ["header", "Arguments"], ["pTemplate", "header", "class", "tal-problem-widget-args-row"], [1, "tal-problem-widget-row", "tal-problem-widget-args"], ["class", "tal-problem-widget-args-row stretch-flex", 4, "ngIf"], ["class", "tal-problem-widget-args-row", 4, "ngFor", "ngForOf"], ["header", "Files"], [1, "tal-problem-widget-problem-selected"], [1, "tal-problem-widget-problem-item"], ["pButton", "", "icon", "pi pi-refresh", "title", "Refresh", "pTooltip", "Refresh", 1, "p-button-danger", "tal-square-button", 3, "click"], ["pButton", "", "icon", "pi pi-spin pi-spinner", "title", "Refresh", "pTooltip", "Refresh", "disabled", "", 1, "p-button-danger", "tal-square-button"], [1, "tal-problem-widget-label"], [1, "tal-problem-widget-args-row", "stretch-flex"], [1, "tal-problem-widget-args-row-no-params"], [1, "tal-problem-widget-args-subrow"], [1, "tal-problem-widget-args-row-info"], [1, "pi", "pi-info-circle", 2, "cursor", "pointer", 3, "id", "title", "click"], ["argsIcons", ""], [1, "tal-problem-widget-args-row-name", 3, "title"], [1, "tal-problem-widget-args-row-field"], ["pInputText", "", "type", "text", 1, "top-bar-url-input", "p-inputtext-sm", 3, "ngModel", "placeholder", "title", "ngModelChange", "change", "blur", "focus"], [1, "tal-problem-widget-args-row-actions"], ["pButton", "", "icon", "pi pi-trash", "title", "Reset to default", "pTooltip", "Reset to default", 1, "tal-square-button", 3, "click"], [1, "tal-problem-widget-args-subrow", 2, "display", "none", "cursor", "pointer", 3, "id", "dblclick"], [1, "tal-problem-widget-args-subrow-regexpr", "format-regex-simple", 3, "id"], [1, "pi", "pi-file"], [1, "tal-problem-widget-args-row-name"], ["placeholder", "Select a file", "styleClass", "tal-problem-widget-files-dropdown", "panelStyleClass", "tal-problem-widget-files-dropdown-panel", "optionValue", "path", "optionLabel", "path", "dataKey", "path", 3, "id", "overlayOptions", "options", "ngModel", "showClear", "onChange", "ngModelChange"], [1, "tal-problem-widget-files-selected"], [1, "tal-problem-widget-files-item"]],
   template: function ProblemWidgetComponent_Template(rf, ctx) {
     if (rf & 1) {
       _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementStart"](0, "div", 0)(1, "div", 1)(2, "p-dropdown", 2, 3);
@@ -6406,7 +6433,7 @@ ProblemWidgetComponent.ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODU
       _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtemplate"](23, ProblemWidgetComponent_ng_template_23_Template, 2, 0, "ng-template", 13);
       _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementStart"](24, "div", 14);
       _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtemplate"](25, ProblemWidgetComponent_div_25_Template, 4, 0, "div", 15);
-      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtemplate"](26, ProblemWidgetComponent_div_26_Template, 13, 4, "div", 16);
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtemplate"](26, ProblemWidgetComponent_div_26_Template, 11, 6, "div", 16);
       _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵpipe"](27, "keyvalue");
       _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementEnd"]()()()()();
     }
@@ -6429,7 +6456,7 @@ ProblemWidgetComponent.ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODU
       _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵproperty"]("ngForOf", _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵpipeBind1"](27, 14, ctx.selectedFiles));
     }
   },
-  dependencies: [_angular_common__WEBPACK_IMPORTED_MODULE_5__.NgForOf, _angular_common__WEBPACK_IMPORTED_MODULE_5__.NgIf, _angular_forms__WEBPACK_IMPORTED_MODULE_6__.DefaultValueAccessor, _angular_forms__WEBPACK_IMPORTED_MODULE_6__.NgControlStatus, _angular_forms__WEBPACK_IMPORTED_MODULE_6__.NgModel, primeng_button__WEBPACK_IMPORTED_MODULE_7__.ButtonDirective, primeng_api__WEBPACK_IMPORTED_MODULE_8__.PrimeTemplate, primeng_tooltip__WEBPACK_IMPORTED_MODULE_9__.Tooltip, primeng_dropdown__WEBPACK_IMPORTED_MODULE_10__.Dropdown, primeng_tabview__WEBPACK_IMPORTED_MODULE_11__.TabView, primeng_tabview__WEBPACK_IMPORTED_MODULE_11__.TabPanel, _angular_common__WEBPACK_IMPORTED_MODULE_5__.KeyValuePipe],
+  dependencies: [_angular_common__WEBPACK_IMPORTED_MODULE_6__.NgForOf, _angular_common__WEBPACK_IMPORTED_MODULE_6__.NgIf, _angular_forms__WEBPACK_IMPORTED_MODULE_7__.DefaultValueAccessor, _angular_forms__WEBPACK_IMPORTED_MODULE_7__.NgControlStatus, _angular_forms__WEBPACK_IMPORTED_MODULE_7__.NgModel, primeng_button__WEBPACK_IMPORTED_MODULE_8__.ButtonDirective, primeng_api__WEBPACK_IMPORTED_MODULE_9__.PrimeTemplate, primeng_tooltip__WEBPACK_IMPORTED_MODULE_10__.Tooltip, primeng_dropdown__WEBPACK_IMPORTED_MODULE_5__.Dropdown, primeng_tabview__WEBPACK_IMPORTED_MODULE_11__.TabView, primeng_tabview__WEBPACK_IMPORTED_MODULE_11__.TabPanel, _angular_common__WEBPACK_IMPORTED_MODULE_6__.KeyValuePipe],
   styles: ["[_nghost-%COMP%] {\n  width: 100%;\n  height: 100%;\n}\n\n  .tal-problem-widget-row-problem .p-dropdown,   .tal-problem-widget-row-service .p-dropdown {\n  height: 30px;\n  margin-right: 5px;\n}\n\n  .tal-problem-widget-row-problem .p-dropdown-label,   .tal-problem-widget-row-service .p-dropdown-label {\n  height: 30px;\n  padding: 5px !important;\n}\n\n  .tal-problem-widget-args-subrow .p-dropdown {\n  height: 22px;\n}\n\n  .tal-problem-widget-args-subrow .p-dropdown-label {\n  height: 22px;\n  padding: 2px !important;\n}\n\n  .tal-problem-widget-args-subrow .tal-problem-widget-files-selected {\n  width: 100%;\n}\n\n  .tal-problem-widget-args-row-field {\n  display: flex;\n  flex-direction: row;\n  flex-grow: 5;\n}\n\n  .tal-problem-widget-args-row-field p-dropdown,   .tal-problem-widget-args-row-field .p-inputwrapper {\n  display: flex;\n  width: 100%;\n}\n\n  .tal-problem-widget .p-tabview-nav li {\n  width: 50%;\n  align-content: center;\n}\n\n  .tal-problem-widget .p-tabview-ink-bar {\n  width: 50% !important;\n}\n\n  .tal-problem-widget .p-tabview-nav-link {\n  margin: 0px !important;\n  padding: 0px !important;\n  width: 100%;\n  height: 100%;\n}\n\n  .tal-problem-widget .p-tabview-panels {\n  margin: 0px;\n  padding: 0px;\n}\n\n  .tal-problem-widget-problem-selector-panel .p-dropdown-item {\n  height: 30px;\n  margin: 5px !important;\n  padding: 5px !important;\n}\n\n  .tal-problem-widget-files-dropdown-panel .p-dropdown-item {\n  height: 22px;\n  margin: 2px !important;\n  padding: 2px !important;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-row-problem[_ngcontent-%COMP%], .tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-row-service[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: row;\n  align-items: center;\n  padding: 5px;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-row-problem[_ngcontent-%COMP%]   .tal-problem-widget-problem-selector[_ngcontent-%COMP%], .tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-row-problem[_ngcontent-%COMP%]   .tal-problem-widget-service-selector[_ngcontent-%COMP%], .tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-row-service[_ngcontent-%COMP%]   .tal-problem-widget-problem-selector[_ngcontent-%COMP%], .tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-row-service[_ngcontent-%COMP%]   .tal-problem-widget-service-selector[_ngcontent-%COMP%] {\n  flex-grow: 2;\n  display: flex;\n  align-items: center;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-row-problem[_ngcontent-%COMP%]:first-child {\n  padding-bottom: 0px;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-label[_ngcontent-%COMP%] {\n  padding: 0.5rem;\n  font-weight: 600;\n  width: 100%;\n  height: 100%;\n  text-align: center;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-args-row-title[_ngcontent-%COMP%] {\n  display: flex;\n  font-weight: bold;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-args-row-no-params[_ngcontent-%COMP%] {\n  flex-grow: 1;\n  height: 100%;\n  display: flex;\n  width: 100%;\n  justify-content: center;\n  align-items: center;\n  border: 1px solid #444;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-args[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  width: 100%;\n  font-family: monospace;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-args[_ngcontent-%COMP%]   .tal-problem-widget-args-row[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  padding: 5px;\n  border-bottom: 1px solid #333;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-args[_ngcontent-%COMP%]   .tal-problem-widget-args-subrow[_ngcontent-%COMP%] {\n  display: flex;\n  width: 100%;\n  flex-direction: row;\n  align-items: center;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-args[_ngcontent-%COMP%]   .tal-problem-widget-args-subrow[_ngcontent-%COMP%]   button[_ngcontent-%COMP%] {\n  width: 20px;\n  height: 20px;\n  min-height: 20px;\n  max-height: 20px;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-args[_ngcontent-%COMP%]   .tal-problem-widget-args-row[_ngcontent-%COMP%]:last-child {\n  border: 0px;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-args[_ngcontent-%COMP%]   .tal-problem-widget-args-row-info[_ngcontent-%COMP%] {\n  display: flex;\n  width: 20px;\n  padding: 5px;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-args[_ngcontent-%COMP%]   .tal-problem-widget-args-row-name[_ngcontent-%COMP%] {\n  display: flex;\n  flex-grow: 1;\n  width: 10em;\n  padding-left: 5px;\n  font-size: 80%;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-args[_ngcontent-%COMP%]   .tal-problem-widget-args-row-field[_ngcontent-%COMP%] {\n  display: flex;\n  flex-grow: 6;\n  padding: 0px 5px;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-args[_ngcontent-%COMP%]   .tal-problem-widget-args-row-field[_ngcontent-%COMP%]   input[_ngcontent-%COMP%] {\n  width: 100%;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-args[_ngcontent-%COMP%]   .tal-problem-widget-args-row-actions[_ngcontent-%COMP%] {\n  display: flex;\n  padding: 5px;\n}\n\n.tal-problem-widget[_ngcontent-%COMP%]   .tal-problem-widget-args[_ngcontent-%COMP%]   .tal-problem-widget-args-subrow-regexpr[_ngcontent-%COMP%] {\n  font-size: 11px;\n  color: gray;\n  word-wrap: break-word;\n  font-family: monospace;\n}\n\n.tal-problem-widget-problem-selected[_ngcontent-%COMP%]   .problem-label[_ngcontent-%COMP%], .tal-problem-widget-problem-item[_ngcontent-%COMP%]   .problem-label[_ngcontent-%COMP%] {\n  font-weight: bold;\n  text-transform: c-talize;\n  padding: 1px 10px 1px 10px;\n  background-color: #555;\n  border-radius: 20px;\n}\n\n.tal-problem-widget-problem-selected[_ngcontent-%COMP%]   .service-label[_ngcontent-%COMP%], .tal-problem-widget-problem-item[_ngcontent-%COMP%]   .service-label[_ngcontent-%COMP%] {\n  padding-left: 3px;\n}\n\nbutton[_ngcontent-%COMP%] {\n  border-radius: 5px;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInByb2JsZW0td2lkZ2V0LmNvbXBvbmVudC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUVBO0VBQ0ksV0FBQTtFQUNBLFlBQUE7QUFESjs7QUFPUTtFQUNJLFlBQUE7RUFDQSxpQkFBQTtBQUpaOztBQU1RO0VBQ0ksWUFBQTtFQUNBLHVCQUFBO0FBSlo7O0FBU1E7RUFDSSxZQUFBO0FBUFo7O0FBU1E7RUFDSSxZQUFBO0VBQ0EsdUJBQUE7QUFQWjs7QUFTUTtFQUNJLFdBQUE7QUFQWjs7QUFXSTtFQUNJLGFBQUE7RUFDQSxtQkFBQTtFQUNBLFlBQUE7QUFUUjs7QUFXUTtFQUNJLGFBQUE7RUFDQSxXQUFBO0FBVFo7O0FBZVE7RUFDSSxVQUFBO0VBQ0EscUJBQUE7QUFiWjs7QUFnQlE7RUFDSSxxQkFBQTtBQWRaOztBQWlCUTtFQUNJLHNCQUFBO0VBQ0EsdUJBQUE7RUFFQSxXQUFBO0VBQ0EsWUFBQTtBQWhCWjs7QUFvQlE7RUFDSSxXQUFBO0VBQ0EsWUFBQTtBQWxCWjs7QUF5QlE7RUFDSSxZQUFBO0VBQ0Esc0JBQUE7RUFDQSx1QkFBQTtBQXZCWjs7QUE0QlE7RUFDSSxZQUFBO0VBQ0Esc0JBQUE7RUFDQSx1QkFBQTtBQTFCWjs7QUFnQ0E7RUFDSSxhQUFBO0VBQ0Esc0JBQUE7RUFDQSxZQUFBO0FBN0JKOztBQWdDSTtFQUNJLGFBQUE7RUFDQSxtQkFBQTtFQUNBLG1CQUFBO0VBQ0EsWUFBQTtBQTlCUjs7QUFnQ1E7RUFDSSxZQUFBO0VBQ0EsYUFBQTtFQUNBLG1CQUFBO0FBOUJaOztBQW1DSTtFQUNJLG1CQUFBO0FBakNSOztBQXFDSTtFQUNJLGVBQUE7RUFDQSxnQkFBQTtFQUNBLFdBQUE7RUFDQSxZQUFBO0VBQ0Esa0JBQUE7QUFuQ1I7O0FBMENJO0VBQ0ksYUFBQTtFQUNBLGlCQUFBO0FBeENSOztBQTJDSTtFQUNJLFlBQUE7RUFDQSxZQUFBO0VBQ0EsYUFBQTtFQUNBLFdBQUE7RUFDQSx1QkFBQTtFQUNBLG1CQUFBO0VBQ0Esc0JBQUE7QUF6Q1I7O0FBNENJO0VBQ0ksYUFBQTtFQUNBLHNCQUFBO0VBQ0EsV0FBQTtFQUVBLHNCQUFBO0FBM0NSOztBQTZDUTtFQUNJLGFBQUE7RUFDQSxzQkFBQTtFQUNBLG1CQUFBO0VBQ0EsWUFBQTtFQUNBLDZCQUFBO0FBM0NaOztBQThDUTtFQUNJLGFBQUE7RUFDQSxXQUFBO0VBRUEsbUJBQUE7RUFDQSxtQkFBQTtBQTdDWjs7QUErQ1k7RUFDSSxXQUFBO0VBQ0EsWUFBQTtFQUNBLGdCQUFBO0VBQ0EsZ0JBQUE7QUE3Q2hCOztBQWlEUTtFQUNJLFdBQUE7QUEvQ1o7O0FBa0RRO0VBQ0ksYUFBQTtFQUNBLFdBQUE7RUFDQSxZQUFBO0FBaERaOztBQW1EUTtFQUNJLGFBQUE7RUFDQSxZQUFBO0VBQ0EsV0FBQTtFQUNBLGlCQUFBO0VBQ0EsY0FBQTtBQWpEWjs7QUFxRFE7RUFDSSxhQUFBO0VBQ0EsWUFBQTtFQUNBLGdCQUFBO0FBbkRaOztBQW9EWTtFQUNJLFdBQUE7QUFsRGhCOztBQXVEUTtFQUNJLGFBQUE7RUFDQSxZQUFBO0FBckRaOztBQXlEUTtFQUNJLGVBQUE7RUFDQSxXQUFBO0VBQ0EscUJBQUE7RUFDQSxzQkFBQTtBQXZEWjs7QUFxRUk7RUFDSSxpQkFBQTtFQUNBLHdCQUFBO0VBQ0EsMEJBQUE7RUFDQSxzQkFBQTtFQUNBLG1CQUFBO0FBbEVSOztBQW9FSTtFQUNJLGlCQUFBO0FBbEVSOztBQXdFQTtFQUNJLGtCQUFBO0FBckVKIiwiZmlsZSI6InByb2JsZW0td2lkZ2V0LmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiXG5cbjpob3N0e1xuICAgIHdpZHRoOjEwMCU7XG4gICAgaGVpZ2h0OjEwMCU7XG59XG5cbjo6bmctZGVlcCB7XG4gICAgXG4gICAgLnRhbC1wcm9ibGVtLXdpZGdldC1yb3ctcHJvYmxlbSwgLnRhbC1wcm9ibGVtLXdpZGdldC1yb3ctc2VydmljZXtcbiAgICAgICAgLnAtZHJvcGRvd24ge1xuICAgICAgICAgICAgaGVpZ2h0OiAzMHB4O1xuICAgICAgICAgICAgbWFyZ2luLXJpZ2h0OiA1cHg7XG4gICAgICAgIH1cbiAgICAgICAgLnAtZHJvcGRvd24tbGFiZWx7XG4gICAgICAgICAgICBoZWlnaHQ6IDMwcHg7XG4gICAgICAgICAgICBwYWRkaW5nOiA1cHghaW1wb3J0YW50O1xuICAgICAgICB9XG4gICAgfVxuXG4gICAgLnRhbC1wcm9ibGVtLXdpZGdldC1hcmdzLXN1YnJvd3tcbiAgICAgICAgLnAtZHJvcGRvd24ge1xuICAgICAgICAgICAgaGVpZ2h0OiAyMnB4O1xuICAgICAgICB9XG4gICAgICAgIC5wLWRyb3Bkb3duLWxhYmVse1xuICAgICAgICAgICAgaGVpZ2h0OiAyMnB4O1xuICAgICAgICAgICAgcGFkZGluZzogMnB4IWltcG9ydGFudDtcbiAgICAgICAgfVxuICAgICAgICAudGFsLXByb2JsZW0td2lkZ2V0LWZpbGVzLXNlbGVjdGVke1xuICAgICAgICAgICAgd2lkdGg6IDEwMCU7ICAgXG4gICAgICAgIH1cbiAgICB9XG4gICAgXG4gICAgLnRhbC1wcm9ibGVtLXdpZGdldC1hcmdzLXJvdy1maWVsZHtcbiAgICAgICAgZGlzcGxheTogZmxleDtcbiAgICAgICAgZmxleC1kaXJlY3Rpb246IHJvdztcbiAgICAgICAgZmxleC1ncm93OjU7XG4gICAgICAgIFxuICAgICAgICBwLWRyb3Bkb3duLCAucC1pbnB1dHdyYXBwZXJ7XG4gICAgICAgICAgICBkaXNwbGF5OiBmbGV4O1xuICAgICAgICAgICAgd2lkdGg6IDEwMCU7XG4gICAgICAgIH1cbiAgICBcbiAgICB9XG5cbiAgICAudGFsLXByb2JsZW0td2lkZ2V0e1xuICAgICAgICAucC10YWJ2aWV3LW5hdiBsaXtcbiAgICAgICAgICAgIHdpZHRoOiA1MCU7XG4gICAgICAgICAgICBhbGlnbi1jb250ZW50OiBjZW50ZXI7XG4gICAgICAgIH1cblxuICAgICAgICAucC10YWJ2aWV3LWluay1iYXJ7XG4gICAgICAgICAgICB3aWR0aDogNTAlIWltcG9ydGFudDtcbiAgICAgICAgfVxuICAgICAgICBcbiAgICAgICAgLnAtdGFidmlldy1uYXYtbGlua3tcbiAgICAgICAgICAgIG1hcmdpbjogMHB4ICFpbXBvcnRhbnQ7XG4gICAgICAgICAgICBwYWRkaW5nOjBweCAhaW1wb3J0YW50O1xuICAgICAgICAgICAgXG4gICAgICAgICAgICB3aWR0aDogMTAwJTtcbiAgICAgICAgICAgIGhlaWdodDogMTAwJTtcblxuICAgICAgICB9XG5cbiAgICAgICAgLnAtdGFidmlldy1wYW5lbHN7XG4gICAgICAgICAgICBtYXJnaW46IDBweDtcbiAgICAgICAgICAgIHBhZGRpbmc6MHB4O1xuICAgICAgICB9XG4gICAgfVxuXG5cbiAgICAvL29wZW5zIGRldGFjaGVkIGluc2lkZSA8Ym9keT5cbiAgICAudGFsLXByb2JsZW0td2lkZ2V0LXByb2JsZW0tc2VsZWN0b3ItcGFuZWx7XG4gICAgICAgIC5wLWRyb3Bkb3duLWl0ZW0ge1xuICAgICAgICAgICAgaGVpZ2h0OiAzMHB4O1xuICAgICAgICAgICAgbWFyZ2luOiA1cHghaW1wb3J0YW50O1xuICAgICAgICAgICAgcGFkZGluZzogNXB4IWltcG9ydGFudDtcbiAgICAgICAgfVxuICAgIH1cblxuICAgIC50YWwtcHJvYmxlbS13aWRnZXQtZmlsZXMtZHJvcGRvd24tcGFuZWx7XG4gICAgICAgIC5wLWRyb3Bkb3duLWl0ZW0ge1xuICAgICAgICAgICAgaGVpZ2h0OiAyMnB4O1xuICAgICAgICAgICAgbWFyZ2luOiAycHghaW1wb3J0YW50O1xuICAgICAgICAgICAgcGFkZGluZzogMnB4IWltcG9ydGFudDtcbiAgICAgICAgfVxuICAgIH1cbn1cblxuXG4udGFsLXByb2JsZW0td2lkZ2V0e1xuICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgZmxleC1kaXJlY3Rpb246IGNvbHVtbjtcbiAgICBoZWlnaHQ6MTAwJTtcblxuICAgIFxuICAgIC50YWwtcHJvYmxlbS13aWRnZXQtcm93LXByb2JsZW0sIC50YWwtcHJvYmxlbS13aWRnZXQtcm93LXNlcnZpY2V7XG4gICAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICAgIGZsZXgtZGlyZWN0aW9uOiByb3c7XG4gICAgICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAgICAgIHBhZGRpbmc6IDVweDtcblxuICAgICAgICAudGFsLXByb2JsZW0td2lkZ2V0LXByb2JsZW0tc2VsZWN0b3IsIC50YWwtcHJvYmxlbS13aWRnZXQtc2VydmljZS1zZWxlY3RvciB7XG4gICAgICAgICAgICBmbGV4LWdyb3c6IDI7XG4gICAgICAgICAgICBkaXNwbGF5OiBmbGV4O1xuICAgICAgICAgICAgYWxpZ24taXRlbXM6IGNlbnRlcjsgICBcbiAgICAgICAgfVxuXG4gICAgfVxuXG4gICAgLnRhbC1wcm9ibGVtLXdpZGdldC1yb3ctcHJvYmxlbTpmaXJzdC1jaGlsZHtcbiAgICAgICAgcGFkZGluZy1ib3R0b206IDBweDtcbiAgICB9XG5cblxuICAgIC50YWwtcHJvYmxlbS13aWRnZXQtbGFiZWx7XG4gICAgICAgIHBhZGRpbmc6MC41cmVtO1xuICAgICAgICBmb250LXdlaWdodDo2MDA7XG4gICAgICAgIHdpZHRoOiAxMDAlO1xuICAgICAgICBoZWlnaHQ6IDEwMCU7XG4gICAgICAgIHRleHQtYWxpZ246IGNlbnRlcjtcbiAgICB9XG5cbiAgICBcblxuICAgIFxuXG4gICAgLnRhbC1wcm9ibGVtLXdpZGdldC1hcmdzLXJvdy10aXRsZXtcbiAgICAgICAgZGlzcGxheTogZmxleDtcbiAgICAgICAgZm9udC13ZWlnaHQ6IGJvbGQ7XG4gICAgfVxuXG4gICAgLnRhbC1wcm9ibGVtLXdpZGdldC1hcmdzLXJvdy1uby1wYXJhbXN7XG4gICAgICAgIGZsZXgtZ3JvdzogMTtcbiAgICAgICAgaGVpZ2h0OiAxMDAlO1xuICAgICAgICBkaXNwbGF5OiBmbGV4O1xuICAgICAgICB3aWR0aDogMTAwJTtcbiAgICAgICAganVzdGlmeS1jb250ZW50OiBjZW50ZXI7IC8vIGxlZnQtcmlnaHRcbiAgICAgICAgYWxpZ24taXRlbXM6IGNlbnRlcjsgICAgIC8vIHRvcC1ib3R0b21cbiAgICAgICAgYm9yZGVyOiAxcHggc29saWQgIzQ0NDtcbiAgICB9XG5cbiAgICAudGFsLXByb2JsZW0td2lkZ2V0LWFyZ3N7XG4gICAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICAgIGZsZXgtZGlyZWN0aW9uOiBjb2x1bW47XG4gICAgICAgIHdpZHRoOiAxMDAlO1xuXG4gICAgICAgIGZvbnQtZmFtaWx5OiBtb25vc3BhY2U7XG4gICAgICAgIFxuICAgICAgICAudGFsLXByb2JsZW0td2lkZ2V0LWFyZ3Mtcm93e1xuICAgICAgICAgICAgZGlzcGxheTogZmxleDtcbiAgICAgICAgICAgIGZsZXgtZGlyZWN0aW9uOiBjb2x1bW47XG4gICAgICAgICAgICBhbGlnbi1pdGVtczogY2VudGVyO1xuICAgICAgICAgICAgcGFkZGluZzogNXB4O1xuICAgICAgICAgICAgYm9yZGVyLWJvdHRvbTogMXB4IHNvbGlkICMzMzM7XG4gICAgICAgIH1cblxuICAgICAgICAudGFsLXByb2JsZW0td2lkZ2V0LWFyZ3Mtc3Vicm93e1xuICAgICAgICAgICAgZGlzcGxheTogZmxleDtcbiAgICAgICAgICAgIHdpZHRoOjEwMCU7XG4gICAgICAgICAgICAvL2JhY2tncm91bmQtY29sb3I6IGFxdWFtYXJpbmU7XG4gICAgICAgICAgICBmbGV4LWRpcmVjdGlvbjogcm93O1xuICAgICAgICAgICAgYWxpZ24taXRlbXM6IGNlbnRlcjtcblxuICAgICAgICAgICAgYnV0dG9ue1xuICAgICAgICAgICAgICAgIHdpZHRoOiAyMHB4O1xuICAgICAgICAgICAgICAgIGhlaWdodDogMjBweDtcbiAgICAgICAgICAgICAgICBtaW4taGVpZ2h0OiAyMHB4O1xuICAgICAgICAgICAgICAgIG1heC1oZWlnaHQ6IDIwcHg7XG4gICAgICAgICAgICB9XG4gICAgICAgIH1cblxuICAgICAgICAudGFsLXByb2JsZW0td2lkZ2V0LWFyZ3Mtcm93Omxhc3QtY2hpbGR7XG4gICAgICAgICAgICBib3JkZXI6IDBweDtcbiAgICAgICAgfVxuXG4gICAgICAgIC50YWwtcHJvYmxlbS13aWRnZXQtYXJncy1yb3ctaW5mb3tcbiAgICAgICAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICAgICAgICB3aWR0aDogMjBweDtcbiAgICAgICAgICAgIHBhZGRpbmc6IDVweDtcbiAgICAgICAgfVxuXG4gICAgICAgIC50YWwtcHJvYmxlbS13aWRnZXQtYXJncy1yb3ctbmFtZXtcbiAgICAgICAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICAgICAgICBmbGV4LWdyb3c6IDE7XG4gICAgICAgICAgICB3aWR0aDogMTBlbTtcbiAgICAgICAgICAgIHBhZGRpbmctbGVmdDogNXB4O1xuICAgICAgICAgICAgZm9udC1zaXplOiA4MCU7XG4gICAgICAgICAgICBcbiAgICAgICAgfVxuXG4gICAgICAgIC50YWwtcHJvYmxlbS13aWRnZXQtYXJncy1yb3ctZmllbGR7XG4gICAgICAgICAgICBkaXNwbGF5OiBmbGV4O1xuICAgICAgICAgICAgZmxleC1ncm93OiA2O1xuICAgICAgICAgICAgcGFkZGluZzogMHB4IDVweDtcbiAgICAgICAgICAgIGlucHV0e1xuICAgICAgICAgICAgICAgIHdpZHRoOiAxMDAlXG4gICAgICAgICAgICB9XG4gICAgICAgICAgICBcbiAgICAgICAgfVxuXG4gICAgICAgIC50YWwtcHJvYmxlbS13aWRnZXQtYXJncy1yb3ctYWN0aW9uc3tcbiAgICAgICAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICAgICAgICBwYWRkaW5nOiA1cHg7XG4gICAgICAgIH1cblxuICAgICAgICBcbiAgICAgICAgLnRhbC1wcm9ibGVtLXdpZGdldC1hcmdzLXN1YnJvdy1yZWdleHBye1xuICAgICAgICAgICAgZm9udC1zaXplOiAxMXB4O1xuICAgICAgICAgICAgY29sb3I6IGdyYXk7XG4gICAgICAgICAgICB3b3JkLXdyYXA6IGJyZWFrLXdvcmQ7XG4gICAgICAgICAgICBmb250LWZhbWlseTogbW9ub3NwYWNlO1xuICAgICAgICB9XG4gICAgfVxuXG5cblxufVxuXG5cblxuXG5cblxuLnRhbC1wcm9ibGVtLXdpZGdldC1wcm9ibGVtLXNlbGVjdGVkLCAudGFsLXByb2JsZW0td2lkZ2V0LXByb2JsZW0taXRlbXtcbiAgICAucHJvYmxlbS1sYWJlbHtcbiAgICAgICAgZm9udC13ZWlnaHQ6IGJvbGQ7XG4gICAgICAgIHRleHQtdHJhbnNmb3JtOiBjLXRhbGl6ZTsgICBcbiAgICAgICAgcGFkZGluZzogMXB4IDEwcHggMXB4IDEwcHg7ICAgICAgICBcbiAgICAgICAgYmFja2dyb3VuZC1jb2xvcjogIzU1NTtcbiAgICAgICAgYm9yZGVyLXJhZGl1czogMjBweDtcbiAgICB9XG4gICAgLnNlcnZpY2UtbGFiZWx7XG4gICAgICAgIHBhZGRpbmctbGVmdDogM3B4O1xuICAgIH1cbn1cblxuXG5cbmJ1dHRvbntcbiAgICBib3JkZXItcmFkaXVzOiA1cHg7XG59XG4iXX0= */"]
 });
 
