@@ -1,3 +1,4 @@
+import { resolve } from 'dns';
 import { createFs } from 'indexeddb-fs';
 import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver } from './fs.service';
 
@@ -43,6 +44,16 @@ export class IndexeddbFsDriver implements FsServiceDriver {
     return null;
   }
 
+  async mount(path: string): Promise<boolean> {
+    //TODO
+    return new Promise<boolean>(resolve=>true);
+  }
+  
+  async unmount(path: string): Promise<boolean> 
+  {
+    //TODO
+    return new Promise<boolean>(resolve=>true);
+  }
   
   async scanDirectory(path?:string):Promise<FsNodeFolder>{
     if (!path){path = this.rootDir;}

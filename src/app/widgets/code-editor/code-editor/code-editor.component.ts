@@ -318,10 +318,9 @@ export class CodeEditorComponent implements OnInit {
     this.cmdConnect = undefined
     this.outputWidget.enableStdin(false)
 
-    //TODO: stop pyodide gracefully -> stopExecution ( keyboard interrupt ) seams ineffetive
+    
     this.python.driver?.stopExecution()
-    alert("**WORK IN PROGRESS**\nPurtroppo qualcosa è andato storto con le API e pyodide è rimasto appeso.\nPer il momento mi tocca fare il reload della pagina.")
-    window.location.reload()
+    
     
   }
 

@@ -1,7 +1,6 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { Packets } from './api.packets';
 import { Commands } from './api.commands';
-import { stat } from 'fs';
 
 export class Meta extends Packets.Meta{}
 export interface AttachmentInfo extends Packets.Reply.AttachmentInfo{}
@@ -26,7 +25,7 @@ export class ApiService {
   public onApiStateChange = new EventEmitter<ApiState>();
 
   constructor(){
-    this._url = 'ws://localhost:8008/'
+    this._url = 'wss://ta.di.univr.it/sfide'
     this.urlCache = [
       'wss://ta.di.univr.it/sfide',
       'ws://localhost:8008/',
@@ -83,15 +82,16 @@ export class ApiService {
 
   public problemList(onResult:(problemList:Map<string, Meta>)=>void, onError?: (error: string)=>void){
     this.stateMaybe()
+    console.log("problemList:")
     let cmdList = new Commands.ProblemList(this._url);
     cmdList.onRecieveProblemList = (message)=>{
-      console.log("onRecieveProblemList:",message)
+      console.log("problemList:onRecieveProblemList:",message)
       this.stateGood()
       if(onResult){onResult(message.meta)}
     }
     cmdList.onError = (error) => {
       this.stateBad();
-      console.log("assdadsssssssssssssssssssssssss")
+      console.log("problemList:onError:")
       if(onError) {onError(error)} 
     }
     cmdList.run();
@@ -196,65 +196,4 @@ export class ApiService {
     return cmdConnect;
   }
 
-  /*
-
-  public connectToPlay( 
-      lobbyID:string, 
-      displayName:string, 
-      password?:string,
-      onEvent?: (state:LobbyEventType)=>void,
-      onMatchUpdate?: (matchInfo: MatchInfo)=>void, 
-      onData?: (data:string)=>void,
-      onError?:(data:string)=>void
-    ){
-    
-    let cmdConnect = new Commands.Connect(this.url, lobbyID, displayName, password);
-    cmdConnect.onReciveJoin = (message) => { 
-      console.log(message.info.Err)
-      if (message.info.Err){ 
-        if (cmdConnect.onError) { cmdConnect.onError("Failed to join lobby: "+message.info.Err)  } 
-        return;
-      }
-      if(onEvent) { onEvent(LobbyEventType.Join) } 
-      if(onMatchUpdate && message.info.Ok) { onMatchUpdate(message.info.Ok) }
-    }
-    cmdConnect.onReciveStart = (message) => { if(onEvent) { onEvent(LobbyEventType.Start) } }
-    cmdConnect.onReciveEnd = (message) => { if(onEvent) { onEvent(LobbyEventType.End) } }
-    cmdConnect.onReciveUpdate = (message) => { if(onMatchUpdate ) { onMatchUpdate(message.info) } }
-    cmdConnect.onReciveBinary = (message) => { if(onData) { onData(message)} }
-    cmdConnect.onError = onError
-    
-    cmdConnect.run();
-    return cmdConnect;
-  }
-
-  public connectToSpectate( 
-      lobbyID:string, 
-      onEvent?: (state:LobbyEventType)=>void,
-      onMatchUpdate?: (matchInfo: MatchInfo)=>void, 
-      onData?: (data:string)=>void,
-    ){
-    
-    let cmdSpectate = new Commands.Spectate(this.url, lobbyID);
-
-    cmdSpectate.onReciveJoin = (message) => { 
-      if (message.info.Err){ 
-        if (cmdSpectate.onError) { cmdSpectate.onError("Failed to join lobby: "+message.info.Err)  } 
-        return;
-      }
-      if(onEvent) { onEvent(LobbyEventType.Join) } 
-      if(onMatchUpdate && message.info.Ok) { onMatchUpdate(message.info.Ok) }
-    }
-    cmdSpectate.onReciveStart = () => { if(onEvent) { onEvent(LobbyEventType.Start) } }
-    cmdSpectate.onReciveEnd = () => { if(onEvent) { onEvent(LobbyEventType.End) } }
-    cmdSpectate.onReciveSync = () => { if(onEvent) { onEvent(LobbyEventType.Sync) } }
-    cmdSpectate.onReciveUpdate = (message) => { if(onMatchUpdate) { onMatchUpdate(message.info) } }
-    cmdSpectate.onReciveBinary = (message) => { if(onData) { onData( message )} }
-    
-    cmdSpectate.run();
-    return cmdSpectate;
-  }
-
-  */
- 
 }

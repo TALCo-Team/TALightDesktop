@@ -55,7 +55,9 @@ export enum PyodideState {
 }
 
 export enum PyodideMessageType {
-  Ready = 'Ready',
+  Ready = 'Ready', // Deprecated -> SubscribeState
+  Mount = 'Mount', //TODO
+  Unmount = 'Unmount', //TODO
   InstallPackages = 'InstallPackages',
   ExecuteFile = 'ExecuteFile',
   ExecuteCode = 'ExecuteCode',
@@ -153,7 +155,7 @@ class PyodideWorker{
         
         this.interruptBuffer[0]=0
         this.pyodide.setInterruptBuffer(this.interruptBuffer)
-        this.interruptTimer = setInterval(()=>{this.pyodide.checkInterrupt()},1000)
+        this.interruptTimer = setInterval(()=>{this.pyodide.checkInterrupt()},10)
         
         this.isReady = true;
         this.sendState(PyodideState.Ready)
@@ -304,6 +306,12 @@ class PyodideWorker{
     this.pyodide.runPythonAsync(code).then( (result:any)=>{
       console.log("execCode: result:\n",result)
       this.sendState(PyodideState.Success, result)
+    }).catch( (error:any)=>{
+      console.log("execCode: error:\n", error)
+      this.sendState(PyodideState.Error, error)
+    }).catch( (error:any)=>{
+      console.log("execCode: error:\n", error)
+      this.sendState(PyodideState.Error, error)
     }).catch( (error:any)=>{
       console.log("execCode: error:\n", error)
       this.sendState(PyodideState.Error, error)
@@ -471,7 +479,7 @@ class PyodideWorker{
     let signal = parseInt(arg); // 2 stands for SIGINT.
     if(isNaN(signal)){signal = 2}
     
-    this.interruptBuffer[0] = signal;
+    setTimeout(()=>{this.interruptBuffer[0] = signal})
 
     response.message.contents = [wasRunning?"true":"false"]
     return response
@@ -766,6 +774,4 @@ class PyodideWorker{
 
 
 
-
 main()
-
