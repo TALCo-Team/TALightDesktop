@@ -76,8 +76,8 @@ export class CodeEditorComponent implements OnInit {
     this.fsroot = fsroot;
     this.fslist = this.fs.treeToList(fsroot);
     this.fslistfile = this.fslist.filter( item=>"content" in item ) as FsNodeFile[]
-    let filePathList = new Array<{path:string}>()
-    this.fslistfile.forEach(item=>filePathList.push({path:item.path}))
+    let filePathList = new Array<string>()
+    this.fslistfile.forEach(item=>filePathList.push(item.path))
     this.problemWidget.filePathList = filePathList
   }
   

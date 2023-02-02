@@ -472,10 +472,10 @@ class PyodideWorker{
     let arg = request.message.args[0] ?? "2"
     let signal = parseInt(arg); // 2 stands for SIGINT.
     if(isNaN(signal)){signal = 2}
-    
+    console.log("stopExecution:",signal)//,res)
     setTimeout(()=>{this.interruptBuffer[0] = signal})
 
-    response.message.contents = [wasRunning?"true":"false"]
+    response.message.args = [wasRunning?"true":"false"]
     return response
   }
 

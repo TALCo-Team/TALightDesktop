@@ -153,22 +153,19 @@
                                 styleClass="tal-problem-widget-files-dropdown"
                                 panelStyleClass="tal-problem-widget-files-dropdown-panel"
                                 [options]="filePathList"
-                                optionValue="path"
-                                optionLabel="path"
-                                dataKey="path"
                                 [(ngModel)]="file.value.value"
                                 [showClear]="true">
       
                         <ng-template pTemplate="selectedItem" let-option>
                             <div class="tal-problem-widget-files-selected">
-                              <div>{{option.path}}</div>
+                              <div>{{option}}</div>
                             </div>
                         </ng-template>
         
         
                         <ng-template pTemplate="item" let-option>
                             <div class="tal-problem-widget-files-item">
-                              <div>{{option.path}}</div>
+                              <div>{{option}}</div>
                             </div>
                         </ng-template>
 
