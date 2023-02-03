@@ -308,13 +308,15 @@ export class CodeEditorComponent implements OnInit {
     );
     this.cmdConnect.onError = (error)=>{this.didConnectError(error)};
     console.log("apiConnect:DONE")
-
-    console.log("apiConnect:runProject")
-    this.saveFile();
-    await this.python.runProject()
-    this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
-    console.log("apiConnect:runProject:running")
-
+    
+    if(files.size === 0) {
+      console.log("apiConnect:runProject")
+      this.saveFile();
+      await this.python.runProject()
+      this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
+      console.log("apiConnect:runProject:running")
+    }
+    
     return true
   }
 

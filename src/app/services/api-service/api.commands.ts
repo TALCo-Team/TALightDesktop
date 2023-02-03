@@ -172,18 +172,25 @@ export namespace Commands{
           this.didRecieveConnectBegin(message); 
           if(this.files.size > 0 && message.status.Err === "") {
             const byteSize = (str:string) => new Blob([str]).size;
+            var JSONbig = require('json-bigint');
             for (let [arg, value] of this.files.entries()) {
+              //header main.py da terminale
+              //{"name":"instance","size":21,"hash":28267277493754039280895210869094079614}
+
               let name = arg;
               let size = byteSize(value);
-              let hash = 313205442490843939907464264599881252868n;
-
+              let hash = BigInt("28267277493754039280895210869094079614");
               console.log("hash: ", hash);
               
-              //header main.py da terminale
-              //{"name":"instance","size":344,"hash":313205442490843939907464264599881252868}
-
               let header = new Packets.Request.BinaryHeader(name, size, hash);
-              this.tal.ws!.next(header);
+              console.log("header: ", header);
+              console.log("header:string", header.toString());
+
+              var header_parsed = JSONbig.stringify(header);
+              console.log("header:parsed: ", header_parsed);
+              console.log("header:parsed:type ", typeof header_parsed);
+
+              this.tal.ws!.next(header_parsed);
               this.tal.sendBinary(value);
             }
           }
