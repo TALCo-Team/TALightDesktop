@@ -346,5 +346,6 @@ export class CodeEditorComponent implements OnInit {
   async didConnectData(data: string){
     console.log("apiConnect:didConnectData:", data)
     this.sendStdin(data, true)
+    
   }
 }
