@@ -45,6 +45,8 @@ export class CodeEditorComponent implements OnInit {
   @ViewChild("execBar") public execBar!: ExecbarWidgetComponent;
   @ViewChild("problemWidget") public problemWidget!: ProblemWidgetComponent;
   @ViewChild("outputWidget") public outputWidget!: OutputWidgetComponent;
+
+  private output_file = undefined;
   
   constructor(
     private fs: FsService,
@@ -293,6 +295,7 @@ export class CodeEditorComponent implements OnInit {
     let onConnectionBegin = (msg: string[]) => {this.didConnectBegin(msg)};
     let onConnectionClose = (msg: string[]) => {this.didConnectClose(msg)};
     let onData = (data: string)=>{ this.didConnectData(data)};
+    let onBinaryHeader = (msg: any)=>{ this.didRecieveBinaryHeader(msg)};
 
     this.cmdConnect = await this.api.Connect(
       problem, 
@@ -304,7 +307,8 @@ export class CodeEditorComponent implements OnInit {
       onConnectionBegin,
       onConnectionStart,
       onConnectionClose,
-      onData
+      onData,
+      onBinaryHeader
     );
     this.cmdConnect.onError = (error)=>{this.didConnectError(error)};
     console.log("apiConnect:DONE")
@@ -342,12 +346,20 @@ export class CodeEditorComponent implements OnInit {
 
   async didConnectClose(message: string[]){
     console.log("apiConnect:didConnectionClose:",message)
-    this.cmdConnect = undefined
+    //this.cmdConnect = undefined
   }
 
   async didConnectData(data: string){
     console.log("apiConnect:didConnectData:", data)
-    this.sendStdin(data, true)
-    
+    this.sendStdin(data, true);
+
+    if(this.output_file)this.driver?.writeFile("/" + this.output_file, data);
+  }
+
+  async didRecieveBinaryHeader(message: any){
+    console.log("apiConnect:didRecieveBinaryHeader:", message)
+
+    this.output_file = message.name;
+    if(this.output_file)this.driver?.writeFile("/" + this.output_file, "");
   }
 }

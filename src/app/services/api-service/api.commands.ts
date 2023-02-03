@@ -90,7 +90,7 @@ export namespace Commands{
 
       public override didRecive(payload:Packets.PacketsPayload){
         super.didRecive(payload);
-        let message = payload.getMessage(Packets.Reply.MetaList);
+        let message = payload.getMessage_MetaList(Packets.Reply.MetaList);
         if (message){ this.didReciveProblemList(message); }
       }
         
@@ -170,7 +170,8 @@ export namespace Commands{
         message = payload.getMessage(Packets.Reply.ConnectBegin);
         if (message){ 
           this.didRecieveConnectBegin(message); 
-          if(this.files.size > 0 && message.status.Err === "") {
+
+          if(this.files.size > 0 && message.status.Ok.length > 0 && message.status.Ok[0] !== "") {
             const byteSize = (str:string) => new Blob([str]).size;
             var JSONbig = require('json-bigint');
             for (let [arg, value] of this.files.entries()) {
@@ -180,7 +181,7 @@ export namespace Commands{
               let name = arg;
               let size = byteSize(value);
               let hash = BigInt("28267277493754039280895210869094079614");
-              console.log("hash: ", hash);
+              
               
               let header = new Packets.Request.BinaryHeader(name, size, hash);
               console.log("header: ", header);
@@ -201,6 +202,9 @@ export namespace Commands{
 
         message = payload.getMessage(Packets.Reply.ConnectStop)
         if (message){ this.didRecieveConnectStop(message); }
+
+        message = payload.getMessage(Packets.Reply.AttachmentInfo)
+        if (message){ this.didRecieveBinaryHeader(message); }
       }
 
       public didRecieveConnectBegin(message: Packets.Reply.ConnectBegin){
@@ -218,12 +222,13 @@ export namespace Commands{
         /* download result files */
         
         if (this.onReciveConnectStop) { 
+          this.sendConnectStop();
           this.onReciveConnectStop(message); 
         }
       }
 
       public didRecieveBinaryHeader(message: Packets.Reply.AttachmentInfo){
-        this.log("AttachmentInfo");
+        this.log("BinaryHeader");
         if (this.onReciveBinaryHeader ) { this.onReciveBinaryHeader(message); }
       }
 
