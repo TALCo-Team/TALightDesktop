@@ -48,7 +48,7 @@ export class ProblemWidgetComponent {
   selectedFiles?: FilesMap;
   selectedFile?: FileDescriptor;
 
-  filePathList = new Array<{path:string}>();
+  filePathList = new Array<string>();
 
   driver?:PyodideDriver
   
@@ -174,23 +174,11 @@ export class ProblemWidgetComponent {
 
 
 //files
-  async fileDidFocus(file:FileDescriptor,event:Event){
-    console.log('fileDidFocus:',file.key,event)
-  }
 
-  async fileDidChange(file:FileDescriptor,event:any){
+  async fileDidChange(file:FileDescriptor,event:{ originalEvent: Event, value?: string }){
     console.log('fileDidChange:',file.key,event)
-    
-    if(!("value" in event)){return;}
-    console.log('fileDidChange:value:found',event.value)
-    let path = event.value
-    
-    /*
-    if(!("path" in value )){return;}
-    console.log('fileDidChange:path:found',value.path)
-    let path = value.path
-    */
-    
+    let path = event.value ?? ""
+
     let idDropdown = 'file-dropdown-' + file.key
     let dropdown = document.getElementById(idDropdown)
     if(!(dropdown instanceof HTMLElement)) {return}
@@ -198,7 +186,7 @@ export class ProblemWidgetComponent {
     
     if (path == ""){
       dropdown.style.color = ""
-      file.value = ""
+      //file.value = ""
       return
     }
 
@@ -206,10 +194,10 @@ export class ProblemWidgetComponent {
     console.log('fileDidChange:pathExist:',pathExist)
     if(!pathExist){
       dropdown.style.color = "red"
-      file.value = ""
+      //file.value = ""
     }else{
       dropdown.style.color = "green"
-      file.value = path
+      //file.value = path
     }
   }
   
