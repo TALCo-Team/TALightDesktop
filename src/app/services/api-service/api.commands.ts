@@ -222,8 +222,9 @@ export namespace Commands{
         /* download result files */
         
         if (this.onReciveConnectStop) { 
-          this.sendConnectStop();
           this.onReciveConnectStop(message); 
+
+          if(this.tal.isOpen() === true) {this.sendConnectStop();}
         }
       }
 

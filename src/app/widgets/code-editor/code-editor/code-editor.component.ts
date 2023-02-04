@@ -46,7 +46,8 @@ export class CodeEditorComponent implements OnInit {
   @ViewChild("problemWidget") public problemWidget!: ProblemWidgetComponent;
   @ViewChild("outputWidget") public outputWidget!: OutputWidgetComponent;
 
-  private output_file = undefined;
+  private output_files:string[]|undefined = undefined;
+  private current_output_file:string|undefined = undefined;
   
   constructor(
     private fs: FsService,
@@ -313,13 +314,13 @@ export class CodeEditorComponent implements OnInit {
     this.cmdConnect.onError = (error)=>{this.didConnectError(error)};
     console.log("apiConnect:DONE")
     
-    if(files.size === 0) {
-      console.log("apiConnect:runProject")
-      this.saveFile();
-      await this.python.runProject()
-      this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
-      console.log("apiConnect:runProject:running")
-    }
+ 
+    console.log("apiConnect:runProject")
+    this.saveFile();
+    await this.python.runProject()
+    this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
+    console.log("apiConnect:runProject:running")
+    
     
     return true
   }
@@ -346,20 +347,36 @@ export class CodeEditorComponent implements OnInit {
 
   async didConnectClose(message: string[]){
     console.log("apiConnect:didConnectionClose:",message)
-    //this.cmdConnect = undefined
+
+    if(message && message.length > 0 && message[0] !== "") {
+      this.output_files = message;
+    }
+    else {
+      this.cmdConnect = undefined;
+      console.log("apiConncect:cmdConnect:value:", this.cmdConnect);
+    }
   }
 
   async didConnectData(data: string){
     console.log("apiConnect:didConnectData:", data)
-    this.sendStdin(data, true);
-
-    if(this.output_file)this.driver?.writeFile("/" + this.output_file, data);
+    if(this.output_files && this.current_output_file){
+      if(this.current_output_file){
+        this.driver?.writeFile("/" + this.current_output_file, data)
+      };
+      if(this.current_output_file === this.output_files[this.output_files.length - 1]){
+        this.cmdConnect = undefined;
+      }
+      console.log("apiConncect:cmdConnect:value:", this.cmdConnect);
+    }
+    else {
+      this.sendStdin(data, true);
+    }
   }
 
   async didRecieveBinaryHeader(message: any){
     console.log("apiConnect:didRecieveBinaryHeader:", message)
 
-    this.output_file = message.name;
-    if(this.output_file)this.driver?.writeFile("/" + this.output_file, "");
+    this.current_output_file = message.name;
+    if(this.current_output_file){this.driver?.writeFile("/" + this.current_output_file, "")};
   }
 }
