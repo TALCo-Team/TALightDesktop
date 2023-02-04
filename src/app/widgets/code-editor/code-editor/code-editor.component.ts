@@ -45,6 +45,9 @@ export class CodeEditorComponent implements OnInit {
   @ViewChild("execBar") public execBar!: ExecbarWidgetComponent;
   @ViewChild("problemWidget") public problemWidget!: ProblemWidgetComponent;
   @ViewChild("outputWidget") public outputWidget!: OutputWidgetComponent;
+
+  private output_files:string[]|undefined = undefined;
+  private current_output_file:string|undefined = undefined;
   
   constructor(
     private fs: FsService,
@@ -76,8 +79,8 @@ export class CodeEditorComponent implements OnInit {
     this.fsroot = fsroot;
     this.fslist = this.fs.treeToList(fsroot);
     this.fslistfile = this.fslist.filter( item=>"content" in item ) as FsNodeFile[]
-    let filePathList = new Array<{path:string}>()
-    this.fslistfile.forEach(item=>filePathList.push({path:item.path}))
+    let filePathList = new Array<string>()
+    this.fslistfile.forEach(item=>filePathList.push(item.path))
     this.problemWidget.filePathList = filePathList
   }
   
@@ -108,7 +111,7 @@ export class CodeEditorComponent implements OnInit {
   public didStderr(data:string){
     console.log("onStderr:")
     //alert("STDERR: "+data)
-    this.nm.sendNotification("ERROR:",data,NotificationType.Error)
+    //this.nm.sendNotification("ERROR:",data,NotificationType.Error)
     this.outputWidget.print(data, OutputType.STDERR)
   }
 
@@ -255,11 +258,20 @@ export class CodeEditorComponent implements OnInit {
       return false
     }
     console.log("apiConnect:service:ok")
+    
 
     let config = await this.python.readPythonConfig()
     if (!config){return false}
     console.log("apiConnect:config:ok")
-    
+
+    //Run MAIN
+    console.log("apiConnect:runProject")
+    this.saveFile();
+    await this.python.runProject()
+    this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
+    console.log("apiConnect:runProject:running")
+
+    //Open Connection
     let problem = this.selectedService.parent.name;
     let service = this.selectedService.name;
     let args = this.selectedService.exportArgs();
@@ -293,6 +305,7 @@ export class CodeEditorComponent implements OnInit {
     let onConnectionBegin = (msg: string[]) => {this.didConnectBegin(msg)};
     let onConnectionClose = (msg: string[]) => {this.didConnectClose(msg)};
     let onData = (data: string)=>{ this.didConnectData(data)};
+    let onBinaryHeader = (msg: any)=>{ this.didRecieveBinaryHeader(msg)};
 
     this.cmdConnect = await this.api.Connect(
       problem, 
@@ -304,17 +317,19 @@ export class CodeEditorComponent implements OnInit {
       onConnectionBegin,
       onConnectionStart,
       onConnectionClose,
-      onData
+      onData,
+      onBinaryHeader
     );
-    this.cmdConnect.onError = (error)=>{this.didConnectError(error)};
     console.log("apiConnect:DONE")
-
+    
+ 
     console.log("apiConnect:runProject")
     this.saveFile();
     await this.python.runProject()
     this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
     console.log("apiConnect:runProject:running")
-
+    
+    
     return true
   }
 
@@ -324,10 +339,7 @@ export class CodeEditorComponent implements OnInit {
     this.cmdConnect = undefined
     this.outputWidget.enableStdin(false)
 
-    
     this.python.driver?.stopExecution()
-    
-    
   }
 
   async didConnectStart(){
@@ -340,11 +352,36 @@ export class CodeEditorComponent implements OnInit {
 
   async didConnectClose(message: string[]){
     console.log("apiConnect:didConnectionClose:",message)
-    this.cmdConnect = undefined
+
+    if(message && message.length > 0 && message[0] !== "") {
+      this.output_files = message;
+    }
+    else {
+      this.cmdConnect = undefined;
+      console.log("apiConncect:cmdConnect:value:", this.cmdConnect);
+    }
   }
 
   async didConnectData(data: string){
     console.log("apiConnect:didConnectData:", data)
-    this.sendStdin(data, true)
+    if(this.output_files && this.current_output_file){
+      if(this.current_output_file){
+        this.driver?.writeFile("/" + this.current_output_file, data)
+      };
+      if(this.current_output_file === this.output_files[this.output_files.length - 1]){
+        this.cmdConnect = undefined;
+      }
+      console.log("apiConncect:cmdConnect:value:", this.cmdConnect);
+    }
+    else {
+      this.sendStdin(data, true);
+    }
+  }
+
+  async didRecieveBinaryHeader(message: any){
+    console.log("apiConnect:didRecieveBinaryHeader:", message)
+
+    this.current_output_file = message.name;
+    if(this.current_output_file){this.driver?.writeFile("/" + this.current_output_file, "")};
   }
 }

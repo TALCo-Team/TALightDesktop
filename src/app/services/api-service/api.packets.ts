@@ -28,7 +28,23 @@ export namespace Packets{
         for (var pkttype in this.packets) {
           if (pkttype != packetType){ continue; }
           let packet = this.packets[packetType] 
+          console.log("Packet:", packet);
           let message = new packetClass(packet);
+          message.fromPacket(packet);
+          console.log("Packet:Message:", message);
+          return message;
+        }        
+        return null;
+      }
+
+      public getMessage_MetaList<T extends Message>( packetClass: new (packet?: any)=>T ):T | null{
+        let packetType = packetClass.name;
+        for (var pkttype in this.packets) {
+          if (pkttype != packetType){ continue; }
+          let packet = this.packets[packetType] 
+          console.log("Packet:", packet);
+          let message = new packetClass(packet);
+          console.log("Packet:Message:", message);
           return message;
         }        
         return null;
@@ -38,6 +54,7 @@ export namespace Packets{
   
     export class Message{
       constructor(packet?: any){
+        console.log("packet:message:constructor:", packet)
         if(packet){this.fromPacket(packet);}
       }
 
@@ -75,16 +92,23 @@ export namespace Packets{
       }
       
       public fromPacket(packet:any){
+        console.log("packet:message:fromPacket:", this)
+        if("name" in this){console.log("packet:message:fromPacket:", this["name"])} else {console.log("packet:message:fromPacket:", false)}
+        for (var msgField in this) {
+          console.log("packet:message:fromPacket:var:checkprint")
+          console.log("packet:message:fromPacket:var:", msgField)
+        }
         for (var msgField in this) {
           if (! (msgField in packet)){ continue; }
           let value = packet[msgField];
           const varType = typeof value;
-          
           if (varType in ["function","undefined","symbol"] ){ continue; }
   
           if (varType === "object") {
+            console.log("packet:message:copyObject:",value)
             this[msgField] = Object.assign(value);
           } else {
+            console.log("packet:message:copyValue:",value)
             this[msgField] = value;
           }
         }
@@ -171,6 +195,18 @@ export namespace Packets{
         this.tty = tty;
         this.token = token;
         this.files = files;
+      }
+    }
+    export class BinaryHeader extends Message {
+      public name:string = "";
+      public size:number = 0;
+      public hash:bigint = 0n;
+
+      constructor(name:string, size:number, hash:bigint) {
+        super();
+        this.name = name;
+        this.size = size;
+        this.hash = hash;
       }
     }
     export class ConnectStop extends Message {
