@@ -1,7 +1,6 @@
 /// <reference lib="webworker" />
 // Configs
 
-
 let pyodideRoot = "/"
 let pyodideMount = "/mnt"
 
@@ -51,6 +50,7 @@ export enum PyodideState {
   Run = 'Run',
   Stdin = 'Stdin',
   Success = 'Success',
+  Killed = 'Killed',
   Error = 'Error',
 }
 
@@ -144,7 +144,7 @@ class PyodideWorker{
 
     
     addEventListener("message", async ( payload:any ) => { this.onData(payload.data) })
-   
+    
     //Send Init event, but outside the constructor
     setTimeout(()=>{this.sendState(PyodideState.Loading)})
 
@@ -155,8 +155,6 @@ class PyodideWorker{
         
         this.interruptBuffer[0]=0
         this.pyodide.setInterruptBuffer(this.interruptBuffer)
-        this.interruptTimer = setInterval(()=>{this.pyodide.checkInterrupt()},10)
-        
         this.isReady = true;
         this.sendState(PyodideState.Ready)
         this.readyResolver(this.isReady);
@@ -195,6 +193,8 @@ class PyodideWorker{
     let oldInput = this.pyodide.globals.input;
     console.log("setCustomHooks:oldInput:",oldInput)
 
+
+    //Globals: Input
     let localThis = this;
     this.pyodide.globals.set('input', async function (prompt?:string) {
       if (prompt && prompt.trim().length>0){localThis.sendStdout(prompt)}
@@ -214,6 +214,15 @@ class PyodideWorker{
 
       return promise;
     });
+
+    let sys = this.pyodide.pyimport("signal");
+    let signal = this.pyodide.pyimport("signal");
+    signal.signal(signal.SIGINT, (signal:any, frame:any)=>{ sys.exit(0) })
+
+
+
+
+
   }
 
   async load(root:string, mount:string)
@@ -300,15 +309,27 @@ class PyodideWorker{
 
   execCodeAsync(code:string){
     console.log("execCode:",code)
-    this.interruptBuffer[0] = 0;
-    this.stdinBuffer = []
+    this.interruptBuffer[0]=0
+    this.pyodide.setInterruptBuffer(this.interruptBuffer)
+    this.interruptTimer = setInterval(()=>{
+      try{ this.pyodide.checkInterrupt() }
+      catch(_){ 
+        this.sendStderr("Process terminated by user request")
+        this.sendState(PyodideState.Killed)
+      }
+    },10)
 
+    this.stdinBuffer = []
+    
     this.pyodide.runPythonAsync(code).then( (result:any)=>{
       console.log("execCode: result:\n",result)
       this.sendState(PyodideState.Success, result)
     }).catch( (error:any)=>{
+      let sysmodule = this.pyodide.pyimport("sys");
+      console.log("execCode: exception:\n", sysmodule.exception)
       console.log("execCode: error:\n", error)
       this.sendState(PyodideState.Error, error)
+      
     })
   }
 

@@ -157,6 +157,7 @@ export enum PyodideState {
   Run = 'Run',
   Stdin = 'Stdin',
   Success = 'Success',
+  Killed = 'Killed',
   Error = 'Error',
 }
 
