@@ -45,6 +45,9 @@ export class CodeEditorComponent implements OnInit {
   @ViewChild("execBar") public execBar!: ExecbarWidgetComponent;
   @ViewChild("problemWidget") public problemWidget!: ProblemWidgetComponent;
   @ViewChild("outputWidget") public outputWidget!: OutputWidgetComponent;
+
+  private output_files:string[]|undefined = undefined;
+  private current_output_file:string|undefined = undefined;
   
   constructor(
     private fs: FsService,
@@ -297,6 +300,13 @@ export class CodeEditorComponent implements OnInit {
     console.log("apiConnect:params:token",token)
     console.log("apiConnect:params:files",files)
 
+    
+    let onConnectionStart = () => {this.didConnectStart()};
+    let onConnectionBegin = (msg: string[]) => {this.didConnectBegin(msg)};
+    let onConnectionClose = (msg: string[]) => {this.didConnectClose(msg)};
+    let onData = (data: string)=>{ this.didConnectData(data)};
+    let onBinaryHeader = (msg: any)=>{ this.didRecieveBinaryHeader(msg)};
+
     this.cmdConnect = await this.api.Connect(
       problem, 
       service, 
@@ -304,14 +314,21 @@ export class CodeEditorComponent implements OnInit {
       tty,
       token,
       files,
-      ( msg: string[] )         => { this.didConnectBegin(msg) },
-      ( )                       => { this.didConnectStart() },
-      ( msg: string[] )         => { this.didConnectClose(msg) },
-      ( data: string )          => { this.didConnectData(data) },
-      ( payload:ArrayBuffer )   => { this.didConnectReceiveFiles(payload) },
-      ( error: string )         => { this.didConnectError(error) },
+      onConnectionBegin,
+      onConnectionStart,
+      onConnectionClose,
+      onData,
+      onBinaryHeader
     );
     console.log("apiConnect:DONE")
+    
+ 
+    console.log("apiConnect:runProject")
+    this.saveFile();
+    await this.python.runProject()
+    this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
+    console.log("apiConnect:runProject:running")
+    
     
     return true
   }
@@ -335,16 +352,36 @@ export class CodeEditorComponent implements OnInit {
 
   async didConnectClose(message: string[]){
     console.log("apiConnect:didConnectionClose:",message)
-    this.cmdConnect = undefined
+
+    if(message && message.length > 0 && message[0] !== "") {
+      this.output_files = message;
+    }
+    else {
+      this.cmdConnect = undefined;
+      console.log("apiConncect:cmdConnect:value:", this.cmdConnect);
+    }
   }
 
   async didConnectData(data: string){
     console.log("apiConnect:didConnectData:", data)
-    this.sendStdin(data, true) 
+    if(this.output_files && this.current_output_file){
+      if(this.current_output_file){
+        this.driver?.writeFile("/" + this.current_output_file, data)
+      };
+      if(this.current_output_file === this.output_files[this.output_files.length - 1]){
+        this.cmdConnect = undefined;
+      }
+      console.log("apiConncect:cmdConnect:value:", this.cmdConnect);
+    }
+    else {
+      this.sendStdin(data, true);
+    }
   }
 
-  async didConnectReceiveFiles(data: ArrayBuffer){
-    console.log("apiConnect:didConnectReceiveFiles:", data)
-    
+  async didRecieveBinaryHeader(message: any){
+    console.log("apiConnect:didRecieveBinaryHeader:", message)
+
+    this.current_output_file = message.name;
+    if(this.current_output_file){this.driver?.writeFile("/" + this.current_output_file, "")};
   }
 }

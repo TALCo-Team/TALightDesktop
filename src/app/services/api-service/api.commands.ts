@@ -90,7 +90,7 @@ export namespace Commands{
 
       public override didRecive(payload:Packets.PacketsPayload){
         super.didRecive(payload);
-        let message = payload.getMessage(Packets.Reply.MetaList);
+        let message = payload.getMessage_MetaList(Packets.Reply.MetaList);
         if (message){ this.didReciveProblemList(message); }
       }
         
@@ -170,20 +170,28 @@ export namespace Commands{
         message = payload.getMessage(Packets.Reply.ConnectBegin);
         if (message){ 
           this.didRecieveConnectBegin(message); 
-          if(this.files.size > 0 && message.status.Err === "") {
+
+          if(this.files.size > 0 && message.status.Ok.length > 0 && message.status.Ok[0] !== "") {
             const byteSize = (str:string) => new Blob([str]).size;
+            var JSONbig = require('json-bigint');
             for (let [arg, value] of this.files.entries()) {
+              //header main.py da terminale
+              //{"name":"instance","size":21,"hash":28267277493754039280895210869094079614}
+
               let name = arg;
               let size = byteSize(value);
-              let hash = 313205442490843939907464264599881252868n;
-
-              console.log("hash: ", hash);
+              let hash = BigInt("28267277493754039280895210869094079614");
               
-              //header main.py da terminale
-              //{"name":"instance","size":344,"hash":313205442490843939907464264599881252868}
-
+              
               let header = new Packets.Request.BinaryHeader(name, size, hash);
-              this.tal.ws!.next(header);
+              console.log("header: ", header);
+              console.log("header:string", header.toString());
+
+              var header_parsed = JSONbig.stringify(header);
+              console.log("header:parsed: ", header_parsed);
+              console.log("header:parsed:type ", typeof header_parsed);
+
+              this.tal.ws!.next(header_parsed);
               this.tal.sendBinary(value);
             }
           }
@@ -194,6 +202,9 @@ export namespace Commands{
 
         message = payload.getMessage(Packets.Reply.ConnectStop)
         if (message){ this.didRecieveConnectStop(message); }
+
+        message = payload.getMessage(Packets.Reply.AttachmentInfo)
+        if (message){ this.didRecieveBinaryHeader(message); }
       }
 
       public didRecieveConnectBegin(message: Packets.Reply.ConnectBegin){
@@ -212,11 +223,13 @@ export namespace Commands{
         
         if (this.onReciveConnectStop) { 
           this.onReciveConnectStop(message); 
+
+          if(this.tal.isOpen() === true) {this.sendConnectStop();}
         }
       }
 
       public didRecieveBinaryHeader(message: Packets.Reply.AttachmentInfo){
-        this.log("AttachmentInfo");
+        this.log("BinaryHeader");
         if (this.onReciveBinaryHeader ) { this.onReciveBinaryHeader(message); }
       }
 

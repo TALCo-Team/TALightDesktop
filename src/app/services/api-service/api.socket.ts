@@ -27,6 +27,8 @@ export class TALightSocket{
         serializer: msg => {
           if (msg instanceof ArrayBuffer)
             return msg;
+          else if (typeof msg === "string")
+            return msg;
           else
             return JSON.stringify(msg);
         }

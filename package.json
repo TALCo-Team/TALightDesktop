@@ -26,6 +26,7 @@
     "b4a": "^1.6.1",
     "base64-arraybuffer": "^1.0.2",
     "indexeddb-fs": "^1.2.5",
+    "json-bigint": "^1.0.0",
     "marked": "^4.2.12",
     "monaco-editor": "^0.34.1",
     "ngx-monaco-editor-v2": "^14.0.4",

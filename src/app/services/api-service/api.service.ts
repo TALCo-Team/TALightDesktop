@@ -148,7 +148,7 @@ export class ApiService {
     onConnectStart?:()=>void,
     onConnectStop?:(message:string[])=>void,
     onData?: (data:string)=>void,
-    onResultFile?:(message:ArrayBuffer)=>void,
+    onBinaryHeader?:(message:Packets.Reply.AttachmentInfo)=>void,
     onError?:(data:string)=>void
   ){
     this.stateMaybe()
@@ -189,9 +189,9 @@ export class ApiService {
       if(onData) { onData(message)} 
     }
 
-    cmdConnect.onReciveUndecodedBinary = (message) => { 
+    cmdConnect.onReciveBinaryHeader = (message) => { 
       this.stateGood();
-      if(onResultFile) { onResultFile( message )} 
+      if(onBinaryHeader) { onBinaryHeader( message )} 
     }
     
     cmdConnect.onError = (error) => { 
