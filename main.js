@@ -321,7 +321,7 @@ var Commands;
         }
         didRecive(payload) {
             super.didRecive(payload);
-            let message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.MetaList);
+            let message = payload.getMessage_MetaList(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.MetaList);
             if (message) {
                 this.didReciveProblemList(message);
             }
@@ -389,6 +389,25 @@ var Commands;
             message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.ConnectBegin);
             if (message) {
                 this.didRecieveConnectBegin(message);
+                if (this.files.size > 0 && message.status.Ok.length > 0 && message.status.Ok[0] !== "") {
+                    const byteSize = (str) => new Blob([str]).size;
+                    var JSONbig = __webpack_require__(/*! json-bigint */ 4153);
+                    for (let [arg, value] of this.files.entries()) {
+                        //header main.py da terminale
+                        //{"name":"instance","size":21,"hash":28267277493754039280895210869094079614}
+                        let name = arg;
+                        let size = byteSize(value);
+                        let hash = BigInt("28267277493754039280895210869094079614");
+                        let header = new _api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Request.BinaryHeader(name, size, hash);
+                        console.log("header: ", header);
+                        console.log("header:string", header.toString());
+                        var header_parsed = JSONbig.stringify(header);
+                        console.log("header:parsed: ", header_parsed);
+                        console.log("header:parsed:type ", typeof header_parsed);
+                        this.tal.ws.next(header_parsed);
+                        this.tal.sendBinary(value);
+                    }
+                }
             }
             message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.ConnectStart);
             if (message) {
@@ -397,6 +416,10 @@ var Commands;
             message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.ConnectStop);
             if (message) {
                 this.didRecieveConnectStop(message);
+            }
+            message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.AttachmentInfo);
+            if (message) {
+                this.didRecieveBinaryHeader(message);
             }
         }
         didRecieveConnectBegin(message) {
@@ -416,6 +439,15 @@ var Commands;
             /* download result files */
             if (this.onReciveConnectStop) {
                 this.onReciveConnectStop(message);
+                if (this.tal.isOpen() === true) {
+                    this.sendConnectStop();
+                }
+            }
+        }
+        didRecieveBinaryHeader(message) {
+            this.log("BinaryHeader");
+            if (this.onReciveBinaryHeader) {
+                this.onReciveBinaryHeader(message);
             }
         }
         sendConnectStop() {
@@ -445,229 +477,6 @@ var Commands;
         }
     }
     Commands.CloseConnection = CloseConnection;
-    /*
-  
-    export class GameList extends Command{
-      public onRecieveGameList?:(message:Packets.Reply.GameList)=>void
-      
-      public override didReciveHandshake( handshake: Packets.Reply.Handshake){
-        super.didReciveHandshake(handshake);
-
-        let msg = new Packets.Request.GameList();
-        this.tal.send(msg);
-      }
-
-      public override didRecive(payload:Packets.PacketsPayload){
-        super.didRecive(payload);
-        let message = payload.getMessage(Packets.Reply.GameList)
-        if (message){ this.didReciveGameList(message); }
-      }
-        
-      public didReciveGameList(message:Packets.Reply.GameList){
-        this.log("didRecieveGameList");
-        if (this.onRecieveGameList) { this.onRecieveGameList(message); }
-      }
-    }
-
-    export class GameDescription extends Command{
-      public onRecieveGameDescription?:(message:Packets.Reply.GameDescription)=>void
-      private msg:Packets.Request.GameDescription;
-  
-      constructor(url:string, game:string){
-        super(url);
-        this.msg = new Packets.Request.GameDescription(game);
-      }
-
-      public override didReciveHandshake( handshake: Packets.Reply.Handshake){
-        super.didReciveHandshake(handshake);
-
-        let msg = new Packets.Request.GameDescription();
-        this.tal.send(msg);
-      }
-
-      public override didRecive(payload:Packets.PacketsPayload){
-        super.didRecive(payload);
-        let message = payload.getMessage(Packets.Reply.GameDescription)
-        if (message){ this.didReciveGameDescription(message); }
-      }
-        
-      public didReciveGameDescription(message:Packets.Reply.GameDescription){
-        this.log("didRecieveGameList");
-        if (this.onRecieveGameDescription) { this.onRecieveGameDescription(message); }
-      }
-    }
-  
-    export class LobbyList extends Command{
-      public onReciveLobbyList?:(message:Packets.Reply.LobbyList)=>void;
-      
-      public override didReciveHandshake( handshake: Packets.Reply.Handshake){
-        super.didReciveHandshake(handshake);
-        
-        let msg = new Packets.Request.LobbyList();
-        this.tal!.send(msg);
-      }
-
-      public override didRecive(payload:Packets.PacketsPayload){
-        super.didRecive(payload);
-        let message = payload.getMessage(Packets.Reply.LobbyList)
-        if (message){ this.didRecieveLobbyList(message);}
-      }
-        
-      public didRecieveLobbyList(message:Packets.Reply.LobbyList){
-        this.log("didRecieveLobbyList");
-        if (this.onReciveLobbyList) { this.onReciveLobbyList(message); }
-      }
-    }
-  
-    export class NewLobby extends Command {
-      public onReciveNewLobby?:(message:Packets.Reply.GameNew)=>void;
-
-      private msg:Packets.Request.GameNew;
-  
-      constructor(url:string, lobby_name?:string, game_name?:string, num_palyer?:number, num_bots?:number, timeout?:number, args?:{}, password?:string){
-        super(url);
-        this.msg = new Packets.Request.GameNew(lobby_name, game_name, num_palyer, num_bots, timeout, args, password);
-      }
-      
-      public override didRecive(payload:Packets.PacketsPayload){
-        super.didRecive(payload);
-        let message = payload.getMessage(Packets.Reply.GameNew)
-        if (message){
-          this.didRecieveNewLobby(message);
-        }
-      }
-        
-      public didRecieveNewLobby(message:Packets.Reply.GameNew){
-        this.log("didRecieveNewLobby");
-        if (this.onReciveNewLobby) { this.onReciveNewLobby(message); }
-      }
-            
-      public override didReciveHandshake( handshake: Packets.Reply.Handshake){
-        super.didReciveHandshake(handshake);
-        this.tal!.send(this.msg);
-      }
-    }
-  
-    export class Connect extends Command{
-      public onReciveJoin?:(message:Packets.Reply.LobbyJoinedMatch )=>void;
-      public onReciveUpdate?:(message:Packets.Reply.LobbyUpdate)=>void;
-      public onReciveStart?:(message:Packets.Reply.MatchStarted)=>void;
-      public onReciveEnd?:(message:Packets.Reply.MatchEnded) => void;
-      
-      private msg:Packets.Request.LobbyJoinMatch;
-  
-      constructor(url:string, lobby_id:string, player_name:string, lobby_password?:string){
-        super(url);
-        this.msg = new Packets.Request.LobbyJoinMatch(lobby_id, player_name, lobby_password);
-      }
-
-      public override didReciveHandshake(handshake: Packets.Reply.Handshake){
-        super.didReciveHandshake(handshake);
-        this.tal.send(this.msg);
-      }
-      
-      public override didRecive(payload: Packets.PacketsPayload): void {
-        super.didRecive(payload);
-        let message;
-        message = payload.getMessage(Packets.Reply.LobbyJoinedMatch);
-        if (message){ this.didRecieveJoin(message); }
-
-        message = payload.getMessage(Packets.Reply.LobbyUpdate)
-        if (message){ this.didRecieveUpdate(message); }
-
-        message = payload.getMessage(Packets.Reply.MatchStarted)
-        if (message){ this.didRecieveStart(message); }
-        
-        message = payload.getMessage(Packets.Reply.MatchEnded)
-        if (message){ this.didRecieveEnd(message); }
-      }
-
-      public didRecieveJoin(message: Packets.Reply.LobbyJoinedMatch){
-        this.log("didRecieveJoin");
-        if (this.onReciveJoin ) { this.onReciveJoin(message); }
-      }
-
-      public didRecieveUpdate(message: Packets.Reply.LobbyUpdate){
-        this.log("didRecieveUpdate");
-        if (this.onReciveUpdate ) { this.onReciveUpdate(message); }
-      }
-      
-      public didRecieveStart(message: Packets.Reply.MatchStarted){
-        this.log("didRecieveStart");
-        if (this.onReciveStart ) { this.onReciveStart(message); }
-      }
-      
-      public didRecieveEnd(message: Packets.Reply.MatchEnded){
-        this.log("didRecieveEnd");
-        this.tal.closeConnection();
-        if (this.onReciveEnd ) { this.onReciveEnd(message); }
-      }
-    }
-
-    export class Spectate extends Command{
-      public onReciveJoin?:(message:Packets.Reply.SpectateJoined )=>void;
-      public onReciveUpdate?:(message:Packets.Reply.LobbyUpdate)=>void;
-      public onReciveStart?:(message:Packets.Reply.SpectateStarted)=>void;
-      public onReciveSync?:(message:Packets.Reply.SpectateSynced) => void;
-      public onReciveEnd?:(message:Packets.Reply.SpectateEnded) => void;
-
-      private msg:Packets.Request.SpectateJoin;
-  
-      constructor(url:string, lobby_id:string){
-        super(url);
-  
-        this.msg = new Packets.Request.SpectateJoin(lobby_id);
-      }
-  
-      public override didReciveHandshake(handshake: Packets.Reply.Handshake){
-        super.didReciveHandshake(handshake);
-  
-        this.tal!.send(this.msg)
-      }
-
-      public override didRecive(payload: Packets.PacketsPayload): void {
-        super.didRecive(payload);
-        let message;
-
-        message = payload.getMessage(Packets.Reply.SpectateJoined)
-        if (message){ this.didRecieveJoin(message); }
-
-        message = payload.getMessage(Packets.Reply.LobbyUpdate)
-        if (message){ this.didRecieveUpdate(message);}
-        
-        message = payload.getMessage(Packets.Reply.SpectateStarted)
-        if (message){ this.didRecieveStart(message);}
-
-        message = payload.getMessage(Packets.Reply.SpectateSynced)
-        if (message){ this.didRecieveStart(message);}
-
-        message = payload.getMessage(Packets.Reply.SpectateEnded)
-        if (message){ this.didRecieveEnd(message);}
-
-      }
-
-      public didRecieveJoin(message: Packets.Reply.LobbyJoinedMatch){
-        this.log("LobbyJoinedMatch");
-        if (this.onReciveJoin ) { this.onReciveJoin(message); }
-      }
-
-      public didRecieveUpdate(message: Packets.Reply.LobbyUpdate){
-        this.log("LobbyUpdate");
-        if (this.onReciveUpdate ) { this.onReciveUpdate(message); }
-      }
-      
-      public didRecieveStart(message: Packets.Reply.MatchStarted){
-        this.log("MatchStarted");
-        if (this.onReciveStart ) { this.onReciveStart(message); }
-      }
-      
-      public didRecieveEnd(message: Packets.Reply.MatchEnded){
-        this.log("MatchEnded");
-        this.tal.closeConnection();
-        if (this.onReciveEnd ) { this.onReciveEnd(message); }
-      }
-    }
-    */
 })(Commands || (Commands = {}));
 
 
@@ -709,7 +518,24 @@ var Packets;
                     continue;
                 }
                 let packet = this.packets[packetType];
+                console.log("Packet:", packet);
                 let message = new packetClass(packet);
+                message.fromPacket(packet);
+                console.log("Packet:Message:", message);
+                return message;
+            }
+            return null;
+        }
+        getMessage_MetaList(packetClass) {
+            let packetType = packetClass.name;
+            for (var pkttype in this.packets) {
+                if (pkttype != packetType) {
+                    continue;
+                }
+                let packet = this.packets[packetType];
+                console.log("Packet:", packet);
+                let message = new packetClass(packet);
+                console.log("Packet:Message:", message);
                 return message;
             }
             return null;
@@ -718,6 +544,7 @@ var Packets;
     Packets.PacketsPayload = PacketsPayload;
     class Message {
         constructor(packet) {
+            console.log("packet:message:constructor:", packet);
             if (packet) {
                 this.fromPacket(packet);
             }
@@ -748,6 +575,17 @@ var Packets;
             return packet;
         }
         fromPacket(packet) {
+            console.log("packet:message:fromPacket:", this);
+            if ("name" in this) {
+                console.log("packet:message:fromPacket:", this["name"]);
+            }
+            else {
+                console.log("packet:message:fromPacket:", false);
+            }
+            for (var msgField in this) {
+                console.log("packet:message:fromPacket:var:checkprint");
+                console.log("packet:message:fromPacket:var:", msgField);
+            }
             for (var msgField in this) {
                 if (!(msgField in packet)) {
                     continue;
@@ -758,9 +596,11 @@ var Packets;
                     continue;
                 }
                 if (varType === "object") {
+                    console.log("packet:message:copyObject:", value);
                     this[msgField] = Object.assign(value);
                 }
                 else {
+                    console.log("packet:message:copyValue:", value);
                     this[msgField] = value;
                 }
             }
@@ -850,6 +690,18 @@ var Packets;
             }
         }
         Request.ConnectBegin = ConnectBegin;
+        class BinaryHeader extends Message {
+            constructor(name, size, hash) {
+                super();
+                this.name = "";
+                this.size = 0;
+                this.hash = 0n;
+                this.name = name;
+                this.size = size;
+                this.hash = hash;
+            }
+        }
+        Request.BinaryHeader = BinaryHeader;
         class ConnectStop extends Message {
         }
         Request.ConnectStop = ConnectStop;
@@ -1089,7 +941,7 @@ class ApiService {
         cmdGet.run();
         return cmdGet;
     }
-    Connect(problem_name, service, args, tty, token, files, onConnectBegin, onConnectStart, onConnectStop, onData, onError) {
+    Connect(problem_name, service, args, tty, token, files, onConnectBegin, onConnectStart, onConnectStop, onData, onBinaryHeader, onError) {
         this.stateMaybe();
         let cmdConnect = new _api_commands__WEBPACK_IMPORTED_MODULE_1__.Commands.Connect(this._url, problem_name, service, args, tty, token, files);
         cmdConnect.onReciveConnectBegin = (message) => {
@@ -1137,6 +989,12 @@ class ApiService {
                 onData(message);
             }
         };
+        cmdConnect.onReciveBinaryHeader = (message) => {
+            this.stateGood();
+            if (onBinaryHeader) {
+                onBinaryHeader(message);
+            }
+        };
         cmdConnect.onError = (error) => {
             this.stateBad();
             if (onError) {
@@ -1182,6 +1040,8 @@ class TALightSocket {
                 deserializer: msg => msg,
                 serializer: msg => {
                     if (msg instanceof ArrayBuffer)
+                        return msg;
+                    else if (typeof msg === "string")
                         return msg;
                     else
                         return JSON.stringify(msg);
@@ -1521,183 +1381,234 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "FsNodeList": () => (/* binding */ FsNodeList),
 /* harmony export */   "FsService": () => (/* binding */ FsService),
-/* harmony export */   "Tar": () => (/* binding */ Tar)
+/* harmony export */   "Tar": () => (/* binding */ Tar),
+/* harmony export */   "xxhash": () => (/* binding */ xxhash)
 /* harmony export */ });
-/* harmony import */ var _fs_service_test__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./fs.service.test */ 9365);
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ 3991);
+/* harmony import */ var _home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./node_modules/@angular-builders/custom-webpack/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js */ 8046);
+/* harmony import */ var _fs_service_test__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./fs.service.test */ 9365);
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/core */ 3991);
 
 
-class FsNodeList extends Array {
-}
+
+class FsNodeList extends Array {}
 ;
 class FsService {
-    constructor() {
-        this.drivers = new Map();
-        //TODO: Remove test driver FS from constructor
-        this.registerDriver('example', new _fs_service_test__WEBPACK_IMPORTED_MODULE_0__.IndexeddbFsDriver());
+  constructor() {
+    this.drivers = new Map();
+    //TODO: Remove test driver FS from constructor
+    this.registerDriver('example', new _fs_service_test__WEBPACK_IMPORTED_MODULE_1__.IndexeddbFsDriver());
+  }
+  registerDriver(name, driver) {
+    //if (name in this.drivers){return false;}
+    //alert('register: '+driver)
+    this.drivers.set(name, driver);
+    //alert('register: '+driver.constructor.name+' | all: '+this.getDriverNames())
+    return true;
+  }
+  getDriver(name) {
+    //alert(name + ' '  + this.getDriverNames() )
+    if (this.drivers.has(name)) {
+      return this.drivers.get(name);
     }
-    registerDriver(name, driver) {
-        //if (name in this.drivers){return false;}
-        //alert('register: '+driver)
-        this.drivers.set(name, driver);
-        //alert('register: '+driver.constructor.name+' | all: '+this.getDriverNames())
-        return true;
+    alert(name + ' NOT found in: ' + this.getDriverNames() + " | getDriver: undefined !!!");
+    return undefined;
+  }
+  getDriverNames() {
+    return Array.from(this.drivers.keys());
+  }
+  treeToList(root) {
+    let items = new Array();
+    let queue = new Array();
+    queue.push(root);
+    console.log('treeToList:root', root);
+    console.log('treeToList:queue:0:', queue.length);
+    while (queue.length > 0) {
+      let dir = queue.shift();
+      console.log('treeToList:dir:', dir);
+      if (!dir) {
+        break;
+      }
+      items = items.concat(dir.files, dir.folders);
+      queue = queue.concat(dir.folders);
+      console.log('treeToList:queue:', queue.length);
     }
-    getDriver(name) {
-        //alert(name + ' '  + this.getDriverNames() )
-        if (this.drivers.has(name)) {
-            return this.drivers.get(name);
-        }
-        alert(name + ' NOT found in: ' + this.getDriverNames() + " | getDriver: undefined !!!");
-        return undefined;
-    }
-    getDriverNames() {
-        return Array.from(this.drivers.keys());
-    }
-    treeToList(root) {
-        let items = new Array();
-        let queue = new Array();
-        queue.push(root);
-        console.log('treeToList:root', root);
-        console.log('treeToList:queue:0:', queue.length);
-        while (queue.length > 0) {
-            let dir = queue.shift();
-            console.log('treeToList:dir:', dir);
-            if (!dir) {
-                break;
-            }
-            items = items.concat(dir.files, dir.folders);
-            queue = queue.concat(dir.folders);
-            console.log('treeToList:queue:', queue.length);
-        }
-        return items;
-    }
+    return items;
+  }
 }
-FsService.EmptyFolder = { name: "", path: "/", files: [], folders: [] };
-FsService.EmptyFile = { name: "", path: "/", content: "" };
-FsService.ɵfac = function FsService_Factory(t) { return new (t || FsService)(); };
-FsService.ɵprov = /*@__PURE__*/ _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineInjectable"]({ token: FsService, factory: FsService.ɵfac, providedIn: 'root' });
+FsService.EmptyFolder = {
+  name: "",
+  path: "/",
+  files: [],
+  folders: []
+};
+FsService.EmptyFile = {
+  name: "",
+  path: "/",
+  content: ""
+};
+FsService.ɵfac = function FsService_Factory(t) {
+  return new (t || FsService)();
+};
+FsService.ɵprov = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵdefineInjectable"]({
+  token: FsService,
+  factory: FsService.ɵfac,
+  providedIn: 'root'
+});
 class Tar {
-    static unpack(tarball, cb) {
-        var extract = this.tarstream.extract();
-        var files = new Array();
-        var folders = new Array();
-        extract.on('entry', function (header, stream, next) {
-            // header is the tar header
-            // stream is the content body (might be an empty stream)
-            // call next when you are done with this entry
-            console.log('Tar:unpack:entry:header', header);
-            console.log('Tar:unpack:entry:stream', stream);
-            let fullpath = header.name;
-            let filetype = header.type;
-            if (filetype == 'file') {
-                stream.on('data', (data) => {
-                    console.log('Tar:unpack:entry:data', data);
-                    let filename = fullpath.split("/").slice(0, -1)[0];
-                    let file = { path: fullpath, name: filename, content: data };
-                    console.log('Tar:unpack:entry:file', file, stream.read);
-                    files.push(file);
-                });
-            }
-            else if (filetype == 'directory') {
-                let dirname = fullpath;
-                if (dirname.slice(-1) == '/') {
-                    dirname = dirname.slice(0, -1);
-                }
-                let forder = { path: fullpath, name: dirname, files: [], folders: [] };
-                console.log('Tar:unpack:entry:forder', forder);
-                folders.push(forder);
-            }
-            // ready for next entry
-            stream.on('end', () => {
-                console.log('Tar:unpack:entry:end');
-                next();
-            });
-            stream.resume(); // just auto drain the stream
+  static unpack(tarball, cb) {
+    var extract = this.tarstream.extract();
+    var files = new Array();
+    var folders = new Array();
+    extract.on('entry', function (header, stream, next) {
+      // header is the tar header
+      // stream is the content body (might be an empty stream)
+      // call next when you are done with this entry
+      console.log('Tar:unpack:entry:header', header);
+      console.log('Tar:unpack:entry:stream', stream);
+      let fullpath = header.name;
+      let filetype = header.type;
+      if (filetype == 'file') {
+        stream.on('data', data => {
+          console.log('Tar:unpack:entry:data', data);
+          let filename = fullpath.split("/").slice(0, -1)[0];
+          let file = {
+            path: fullpath,
+            name: filename,
+            content: data
+          };
+          console.log('Tar:unpack:entry:file', file, stream.read);
+          files.push(file);
         });
-        extract.on('finish', function () {
-            console.log('Tar:unpack:finish');
-            console.log('Tar:unpack:files', files);
-            console.log('Tar:unpack:folders', folders);
-            files.sort((a, b) => a.path.length - b.path.length);
-            folders.sort((a, b) => a.path.length - b.path.length);
-            // all entries read
-            if (cb) {
-                cb(files, folders);
-            }
-        });
-        console.log('Tar:unpack:tarball', tarball);
-        console.log('Tar:unpack:extract', extract);
-        let tarData = new Uint8Array(tarball);
-        extract.write(tarData, (errr) => { console.log("Tar:unpack:extract:write:", errr); });
-        extract.end();
-    }
-    static pack(items, cb) {
-        let pack = this.tarstream.pack(); // pack is a stream
-        console.log(pack);
-        var length = 0;
-        var chunks = new Array();
-        pack.on('data', (chunk) => {
-            console.log('data:chunk:prototype:', chunk.constructor.name);
-            console.log('data:chunk:', chunk);
-            length += chunk.byteLength;
-            chunks.push(chunk);
-        });
-        pack.on('end', () => {
-            // Create a new array with total length and merge all source arrays.
-            console.log(chunks);
-            let data = new Uint8Array(length);
-            let offset = 0;
-            chunks.forEach(item => {
-                data.set(item, offset);
-                offset += item.length;
-            });
-            console.log(data);
-            if (cb) {
-                cb(data);
-            }
-        });
-        let processItems = function (items) {
-            let item = items.shift();
-            let file = item;
-            console.log("Tar:pack:item", item);
-            let content;
-            let header;
-            if (file.content) {
-                console.log("Tar:pack:file", file);
-                if (file.content instanceof ArrayBuffer) {
-                    content = new Uint8Array(file.content);
-                }
-                else {
-                    content = file.content;
-                }
-                header = { name: file.path };
-            }
-            else {
-                header = { name: item.path, type: "directory" };
-            }
-            pack.entry(header, content, (error) => {
-                console.log("Tar:pack:onFinishEntry", error);
-                if (error) {
-                    throw error;
-                }
-                if (items.length == 0) {
-                    pack.finalize();
-                }
-                else {
-                    processItems(items);
-                }
-            });
+      } else if (filetype == 'directory') {
+        let dirname = fullpath;
+        if (dirname.slice(-1) == '/') {
+          dirname = dirname.slice(0, -1);
+        }
+        let forder = {
+          path: fullpath,
+          name: dirname,
+          files: [],
+          folders: []
         };
-        console.log("Tar:pack:processItems", items);
-        processItems(items);
-    }
+        console.log('Tar:unpack:entry:forder', forder);
+        folders.push(forder);
+      }
+      // ready for next entry
+      stream.on('end', () => {
+        console.log('Tar:unpack:entry:end');
+        next();
+      });
+      stream.resume(); // just auto drain the stream
+    });
+
+    extract.on('finish', function () {
+      console.log('Tar:unpack:finish');
+      console.log('Tar:unpack:files', files);
+      console.log('Tar:unpack:folders', folders);
+      files.sort((a, b) => a.path.length - b.path.length);
+      folders.sort((a, b) => a.path.length - b.path.length);
+      // all entries read
+      if (cb) {
+        cb(files, folders);
+      }
+    });
+    console.log('Tar:unpack:tarball', tarball);
+    console.log('Tar:unpack:extract', extract);
+    let tarData = new Uint8Array(tarball);
+    extract.write(tarData, errr => {
+      console.log("Tar:unpack:extract:write:", errr);
+    });
+    extract.end();
+  }
+  static pack(items, cb) {
+    let pack = this.tarstream.pack(); // pack is a stream
+    console.log(pack);
+    var length = 0;
+    var chunks = new Array();
+    pack.on('data', chunk => {
+      console.log('data:chunk:prototype:', chunk.constructor.name);
+      console.log('data:chunk:', chunk);
+      length += chunk.byteLength;
+      chunks.push(chunk);
+    });
+    pack.on('end', () => {
+      // Create a new array with total length and merge all source arrays.
+      console.log(chunks);
+      let data = new Uint8Array(length);
+      let offset = 0;
+      chunks.forEach(item => {
+        data.set(item, offset);
+        offset += item.length;
+      });
+      console.log(data);
+      if (cb) {
+        cb(data);
+      }
+    });
+    let processItems = function (items) {
+      let item = items.shift();
+      let file = item;
+      console.log("Tar:pack:item", item);
+      let content;
+      let header;
+      if (file.content) {
+        console.log("Tar:pack:file", file);
+        if (file.content instanceof ArrayBuffer) {
+          content = new Uint8Array(file.content);
+        } else {
+          content = file.content;
+        }
+        header = {
+          name: file.path
+        };
+      } else {
+        header = {
+          name: item.path,
+          type: "directory"
+        };
+      }
+      pack.entry(header, content, error => {
+        console.log("Tar:pack:onFinishEntry", error);
+        if (error) {
+          throw error;
+        }
+        if (items.length == 0) {
+          pack.finalize();
+        } else {
+          processItems(items);
+        }
+      });
+    };
+    console.log("Tar:pack:processItems", items);
+    processItems(items);
+  }
 }
 Tar.tarstream = __webpack_require__(/*! tar-web */ 5551);
 Tar.b4a = __webpack_require__(/*! b4a */ 3519);
 Tar.binEncoder = new TextEncoder(); // always utf-8
 Tar.binDecoder = new TextDecoder("utf-8");
-
+class xxhash {
+  static load() {
+    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+      const response = yield fetch('/assets/xxhsum.wasm');
+      console.log("xxhash:load:response", response);
+      const buffer = yield response.arrayBuffer();
+      console.log("xxhash:load:buffer", buffer);
+      WebAssembly.instantiate(buffer).then(result => {
+        console.log("xxhash:load:instance", result.instance);
+        xxhash.sharedInstance = result.instance.exports;
+        console.log("xxhash:load:DONE");
+      }).catch(error => {
+        console.log("xxhash:load:error", error);
+      });
+    })();
+  }
+  static xxh128(data) {
+    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+      return xxhash.sharedInstance.XXH128(data, data.length);
+    })();
+  }
+}
 
 /***/ }),
 
@@ -2232,6 +2143,9 @@ class PyodideDriver {
     this.worker.onmessage = event => {
       this.didRecieve(event.data);
     };
+    this.worker.addEventListener('error', event => {
+      console.log('Workererror!');
+    });
   }
   didRecieve(response) {
     if (!response) {
@@ -2576,10 +2490,8 @@ class PyodideDriver {
       };
       let resultPromise = _this5.sendMessage(message);
       //TODO: stop pyodide gracefully -> stopExecution ( keyboard interrupt ) seams ineffetive
-      let res = confirm("**WORK IN PROGRESS**\nPurtroppo qualcosa è andato storto con le API e pyodide è rimasto appeso.\nPer il momento mi tocca fare il reload della pagina.");
-      if (res) {
-        window.location.reload();
-      }
+      //let res = confirm("**WORK IN PROGRESS**\nPurtroppo qualcosa è andato storto con le API e pyodide è rimasto appeso.\nPer il momento mi tocca fare il reload della pagina.")
+      //if(res){ window.location.reload() }
       return resultPromise;
     })();
   }
@@ -2949,6 +2861,7 @@ var PyodideState;
   PyodideState["Run"] = "Run";
   PyodideState["Stdin"] = "Stdin";
   PyodideState["Success"] = "Success";
+  PyodideState["Killed"] = "Killed";
   PyodideState["Error"] = "Error";
 })(PyodideState || (PyodideState = {}));
 
@@ -3075,8 +2988,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "DemoViewComponent": () => (/* binding */ DemoViewComponent)
 /* harmony export */ });
 /* harmony import */ var _home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./node_modules/@angular-builders/custom-webpack/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js */ 8046);
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/core */ 3991);
-/* harmony import */ var src_app_services_api_service_api_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! src/app/services/api-service/api.service */ 6986);
+/* harmony import */ var src_app_services_fs_service_fs_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! src/app/services/fs-service/fs.service */ 7934);
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/core */ 3991);
+/* harmony import */ var src_app_services_api_service_api_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! src/app/services/api-service/api.service */ 6986);
+
 
 
 
@@ -3088,37 +3003,7 @@ class DemoViewComponent {
     this.output = "";
   }
   ngOnInit() {
-    //api.problemList((problemList: any) => {console.log(problemList)});
-    /*
-    api.getAttachment(
-      "piastrelle",
-      ()=>{console.log("Attachment packet received")},
-      (onAttachmentInfo: any) => {console.log(onAttachmentInfo)},
-      (data: ArrayBuffer) => {
-        console.log("ArrayBuffer received");
-             const arrayBufferToFile = (buffer:any, filename:any) => {
-          const blob = new Blob([buffer], { type: 'application/octet-stream' });
-          return new File([blob], filename, { type: 'application/octet-stream' });
-        };
-             let file = arrayBufferToFile(data, "/home/michele/piastrelle.tar");
-        console.log(file);
-      }
-    );
-    
-         api.Connect(
-      "sum",
-      "synopsis",
-      {"service":"free_sum"},
-      undefined,
-      undefined,
-      undefined,
-      (onConnectionBegin: any) => {console.log("Connection Begin -> " + onConnectionBegin); },
-      () => {console.log("Connection Start")},
-      (onConnectionClose: any) => {console.log(onConnectionClose)},
-      (onData: any) => {console.log(onData)},
-      (onError: any) => {alert(onError)},
-    );
-         */
+    //this.hashTest()
   }
   //API Test
   onApiError(message) {
@@ -3233,52 +3118,63 @@ class DemoViewComponent {
       }, 2500);
     })();
   }
+  hashTest() {
+    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+      src_app_services_fs_service_fs_service__WEBPACK_IMPORTED_MODULE_1__.xxhash.load();
+    })();
+  }
 }
 DemoViewComponent.ɵfac = function DemoViewComponent_Factory(t) {
-  return new (t || DemoViewComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_2__.NgZone), _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵdirectiveInject"](src_app_services_api_service_api_service__WEBPACK_IMPORTED_MODULE_1__.ApiService));
+  return new (t || DemoViewComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_3__.NgZone), _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵdirectiveInject"](src_app_services_api_service_api_service__WEBPACK_IMPORTED_MODULE_2__.ApiService));
 };
-DemoViewComponent.ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵdefineComponent"]({
+DemoViewComponent.ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵdefineComponent"]({
   type: DemoViewComponent,
   selectors: [["app-demo-view"]],
-  decls: 16,
+  decls: 18,
   vars: 1,
-  consts: [[2, "display", "flex", "flex-direction", "row"], [3, "click"]],
+  consts: [[2, "display", "flex", "flex-direction", "column"], [3, "click"]],
   template: function DemoViewComponent_Template(rf, ctx) {
     if (rf & 1) {
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementStart"](0, "div", 0)(1, "div")(2, "div");
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵtext"](3, " API Demo ");
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementEnd"]();
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementStart"](4, "div")(5, "button", 1);
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_5_listener() {
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](0, "div", 0)(1, "div")(2, "div");
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](3, " API Demo ");
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]();
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](4, "div")(5, "button", 1);
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_5_listener() {
         return ctx.apiProblemList();
       });
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵtext"](6, "Problem List");
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementEnd"]();
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementStart"](7, "button", 1);
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_7_listener() {
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](6, "Problem List");
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]();
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](7, "button", 1);
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_7_listener() {
         return ctx.apiGetAttachment();
       });
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵtext"](8, "Get Attachment");
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementEnd"]();
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementStart"](9, "button", 1);
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_9_listener() {
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](8, "Get Attachment");
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]();
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](9, "button", 1);
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_9_listener() {
         return ctx.apiConnectOld();
       });
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵtext"](10, "Connect Old");
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementEnd"]();
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementStart"](11, "button", 1);
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_11_listener() {
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](10, "Connect Old");
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]();
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](11, "button", 1);
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_11_listener() {
         return ctx.apiConnect();
       });
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵtext"](12, "Connect");
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementEnd"]()()();
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementStart"](13, "div")(14, "pre");
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵtext"](15);
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵelementEnd"]()()();
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](12, "Connect");
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]();
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](13, "button", 1);
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_13_listener() {
+        return ctx.hashTest();
+      });
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](14, "Hash");
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]()()();
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](15, "div")(16, "pre");
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](17);
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]()()();
     }
     if (rf & 2) {
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵadvance"](15);
-      _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵtextInterpolate"](ctx.output);
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵadvance"](17);
+      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtextInterpolate"](ctx.output);
     }
   },
   styles: ["\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiJkZW1vLXZpZXcuY29tcG9uZW50LnNjc3MifQ== */"]
@@ -3661,6 +3557,8 @@ class CodeEditorComponent {
     this.fsroot = src_app_services_fs_service_fs_service__WEBPACK_IMPORTED_MODULE_1__.FsService.EmptyFolder;
     this.fslist = [];
     this.fslistfile = [];
+    this.output_files = undefined;
+    this.current_output_file = undefined;
     if (!pm.currentProject) {
       let project = pm.createProject('My Solution', '/mnt', '/');
       pm.currentProject = project;
@@ -3689,9 +3587,7 @@ class CodeEditorComponent {
     this.fslist = this.fs.treeToList(fsroot);
     this.fslistfile = this.fslist.filter(item => "content" in item);
     let filePathList = new Array();
-    this.fslistfile.forEach(item => filePathList.push({
-      path: item.path
-    }));
+    this.fslistfile.forEach(item => filePathList.push(item.path));
     this.problemWidget.filePathList = filePathList;
   }
   didNotify(data) {
@@ -3724,7 +3620,7 @@ class CodeEditorComponent {
   didStderr(data) {
     console.log("onStderr:");
     //alert("STDERR: "+data)
-    this.nm.sendNotification("ERROR:", data, src_app_services_notification_mananger_service_notification_manager_service__WEBPACK_IMPORTED_MODULE_2__.NotificationType.Error);
+    //this.nm.sendNotification("ERROR:",data,NotificationType.Error)
     this.outputWidget.print(data, _output_widget_output_widget_component__WEBPACK_IMPORTED_MODULE_4__.OutputType.STDERR);
   }
   sendStdin(msg, fromAPI = false) {
@@ -3876,6 +3772,13 @@ class CodeEditorComponent {
         return false;
       }
       console.log("apiConnect:config:ok");
+      //Run MAIN
+      console.log("apiConnect:runProject");
+      _this5.saveFile();
+      yield _this5.python.runProject();
+      _this5.outputWidget.print("API: " + config.RUN, _output_widget_output_widget_component__WEBPACK_IMPORTED_MODULE_4__.OutputType.SYSTEM);
+      console.log("apiConnect:runProject:running");
+      //Open Connection
       let problem = _this5.selectedService.parent.name;
       let service = _this5.selectedService.name;
       let args = _this5.selectedService.exportArgs();
@@ -3914,10 +3817,10 @@ class CodeEditorComponent {
       let onData = data => {
         _this5.didConnectData(data);
       };
-      _this5.cmdConnect = yield _this5.api.Connect(problem, service, args, tty, token, files, onConnectionBegin, onConnectionStart, onConnectionClose, onData);
-      _this5.cmdConnect.onError = error => {
-        _this5.didConnectError(error);
+      let onBinaryHeader = msg => {
+        _this5.didRecieveBinaryHeader(msg);
       };
+      _this5.cmdConnect = yield _this5.api.Connect(problem, service, args, tty, token, files, onConnectionBegin, onConnectionStart, onConnectionClose, onData, onBinaryHeader);
       console.log("apiConnect:DONE");
       console.log("apiConnect:runProject");
       _this5.saveFile();
@@ -3951,14 +3854,41 @@ class CodeEditorComponent {
     var _this7 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("apiConnect:didConnectionClose:", message);
-      _this7.cmdConnect = undefined;
+      if (message && message.length > 0 && message[0] !== "") {
+        _this7.output_files = message;
+      } else {
+        _this7.cmdConnect = undefined;
+        console.log("apiConncect:cmdConnect:value:", _this7.cmdConnect);
+      }
     })();
   }
   didConnectData(data) {
     var _this8 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("apiConnect:didConnectData:", data);
-      _this8.sendStdin(data, true);
+      if (_this8.output_files && _this8.current_output_file) {
+        if (_this8.current_output_file) {
+          _this8.driver?.writeFile("/" + _this8.current_output_file, data);
+        }
+        ;
+        if (_this8.current_output_file === _this8.output_files[_this8.output_files.length - 1]) {
+          _this8.cmdConnect = undefined;
+        }
+        console.log("apiConncect:cmdConnect:value:", _this8.cmdConnect);
+      } else {
+        _this8.sendStdin(data, true);
+      }
+    })();
+  }
+  didRecieveBinaryHeader(message) {
+    var _this9 = this;
+    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+      console.log("apiConnect:didRecieveBinaryHeader:", message);
+      _this9.current_output_file = message.name;
+      if (_this9.current_output_file) {
+        _this9.driver?.writeFile("/" + _this9.current_output_file, "");
+      }
+      ;
     })();
   }
 }
@@ -6000,7 +5930,7 @@ function ProblemWidgetComponent_div_26_ng_template_9_Template(rf, ctx) {
   if (rf & 2) {
     const option_r34 = ctx.$implicit;
     _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtextInterpolate"](option_r34.path);
+    _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtextInterpolate"](option_r34);
   }
 }
 function ProblemWidgetComponent_div_26_ng_template_10_Template(rf, ctx) {
@@ -6012,7 +5942,7 @@ function ProblemWidgetComponent_div_26_ng_template_10_Template(rf, ctx) {
   if (rf & 2) {
     const option_r35 = ctx.$implicit;
     _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵadvance"](2);
-    _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtextInterpolate"](option_r35.path);
+    _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtextInterpolate"](option_r35);
   }
 }
 function ProblemWidgetComponent_div_26_Template(rf, ctx) {
@@ -6187,25 +6117,11 @@ class ProblemWidgetComponent {
     })();
   }
   //files
-  fileDidFocus(file, event) {
-    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
-      console.log('fileDidFocus:', file.key, event);
-    })();
-  }
   fileDidChange(file, event) {
     var _this3 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log('fileDidChange:', file.key, event);
-      if (!("value" in event)) {
-        return;
-      }
-      console.log('fileDidChange:value:found', event.value);
-      let path = event.value;
-      /*
-      if(!("path" in value )){return;}
-      console.log('fileDidChange:path:found',value.path)
-      let path = value.path
-      */
+      let path = event.value ?? "";
       let idDropdown = 'file-dropdown-' + file.key;
       let dropdown = document.getElementById(idDropdown);
       if (!(dropdown instanceof HTMLElement)) {
@@ -6214,20 +6130,21 @@ class ProblemWidgetComponent {
       console.log('fileDidChange:dropdown:found', dropdown);
       if (path == "") {
         dropdown.style.color = "";
-        file.value = "";
+        //file.value = ""
         return;
       }
       let pathExist = yield _this3.driver?.exists(path);
       console.log('fileDidChange:pathExist:', pathExist);
       if (!pathExist) {
         dropdown.style.color = "red";
-        file.value = "";
+        //file.value = ""
       } else {
         dropdown.style.color = "green";
-        file.value = path;
+        //file.value = path
       }
     })();
   }
+
   fileDidReset(file, event) {
     var _this4 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
@@ -6393,7 +6310,7 @@ ProblemWidgetComponent.ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODU
   },
   decls: 28,
   vars: 16,
-  consts: [[1, "tal-problem-widget"], [1, "tal-problem-widget-row", "tal-problem-widget-row-problem"], ["placeholder", "Seleziona un problema", "scrollHeight", "50rem", "panelStyleClass", "tal-problem-widget-problem-selector-panel", "optionLabel", "name", 1, "tal-problem-widget-problem-selector", 3, "overlayOptions", "options", "ngModel", "ngModelChange", "onChange"], ["problemDropdown", ""], ["pTemplate", "selectedItem"], ["pTemplate", "item"], ["pButton", "", "class", "p-button-danger tal-square-button", "icon", "pi pi-refresh", "title", "Refresh", "pTooltip", "Refresh", 3, "click", 4, "ngIf"], ["pButton", "", "class", "p-button-danger tal-square-button", "icon", "pi pi-spin pi-spinner", "title", "Refresh", "pTooltip", "Refresh", "disabled", "", 4, "ngIf"], ["placeholder", "Seleziona un servizio", "scrollHeight", "50rem", "panelStyleClass", "tal-problem-widget-problem-selector-panel", "optionLabel", "name", 1, "tal-problem-widget-problem-selector", 3, "overlayOptions", "options", "ngModel", "ngModelChange", "onChange"], ["serviceDropdown", ""], ["pButton", "", "icon", "pi pi-download", "title", "Download Attachments", "pTooltip", "Scarica allegati", 1, "p-button-help", "tal-square-button", 3, "click"], [1, "tal-problem-widget-args-row"], ["header", "Arguments"], ["pTemplate", "header", "class", "tal-problem-widget-args-row"], [1, "tal-problem-widget-row", "tal-problem-widget-args"], ["class", "tal-problem-widget-args-row stretch-flex", 4, "ngIf"], ["class", "tal-problem-widget-args-row", 4, "ngFor", "ngForOf"], ["header", "Files"], [1, "tal-problem-widget-problem-selected"], [1, "tal-problem-widget-problem-item"], ["pButton", "", "icon", "pi pi-refresh", "title", "Refresh", "pTooltip", "Refresh", 1, "p-button-danger", "tal-square-button", 3, "click"], ["pButton", "", "icon", "pi pi-spin pi-spinner", "title", "Refresh", "pTooltip", "Refresh", "disabled", "", 1, "p-button-danger", "tal-square-button"], [1, "tal-problem-widget-label"], [1, "tal-problem-widget-args-row", "stretch-flex"], [1, "tal-problem-widget-args-row-no-params"], [1, "tal-problem-widget-args-subrow"], [1, "tal-problem-widget-args-row-info"], [1, "pi", "pi-info-circle", 2, "cursor", "pointer", 3, "id", "title", "click"], ["argsIcons", ""], [1, "tal-problem-widget-args-row-name", 3, "title"], [1, "tal-problem-widget-args-row-field"], ["pInputText", "", "type", "text", 1, "top-bar-url-input", "p-inputtext-sm", 3, "ngModel", "placeholder", "title", "ngModelChange", "change", "blur", "focus"], [1, "tal-problem-widget-args-row-actions"], ["pButton", "", "icon", "pi pi-trash", "title", "Reset to default", "pTooltip", "Reset to default", 1, "tal-square-button", 3, "click"], [1, "tal-problem-widget-args-subrow", 2, "display", "none", "cursor", "pointer", 3, "id", "dblclick"], [1, "tal-problem-widget-args-subrow-regexpr", "format-regex-simple", 3, "id"], [1, "pi", "pi-file"], [1, "tal-problem-widget-args-row-name"], ["placeholder", "Select a file", "styleClass", "tal-problem-widget-files-dropdown", "panelStyleClass", "tal-problem-widget-files-dropdown-panel", "optionValue", "path", "optionLabel", "path", "dataKey", "path", 3, "id", "overlayOptions", "options", "ngModel", "showClear", "onChange", "ngModelChange"], [1, "tal-problem-widget-files-selected"], [1, "tal-problem-widget-files-item"]],
+  consts: [[1, "tal-problem-widget"], [1, "tal-problem-widget-row", "tal-problem-widget-row-problem"], ["placeholder", "Seleziona un problema", "scrollHeight", "50rem", "panelStyleClass", "tal-problem-widget-problem-selector-panel", "optionLabel", "name", 1, "tal-problem-widget-problem-selector", 3, "overlayOptions", "options", "ngModel", "ngModelChange", "onChange"], ["problemDropdown", ""], ["pTemplate", "selectedItem"], ["pTemplate", "item"], ["pButton", "", "class", "p-button-danger tal-square-button", "icon", "pi pi-refresh", "title", "Refresh", "pTooltip", "Refresh", 3, "click", 4, "ngIf"], ["pButton", "", "class", "p-button-danger tal-square-button", "icon", "pi pi-spin pi-spinner", "title", "Refresh", "pTooltip", "Refresh", "disabled", "", 4, "ngIf"], ["placeholder", "Seleziona un servizio", "scrollHeight", "50rem", "panelStyleClass", "tal-problem-widget-problem-selector-panel", "optionLabel", "name", 1, "tal-problem-widget-problem-selector", 3, "overlayOptions", "options", "ngModel", "ngModelChange", "onChange"], ["serviceDropdown", ""], ["pButton", "", "icon", "pi pi-download", "title", "Download Attachments", "pTooltip", "Scarica allegati", 1, "p-button-help", "tal-square-button", 3, "click"], [1, "tal-problem-widget-args-row"], ["header", "Arguments"], ["pTemplate", "header", "class", "tal-problem-widget-args-row"], [1, "tal-problem-widget-row", "tal-problem-widget-args"], ["class", "tal-problem-widget-args-row stretch-flex", 4, "ngIf"], ["class", "tal-problem-widget-args-row", 4, "ngFor", "ngForOf"], ["header", "Files"], [1, "tal-problem-widget-problem-selected"], [1, "tal-problem-widget-problem-item"], ["pButton", "", "icon", "pi pi-refresh", "title", "Refresh", "pTooltip", "Refresh", 1, "p-button-danger", "tal-square-button", 3, "click"], ["pButton", "", "icon", "pi pi-spin pi-spinner", "title", "Refresh", "pTooltip", "Refresh", "disabled", "", 1, "p-button-danger", "tal-square-button"], [1, "tal-problem-widget-label"], [1, "tal-problem-widget-args-row", "stretch-flex"], [1, "tal-problem-widget-args-row-no-params"], [1, "tal-problem-widget-args-subrow"], [1, "tal-problem-widget-args-row-info"], [1, "pi", "pi-info-circle", 2, "cursor", "pointer", 3, "id", "title", "click"], ["argsIcons", ""], [1, "tal-problem-widget-args-row-name", 3, "title"], [1, "tal-problem-widget-args-row-field"], ["pInputText", "", "type", "text", 1, "top-bar-url-input", "p-inputtext-sm", 3, "ngModel", "placeholder", "title", "ngModelChange", "change", "blur", "focus"], [1, "tal-problem-widget-args-row-actions"], ["pButton", "", "icon", "pi pi-trash", "title", "Reset to default", "pTooltip", "Reset to default", 1, "tal-square-button", 3, "click"], [1, "tal-problem-widget-args-subrow", 2, "display", "none", "cursor", "pointer", 3, "id", "dblclick"], [1, "tal-problem-widget-args-subrow-regexpr", "format-regex-simple", 3, "id"], [1, "pi", "pi-file"], [1, "tal-problem-widget-args-row-name"], ["placeholder", "Select a file", "styleClass", "tal-problem-widget-files-dropdown", "panelStyleClass", "tal-problem-widget-files-dropdown-panel", 3, "id", "overlayOptions", "options", "ngModel", "showClear", "onChange", "ngModelChange"], [1, "tal-problem-widget-files-selected"], [1, "tal-problem-widget-files-item"]],
   template: function ProblemWidgetComponent_Template(rf, ctx) {
     if (rf & 1) {
       _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementStart"](0, "div", 0)(1, "div", 1)(2, "p-dropdown", 2, 3);

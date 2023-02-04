@@ -143,6 +143,7 @@ var PyodideState;
   PyodideState["Run"] = "Run";
   PyodideState["Stdin"] = "Stdin";
   PyodideState["Success"] = "Success";
+  PyodideState["Killed"] = "Killed";
   PyodideState["Error"] = "Error";
 })(PyodideState || (PyodideState = {}));
 var PyodideMessageType;
@@ -212,9 +213,6 @@ class PyodideWorker {
       this.fs.syncfs(true, () => {
         this.interruptBuffer[0] = 0;
         this.pyodide.setInterruptBuffer(this.interruptBuffer);
-        this.interruptTimer = setInterval(() => {
-          this.pyodide.checkInterrupt();
-        }, 10);
         this.isReady = true;
         this.sendState(PyodideState.Ready);
         this.readyResolver(this.isReady);
@@ -253,6 +251,7 @@ class PyodideWorker {
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       let oldInput = _this3.pyodide.globals.input;
       console.log("setCustomHooks:oldInput:", oldInput);
+      //Globals: Input
       let localThis = _this3;
       _this3.pyodide.globals.set('input', /*#__PURE__*/function () {
         var _ref2 = (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* (prompt) {
@@ -278,6 +277,11 @@ class PyodideWorker {
           return _ref2.apply(this, arguments);
         };
       }());
+      let sys = _this3.pyodide.pyimport("signal");
+      let signal = _this3.pyodide.pyimport("signal");
+      signal.signal(signal.SIGINT, (signal, frame) => {
+        sys.exit(0);
+      });
     })();
   }
   load(root, mount) {
@@ -365,11 +369,22 @@ class PyodideWorker {
   execCodeAsync(code) {
     console.log("execCode:", code);
     this.interruptBuffer[0] = 0;
+    this.pyodide.setInterruptBuffer(this.interruptBuffer);
+    this.interruptTimer = setInterval(() => {
+      try {
+        this.pyodide.checkInterrupt();
+      } catch (_) {
+        this.sendStderr("Process terminated by user request");
+        this.sendState(PyodideState.Killed);
+      }
+    }, 10);
     this.stdinBuffer = [];
     this.pyodide.runPythonAsync(code).then(result => {
       console.log("execCode: result:\n", result);
       this.sendState(PyodideState.Success, result);
     }).catch(error => {
+      let sysmodule = this.pyodide.pyimport("sys");
+      console.log("execCode: exception:\n", sysmodule.exception);
       console.log("execCode: error:\n", error);
       this.sendState(PyodideState.Error, error);
     });
@@ -560,10 +575,11 @@ class PyodideWorker {
     if (isNaN(signal)) {
       signal = 2;
     }
+    console.log("stopExecution:", signal); //,res)
     setTimeout(() => {
       this.interruptBuffer[0] = signal;
     });
-    response.message.contents = [wasRunning ? "true" : "false"];
+    response.message.args = [wasRunning ? "true" : "false"];
     return response;
   }
   executeFile(request) {
