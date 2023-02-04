@@ -232,3 +232,29 @@ export interface FsServiceDriver {
 
   exists(fullpath:string): Promise<boolean>;
 }
+
+
+
+export class xxhash{
+  static sharedInstance:any;
+
+  static async load(){
+    const response = await fetch('/assets/xxhsum.wasm')
+    console.log("xxhash:load:response", response);
+    const buffer = await response.arrayBuffer();
+    console.log("xxhash:load:buffer", buffer);
+    WebAssembly.instantiate(buffer).then( result =>{ 
+      console.log("xxhash:load:instance", result.instance);
+      xxhash.sharedInstance = result.instance.exports;
+      console.log("xxhash:load:DONE");
+    }).catch((error)=>{
+      console.log("xxhash:load:error", error);
+    })
+  }
+
+  static async xxh128(data:string){
+      return xxhash.sharedInstance.XXH128(data,data.length)
+  }
+}
+
+//xxhash.load()

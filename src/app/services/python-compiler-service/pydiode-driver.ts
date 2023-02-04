@@ -80,7 +80,7 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     //alert('driver built!');
     this.worker = new Worker(new URL('../../workers/python-compiler.worker', import.meta.url));
     this.worker.onmessage = (event: MessageEvent) => { this.didRecieve(event.data) };   
-    
+    this.worker.addEventListener('error', (event) => { console.log('Workererror!')});
   }
 
 
@@ -429,8 +429,8 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
     let resultPromise = this.sendMessage<boolean>(message);
 
     //TODO: stop pyodide gracefully -> stopExecution ( keyboard interrupt ) seams ineffetive
-    let res = confirm("**WORK IN PROGRESS**\nPurtroppo qualcosa è andato storto con le API e pyodide è rimasto appeso.\nPer il momento mi tocca fare il reload della pagina.")
-    if(res){ window.location.reload() }
+    //let res = confirm("**WORK IN PROGRESS**\nPurtroppo qualcosa è andato storto con le API e pyodide è rimasto appeso.\nPer il momento mi tocca fare il reload della pagina.")
+    //if(res){ window.location.reload() }
 
     return resultPromise;
   }
@@ -443,7 +443,9 @@ export class PyodideDriver implements FsServiceDriver, PythonCompiler {
       contents: [],
     }
     if (onNotify && enable){
-      this.onNotify = (title: string, msg:string, kind:string="")=>{onNotify(title,msg,kind)}
+      this.onNotify = (title: string, msg:string, kind:string="")=>{
+        onNotify(title,msg,kind)
+      }
     }else{
       this.onNotify = undefined;
     }

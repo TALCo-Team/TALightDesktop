@@ -111,7 +111,7 @@ export class CodeEditorComponent implements OnInit {
   public didStderr(data:string){
     console.log("onStderr:")
     //alert("STDERR: "+data)
-    this.nm.sendNotification("ERROR:",data,NotificationType.Error)
+    //this.nm.sendNotification("ERROR:",data,NotificationType.Error)
     this.outputWidget.print(data, OutputType.STDERR)
   }
 
@@ -258,11 +258,20 @@ export class CodeEditorComponent implements OnInit {
       return false
     }
     console.log("apiConnect:service:ok")
+    
 
     let config = await this.python.readPythonConfig()
     if (!config){return false}
     console.log("apiConnect:config:ok")
-    
+
+    //Run MAIN
+    console.log("apiConnect:runProject")
+    this.saveFile();
+    await this.python.runProject()
+    this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
+    console.log("apiConnect:runProject:running")
+
+    //Open Connection
     let problem = this.selectedService.parent.name;
     let service = this.selectedService.name;
     let args = this.selectedService.exportArgs();
@@ -311,7 +320,6 @@ export class CodeEditorComponent implements OnInit {
       onData,
       onBinaryHeader
     );
-    this.cmdConnect.onError = (error)=>{this.didConnectError(error)};
     console.log("apiConnect:DONE")
     
  
@@ -331,10 +339,7 @@ export class CodeEditorComponent implements OnInit {
     this.cmdConnect = undefined
     this.outputWidget.enableStdin(false)
 
-    
     this.python.driver?.stopExecution()
-    
-    
   }
 
   async didConnectStart(){

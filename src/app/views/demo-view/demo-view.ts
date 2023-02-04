@@ -1,6 +1,7 @@
 import { Component, NgZone, OnInit } from '@angular/core';
 import { ApiService, Meta } from 'src/app/services/api-service/api.service';
 import { Commands } from 'src/app/services/api-service/api.commands';
+import { xxhash } from 'src/app/services/fs-service/fs.service';
 
 @Component({
   selector: 'app-demo-view',
@@ -17,42 +18,7 @@ export class DemoViewComponent implements OnInit {
     ) {}
 
   ngOnInit(): void {
-    //api.problemList((problemList: any) => {console.log(problemList)});
-
-    /*
-    api.getAttachment(
-      "piastrelle",
-      ()=>{console.log("Attachment packet received")},
-      (onAttachmentInfo: any) => {console.log(onAttachmentInfo)},
-      (data: ArrayBuffer) => {
-        console.log("ArrayBuffer received");
-
-        const arrayBufferToFile = (buffer:any, filename:any) => {
-          const blob = new Blob([buffer], { type: 'application/octet-stream' });
-          return new File([blob], filename, { type: 'application/octet-stream' });
-        };
-
-        let file = arrayBufferToFile(data, "/home/michele/piastrelle.tar");
-        console.log(file);
-      }
-    );
-    
-
-    api.Connect(
-      "sum", 
-      "synopsis", 
-      {"service":"free_sum"}, 
-      undefined,
-      undefined,
-      undefined,
-      (onConnectionBegin: any) => {console.log("Connection Begin -> " + onConnectionBegin); },
-      () => {console.log("Connection Start")},
-      (onConnectionClose: any) => {console.log(onConnectionClose)},
-      (onData: any) => {console.log(onData)},
-      (onError: any) => {alert(onError)},
-    );
-
-    */
+    //this.hashTest()
     
   }
   //API Test
@@ -113,11 +79,6 @@ export class DemoViewComponent implements OnInit {
     this.sendBinary();
   }
 
-
-
-
-
-
   //OLD
 
   async apiConnectOld() {
@@ -161,5 +122,7 @@ export class DemoViewComponent implements OnInit {
     console.log(this.cmdConnect!.tal.isOpen());}, 2500);
   }
 
-
+  async hashTest(){
+    xxhash.load()
+  }
 }
