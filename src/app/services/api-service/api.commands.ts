@@ -1,5 +1,7 @@
 import { TALightSocket } from "./api.socket";
 import { Packets } from "./api.packets";
+import { xxhash128 } from "hash-wasm";
+var JSONbig = require('json-bigint');
 
 export namespace Commands{
 
@@ -63,7 +65,7 @@ export namespace Commands{
         if(this.onReciveUndecodedBinary){this.onReciveUndecodedBinary(payload)}
       }
 
-      public didRecive(payload:Packets.PacketsPayload){
+      public async didRecive(payload:Packets.PacketsPayload){
         this.log("didRecive");
         if(this.onRecive){ this.onRecive(payload) }
         
@@ -88,7 +90,7 @@ export namespace Commands{
         this.tal.send(msg);
       }
 
-      public override didRecive(payload:Packets.PacketsPayload){
+      public override async didRecive(payload:Packets.PacketsPayload){
         super.didRecive(payload);
         let message = payload.getMessage_MetaList(Packets.Reply.MetaList);
         if (message){ this.didReciveProblemList(message); }
@@ -118,7 +120,7 @@ export namespace Commands{
         this.tal!.send(this.msg)
       }
 
-      public override didRecive(payload: Packets.PacketsPayload): void {
+      public override async didRecive(payload: Packets.PacketsPayload) {
         super.didRecive(payload);
         let message;
 
@@ -164,7 +166,7 @@ export namespace Commands{
         this.tal.send(this.msg);
       }
       
-      public override didRecive(payload: Packets.PacketsPayload): void {
+      public override async didRecive(payload: Packets.PacketsPayload) {
         super.didRecive(payload);
         let message;
         message = payload.getMessage(Packets.Reply.ConnectBegin);
@@ -173,17 +175,13 @@ export namespace Commands{
 
           if(this.files.size > 0 && message.status.Ok.length > 0 && message.status.Ok[0] !== "") {
             const byteSize = (str:string) => new Blob([str]).size;
-            var JSONbig = require('json-bigint');
-            for (let [arg, value] of this.files.entries()) {
-              //header main.py da terminale
-              //{"name":"instance","size":21,"hash":28267277493754039280895210869094079614}
+            
+            for (let [nameArgFile, content] of this.files.entries()) {
+              let hashHex =  '0x' + await xxhash128(content)
+              let hash = BigInt( hashHex ) 
+              let size = byteSize(content);
 
-              let name = arg;
-              let size = byteSize(value);
-              let hash = BigInt("28267277493754039280895210869094079614");
-              
-              
-              let header = new Packets.Request.BinaryHeader(name, size, hash);
+              let header = new Packets.Request.BinaryHeader(nameArgFile, size, hash);
               console.log("header: ", header);
               console.log("header:string", header.toString());
 
@@ -192,7 +190,7 @@ export namespace Commands{
               console.log("header:parsed:type ", typeof header_parsed);
 
               this.tal.ws!.next(header_parsed);
-              this.tal.sendBinary(value);
+              this.tal.sendBinary(content);
             }
           }
         }
@@ -249,7 +247,7 @@ export namespace Commands{
         this.tal.send(msg);
       }
 
-      public override didRecive(payload:Packets.PacketsPayload){
+      public override async didRecive(payload:Packets.PacketsPayload){
         super.didRecive(payload);
         let message = payload.getMessage(Packets.Reply.ConnectStop);
         if (message){ this.didReciveConnectStop(message); }
