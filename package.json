@@ -25,6 +25,7 @@
     "@types/marked": "~4.0.0",
     "b4a": "^1.6.1",
     "base64-arraybuffer": "^1.0.2",
+    "hash-wasm": "^4.9.0",
     "indexeddb-fs": "^1.2.5",
     "json-bigint": "^1.0.0",
     "marked": "^4.2.12",
