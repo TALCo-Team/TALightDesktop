@@ -237,248 +237,278 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Commands": () => (/* binding */ Commands)
 /* harmony export */ });
-/* harmony import */ var _api_socket__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./api.socket */ 2023);
-/* harmony import */ var _api_packets__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./api.packets */ 645);
+/* harmony import */ var _home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./node_modules/@angular-builders/custom-webpack/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js */ 8046);
+/* harmony import */ var _api_socket__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./api.socket */ 2023);
+/* harmony import */ var _api_packets__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./api.packets */ 645);
+/* harmony import */ var hash_wasm__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! hash-wasm */ 2192);
 
 
+
+
+var JSONbig = __webpack_require__(/*! json-bigint */ 4153);
 var Commands;
 (function (Commands) {
-    class Command {
-        constructor(url, decodeBinary) {
-            this.debug = false;
-            this.url = url;
-            this.tal = new _api_socket__WEBPACK_IMPORTED_MODULE_0__.TALightSocket(this.url);
-            if (decodeBinary === false) {
-                this.tal.decode = decodeBinary;
-            }
-            this.tal.onError = (error) => { this.didError(error); };
-            this.tal.onClose = () => { this.didClose(); };
-            this.tal.onRecive = (payload) => { this.didRecive(payload); };
-            this.tal.onReciveBinary = (payload) => { this.didReciveBinary(payload); };
-            this.tal.onReciveUndecodedBinary = (payload) => { this.didReciveUndecodedBinary(payload); };
-        }
-        run() {
-            let msg = new _api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Request.Handshake();
-            this.tal.send(msg);
-        }
-        sendBinary(data) {
-            this.log("didSendBinary: " + data);
-            this.tal.sendBinary(data);
-        }
-        log(...args) {
-            let prefix = this.constructor.name + ": ";
-            console.log(prefix, ...args);
-            if (this.debug)
-                alert(prefix + (args).join(" "));
-        }
-        didClose() {
-            this.log("didClose");
-            if (this.onClose) {
-                this.onClose();
-            }
-        }
-        didError(error) {
-            this.log("didError ", error);
-            if (this.onError) {
-                this.onError(error);
-            }
-        }
-        didReciveBinary(payload) {
-            this.log("didReciveBinary:\n" + payload);
-            if (this.onReciveBinary) {
-                this.onReciveBinary(payload);
-            }
-        }
-        didReciveUndecodedBinary(payload) {
-            this.log("didReciveUndecodedBinary:\n");
-            if (this.onReciveUndecodedBinary) {
-                this.onReciveUndecodedBinary(payload);
-            }
-        }
-        didRecive(payload) {
-            this.log("didRecive");
-            if (this.onRecive) {
-                this.onRecive(payload);
-            }
-            let message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.Handshake);
-            if (message) {
-                this.didReciveHandshake(message);
-            }
-        }
-        didReciveHandshake(message) {
-            this.log("didRecieveHandshake");
-            if (this.onReciveHandshake) {
-                this.onReciveHandshake(message);
-            }
-        }
+  class Command {
+    constructor(url, decodeBinary) {
+      this.debug = false;
+      this.url = url;
+      this.tal = new _api_socket__WEBPACK_IMPORTED_MODULE_1__.TALightSocket(this.url);
+      if (decodeBinary === false) {
+        this.tal.decode = decodeBinary;
+      }
+      this.tal.onError = error => {
+        this.didError(error);
+      };
+      this.tal.onClose = () => {
+        this.didClose();
+      };
+      this.tal.onRecive = payload => {
+        this.didRecive(payload);
+      };
+      this.tal.onReciveBinary = payload => {
+        this.didReciveBinary(payload);
+      };
+      this.tal.onReciveUndecodedBinary = payload => {
+        this.didReciveUndecodedBinary(payload);
+      };
     }
-    Commands.Command = Command;
-    class ProblemList extends Command {
-        didReciveHandshake(handshake) {
-            super.didReciveHandshake(handshake);
-            let msg = new _api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Request.MetaList();
-            this.tal.send(msg);
-        }
-        didRecive(payload) {
-            super.didRecive(payload);
-            let message = payload.getMessage_MetaList(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.MetaList);
-            if (message) {
-                this.didReciveProblemList(message);
-            }
-        }
-        didReciveProblemList(message) {
-            this.log("onRecieveProblemList");
-            if (this.onRecieveProblemList) {
-                this.onRecieveProblemList(message);
-            }
-        }
+    run() {
+      let msg = new _api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Request.Handshake();
+      this.tal.send(msg);
     }
-    Commands.ProblemList = ProblemList;
-    class Attchment extends Command {
-        constructor(url, problem_name) {
-            super(url, false);
-            this.msg = new _api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Request.Attachment(problem_name);
-        }
-        didReciveHandshake(handshake) {
-            super.didReciveHandshake(handshake);
-            this.tal.send(this.msg);
-        }
-        didRecive(payload) {
-            super.didRecive(payload);
-            let message;
-            message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.Attachment);
-            if (message) {
-                this.didRecieveAttachment(message);
-            }
-            message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.AttachmentInfo);
-            if (message) {
-                this.didRecieveAttachmentInfo(message);
-            }
-        }
-        didRecieveAttachment(message) {
-            this.log("Attachment");
-            if (this.onReciveAttachment) {
-                this.onReciveAttachment(message);
-            }
-        }
-        didRecieveAttachmentInfo(message) {
-            this.log("AttachmentInfo");
-            if (this.onReciveAttachmentInfo) {
-                this.onReciveAttachmentInfo(message);
-            }
-        }
+    sendBinary(data) {
+      this.log("didSendBinary: " + data);
+      this.tal.sendBinary(data);
     }
-    Commands.Attchment = Attchment;
-    class Connect extends Command {
-        constructor(url, problem_name, service, args, tty, token, files) {
-            super(url);
-            this.files = new Map();
-            if (files) {
-                this.files = files;
-            }
-            let fileArgNames = [...this.files.keys()];
-            this.msg = new _api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Request.ConnectBegin(problem_name, service, args, tty, token, fileArgNames);
-        }
-        didReciveHandshake(handshake) {
-            super.didReciveHandshake(handshake);
-            this.tal.send(this.msg);
-        }
-        didRecive(payload) {
-            super.didRecive(payload);
-            let message;
-            message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.ConnectBegin);
-            if (message) {
-                this.didRecieveConnectBegin(message);
-                if (this.files.size > 0 && message.status.Ok.length > 0 && message.status.Ok[0] !== "") {
-                    const byteSize = (str) => new Blob([str]).size;
-                    var JSONbig = __webpack_require__(/*! json-bigint */ 4153);
-                    for (let [arg, value] of this.files.entries()) {
-                        //header main.py da terminale
-                        //{"name":"instance","size":21,"hash":28267277493754039280895210869094079614}
-                        let name = arg;
-                        let size = byteSize(value);
-                        let hash = BigInt("28267277493754039280895210869094079614");
-                        let header = new _api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Request.BinaryHeader(name, size, hash);
-                        console.log("header: ", header);
-                        console.log("header:string", header.toString());
-                        var header_parsed = JSONbig.stringify(header);
-                        console.log("header:parsed: ", header_parsed);
-                        console.log("header:parsed:type ", typeof header_parsed);
-                        this.tal.ws.next(header_parsed);
-                        this.tal.sendBinary(value);
-                    }
-                }
-            }
-            message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.ConnectStart);
-            if (message) {
-                this.didRecieveConnectStart(message);
-            }
-            message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.ConnectStop);
-            if (message) {
-                this.didRecieveConnectStop(message);
-            }
-            message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.AttachmentInfo);
-            if (message) {
-                this.didRecieveBinaryHeader(message);
-            }
-        }
-        didRecieveConnectBegin(message) {
-            this.log("didRecieveConnectBegin");
-            if (this.onReciveConnectBegin) {
-                this.onReciveConnectBegin(message);
-            }
-        }
-        didRecieveConnectStart(message) {
-            this.log("didRecieveConnectStart");
-            if (this.onReciveConnectStart) {
-                this.onReciveConnectStart(message);
-            }
-        }
-        didRecieveConnectStop(message) {
-            this.log("didRecieveConnectStop", message);
-            /* download result files */
-            if (this.onReciveConnectStop) {
-                this.onReciveConnectStop(message);
-                if (this.tal.isOpen() === true) {
-                    this.sendConnectStop();
-                }
-            }
-        }
-        didRecieveBinaryHeader(message) {
-            this.log("BinaryHeader");
-            if (this.onReciveBinaryHeader) {
-                this.onReciveBinaryHeader(message);
-            }
-        }
-        sendConnectStop() {
-            this.tal.send(new _api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Request.ConnectStop());
-            //this.tal.closeConnection();
-        }
+    log(...args) {
+      let prefix = this.constructor.name + ": ";
+      console.log(prefix, ...args);
+      if (this.debug) alert(prefix + args.join(" "));
     }
-    Commands.Connect = Connect;
-    class CloseConnection extends Command {
-        didReciveHandshake(handshake) {
-            super.didReciveHandshake(handshake);
-            let msg = new _api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Request.ConnectStop();
-            this.tal.send(msg);
-        }
-        didRecive(payload) {
-            super.didRecive(payload);
-            let message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_1__.Packets.Reply.ConnectStop);
-            if (message) {
-                this.didReciveConnectStop(message);
-            }
-        }
-        didReciveConnectStop(message) {
-            this.log("didRecieveGameList");
-            if (this.onReciveConnectStop) {
-                this.onReciveConnectStop(message);
-            }
-        }
+    didClose() {
+      this.log("didClose");
+      if (this.onClose) {
+        this.onClose();
+      }
     }
-    Commands.CloseConnection = CloseConnection;
-})(Commands || (Commands = {}));
+    didError(error) {
+      this.log("didError ", error);
+      if (this.onError) {
+        this.onError(error);
+      }
+    }
+    didReciveBinary(payload) {
+      this.log("didReciveBinary:\n" + payload);
+      if (this.onReciveBinary) {
+        this.onReciveBinary(payload);
+      }
+    }
+    didReciveUndecodedBinary(payload) {
+      this.log("didReciveUndecodedBinary:\n");
+      if (this.onReciveUndecodedBinary) {
+        this.onReciveUndecodedBinary(payload);
+      }
+    }
+    didRecive(payload) {
+      var _this = this;
+      return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+        _this.log("didRecive");
+        if (_this.onRecive) {
+          _this.onRecive(payload);
+        }
+        let message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Reply.Handshake);
+        if (message) {
+          _this.didReciveHandshake(message);
+        }
+      })();
+    }
+    didReciveHandshake(message) {
+      this.log("didRecieveHandshake");
+      if (this.onReciveHandshake) {
+        this.onReciveHandshake(message);
+      }
+    }
+  }
+  Commands.Command = Command;
+  class ProblemList extends Command {
+    didReciveHandshake(handshake) {
+      super.didReciveHandshake(handshake);
+      let msg = new _api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Request.MetaList();
+      this.tal.send(msg);
+    }
+    didRecive(payload) {
+      var _superprop_getDidRecive = () => super.didRecive,
+        _this2 = this;
+      return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+        _superprop_getDidRecive().call(_this2, payload);
+        let message = payload.getMessage_MetaList(_api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Reply.MetaList);
+        if (message) {
+          _this2.didReciveProblemList(message);
+        }
+      })();
+    }
+    didReciveProblemList(message) {
+      this.log("onRecieveProblemList");
+      if (this.onRecieveProblemList) {
+        this.onRecieveProblemList(message);
+      }
+    }
+  }
+  Commands.ProblemList = ProblemList;
+  class Attchment extends Command {
+    constructor(url, problem_name) {
+      super(url, false);
+      this.msg = new _api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Request.Attachment(problem_name);
+    }
+    didReciveHandshake(handshake) {
+      super.didReciveHandshake(handshake);
+      this.tal.send(this.msg);
+    }
+    didRecive(payload) {
+      var _superprop_getDidRecive2 = () => super.didRecive,
+        _this3 = this;
+      return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+        _superprop_getDidRecive2().call(_this3, payload);
+        let message;
+        message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Reply.Attachment);
+        if (message) {
+          _this3.didRecieveAttachment(message);
+        }
+        message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Reply.AttachmentInfo);
+        if (message) {
+          _this3.didRecieveAttachmentInfo(message);
+        }
+      })();
+    }
+    didRecieveAttachment(message) {
+      this.log("Attachment");
+      if (this.onReciveAttachment) {
+        this.onReciveAttachment(message);
+      }
+    }
+    didRecieveAttachmentInfo(message) {
+      this.log("AttachmentInfo");
+      if (this.onReciveAttachmentInfo) {
+        this.onReciveAttachmentInfo(message);
+      }
+    }
+  }
+  Commands.Attchment = Attchment;
+  class Connect extends Command {
+    constructor(url, problem_name, service, args, tty, token, files) {
+      super(url);
+      this.files = new Map();
+      if (files) {
+        this.files = files;
+      }
+      let fileArgNames = [...this.files.keys()];
+      this.msg = new _api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Request.ConnectBegin(problem_name, service, args, tty, token, fileArgNames);
+    }
+    didReciveHandshake(handshake) {
+      super.didReciveHandshake(handshake);
+      this.tal.send(this.msg);
+    }
+    didRecive(payload) {
+      var _superprop_getDidRecive3 = () => super.didRecive,
+        _this4 = this;
+      return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+        _superprop_getDidRecive3().call(_this4, payload);
+        let message;
+        message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Reply.ConnectBegin);
+        if (message) {
+          _this4.didRecieveConnectBegin(message);
+          if (_this4.files.size > 0 && message.status.Ok.length > 0 && message.status.Ok[0] !== "") {
+            const byteSize = str => new Blob([str]).size;
+            for (let [nameArgFile, content] of _this4.files.entries()) {
+              let hashHex = '0x' + (yield (0,hash_wasm__WEBPACK_IMPORTED_MODULE_3__.xxhash128)(content));
+              let hash = BigInt(hashHex);
+              let size = byteSize(content);
+              let header = new _api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Request.BinaryHeader(nameArgFile, size, hash);
+              console.log("header: ", header);
+              console.log("header:string", header.toString());
+              var header_parsed = JSONbig.stringify(header);
+              console.log("header:parsed: ", header_parsed);
+              console.log("header:parsed:type ", typeof header_parsed);
+              _this4.tal.ws.next(header_parsed);
+              _this4.tal.sendBinary(content);
+            }
+          }
+        }
+        message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Reply.ConnectStart);
+        if (message) {
+          _this4.didRecieveConnectStart(message);
+        }
+        message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Reply.ConnectStop);
+        if (message) {
+          _this4.didRecieveConnectStop(message);
+        }
+        message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Reply.AttachmentInfo);
+        if (message) {
+          _this4.didRecieveBinaryHeader(message);
+        }
+      })();
+    }
+    didRecieveConnectBegin(message) {
+      this.log("didRecieveConnectBegin");
+      if (this.onReciveConnectBegin) {
+        this.onReciveConnectBegin(message);
+      }
+    }
+    didRecieveConnectStart(message) {
+      this.log("didRecieveConnectStart");
+      if (this.onReciveConnectStart) {
+        this.onReciveConnectStart(message);
+      }
+    }
+    didRecieveConnectStop(message) {
+      this.log("didRecieveConnectStop", message);
+      /* download result files */
+      if (this.onReciveConnectStop) {
+        this.onReciveConnectStop(message);
+        if (this.tal.isOpen() === true) {
+          this.sendConnectStop();
+        }
+      }
+    }
+    didRecieveBinaryHeader(message) {
+      this.log("BinaryHeader");
+      if (this.onReciveBinaryHeader) {
+        this.onReciveBinaryHeader(message);
+      }
+    }
+    sendConnectStop() {
+      this.tal.send(new _api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Request.ConnectStop());
+      //this.tal.closeConnection();
+    }
+  }
 
+  Commands.Connect = Connect;
+  class CloseConnection extends Command {
+    didReciveHandshake(handshake) {
+      super.didReciveHandshake(handshake);
+      let msg = new _api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Request.ConnectStop();
+      this.tal.send(msg);
+    }
+    didRecive(payload) {
+      var _superprop_getDidRecive4 = () => super.didRecive,
+        _this5 = this;
+      return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+        _superprop_getDidRecive4().call(_this5, payload);
+        let message = payload.getMessage(_api_packets__WEBPACK_IMPORTED_MODULE_2__.Packets.Reply.ConnectStop);
+        if (message) {
+          _this5.didReciveConnectStop(message);
+        }
+      })();
+    }
+    didReciveConnectStop(message) {
+      this.log("didRecieveGameList");
+      if (this.onReciveConnectStop) {
+        this.onReciveConnectStop(message);
+      }
+    }
+  }
+  Commands.CloseConnection = CloseConnection;
+})(Commands || (Commands = {}));
 
 /***/ }),
 
@@ -2053,6 +2083,7 @@ class ProjectConfig {
     this.TAL_SERVER = "wss://ta.di.univr.it/sfide"; //TODO
     this.TAL_PROBLEM = ""; //TODO
     this.TAL_SERVICE = ""; //TODO
+    this.TAL_TOKEN = ""; //TODO
     this.DIR_PROJECT = '/.talight/';
     this.DIR_ATTACHMENTS = '/data/';
     this.DIR_RESULTS = '/results/'; //TODO
@@ -2988,9 +3019,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "DemoViewComponent": () => (/* binding */ DemoViewComponent)
 /* harmony export */ });
 /* harmony import */ var _home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./node_modules/@angular-builders/custom-webpack/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js */ 8046);
-/* harmony import */ var src_app_services_fs_service_fs_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! src/app/services/fs-service/fs.service */ 7934);
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/core */ 3991);
-/* harmony import */ var src_app_services_api_service_api_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! src/app/services/api-service/api.service */ 6986);
+/* harmony import */ var hash_wasm__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! hash-wasm */ 2192);
+/* harmony import */ var buffer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! buffer */ 4485);
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/core */ 3991);
+/* harmony import */ var src_app_services_api_service_api_service__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! src/app/services/api-service/api.service */ 6986);
+
 
 
 
@@ -3120,14 +3153,17 @@ class DemoViewComponent {
   }
   hashTest() {
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
-      src_app_services_fs_service_fs_service__WEBPACK_IMPORTED_MODULE_1__.xxhash.load();
+      let hex = yield (0,hash_wasm__WEBPACK_IMPORTED_MODULE_1__.xxhash128)(buffer__WEBPACK_IMPORTED_MODULE_2__.Buffer.from("ciao"));
+      let dec = parseInt(hex, 16);
+      alert(hex);
+      alert(dec);
     })();
   }
 }
 DemoViewComponent.ɵfac = function DemoViewComponent_Factory(t) {
-  return new (t || DemoViewComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_3__.NgZone), _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵdirectiveInject"](src_app_services_api_service_api_service__WEBPACK_IMPORTED_MODULE_2__.ApiService));
+  return new (t || DemoViewComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵdirectiveInject"](_angular_core__WEBPACK_IMPORTED_MODULE_4__.NgZone), _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵdirectiveInject"](src_app_services_api_service_api_service__WEBPACK_IMPORTED_MODULE_3__.ApiService));
 };
-DemoViewComponent.ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵdefineComponent"]({
+DemoViewComponent.ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵdefineComponent"]({
   type: DemoViewComponent,
   selectors: [["app-demo-view"]],
   decls: 18,
@@ -3135,46 +3171,46 @@ DemoViewComponent.ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODULE_3_
   consts: [[2, "display", "flex", "flex-direction", "column"], [3, "click"]],
   template: function DemoViewComponent_Template(rf, ctx) {
     if (rf & 1) {
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](0, "div", 0)(1, "div")(2, "div");
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](3, " API Demo ");
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]();
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](4, "div")(5, "button", 1);
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_5_listener() {
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementStart"](0, "div", 0)(1, "div")(2, "div");
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtext"](3, " API Demo ");
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementEnd"]();
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementStart"](4, "div")(5, "button", 1);
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_5_listener() {
         return ctx.apiProblemList();
       });
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](6, "Problem List");
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]();
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](7, "button", 1);
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_7_listener() {
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtext"](6, "Problem List");
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementEnd"]();
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementStart"](7, "button", 1);
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_7_listener() {
         return ctx.apiGetAttachment();
       });
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](8, "Get Attachment");
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]();
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](9, "button", 1);
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_9_listener() {
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtext"](8, "Get Attachment");
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementEnd"]();
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementStart"](9, "button", 1);
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_9_listener() {
         return ctx.apiConnectOld();
       });
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](10, "Connect Old");
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]();
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](11, "button", 1);
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_11_listener() {
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtext"](10, "Connect Old");
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementEnd"]();
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementStart"](11, "button", 1);
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_11_listener() {
         return ctx.apiConnect();
       });
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](12, "Connect");
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]();
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](13, "button", 1);
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_13_listener() {
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtext"](12, "Connect");
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementEnd"]();
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementStart"](13, "button", 1);
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵlistener"]("click", function DemoViewComponent_Template_button_click_13_listener() {
         return ctx.hashTest();
       });
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](14, "Hash");
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]()()();
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementStart"](15, "div")(16, "pre");
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtext"](17);
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵelementEnd"]()()();
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtext"](14, "Hash");
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementEnd"]()()();
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementStart"](15, "div")(16, "pre");
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtext"](17);
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵelementEnd"]()()();
     }
     if (rf & 2) {
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵadvance"](17);
-      _angular_core__WEBPACK_IMPORTED_MODULE_3__["ɵɵtextInterpolate"](ctx.output);
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵadvance"](17);
+      _angular_core__WEBPACK_IMPORTED_MODULE_4__["ɵɵtextInterpolate"](ctx.output);
     }
   },
   styles: ["\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiJkZW1vLXZpZXcuY29tcG9uZW50LnNjc3MifQ== */"]
@@ -3782,8 +3818,8 @@ class CodeEditorComponent {
       let problem = _this5.selectedService.parent.name;
       let service = _this5.selectedService.name;
       let args = _this5.selectedService.exportArgs();
-      let tty = undefined;
-      let token = undefined;
+      let tty = false; //true: bash code coloring, backspaces, etc
+      let token = config.TAL_TOKEN && config.TAL_TOKEN != "" ? config.TAL_TOKEN : undefined;
       let filePaths = _this5.selectedService.exportFilesPaths();
       let files = new Map();
       filePaths.forEach((fileArgPath, fileArgName) => {
