@@ -275,8 +275,8 @@ export class CodeEditorComponent implements OnInit {
     let problem = this.selectedService.parent.name;
     let service = this.selectedService.name;
     let args = this.selectedService.exportArgs();
-    let tty = undefined
-    let token = undefined
+    let tty = false //true: bash code coloring, backspaces, etc
+    let token =  (config.TAL_TOKEN && config.TAL_TOKEN!=""?config.TAL_TOKEN:undefined)
     let filePaths = this.selectedService.exportFilesPaths();
     let files =  new Map<string,string>();
 

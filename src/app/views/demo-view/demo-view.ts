@@ -124,6 +124,9 @@ export class DemoViewComponent implements OnInit {
   }
 
   async hashTest(){
-    console.log(await xxhash128(Buffer.from("ciao")));
+    let hex = await xxhash128(Buffer.from("ciao"));
+    let dec = parseInt(hex,16)
+    alert(hex);
+    alert(dec);
   }
 }
