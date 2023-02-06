@@ -1,7 +1,8 @@
 import { Component, NgZone, OnInit } from '@angular/core';
 import { ApiService, Meta } from 'src/app/services/api-service/api.service';
 import { Commands } from 'src/app/services/api-service/api.commands';
-import { xxhash } from 'src/app/services/fs-service/fs.service';
+import { xxhash128} from 'hash-wasm';
+import { Buffer } from 'buffer';
 
 @Component({
   selector: 'app-demo-view',
@@ -123,6 +124,6 @@ export class DemoViewComponent implements OnInit {
   }
 
   async hashTest(){
-    xxhash.load()
+    console.log(await xxhash128(Buffer.from("ciao")));
   }
 }
