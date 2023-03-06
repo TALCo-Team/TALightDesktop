@@ -52,8 +52,10 @@ Dependencies:
 
 - NodeJS
 ```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | 
-sh ~/.nvm/nvm.sh install --lts
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+  source ~/.bashrc
+  nvm list-remote
+  nvm install --lts
 ```
 
 - Yarn
