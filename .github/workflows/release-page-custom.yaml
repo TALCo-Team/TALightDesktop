@@ -47,7 +47,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: TALIGHT_${{ inputs.siteUrl }}
+        tag_name: TALIGHT
         release_name: TALIGHT ${{ inputs.siteUrl }}
         draft: false
         prerelease: false
