@@ -1,4 +1,4 @@
-name: "Release Pages"
+name: "Release Pages Custom Url"
 
 on:
   workflow_dispatch:
@@ -51,7 +51,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: TALIGHT
+          tag_name: TALIGHT ${{ github.sha }}
           release_name: TALIGHT ${{ inputs.siteUrl }}
           draft: false
           prerelease: false
