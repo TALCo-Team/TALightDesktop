@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } 
 import { ControlValueAccessor } from '@angular/forms';
 import { EditorComponent } from 'ngx-monaco-editor-v2';
 import { noop } from 'rxjs';
-import { FsNodeFile } from 'src/app/services/fs-service/fs.service';
+import { FsNodeFile } from 'src/app/services/fs-service/fs.service.types';
 import { ThemeService } from 'src/app/services/theme-service/theme.service';
 
 @Component({

@@ -1,7 +1,7 @@
 import { Component, ElementRef, EventEmitter, Input,  OnInit, Output, ViewChild } from '@angular/core';
 import { encode } from 'base64-arraybuffer';
 import { marked } from 'marked';
-import { FsNodeFile } from 'src/app/services/fs-service/fs.service';
+import { FsNodeFile } from 'src/app/services/fs-service/fs.service.types';
 import { ThemeService } from 'src/app/services/theme-service/theme.service';
 import { MonacoEditorWidgetComponent } from '../monaco-editor-widget/monaco-editor-widget.component';
 

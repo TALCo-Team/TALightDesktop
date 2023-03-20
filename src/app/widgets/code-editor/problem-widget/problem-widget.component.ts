@@ -1,13 +1,13 @@
 import { Component, EventEmitter, Output, NgZone, Input, ViewChild, ElementRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ApiService } from 'src/app/services/api-service/api.service';
-import { FsNodeFolder, FsNodeFile } from 'src/app/services/fs-service/fs.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
-import { PyodideDriver } from 'src/app/services/python-compiler-service/pydiode-driver';
+
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 import { OverlayOptions } from 'primeng/api';
 import { ServiceDescriptor, ProblemDescriptor, ArgsMap, FilesMap, FileDescriptor, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 import { Dropdown } from 'primeng/dropdown';
+import { CompilerDriver } from 'src/app/services/compiler-service/compiler-service-driver';
 
 
 export class ServiceMenuEntry {
@@ -50,7 +50,8 @@ export class ProblemWidgetComponent {
 
   filePathList = new Array<string>();
 
-  driver?:PyodideDriver
+  driver?:CompilerDriver
+
   
   regexFormat = true;
   showRegex = true;

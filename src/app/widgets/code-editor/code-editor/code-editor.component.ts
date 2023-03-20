@@ -1,15 +1,18 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { Commands } from 'src/app/services/api-service/api.commands';
 import { ApiService } from 'src/app/services/api-service/api.service';
+import { CompilerState } from 'src/app/services/compiler-service/compiler-service.types';
 
-import { FsService, FsNodeFile, Tar, FsNodeFolder, FsNodeList } from 'src/app/services/fs-service/fs.service';
+import { FsService, Tar } from 'src/app/services/fs-service/fs.service';
+import { FsNodeFile, FsNodeFolder, FsNodeList } from 'src/app/services/fs-service/fs.service.types';
 import { NotificationManagerService, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
 import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
+import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 
-import { PyodideState, PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
+
 import { FileExplorerWidgetComponent } from 'src/app/widgets/code-editor/file-explorer-widget/file-explorer-widget.component';
 import { ExecbarWidgetComponent } from '../execbar-widget/execbar-widget.component';
 import { FileEditorWidgetComponent } from '../file-editor-widget/file-editor-widget.component';
@@ -33,7 +36,7 @@ export class CodeEditorComponent implements OnInit {
   public selectedProblem?: ProblemDescriptor;
   public selectedService?: ServiceDescriptor;
   public driver;
-  public pyodideState = PyodideState.Unknown
+  public pyodideState = CompilerState.Unknown
   public pyodideStateContent? = ""
 
   public fsroot = FsService.EmptyFolder;
@@ -65,10 +68,10 @@ export class CodeEditorComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.python.driver?.subscribeNotify(true,(msg)=>{this.didNotify(msg)})
-    this.python.driver?.subscribeState(true,(state:PyodideState,content?:string)=>{this.didStateChange(state,content)})
-    this.python.driver?.subscribeStdout(true,(msg)=>{this.didStdout(msg)})
-    this.python.driver?.subscribeStderr(true,(msg)=>{this.didStderr(msg)})
+    this.python.driver?.subscribeNotify(true,(msg:string)=>{this.didNotify(msg)})
+    this.python.driver?.subscribeState(true,(state:CompilerState,content?:string)=>{this.didStateChange(state,content)})
+    this.python.driver?.subscribeStdout(true,(msg:string)=>{this.didStdout(msg)})
+    this.python.driver?.subscribeStderr(true,(msg:string)=>{this.didStderr(msg)})
   }
 
   ngAfterViewInit(){
@@ -92,7 +95,7 @@ export class CodeEditorComponent implements OnInit {
     this.cmdConnect.sendBinary(data + "\n"); //lo \n va aggiunto all'output del bot python
   }
 
-  public didStateChange(state:PyodideState,content?:string){
+  public didStateChange(state:CompilerState,content?:string){
     console.log("didStateChange:")
     //this.outputWidget!.print(state,OutputType.SYSTEM);
     this.pyodideState=state
@@ -125,7 +128,7 @@ export class CodeEditorComponent implements OnInit {
       this.outputWidget.print(msgs[i],fromAPI?OutputType.STDINAPI:OutputType.STDIN)
       this.python.driver?.sendStdin(msgs[i])
     }
-    if (fromAPI || this.pyodideState != PyodideState.Stdin ){
+    if (fromAPI || this.pyodideState != CompilerState.Stdin ){
       this.outputWidget.enableStdin(false)
     }
   }
@@ -321,14 +324,7 @@ export class CodeEditorComponent implements OnInit {
       onBinaryHeader
     );
     console.log("apiConnect:DONE")
-    
- 
-    console.log("apiConnect:runProject")
-    this.saveFile();
-    await this.python.runProject()
-    this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
-    console.log("apiConnect:runProject:running")
-    
+       
     
     return true
   }

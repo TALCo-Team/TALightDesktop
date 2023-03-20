@@ -2,7 +2,8 @@ import { Component, ElementRef, EventEmitter, Input, NgZone, OnInit, Output, Que
 
 import { ConfirmationService } from 'primeng/api';
 import { OverlayPanel } from 'primeng/overlaypanel';
-import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver, Tar } from 'src/app/services/fs-service/fs.service';
+import { FsService, Tar } from 'src/app/services/fs-service/fs.service';
+import { FsNodeFile, FsNodeFolder, FsServiceDriver } from 'src/app/services/fs-service/fs.service.types';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 
 
