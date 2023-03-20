@@ -23,6 +23,12 @@
             width: 100%;
             margin: 0px;
             padding: 0px;
+            overflow-x: unset;
+            word-wrap: break-word;
+            flex-wrap: wrap;
+            overflow-x: hidden;
+            position: relative;
+            overflow-y: scroll;
         }
     }
 
@@ -55,6 +61,7 @@
     .tal-output-widget-row-scroll{
         flex-grow: 2;
         display: flex;
+        overflow: auto;
     }
     
     .tal-output-widget-scroll{
@@ -92,7 +99,11 @@
         }
 
         .tal-output-widget-text{
-            flex-grow: 2;
+            box-sizing:border-box;
+            
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            flex-wrap: wrap;
         }
     }
 

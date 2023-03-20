@@ -7,7 +7,7 @@
         </div>
     </div>
 
-  <div class="tal-output-widget-row tal-output-widget-row-scroll">
+  <div class="tal-output-widget-row tal-output-widget-row-scroll" style="border: 1px yellow solid">
       <p-scrollPanel class="tal-output-widget-pscroll" id="tal-output-widget-scroll-id">
           <div class="tal-output-widget-inner-row tal-output-widget-inner-row-{{line.type}}" *ngFor="let line of outputLines">
               <div class="tal-output-widget-icon">
@@ -27,7 +27,12 @@
              (blur)="blurStdin()"
              (keydown)="sendOnEnter($event)"
              placeholder="Input del programma" />
-      <button pButton #sdtinButton icon="pi pi-send" class="tal-output-widget-stdin-button  tal-square-button" (click)="sendStdin()" title="Send" pTooltip="Invia"></button>
+      <button pButton #sdtinButton 
+             icon="pi pi-send" 
+             class="tal-output-widget-stdin-button  tal-square-button" 
+             (click)="sendStdin()" 
+             title="Send" 
+             pTooltip="Invia"></button>
   </div>
 
 </div>
