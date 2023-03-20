@@ -62,6 +62,7 @@ export class ProjectConfig {
   TAL_SERVER = "wss://ta.di.univr.it/sfide" //TODO
   TAL_PROBLEM = "" //TODO
   TAL_SERVICE = "" //TODO
+  TAL_TOKEN = "" //TODO
 
   DIR_PROJECT = '/.talight/'
   DIR_ATTACHMENTS = '/data/'
