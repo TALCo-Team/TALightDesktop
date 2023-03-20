@@ -1,18 +1,14 @@
-import { EventEmitter } from "@angular/core";
-import { Packets } from "../api-service/api.packets";
-import { ApiService, Meta } from "../api-service/api.service";
-import { ClangCompilerService } from "../clang-compiler-service/clang-compiler.service";
-import { FsNodeFile, FsNodeFolder, FsNodeList, FsService, FsServiceDriver as FsDriver } from "../fs-service/fs.service"
-import { PyodideDriver } from "../python-compiler-service/pydiode-driver";
-import { PythonCompiler, PythonCompilerService } from "../python-compiler-service/python-compiler.service";
+import { CompilerDriver } from "../compiler-service/compiler-service.types";
+import { FsNodeFile, FsNodeFolder, FsNodeList, FsServiceDriver as FsDriver, FsServiceDriver } from "../fs-service/fs.service.types"
 
-export enum ProjectType{
+export enum ProjectLang{
   PY='PY',
   C='C',
   CPP='CPP',
 }
 
-export class ProjectList extends Array<ProjectEnvironment>{}
+export class ProjectList extends Array<ProjectEnvironment>{};
+export interface ProjectDriver extends FsServiceDriver, CompilerDriver{};
 
 
 export class ProjectEnvironment{
@@ -27,7 +23,7 @@ export class ProjectEnvironment{
   public fslistfiles?:Array<FsNodeFile>;
 
   //Compiler
-  public compiler?: PythonCompiler;
+  public compiler?: ProjectDriver;
   
   async load(){
     if(!this.fs){return false}
@@ -47,7 +43,6 @@ export class ProjectEnvironment{
 }
 
 
-
 export class ProjectConfig {
   RUN = "/main.py"
   DEBUG = false //TODO
@@ -55,11 +50,11 @@ export class ProjectConfig {
   PREFERED_LANG="it"
   
   TAL_SERVERS = [ //TODO
+    'wss://ta.di.univr.it/algo',
     "wss://ta.di.univr.it/sfide",
-    "wss://ta.di.univr.it/rtal",
     "ws://localhost:8008/",
   ]
-  TAL_SERVER = "wss://ta.di.univr.it/sfide" //TODO
+  TAL_SERVER = "wss://ta.di.univr.it/algo" //TODO
   TAL_PROBLEM = "" //TODO
   TAL_SERVICE = "" //TODO
   TAL_TOKEN = "" //TODO
@@ -79,7 +74,7 @@ export class ProjectConfig {
   CONFIG_NAME = 'talight.json'
   CONFIG_PATH = this.DIR_PROJECT + this.CONFIG_NAME
 
-  PIP_PACKAGES: string[] = []
+  EXTRA_PACKAGES: string[] = []
 
   public static readonly defaultConfig = new ProjectConfig()
 

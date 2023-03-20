@@ -1,10 +1,8 @@
 import { EventEmitter, Injectable, Input } from '@angular/core';
 import { ApiService } from '../api-service/api.service';
-import { ClangCompilerService } from '../clang-compiler-service/clang-compiler.service';
+import { CompilerDriver } from '../compiler-service/compiler-service.types';
 import { FsService } from '../fs-service/fs.service';
-import { PyodideDriver } from '../python-compiler-service/pydiode-driver';
-import { PythonCompilerService } from '../python-compiler-service/python-compiler.service';
-import { ProjectEnvironment, ProjectType } from './project-manager.types';
+import { ProjectDriver, ProjectEnvironment, ProjectLang } from './project-manager.types';
 
 
 @Injectable({
@@ -14,18 +12,12 @@ export class ProjectManagerService {
   
   projects = new Array<ProjectEnvironment>();
   private _selectedProject?: ProjectEnvironment;
-  driver
   
   @Input("onProjectSelected") onProjectSelected = new EventEmitter<ProjectEnvironment>();
   @Input("onProjectListChanged") onProjectListChanged = new EventEmitter<void>();
 
   constructor(
-      public fs:FsService,  
-      public api:ApiService,
-      public python:PythonCompilerService,
-      public clang:ClangCompilerService,
     ) {
-      this.driver = python.driver;
   }
 
 

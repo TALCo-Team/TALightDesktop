@@ -25,11 +25,11 @@ export class ApiService {
   public onApiStateChange = new EventEmitter<ApiState>();
 
   constructor(){
-    this._url = 'wss://ta.di.univr.it/sfide'
+    this._url = 'wss://ta.di.univr.it/algo'
     this.urlCache = [
+      'wss://ta.di.univr.it/algo',
       'wss://ta.di.univr.it/sfide',
       'ws://localhost:8008/',
-      'wss://ta.di.univr.it/rtal',
     ]
   }
 
