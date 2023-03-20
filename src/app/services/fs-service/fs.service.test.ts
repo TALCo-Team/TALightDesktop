@@ -1,6 +1,7 @@
 import { resolve } from 'dns';
 import { createFs } from 'indexeddb-fs';
-import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver } from './fs.service';
+import { FsService } from './fs.service';
+import { FsNodeFile, FsNodeFolder, FsServiceDriver } from './fs.service.types';
 
 
 export class IndexeddbFsDriver implements FsServiceDriver {
