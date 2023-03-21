@@ -45,8 +45,7 @@ export class PythonCompilerService {
       console.log("createPythonProject:createDirectory:",folders[i])
       await this.driver?.createDirectory(folders[i]);
     }
-
-    //TODO: load from external asset bundle
+    
     let files: string[][] = []
     
      

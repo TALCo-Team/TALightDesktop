@@ -1,7 +1,7 @@
 import { CompilerDriver } from "../compiler-service/compiler-service.types";
 import { FsNodeFile, FsNodeFolder, FsNodeList, FsServiceDriver as FsDriver, FsServiceDriver } from "../fs-service/fs.service.types"
 
-export enum ProjectLang{
+export enum ProjectLanguage{
   PY='PY',
   C='C',
   CPP='CPP',
@@ -11,36 +11,27 @@ export class ProjectList extends Array<ProjectEnvironment>{};
 export interface ProjectDriver extends FsServiceDriver, CompilerDriver{};
 
 
-export class ProjectEnvironment{
 
-  public config?: ProjectConfig;
+export abstract class ProjectEnvironment{
+  
+  public config: ProjectConfig | null  = null;
   public isLoaded = false;
   
-  //FS
-  public fs?: FsDriver;
-  public fsroot?:FsNodeFolder;
-  public fslist?:FsNodeList;
-  public fslistfiles?:Array<FsNodeFile>;
-
-  //Compiler
-  public compiler?: ProjectDriver;
+  constructor(
+    public laguange: ProjectLanguage,
+    public driver: ProjectDriver
+  ){
+    ProjectConfig.load(this.driver).then(config=>{
+      this.config = config;
+      if(config){ this.loadProject(); }
+    })
+  }
   
-  async load(){
-    if(!this.fs){return false}
-    let config = await ProjectConfig.load(this.fs)
-    if(config){return false;}
-    //load more
-    return true;
-  }
-
-  public activate(){
-    //subscribe
-  }
-
-  public deactivate(){
-    //unsubscribe
-  }
+  abstract loadProject():boolean;
 }
+
+
+
 
 
 export class ProjectConfig {

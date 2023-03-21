@@ -1,4 +1,6 @@
 export class FsNodeList extends Array<FsNodeFile|FsNodeFolder>{};
+export class FsNodeFileList extends Array<FsNodeFile>{};
+export class FsNodeFolderList extends Array<FsNodeFolder>{};
 
 export interface FsNode {
   name: string;
@@ -13,8 +15,16 @@ export interface FsNodeFile extends FsNode {
   content:string|ArrayBuffer
 }
 
+let FsNodeEmptyFolder = {name:'',path:'/', files:[],folders:[]};
+export {FsNodeEmptyFolder}
+
 export interface FsServiceDriver {
-  rootDir:string;
+  mountPoint:string;
+  mountRoot:string;
+  
+  fsroot:FsNodeFolder;
+  fslist:FsNodeList;
+  fslistfiles:FsNodeFileList;
   
   mount(path: string): Promise<boolean>;
   

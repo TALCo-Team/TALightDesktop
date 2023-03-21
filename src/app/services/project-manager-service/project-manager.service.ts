@@ -2,7 +2,7 @@ import { EventEmitter, Injectable, Input } from '@angular/core';
 import { ApiService } from '../api-service/api.service';
 import { CompilerDriver } from '../compiler-service/compiler-service.types';
 import { FsService } from '../fs-service/fs.service';
-import { ProjectDriver, ProjectEnvironment, ProjectLang } from './project-manager.types';
+import { ProjectDriver, ProjectEnvironment, ProjectLanguage } from './project-manager.types';
 
 
 @Injectable({
@@ -16,9 +16,7 @@ export class ProjectManagerService {
   @Input("onProjectSelected") onProjectSelected = new EventEmitter<ProjectEnvironment>();
   @Input("onProjectListChanged") onProjectListChanged = new EventEmitter<void>();
 
-  constructor(
-    ) {
-  }
+  constructor(){}
 
 
   public set currentProject(project:ProjectEnvironment | undefined){
@@ -31,11 +29,20 @@ export class ProjectManagerService {
   public get currentProject(): ProjectEnvironment | undefined{
     return this._selectedProject
   }
+
+  public listProject(){
+    let projects = new Array<ProjectEnvironment>();
+    //TODO: 
+    return projects
+  }
   
+  public addProject(project:ProjectEnvironment){
+    if( this.projects.indexOf(project) == -1 ){
+      this.projects.push(project)
+    }
+  }
 
-
-  public createProject(name:string, mount:string, root:string, ){
-    let project = new ProjectEnvironment();
+  public openProject(project:ProjectEnvironment){
     //TODO: 
     return project
   }
@@ -45,17 +52,6 @@ export class ProjectManagerService {
     return project
   }
 
-  public listProject(){
-    let projects = new Array<ProjectEnvironment>();
-    //TODO: 
-    return projects
-  }
-
-  public addProject(project:ProjectEnvironment){
-    if( this.projects.indexOf(project) == -1 ){
-      this.projects.push(project)
-    }
-  }
 
 
 

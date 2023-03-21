@@ -1,5 +1,5 @@
 import { CompilerMessage, CompilerMessageType, CompilerRequest, CompilerRequestHandler, CompilerResponse, CompilerState, notifyCallback, PromiseResolver, stateCallback, stdCallback, UID } from './compiler-service.types';
-import { FsNodeFolder } from '../fs-service/fs.service.types';
+import { FsNodeEmptyFolder, FsNodeFileList, FsNodeFolder, FsNodeList } from '../fs-service/fs.service.types';
 import { ProjectDriver } from '../project-manager-service/project-manager.types';
 
 
@@ -7,10 +7,13 @@ import { ProjectDriver } from '../project-manager-service/project-manager.types'
 
 
 export class CompilerDriver implements ProjectDriver {
+  public fsroot:FsNodeFolder = FsNodeEmptyFolder;
+  public fslist:FsNodeList=[];
+  public fslistfiles:FsNodeFileList=[];
+
+  public mountPoint = "/mnt"
+  public mountRoot = "."
   
-  public mountDir = "/mnt"
-  public homeDir = "/"
-  public rootDir = "."
   public requestIndex = new Map<UID, CompilerRequestHandler>();
 
   public binEncoder = new TextEncoder(); // always utf-8
@@ -23,7 +26,7 @@ export class CompilerDriver implements ProjectDriver {
 
   constructor(public worker: Worker) {
     this.worker.onmessage = (event: MessageEvent) => { this.didRecieve(event.data) };   
-    this.worker.addEventListener('error', (event) => { console.log('Workererror!')});
+    this.worker.addEventListener('error', (event) => { console.log('CompilerDriver: Worker error!')});
   }
 
 
@@ -83,7 +86,7 @@ export class CompilerDriver implements ProjectDriver {
     }
     console.log(msgRecived.contents)
 
-    resolvePromise(this.toString(msgRecived.contents[0]))
+    resolvePromise(this.dataToString(msgRecived.contents[0]))
   } 
 
   private didReceiveExecuteCode(msgSent:CompilerMessage, msgRecived:CompilerMessage, resolvePromise:PromiseResolver<string> ){
@@ -93,7 +96,7 @@ export class CompilerDriver implements ProjectDriver {
     }
     console.log(msgRecived.contents)
 
-    resolvePromise(this.toString(msgRecived.contents[0]))
+    resolvePromise(this.dataToString(msgRecived.contents[0]))
   } 
 
   private didReceiveExecuteFile(msgSent:CompilerMessage, msgRecived:CompilerMessage, resolvePromise:PromiseResolver<string> ){
@@ -103,7 +106,7 @@ export class CompilerDriver implements ProjectDriver {
     }
     console.log(msgRecived.contents)
 
-    resolvePromise(this.toString(msgRecived.contents[0]))
+    resolvePromise(this.dataToString(msgRecived.contents[0]))
   } 
 
   private didReceiveStopExecution(msgSent:CompilerMessage, msgRecived:CompilerMessage, resolvePromise:PromiseResolver<boolean> ){
@@ -124,7 +127,7 @@ export class CompilerDriver implements ProjectDriver {
     if ( this.onNotify && msgRecived.contents.length > 1){
       console.log(msgRecived.contents)
       let [title, msg, kind] = msgRecived.contents
-      this.onNotify(this.toString(title), this.toString(msg), this.toString(kind))
+      this.onNotify(this.dataToString(title), this.dataToString(msg), this.dataToString(kind))
     }
   } 
 
@@ -139,7 +142,7 @@ export class CompilerDriver implements ProjectDriver {
       let state = msgRecived.contents[0] as CompilerState
       let content;
       if(msgRecived.contents.length>1){
-        content = this.toString(msgRecived.contents[1])
+        content = this.dataToString(msgRecived.contents[1])
       }
       this.onState(state,content)
     }
@@ -154,7 +157,7 @@ export class CompilerDriver implements ProjectDriver {
     if ( this.onStdout && msgRecived.contents.length > 0){
       console.log(msgRecived.contents)
       let content = msgRecived.contents[0]
-      this.onStdout(this.toString(content))
+      this.onStdout(this.dataToString(content))
     }
   } 
 
@@ -167,7 +170,7 @@ export class CompilerDriver implements ProjectDriver {
     if ( this.onStderr && msgRecived.contents.length > 0){
       console.log(msgRecived.contents)
       let content = msgRecived.contents[0]
-      this.onStderr(this.toString(content))
+      this.onStderr(this.dataToString(content))
     }
   } 
 
@@ -201,14 +204,14 @@ export class CompilerDriver implements ProjectDriver {
       }
       return value
     }
-    let node = JSON.parse(this.toString(msgRecived.contents[0]),this.internal_jsonReplacer)
+    let node = JSON.parse(this.dataToString(msgRecived.contents[0]),this.internal_jsonReplacer)
     console.log("didReceiveReadDirectory: ", node)
     resolvePromise( node )
   }
 
   private didReceiveScanDirectory(msgSent:CompilerMessage, msgRecived:CompilerMessage, resolvePromise:PromiseResolver<FsNodeFolder | null> ){
     //TODO: do the actual thing 
-    let node = JSON.parse(this.toString(msgRecived.contents[0]),this.internal_jsonReplacer)
+    let node = JSON.parse(this.dataToString(msgRecived.contents[0]),this.internal_jsonReplacer)
     console.log("didReceiveScanDirectory: ", node)
     resolvePromise( node )
   }
@@ -557,12 +560,12 @@ export class CompilerDriver implements ProjectDriver {
     return resultPromise;
   }
 
-  private toString(data:string|ArrayBuffer){
+  private dataToString(data:string|ArrayBuffer){
     if(data instanceof ArrayBuffer) { return this.binDecoder.decode(data) }
     return data
   }
 
-  private toArrayBuffer(data:string|ArrayBuffer){
+  private dataToArrayBuffer(data:string|ArrayBuffer){
     if(data instanceof ArrayBuffer) { return data }
     return this.binEncoder.encode(data)
   }
