@@ -11,15 +11,9 @@ let pyodideMount = "/mnt"
 
 // Bootstrap pyodide
 
-importScripts("https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js");
+//importScripts("https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js");
 
-
-//
-//wget https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js
-//wget https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide_py.tar
-//wget https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.asm.js
-//wget https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js.map
-//importScripts("./assets/pyodide.js");
+importScripts("./assets/pyodide/pyodide.js");
 
 declare var loadPyodide: any;
 
