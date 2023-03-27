@@ -1,81 +1,33 @@
 import { Injectable } from '@angular/core';
 import { PyodideDriver } from './python-compiler.driver';
 import { FsService } from '../fs-service/fs.service';
-import { ProjectConfig } from '../project-manager-service/project-manager.types';
+import { ProjectConfig, ProjectLanguage } from '../project-manager-service/project-manager.types';
 import { PyodideExamples } from './python-compiler.examples';
+import { PyodideProjectEnvironment } from './python-compiler.types';
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class PythonCompilerService {
-  public driverName = 'pyodide';
   public projectFolder = ProjectConfig.defaultConfig.DIR_PROJECT
   public configName = ProjectConfig.defaultConfig.CONFIG_NAME
   public configPath = ProjectConfig.defaultConfig.CONFIG_PATH
   
-  public driver?: PyodideDriver;
+  public driver: PyodideDriver;
+  public ppe: PyodideProjectEnvironment;
   
 
-  constructor( private fs:FsService) { 
-    this.driver = new PyodideDriver();
-    this.fs.registerDriver(this.driverName, this.driver); 
+  constructor( private fs:FsService ) { 
+    this.ppe = this.createPythonProject()
+    this.driver = this.ppe.driver;
+    this.fs.registerDriver(this.ppe.driver.driverName, this.ppe.driver); 
   }
 
-  async createPythonProject(){
+  createPythonProject(){
     console.log("PythonCompilerService:createPythonProject")
-    if (!this.driver) {return false}
-
-    let writeConfig = false
-    let config = await this.readPythonConfig();
-    if (!config){
-      config = new ProjectConfig()
-      writeConfig = true
-    }
-    
-    
-    //Starter files
-    let folders = [
-      config.DIR_PROJECT,
-      config.DIR_ATTACHMENTS,
-    ]
-    if(config.CREATE_EXAMPLES){ folders.push(config.DIR_EXAMPLES)}
-    
-    for(let i = 0; i < folders.length; i++){
-      console.log("createPythonProject:createDirectory:",folders[i])
-      await this.driver?.createDirectory(folders[i]);
-    }
-    
-    let files: string[][] = []
-    
-     
-    
-    if(writeConfig){ 
-      let configContent = JSON.stringify(config, null, 4)
-      files.unshift([config.CONFIG_PATH, configContent])
-    }
-    let mainContent = `print("Hello World!")`;
-    files.push([config.RUN, mainContent])
-    
-
-    if(config.CREATE_EXAMPLES){
-      PyodideExamples.forEach((content:string, filename:string)=>{
-        files.push([config!.DIR_EXAMPLES + filename, content])
-      })
-    }    
-    
-    for(let i=0; i < files.length; i++){
-      let path = files[i][0]
-      let content = files[i][1]
-      console.log("PythonCompilerService:createPythonProject:files:", path, content)
-      if(await this.driver.exists(path)){
-        console.log("PythonCompilerService:createPythonProject:files:SKIP:", path)
-        continue;
-      }
-      await this.driver?.writeFile(path, content);  
-    }
-
-    return true
+    let ppe = new PyodideProjectEnvironment();
+    return ppe;
   }
 
   async readPythonConfig(){

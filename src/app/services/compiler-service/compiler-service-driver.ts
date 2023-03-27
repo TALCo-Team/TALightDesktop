@@ -7,9 +7,10 @@ import { ProjectDriver } from '../project-manager-service/project-manager.types'
 
 
 export class CompilerDriver implements ProjectDriver {
-  public fsroot:FsNodeFolder = FsNodeEmptyFolder;
-  public fslist:FsNodeList=[];
-  public fslistfiles:FsNodeFileList=[];
+  public driverName: string;
+  public fsRoot:FsNodeFolder = FsNodeEmptyFolder;
+  public fsList:FsNodeList=[];
+  public fsListfiles:FsNodeFileList=[];
 
   public mountPoint = "/mnt"
   public mountRoot = "."
@@ -24,7 +25,10 @@ export class CompilerDriver implements ProjectDriver {
   onState?: stateCallback
   onNotify?: notifyCallback
 
-  constructor(public worker: Worker) {
+  constructor(mountPoint:string, mountRoot:string, public worker: Worker) {
+    this.driverName = "CompilerDriver";
+    this.mountPoint = mountPoint
+    this.mountRoot = mountRoot
     this.worker.onmessage = (event: MessageEvent) => { this.didRecieve(event.data) };   
     this.worker.addEventListener('error', (event) => { console.log('CompilerDriver: Worker error!')});
   }

@@ -11,6 +11,7 @@ import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-m
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
+import { PyodideProjectEnvironment } from 'src/app/services/python-compiler-service/python-compiler.types';
 
 
 import { FileExplorerWidgetComponent } from 'src/app/widgets/code-editor/file-explorer-widget/file-explorer-widget.component';
@@ -60,7 +61,7 @@ export class CodeEditorComponent implements OnInit {
     private pm: ProjectManagerService,
   ) {
     if(!pm.currentProject ){
-      let project = pm.createProject('My Solution', '/mnt','/');
+      let project = new PyodideProjectEnvironment()
       pm.currentProject = project;
     }
 

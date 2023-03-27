@@ -13,7 +13,7 @@ export class FsService {
   
   constructor(){
      //TODO: Remove test driver FS from constructor
-    this.registerDriver('example', new IndexeddbFsDriver());   
+    //this.registerDriver('example', new IndexeddbFsDriver());   
   }
 
   registerDriver(name:string, driver: FsServiceDriver):boolean{

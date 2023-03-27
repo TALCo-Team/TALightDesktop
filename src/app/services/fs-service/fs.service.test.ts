@@ -1,22 +1,31 @@
 import { resolve } from 'dns';
 import { createFs } from 'indexeddb-fs';
 import { FsService } from './fs.service';
-import { FsNodeFile, FsNodeFolder, FsServiceDriver } from './fs.service.types';
+import { FsNodeEmptyFolder, FsNodeFile, FsNodeFileList, FsNodeFolder, FsNodeList, FsServiceDriver } from './fs.service.types';
 
 
 export class IndexeddbFsDriver implements FsServiceDriver {
+  public driverName: string;
+  public mountPoint: string = "";
+  public fsRoot: FsNodeFolder = FsNodeEmptyFolder;
+  public fsList: FsNodeList = [];
+  public fsListfiles: FsNodeFileList = [];
+
   public fs;
   public mountRoot = "root"
-  public options = {
-    databaseVersion:    1,
-    objectStoreName:    'files',
-    databaseName:       'indexeddb',
-    rootDirectoryName:  this.mountRoot
-  }
 
   constructor() { 
-    this.fs = createFs(this.options);
+    this.driverName = 'example'
+    let options = {
+      databaseVersion:    1,
+      objectStoreName:    'files',
+      databaseName:       'indexeddb',
+      rootDirectoryName:  this.mountRoot
+    }
+    this.fs = createFs(options);
   }
+  
+  
 
   async ready(): Promise<boolean>{
     return true;

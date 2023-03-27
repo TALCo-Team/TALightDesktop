@@ -65,10 +65,9 @@ export class FileExplorerWidgetComponent implements OnInit {
     this.driver?.ready().then((ready)=>{
       //alert('ready!');
       
-      this.python.createPythonProject().then(()=>{
-        this.refreshRoot();
-        //alert('ready!');
-      })
+      let ppe = this.python.createPythonProject()
+      this.refreshRoot();
+
     })
   }
 
@@ -289,10 +288,9 @@ export class FileExplorerWidgetComponent implements OnInit {
   public syncFilesystem(folder: FsNodeFolder) {
     setTimeout(() => { 
       //this.refreshRoot();
-      this.python.createPythonProject().then(()=>{
-        this.refreshRoot();
-        //alert('ready!');
-      });
+      let ppe = this.python.createPythonProject()
+      this.refreshRoot();
+      //alert('ready!');
     }, 0);
   }
 

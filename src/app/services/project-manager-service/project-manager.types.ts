@@ -27,7 +27,7 @@ export abstract class ProjectEnvironment{
     })
   }
   
-  abstract loadProject():boolean;
+  abstract loadProject(): Promise<boolean>;
 }
 
 
