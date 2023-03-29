@@ -13,6 +13,7 @@ export namespace Packets{
           this.packetTypes.push(pkttype)
         }
 
+        /*
         if(this.packetTypes.length === 3 &&
           this.packetTypes.indexOf("name") === 0 &&
           this.packetTypes.indexOf("size") === 1 &&
@@ -21,19 +22,20 @@ export namespace Packets{
             this.packetTypes = ["AttachmentInfo"];
             this.packets = {"AttachmentInfo" : this.packets};
         }
+        */
       }
 
       public getMessage<T extends Message>( packetClass: new (packet?: any)=>T ):T | null{
         let packetType = packetClass.name;
         for (var pkttype in this.packets) {
           if (pkttype != packetType){ continue; }
-          let packet = this.packets[packetType] 
+          let packet = this.packets[packetType]
           console.log("Packet:", packet);
           let message = new packetClass(packet);
           message.fromPacket(packet);
           console.log("Packet:Message:", message);
           return message;
-        }        
+        }
         return null;
       }
 
@@ -41,17 +43,17 @@ export namespace Packets{
         let packetType = packetClass.name;
         for (var pkttype in this.packets) {
           if (pkttype != packetType){ continue; }
-          let packet = this.packets[packetType] 
+          let packet = this.packets[packetType]
           console.log("Packet:", packet);
           let message = new packetClass(packet);
           console.log("Packet:Message:", message);
           return message;
-        }        
+        }
         return null;
       }
 
     }
-  
+
     export class Message{
       constructor(packet?: any){
         console.log("packet:message:constructor:", packet)
@@ -62,7 +64,7 @@ export namespace Packets{
         let raw = JSON.parse(data);
         return raw;
       }
-      
+
       public static findPacketName(msgClasses: Array<string>, packet: any): string{
         var msgClass = "";
         msgClasses.forEach((msgName) => {
@@ -70,7 +72,7 @@ export namespace Packets{
             msgClass = msgName;
           }
         });
-  
+
         return msgClass;
       }
 
@@ -79,7 +81,7 @@ export namespace Packets{
       public messageName():string{
         return this.constructor.name;
       }
-  
+
       public toPacketWithName(messageName: string){
         const packet = { [messageName]:this };
         return packet;
@@ -90,7 +92,7 @@ export namespace Packets{
         const packet = { [packetName]:this };
         return packet;
       }
-      
+
       public fromPacket(packet:any){
         console.log("packet:message:fromPacket:", this)
         if("name" in this){console.log("packet:message:fromPacket:", this["name"])} else {console.log("packet:message:fromPacket:", false)}
@@ -103,7 +105,7 @@ export namespace Packets{
           let value = packet[msgField];
           const varType = typeof value;
           if (varType in ["function","undefined","symbol"] ){ continue; }
-  
+
           if (varType === "object") {
             console.log("packet:message:copyObject:",value)
             this[msgField] = Object.assign(value);
@@ -115,7 +117,7 @@ export namespace Packets{
         return true;
       }
     }
-  
+
   export class Meta {
     constructor(data?: any){
       //console.log("Meta:constructor:", data)
@@ -162,13 +164,13 @@ export namespace Packets{
 
 
 
-    
+
   // Requests ---------------------------------
   export namespace Request{
     export class Message extends Packets.Message {}
     export class Handshake extends Message {
       public magic:string = "rtal";
-      public version:number = 2;
+      public version:number = 3;
     }
     export class MetaList extends Message {}
     export class  Attachment extends Message{
@@ -197,12 +199,12 @@ export namespace Packets{
         this.files = files;
       }
     }
-    export class BinaryHeader extends Message {
+    export class BinaryDataHeader extends Message {
       public name:string = "";
       public size:number = 0;
-      public hash:bigint = 0n;
+      public hash:number[] = [];
 
-      constructor(name:string, size:number, hash:bigint) {
+      constructor(name:string, size:number, hash:number[]) {
         super();
         this.name = name;
         this.size = size;
@@ -237,7 +239,7 @@ export namespace Packets{
     export class  Attachment extends Message{
       public status = {"Ok": undefined, "Err": ""};
     }
-    export class AttachmentInfo extends Message {
+    export class BinaryDataHeader extends Message {
       public name:string = "";
       public size:string = "";
       public hash:string = "";
@@ -261,7 +263,7 @@ export namespace Packets{
         if("Ok" in data){this.Err = data["Ok"]}
         if("Err" in data){this.Err = data["Err"]}
       }
-      
+
       success(){ return this.Err == "" }
     }
     /*
@@ -271,7 +273,7 @@ export namespace Packets{
     ConnectStop { status: Result<Vec<String>, String> }
     */
 
-    
+
   }
 }
 
