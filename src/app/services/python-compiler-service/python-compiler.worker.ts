@@ -210,6 +210,8 @@ class PyodideWorker{
         if(err){
           console.log('syncFS: error while syncing, retrying')
           this.needSync = true;
+        }else{
+          console.log('syncFS: success!');
         }
         this.isSync = false;
         if (this.needSync){
@@ -767,6 +769,7 @@ class PyodideWorker{
   }
 
   internal_exists(path:string){
+    console.log("internal_file_exists:internal_exists", path)
     let res = this.fs.analyzePath(path)
     console.log("internal_file_exists:analyzePath", res)
     return res["exists"]

@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { PyodideDriver } from './python-compiler.driver';
 import { FsService } from '../fs-service/fs.service';
-import { ProjectConfig, ProjectLanguage } from '../project-manager-service/project-manager.types';
-import { PyodideExamples } from './python-compiler.examples';
+import { ProjectConfig } from '../project-manager-service/project-manager.types';
 import { PyodideProjectEnvironment } from './python-compiler.types';
 
 
@@ -26,7 +25,9 @@ export class PythonCompilerService {
 
   createPythonProject(){
     console.log("PythonCompilerService:createPythonProject")
-    let ppe = new PyodideProjectEnvironment();
+    let pyodideRoot = "/"
+    let pyodideMount = "/mnt"
+    let ppe = new PyodideProjectEnvironment(pyodideRoot, pyodideMount);
     return ppe;
   }
 

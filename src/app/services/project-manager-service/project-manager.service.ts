@@ -10,35 +10,40 @@ import { ProjectDriver, ProjectEnvironment, ProjectLanguage } from './project-ma
 })
 export class ProjectManagerService {
   
-  projects = new Array<ProjectEnvironment>();
-  private _selectedProject?: ProjectEnvironment;
+  private projects = new Array<ProjectEnvironment>();
+  private currentProject: ProjectEnvironment | null = null;
   
-  @Input("onProjectSelected") onProjectSelected = new EventEmitter<ProjectEnvironment>();
-  @Input("onProjectListChanged") onProjectListChanged = new EventEmitter<void>();
+  public onProjectChanged = new EventEmitter<ProjectEnvironment>();
+  public onProjectListChanged = new EventEmitter<void>();
 
   constructor(){}
 
-
-  public set currentProject(project:ProjectEnvironment | undefined){
-    if(!project){return}
-    this.addProject(project)
-    this._selectedProject = project
-    this.onProjectSelected.emit(project)
+  public clearCurrentProject(){
+    this.currentProject = null;
+    this.onProjectChanged.emit();
   }
 
-  public get currentProject(): ProjectEnvironment | undefined{
-    return this._selectedProject
+  public setCurrentProject(project:ProjectEnvironment){
+    console.log("ProjectManagerService:setCurrentProject")
+    this.addProject(project)
+    this.currentProject = project
+    console.log("ProjectManagerService:setCurrentProject:willEmit", project)
+    this.onProjectChanged.emit(project)
+    console.log("ProjectManagerService:setCurrentProject:sent")
+  }
+
+  public getCurrentProject(){
+    return this.currentProject;
   }
 
   public listProject(){
-    let projects = new Array<ProjectEnvironment>();
-    //TODO: 
-    return projects
+    return this.projects.slice();
   }
   
   public addProject(project:ProjectEnvironment){
     if( this.projects.indexOf(project) == -1 ){
       this.projects.push(project)
+      this.onProjectListChanged.emit();
     }
   }
 
@@ -49,6 +54,7 @@ export class ProjectManagerService {
 
   public closeProject(project:ProjectEnvironment){
     //TODO: 
+    this.onProjectListChanged.emit();
     return project
   }
 

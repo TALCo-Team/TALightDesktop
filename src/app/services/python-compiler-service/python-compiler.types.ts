@@ -1,4 +1,4 @@
-import { ProjectEnvironment, ProjectLanguage } from "../project-manager-service/project-manager.types";
+import { ProjectConfig, ProjectEnvironment, ProjectLanguage } from "../project-manager-service/project-manager.types";
 import { PyodideDriver } from "./python-compiler.driver";
 import { PyodideExamples } from "./python-compiler.examples";
 
@@ -6,9 +6,8 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
     public override driver: PyodideDriver;
 
 
-    constructor(){
-        let pyodideRoot = "/"
-        let pyodideMount = "/mnt"
+    constructor(pyodideRoot:string, pyodideMount:string){
+        console.log("PyodideProjectEnvironment:constructor:")
         let driver = new PyodideDriver(pyodideRoot, pyodideMount);
         super(ProjectLanguage.PY, driver)
         this.driver = driver;
@@ -16,8 +15,14 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
 
 
     async loadProject() {
-        if(!this.config){return false}
-        let config = this.config;
+        console.log("PyodideProjectEnvironment:loadProject")
+        let config = await ProjectConfig.load(this.driver);
+        if(!config){
+            console.log("PyodideProjectEnvironment:loadProject:not found")
+            config = new ProjectConfig();
+            config.save(this.driver);
+        }    
+        this.config = config;
         
         //Starter files
         let folders = [

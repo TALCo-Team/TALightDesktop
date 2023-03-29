@@ -5,14 +5,11 @@ import { CompilerState } from 'src/app/services/compiler-service/compiler-servic
 
 import { FsService, Tar } from 'src/app/services/fs-service/fs.service';
 import { FsNodeFile, FsNodeFolder, FsNodeList } from 'src/app/services/fs-service/fs.service.types';
-import { NotificationManagerService, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
 import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
-import { PyodideProjectEnvironment } from 'src/app/services/python-compiler-service/python-compiler.types';
-
 
 import { FileExplorerWidgetComponent } from 'src/app/widgets/code-editor/file-explorer-widget/file-explorer-widget.component';
 import { ExecbarWidgetComponent } from '../execbar-widget/execbar-widget.component';
@@ -31,12 +28,11 @@ export class CodeEditorComponent implements OnInit {
 
   public cmdConnect?:Commands.Connect;
   
-  public currentProject?:ProjectEnvironment;
+  public project:ProjectEnvironment | null = null;
 
   public selectedFile?: FsNodeFile;
   public selectedProblem?: ProblemDescriptor;
   public selectedService?: ServiceDescriptor;
-  public driver;
   public pyodideState = CompilerState.Unknown
   public pyodideStateContent? = ""
 
@@ -57,27 +53,45 @@ export class CodeEditorComponent implements OnInit {
     private fs: FsService,
     private python:PythonCompilerService,
     private api:ApiService,
-    private nm: NotificationManagerService,
     private pm: ProjectManagerService,
   ) {
-    if(!pm.currentProject ){
-      let project = new PyodideProjectEnvironment()
-      pm.currentProject = project;
-    }
-
-    this.driver = python.driver
+    console.log("CodeEditorComponent:constructor", this.pm)
+    //TODO: add switch python/cpp
+    
+   
+    
   }
 
   ngOnInit(): void {
-    this.python.driver?.subscribeNotify(true,(msg:string)=>{this.didNotify(msg)})
-    this.python.driver?.subscribeState(true,(state:CompilerState,content?:string)=>{this.didStateChange(state,content)})
-    this.python.driver?.subscribeStdout(true,(msg:string)=>{this.didStdout(msg)})
-    this.python.driver?.subscribeStderr(true,(msg:string)=>{this.didStderr(msg)})
+    this.setPythonProject()
+    this.project?.driver.subscribeNotify(true,(msg:string)=>{this.didNotify(msg)})
+    this.project?.driver.subscribeState(true,(state:CompilerState,content?:string)=>{this.didStateChange(state,content)})
+    this.project?.driver.subscribeStdout(true,(msg:string)=>{this.didStdout(msg)})
+    this.project?.driver.subscribeStderr(true,(msg:string)=>{this.didStderr(msg)})
   }
 
   ngAfterViewInit(){
     this.outputWidget.enableStdin(false); 
   }
+
+  public didStateChangeReady(content?:string){
+    if(this.project){
+      console.log("didStateChange:Ready:loadProject")
+      this.project.loadProject();
+    }
+  }
+
+  public setPythonProject(forceCreate:boolean=false){
+    console.log("CodeEditorComponent:constructor:createPythonProject")
+    if( forceCreate || !this.pm.getCurrentProject() ){
+      console.log("CodeEditorComponent:constructor:createPythonProject:do!")
+      let project = this.python.createPythonProject()
+      this.pm.setCurrentProject(project);
+    }
+    this.project = this.pm.getCurrentProject();
+    console.log("CodeEditorComponent:constructor:createPythonProject:",this.project)
+  }
+
 
   public onUpdateRoot(fsroot:FsNodeFolder){
     this.fsroot = fsroot;
@@ -97,8 +111,11 @@ export class CodeEditorComponent implements OnInit {
   }
 
   public didStateChange(state:CompilerState,content?:string){
-    console.log("didStateChange:")
+    console.log("didStateChange:", state)
     //this.outputWidget!.print(state,OutputType.SYSTEM);
+    if (state == CompilerState.Ready){
+      this.didStateChangeReady(content)
+    }
     this.pyodideState=state
     this.pyodideStateContent=content
     this.outputWidget.didStateChange(state,content)
@@ -127,7 +144,7 @@ export class CodeEditorComponent implements OnInit {
 
     for(let i = 0; i < msgs.length; i++){
       this.outputWidget.print(msgs[i],fromAPI?OutputType.STDINAPI:OutputType.STDIN)
-      this.python.driver?.sendStdin(msgs[i])
+      this.project?.driver.sendStdin(msgs[i])
     }
     if (fromAPI || this.pyodideState != CompilerState.Stdin ){
       this.outputWidget.enableStdin(false)
@@ -161,7 +178,7 @@ export class CodeEditorComponent implements OnInit {
         let folder = folders[idx]
         let path = '/data/' + folder.path
         console.log("extractTar:createDirectory:",path)
-        await this.driver?.createDirectory(path)
+        await this.project?.driver.createDirectory(path)
       }
       console.log("extractTar:createDirectory:DONE")
 
@@ -173,7 +190,7 @@ export class CodeEditorComponent implements OnInit {
         let path = '/data/' + file.path
         let content = file.content
         console.log("extractTar:writeFile:",path,content)
-        await this.driver?.writeFile(path, content)
+        await this.project?.driver.writeFile(path, content)
       }
       console.log("extractTar:writeFile:DONE")
       
@@ -203,7 +220,7 @@ export class CodeEditorComponent implements OnInit {
   public saveFile(){
     if ( this.selectedFile ){ 
       console.log("saveFile:", this.selectedFile.path, this.fileEditor)
-      this.driver?.writeFile(this.selectedFile.path, this.selectedFile.content)
+      this.project?.driver.writeFile(this.selectedFile.path, this.selectedFile.content)
     } else {
       console.log("saveFile:failed")
     }
@@ -214,7 +231,7 @@ export class CodeEditorComponent implements OnInit {
 
     if(this.cmdConnect){this.cmdConnect.tal.closeConnection()}
     console.log("stopAll:cmdConnect:DONE")
-    await this.driver?.stopExecution()
+    await this.project?.driver.stopExecution()
     console.log("stopAll:cmdConnect:DONE")
   }
   
@@ -336,7 +353,7 @@ export class CodeEditorComponent implements OnInit {
     this.cmdConnect = undefined
     this.outputWidget.enableStdin(false)
 
-    this.python.driver?.stopExecution()
+    this.project?.driver.stopExecution()
   }
 
   async didConnectStart(){
@@ -363,7 +380,7 @@ export class CodeEditorComponent implements OnInit {
     console.log("apiConnect:didConnectData:", data)
     if(this.output_files && this.current_output_file){
       if(this.current_output_file){
-        this.driver?.writeFile("/" + this.current_output_file, data)
+        this.project?.driver.writeFile("/" + this.current_output_file, data)
       };
       if(this.current_output_file === this.output_files[this.output_files.length - 1]){
         this.cmdConnect = undefined;
@@ -379,6 +396,6 @@ export class CodeEditorComponent implements OnInit {
     console.log("apiConnect:didRecieveBinaryHeader:", message)
 
     this.current_output_file = message.name;
-    if(this.current_output_file){this.driver?.writeFile("/" + this.current_output_file, "")};
+    if(this.current_output_file){this.project?.driver.writeFile("/" + this.current_output_file, "")};
   }
 }
