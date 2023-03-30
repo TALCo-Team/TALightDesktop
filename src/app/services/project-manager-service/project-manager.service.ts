@@ -1,7 +1,4 @@
 import { EventEmitter, Injectable, Input } from '@angular/core';
-import { ApiService } from '../api-service/api.service';
-import { CompilerDriver } from '../compiler-service/compiler-service.types';
-import { FsService } from '../fs-service/fs.service';
 import { ProjectDriver, ProjectEnvironment, ProjectLanguage } from './project-manager.types';
 
 

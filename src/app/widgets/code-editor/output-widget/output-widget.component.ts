@@ -74,7 +74,7 @@ export class OutputWidgetComponent {
   }
 
   public didStateChange(state:CompilerState,content?:string){
-    console.log("didStateChange:")
+    console.log("didStateChange:",state)
     this.pyodideState=state
     this.pyodideStateTooltip = 'State: '+ this.pyodideState
     
@@ -103,7 +103,7 @@ export class OutputWidgetComponent {
       case CompilerState.Stdin: 
         this.pyodideStateIcon="pi-spin pi-spinner"
         this.pyodideStateColor="orange"
-        this.enableStdin(); 
+        this.enableStdin(true); 
         break;
       case CompilerState.Error: 
         this.pyodideStateIcon="pi-circle-fill"

@@ -336,7 +336,7 @@ class PyodideWorker{
     if(!state){ state = this.lastState } //Resend the same state, used onSubscribe
     else { this.lastState = state }
     
-    console.log("sendState: ",state)
+    console.log("PyodideWorker:sendState: ",state)
     this.requestQueueState.forEach(( request:CompilerRequest, uid:string )=>{
       let response = this.responseFromRequest(request); 
       response.message.contents = [state ?? CompilerState.Unknown]

@@ -141,8 +141,9 @@ export class CompilerDriver implements ProjectDriver {
       let result = msgRecived.args[0] == 'true'
       resolvePromise(result); 
     }
+    console.log("didReceiveSubscribeState: ",msgRecived.contents)
     if ( this.onState && msgRecived.contents.length > 0){
-      console.log(msgRecived.contents)
+      console.log("didReceiveSubscribeState: ",msgRecived.contents)
       let state = msgRecived.contents[0] as CompilerState
       let content;
       if(msgRecived.contents.length>1){

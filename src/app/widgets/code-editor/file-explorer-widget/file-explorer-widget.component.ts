@@ -58,13 +58,15 @@ export class FileExplorerWidgetComponent implements OnInit {
   ngOnInit() {
     this.bindCollapseEvent();
     //alert('init!');
+    /*
     let project = this.pm.getCurrentProject()
     if(project){
       this.didProjectChanged(project)
     }
+    */
     
   }
-
+  
   public didProjectChanged(project:ProjectEnvironment){
     console.log("FileExplorerWidgetComponent:didProjectChanged")
     this.project = project;

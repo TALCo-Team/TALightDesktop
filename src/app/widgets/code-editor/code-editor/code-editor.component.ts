@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { Commands } from 'src/app/services/api-service/api.commands';
 import { ApiService } from 'src/app/services/api-service/api.service';
+import { CompilerService } from 'src/app/services/compiler-service/compiler-service.service';
 import { CompilerState } from 'src/app/services/compiler-service/compiler-service.types';
 
 import { FsService, Tar } from 'src/app/services/fs-service/fs.service';
@@ -51,11 +52,12 @@ export class CodeEditorComponent implements OnInit {
   
   constructor(
     private fs: FsService,
+    private compiler:CompilerService,
     private python:PythonCompilerService,
     private api:ApiService,
-    private pm: ProjectManagerService,
+    private prj: ProjectManagerService,
   ) {
-    console.log("CodeEditorComponent:constructor", this.pm)
+    console.log("CodeEditorComponent:constructor", this.prj)
     //TODO: add switch python/cpp
     
    
@@ -63,15 +65,13 @@ export class CodeEditorComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.setPythonProject()
-    this.project?.driver.subscribeNotify(true,(msg:string)=>{this.didNotify(msg)})
-    this.project?.driver.subscribeState(true,(state:CompilerState,content?:string)=>{this.didStateChange(state,content)})
-    this.project?.driver.subscribeStdout(true,(msg:string)=>{this.didStdout(msg)})
-    this.project?.driver.subscribeStderr(true,(msg:string)=>{this.didStderr(msg)})
+    
+    
   }
 
   ngAfterViewInit(){
     this.outputWidget.enableStdin(false); 
+    this.setPythonProject()
   }
 
   public didStateChangeReady(content?:string){
@@ -83,12 +83,16 @@ export class CodeEditorComponent implements OnInit {
 
   public setPythonProject(forceCreate:boolean=false){
     console.log("CodeEditorComponent:constructor:createPythonProject")
-    if( forceCreate || !this.pm.getCurrentProject() ){
+    this.project = this.prj.getCurrentProject()
+    if( forceCreate || !this.project ){
       console.log("CodeEditorComponent:constructor:createPythonProject:do!")
-      let project = this.python.createPythonProject()
-      this.pm.setCurrentProject(project);
+      this.project = this.python.createPythonProject()
+      this.prj.setCurrentProject(this.project);
     }
-    this.project = this.pm.getCurrentProject();
+    this.project?.driver.subscribeNotify(true,(msg:string)=>{this.didNotify(msg)})
+    this.project?.driver.subscribeState(true,(state:CompilerState,content?:string)=>{this.didStateChange(state,content)})
+    this.project?.driver.subscribeStdout(true,(msg:string)=>{this.didStdout(msg)})
+    this.project?.driver.subscribeStderr(true,(msg:string)=>{this.didStderr(msg)})
     console.log("CodeEditorComponent:constructor:createPythonProject:",this.project)
   }
 
@@ -111,13 +115,14 @@ export class CodeEditorComponent implements OnInit {
   }
 
   public didStateChange(state:CompilerState,content?:string){
-    console.log("didStateChange:", state)
+    console.log("CodeEditorComponent:didStateChange:")
     //this.outputWidget!.print(state,OutputType.SYSTEM);
     if (state == CompilerState.Ready){
       this.didStateChangeReady(content)
     }
     this.pyodideState=state
     this.pyodideStateContent=content
+    console.log("CodeEditorComponent:didStateChange:", state)
     this.outputWidget.didStateChange(state,content)
   }
 
@@ -240,7 +245,7 @@ export class CodeEditorComponent implements OnInit {
     console.log("runProject:")
     this.outputWidget.clearOutput()
     
-    let config = await this.python.readPythonConfig()
+    let config = await this.compiler.readConfig()
     if (!config){return false}
     console.log("runProject:config:ok")
 
@@ -254,7 +259,7 @@ export class CodeEditorComponent implements OnInit {
     this.outputWidget.print("RUN: "+config.RUN, OutputType.SYSTEM)
     this.saveFile();
     
-    await this.python.runProject()
+    await this.compiler.runProject()
     return true
   }
 
@@ -281,14 +286,14 @@ export class CodeEditorComponent implements OnInit {
     console.log("apiConnect:service:ok")
     
 
-    let config = await this.python.readPythonConfig()
+    let config = await this.compiler.readConfig()
     if (!config){return false}
     console.log("apiConnect:config:ok")
 
     //Run MAIN
     console.log("apiConnect:runProject")
     this.saveFile();
-    await this.python.runProject()
+    await this.compiler.runProject()
     this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
     console.log("apiConnect:runProject:running")
 
