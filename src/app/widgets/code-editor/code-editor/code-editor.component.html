@@ -1,6 +1,6 @@
 
 <div class="tal-editor">
-  <p-splitter [style]="{'height': '100%'}" [panelSizes]="[15,50,35]" [minSizes]="[12,20,20]">
+  <p-splitter [style]="{'height': '100%'}" [panelSizes]="[15,50,35]" [minSizes]="[12,20,20]" stateStorage="local">
 
 
     
@@ -40,7 +40,7 @@
 
 
     <ng-template pTemplate>
-      <p-splitter id="tal-problem-column" [style]="{'height': '100%'}" [panelSizes]="[15,50]" [minSizes]="[12,20]" layout="vertical">
+      <p-splitter id="tal-problem-column"  [panelSizes]="[15,50]" [minSizes]="[12,20]" layout="vertical" stateStorage="local">
 
         <ng-template pTemplate>
           <tal-problem-widget #problemWidget 

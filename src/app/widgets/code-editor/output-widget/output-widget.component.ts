@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Output, ViewChild, NgZone, ElementRef } from '@angular/core';
-import { PyodideState } from 'src/app/services/python-compiler-service/python-compiler.service';
+import { CompilerState } from 'src/app/services/compiler-service/compiler-service.types';
+
 
 export class OutputMessage{
   constructor(
@@ -35,7 +36,7 @@ export class OutputWidgetComponent {
   @ViewChild("pyodideIcon") public pyodideIcon!: ElementRef;
 
   public outputLines = new Array<OutputMessage>();
-  public pyodideState = PyodideState.Unknown
+  public pyodideState = CompilerState.Unknown
   public pyodideStateIcon = "pi-circle"
   public pyodideStateColor = "" //default: lightgray
   public pyodideStateTooltip = "State: Unknown"
@@ -72,39 +73,39 @@ export class OutputWidgetComponent {
     return icon;
   }
 
-  public didStateChange(state:PyodideState,content?:string){
-    console.log("didStateChange:")
+  public didStateChange(state:CompilerState,content?:string){
+    console.log("didStateChange:",state)
     this.pyodideState=state
     this.pyodideStateTooltip = 'State: '+ this.pyodideState
     
     switch(state){
       default:
-      case PyodideState.Unknown: 
+      case CompilerState.Unknown: 
         this.pyodideStateIcon="pi-circle"
         this.pyodideStateColor=""
         this.enableStdin(false)
         break;
-      case PyodideState.Loading: 
+      case CompilerState.Loading: 
         this.pyodideStateIcon="pi-spin pi-spinner"
         this.pyodideStateColor="orange"
         this.enableStdin(false)
         break;
-      case PyodideState.Ready: 
+      case CompilerState.Ready: 
         this.pyodideStateIcon="pi-circle"
         this.pyodideStateColor="green"
         this.enableStdin(false)
         break;
-      case PyodideState.Run: 
+      case CompilerState.Run: 
         this.pyodideStateIcon="pi-spin pi-spinner"
         this.pyodideStateColor="green"
         this.enableStdin(false)
         break;
-      case PyodideState.Stdin: 
+      case CompilerState.Stdin: 
         this.pyodideStateIcon="pi-spin pi-spinner"
         this.pyodideStateColor="orange"
-        this.enableStdin(); 
+        this.enableStdin(true); 
         break;
-      case PyodideState.Error: 
+      case CompilerState.Error: 
         this.pyodideStateIcon="pi-circle-fill"
         this.pyodideStateColor="darkred"
 
@@ -112,7 +113,7 @@ export class OutputWidgetComponent {
         this.print(content ?? "Uknown error", OutputType.STDERR)
         this.enableStdin(false)
         break;
-      case PyodideState.Success: 
+      case CompilerState.Success: 
         this.pyodideStateIcon="pi-circle-fill"
         this.pyodideStateColor="green"
         this.print("END: Success", OutputType.SYSTEM)
@@ -164,7 +165,7 @@ export class OutputWidgetComponent {
   public blurStdin(){
     let ipt = this.sdtinInput.nativeElement as HTMLInputElement
     ipt.style.backgroundColor = ""
-    let shouldHighlight = this.pyodideState==PyodideState.Stdin
+    let shouldHighlight = this.pyodideState==CompilerState.Stdin
     this.enableHighlight(shouldHighlight)
   }
 

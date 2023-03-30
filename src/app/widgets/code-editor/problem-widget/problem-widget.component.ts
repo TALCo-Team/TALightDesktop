@@ -1,13 +1,15 @@
 import { Component, EventEmitter, Output, NgZone, Input, ViewChild, ElementRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ApiService } from 'src/app/services/api-service/api.service';
-import { FsNodeFolder, FsNodeFile } from 'src/app/services/fs-service/fs.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
-import { PyodideDriver } from 'src/app/services/python-compiler-service/pydiode-driver';
+
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 import { OverlayOptions } from 'primeng/api';
 import { ServiceDescriptor, ProblemDescriptor, ArgsMap, FilesMap, FileDescriptor, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 import { Dropdown } from 'primeng/dropdown';
+import { CompilerDriver } from 'src/app/services/compiler-service/compiler-service-driver';
+import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
+import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 
 
 export class ServiceMenuEntry {
@@ -50,7 +52,8 @@ export class ProblemWidgetComponent {
 
   filePathList = new Array<string>();
 
-  driver?:PyodideDriver
+  project: ProjectEnvironment | null = null;
+
   
   regexFormat = true;
   showRegex = true;
@@ -61,9 +64,9 @@ export class ProblemWidgetComponent {
   constructor( public zone: NgZone,
                public api: ApiService,
                public pm: ProblemManagerService,
-               public python: PythonCompilerService,)
+               public prjmnrg: ProjectManagerService,)
   {
-    this.driver = python.driver;
+    this.project = prjmnrg.getCurrentProject();
     this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.problemsDidChange(clear) })
 
     // https://primefaces.org/primeng/overlay
@@ -190,7 +193,7 @@ export class ProblemWidgetComponent {
       return
     }
 
-    let pathExist = await this.driver?.exists(path)
+    let pathExist = await this.project?.driver.exists(path)
     console.log('fileDidChange:pathExist:',pathExist)
     if(!pathExist){
       dropdown.style.color = "red"

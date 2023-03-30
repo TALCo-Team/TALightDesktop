@@ -1,10 +1,5 @@
 import { EventEmitter, Injectable, Input } from '@angular/core';
-import { ApiService } from '../api-service/api.service';
-import { ClangCompilerService } from '../clang-compiler-service/clang-compiler.service';
-import { FsService } from '../fs-service/fs.service';
-import { PyodideDriver } from '../python-compiler-service/pydiode-driver';
-import { PythonCompilerService } from '../python-compiler-service/python-compiler.service';
-import { ProjectEnvironment, ProjectType } from './project-manager.types';
+import { ProjectDriver, ProjectEnvironment, ProjectLanguage } from './project-manager.types';
 
 
 @Injectable({
@@ -12,58 +7,54 @@ import { ProjectEnvironment, ProjectType } from './project-manager.types';
 })
 export class ProjectManagerService {
   
-  projects = new Array<ProjectEnvironment>();
-  private _selectedProject?: ProjectEnvironment;
-  driver
+  private projects = new Array<ProjectEnvironment>();
+  private currentProject: ProjectEnvironment | null = null;
   
-  @Input("onProjectSelected") onProjectSelected = new EventEmitter<ProjectEnvironment>();
-  @Input("onProjectListChanged") onProjectListChanged = new EventEmitter<void>();
+  public onProjectChanged = new EventEmitter<ProjectEnvironment>();
+  public onProjectListChanged = new EventEmitter<void>();
 
-  constructor(
-      public fs:FsService,  
-      public api:ApiService,
-      public python:PythonCompilerService,
-      public clang:ClangCompilerService,
-    ) {
-      this.driver = python.driver;
+  constructor(){}
+
+  public clearCurrentProject(){
+    this.currentProject = null;
+    this.onProjectChanged.emit();
   }
 
-
-  public set currentProject(project:ProjectEnvironment | undefined){
-    if(!project){return}
+  public setCurrentProject(project:ProjectEnvironment){
+    console.log("ProjectManagerService:setCurrentProject")
     this.addProject(project)
-    this._selectedProject = project
-    this.onProjectSelected.emit(project)
+    this.currentProject = project
+    console.log("ProjectManagerService:setCurrentProject:willEmit", project)
+    this.onProjectChanged.emit(project)
+    console.log("ProjectManagerService:setCurrentProject:sent")
   }
 
-  public get currentProject(): ProjectEnvironment | undefined{
-    return this._selectedProject
+  public getCurrentProject(){
+    return this.currentProject;
+  }
+
+  public listProject(){
+    return this.projects.slice();
   }
   
+  public addProject(project:ProjectEnvironment){
+    if( this.projects.indexOf(project) == -1 ){
+      this.projects.push(project)
+      this.onProjectListChanged.emit();
+    }
+  }
 
-
-  public createProject(name:string, mount:string, root:string, ){
-    let project = new ProjectEnvironment();
+  public openProject(project:ProjectEnvironment){
     //TODO: 
     return project
   }
 
   public closeProject(project:ProjectEnvironment){
     //TODO: 
+    this.onProjectListChanged.emit();
     return project
   }
 
-  public listProject(){
-    let projects = new Array<ProjectEnvironment>();
-    //TODO: 
-    return projects
-  }
-
-  public addProject(project:ProjectEnvironment){
-    if( this.projects.indexOf(project) == -1 ){
-      this.projects.push(project)
-    }
-  }
 
 
 
