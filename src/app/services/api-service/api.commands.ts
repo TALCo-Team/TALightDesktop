@@ -194,14 +194,14 @@ export namespace Commands{
               let size = byteSize(content);
 
               let header = new Packets.Request.BinaryDataHeader(nameArgFile, size, hash_list);
-              console.log("header: ", header);
-              console.log("header:string", header.toString());
+              //console.log("header: ", header);
+              //console.log("header:string", header.toString());
 
-              var header_parsed = JSONbig.stringify(header);
-              console.log("header:parsed: ", header_parsed);
-              console.log("header:parsed:type ", typeof header_parsed);
-
-              this.tal.ws!.next(header_parsed);
+              //var header_parsed = JSONbig.stringify(header);
+              //console.log("header:parsed: ", header_parsed);
+              //console.log("header:parsed:type ", typeof header_parsed);
+              
+              this.tal.send(header);
               this.tal.sendBinary(content);
             }
           }
