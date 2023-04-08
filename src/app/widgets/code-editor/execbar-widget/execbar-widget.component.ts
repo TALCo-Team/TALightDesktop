@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FsNodeFile, FsNodeFolder } from 'src/app/services/fs-service/fs.service';
+import { FsNodeFile, FsNodeFolder } from 'src/app/services/fs-service/fs.service.types';
 
 @Component({
   selector: 'tal-execbar-widget',

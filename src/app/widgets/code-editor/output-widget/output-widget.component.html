@@ -27,7 +27,12 @@
              (blur)="blurStdin()"
              (keydown)="sendOnEnter($event)"
              placeholder="Input del programma" />
-      <button pButton #sdtinButton icon="pi pi-send" class="tal-output-widget-stdin-button  tal-square-button" (click)="sendStdin()" title="Send" pTooltip="Invia"></button>
+      <button pButton #sdtinButton 
+             icon="pi pi-send" 
+             class="tal-output-widget-stdin-button  tal-square-button" 
+             (click)="sendStdin()" 
+             title="Send" 
+             pTooltip="Invia"></button>
   </div>
 
 </div>

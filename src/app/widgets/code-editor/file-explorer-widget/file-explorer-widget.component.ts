@@ -2,7 +2,10 @@ import { Component, ElementRef, EventEmitter, Input, NgZone, OnInit, Output, Que
 
 import { ConfirmationService } from 'primeng/api';
 import { OverlayPanel } from 'primeng/overlaypanel';
-import { FsNodeFile, FsNodeFolder, FsService, FsServiceDriver, Tar } from 'src/app/services/fs-service/fs.service';
+import { FsService, Tar } from 'src/app/services/fs-service/fs.service';
+import { FsNodeFile, FsNodeFolder, FsServiceDriver } from 'src/app/services/fs-service/fs.service.types';
+import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
+import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 
 
@@ -12,9 +15,8 @@ import { PythonCompilerService } from 'src/app/services/python-compiler-service/
   styleUrls: ['./file-explorer-widget.component.scss']
 })
 export class FileExplorerWidgetComponent implements OnInit {
-  public driver?: FsServiceDriver;
+  public project: ProjectEnvironment | null = null;
   public rootDir = "/"
-  public driverName = 'pyodide'
   public showHidden = false
   public fsroot = FsService.EmptyFolder
   
@@ -47,32 +49,34 @@ export class FileExplorerWidgetComponent implements OnInit {
   constructor(
     private confirmationService: ConfirmationService, 
     private fs:FsService,
-    private python: PythonCompilerService,
-    private zone: NgZone
-    ) {
-    //this.driver = fs.getDriver('pyodide');
-    this.driver = fs.getDriver(this.driverName);
-    //alert(this.driver)
-    //this.driver?.writeFile(this.editingItem.path,this.editingItem)
-   }
+    private pm: ProjectManagerService,
+  ) {
+    this.pm.onProjectChanged.subscribe( (project)=>{this.didProjectChanged(project)} )  
+  }
+
 
   ngOnInit() {
     this.bindCollapseEvent();
     //alert('init!');
-
-    //this.rootDir = this.driver?.rootDir ?? this.rootDir;
-    this.driver?.ready().then((ready)=>{
-      //alert('ready!');
-      
-      this.python.createPythonProject().then(()=>{
-        this.refreshRoot();
-        //alert('ready!');
-      })
+    /*
+    let project = this.pm.getCurrentProject()
+    if(project){
+      this.didProjectChanged(project)
+    }
+    */
+    
+  }
+  
+  public didProjectChanged(project:ProjectEnvironment){
+    console.log("FileExplorerWidgetComponent:didProjectChanged")
+    this.project = project;
+    this.project?.driver.ready().then((ready)=>{
+      this.refreshRoot();
     })
   }
 
   refreshRoot(onDone?:()=>void){
-    this.driver?.scanDirectory(this.rootDir).then((folder)=>{
+    this.project?.driver.scanDirectory(this.rootDir).then((folder)=>{
       this.fsroot = folder ?? FsService.EmptyFolder
 
       this.bindCollapseEvent();
@@ -120,7 +124,7 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   public selectFile(file: FsNodeFile) {
     console.log('selectFile',file)
-    this.driver?.readFile(file.path).then((content)=>{
+    this.project?.driver.readFile(file.path).then((content)=>{
       file.content = content ?? "";
       this.selectedFile = file;
       this.onSelectFile?.emit(file);
@@ -142,12 +146,12 @@ export class FileExplorerWidgetComponent implements OnInit {
 
     console.log("openSettings")
     let projectFolder = this.fsroot.folders.find((item)=>{
-      return item.path + "/" == this.python.projectFolder
+      return item.path + "/" == this.project?.config?.DIR_PROJECT
     })
     if(!projectFolder){return}
     console.log("openSettings:projectFolder:",projectFolder)
     let configFile = projectFolder.files.find((file)=>{
-      return file.path == this.python.configPath
+      return file.path == this.project?.config?.CONFIG_PATH
     })
     if(!configFile){return}
     console.log("openSettings:configFile:",configFile)
@@ -233,7 +237,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   private deleteFile(currentFolder: FsNodeFolder, file: FsNodeFile) {
-    this.driver?.delete(file.path).then(()=>{
+    this.project?.driver.delete(file.path).then(()=>{
       this.refreshRoot();
     })
     /*
@@ -267,7 +271,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   private deleteFolder(currentFolder: FsNodeFolder, folder: FsNodeFolder) {
-    this.driver?.delete(folder.path).then(()=>{
+    this.project?.driver.delete(folder.path).then(()=>{
       this.refreshRoot();
     })
     /*
@@ -287,11 +291,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   /** CREATE METHODS **/
   public syncFilesystem(folder: FsNodeFolder) {
     setTimeout(() => { 
-      //this.refreshRoot();
-      this.python.createPythonProject().then(()=>{
-        this.refreshRoot();
-        //alert('ready!');
-      });
+      this.refreshRoot();
     }, 0);
   }
 
@@ -321,7 +321,7 @@ export class FileExplorerWidgetComponent implements OnInit {
         if (this.newItemFolder) {
           if (this.newItemType === "file") {
             let path = this.newItemFolder.path + "/" + this.newItemValue
-            this.driver?.writeFile(path, "").then(()=>{
+            this.project?.driver.writeFile(path, "").then(()=>{
               this.refreshRoot()
             })
             /*
@@ -331,7 +331,7 @@ export class FileExplorerWidgetComponent implements OnInit {
             } as TalFile );
             */
           } else {
-            this.driver?.createDirectory("./"+this.newItemValue).then(()=>{
+            this.project?.driver.createDirectory("./"+this.newItemValue).then(()=>{
               this.refreshRoot()
             })
             
@@ -381,7 +381,7 @@ export class FileExplorerWidgetComponent implements OnInit {
         console.log("upload:content:", new Uint8Array(content))
         let path = (!this.selectedFolder?"/":this.selectedFolder.path) + file.name
         console.log('upload:', path, content)
-        await this.driver?.writeFile(path, content)
+        await this.project?.driver.writeFile(path, content)
       }
     }
     this.refreshRoot()
@@ -398,7 +398,7 @@ export class FileExplorerWidgetComponent implements OnInit {
         let folder = folders[idx]
         let path = folder.path
         console.log("extractTar:createDirectory:",path)
-        await this.driver?.createDirectory(path)
+        await this.project?.driver.createDirectory(path)
       }
       console.log("extractTar:createDirectory:DONE")
       for(var idx in files){
@@ -407,7 +407,7 @@ export class FileExplorerWidgetComponent implements OnInit {
         let path = file.path
         let content = file.content
         console.log("extractTar:writeFile:",path,content)
-        await this.driver?.writeFile(path, content)
+        await this.project?.driver.writeFile(path, content)
       }
       console.log("extractTar:writeFile:DONE")
       this.refreshRoot()

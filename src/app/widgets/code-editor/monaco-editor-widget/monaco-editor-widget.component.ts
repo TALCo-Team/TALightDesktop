@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } 
 import { ControlValueAccessor } from '@angular/forms';
 import { EditorComponent } from 'ngx-monaco-editor-v2';
 import { noop } from 'rxjs';
-import { FsNodeFile } from 'src/app/services/fs-service/fs.service';
+import { FsNodeFile } from 'src/app/services/fs-service/fs.service.types';
 import { ThemeService } from 'src/app/services/theme-service/theme.service';
 
 @Component({
@@ -103,7 +103,8 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
     console.log("MonacoEditor:value:set")
     if(!this._selectedFile){return;}
     let content=this.getFileContent()
-    console.log("MonacoEditor:value:old:new",content,text)
+    console.log("MonacoEditor:value:old",content)
+    console.log("MonacoEditor:value:new",text)
     if (text !== content) {
       console.log("MonacoEditor:value:set:changed")
       this.setFileContent(text);
@@ -113,7 +114,7 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
   }
   // From ControlValueAccessor interface
   public writeValue(text: any) {
-    console.log("MonacoEditor:value:writeValue")
+    console.log("MonacoEditor:writeValue")
     if (text !== this.value) {
       this.value = text;
     }
@@ -121,7 +122,7 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
 
   
   public didChange(): void {
-    console.log("monacoEditor:didChange")
+    console.log("MonacoEditor:didChange")
     this.onChangeCallback();
     this.onTouchedCallback();
     if(!this.selectedFile){return;}

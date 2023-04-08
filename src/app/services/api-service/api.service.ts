@@ -3,7 +3,7 @@ import { Packets } from './api.packets';
 import { Commands } from './api.commands';
 
 export class Meta extends Packets.Meta{}
-export interface AttachmentInfo extends Packets.Reply.AttachmentInfo{}
+export interface AttachmentInfo extends Packets.Reply.BinaryDataHeader{}
 
 
 export enum ApiState{
@@ -25,11 +25,11 @@ export class ApiService {
   public onApiStateChange = new EventEmitter<ApiState>();
 
   constructor(){
-    this._url = 'wss://ta.di.univr.it/sfide'
+    this._url = 'wss://ta.di.univr.it/algo'
     this.urlCache = [
+      'wss://ta.di.univr.it/algo',
       'wss://ta.di.univr.it/sfide',
       'ws://localhost:8008/',
-      'wss://ta.di.univr.it/rtal',
     ]
   }
 
@@ -77,7 +77,7 @@ export class ApiService {
   public stateBad(){ this.updateState(ApiState.Bad); }
 
   public resetAllConnections(){
-    //TODO: is it necessary to kill all old connection upon URL change ? 
+    //TODO: is it necessary to kill all old connection upon URL change ?
   }
 
   public problemList(onResult:(problemList:Map<string, Meta>)=>void, onError?: (error: string)=>void){
@@ -92,45 +92,45 @@ export class ApiService {
     cmdList.onError = (error) => {
       this.stateBad();
       console.log("problemList:onError:")
-      if(onError) {onError(error)} 
+      if(onError) {onError(error)}
     }
     cmdList.run();
     return cmdList;
   }
 
-  public GetAttachment( 
-    problemName:string, 
+  public GetAttachment(
+    problemName:string,
     onAttachment?: ()=>void,
-    onAttachmentInfo?: (message: Packets.Reply.AttachmentInfo)=>void, 
+    onAttachmentInfo?: (message: Packets.Reply.BinaryDataHeader)=>void,
     onData?: (data: ArrayBuffer)=>void,
     onError?: (error: string)=>void
   ){
     this.stateMaybe()
     let cmdGet = new Commands.Attchment(this._url, problemName);
 
-    cmdGet.onReciveAttachment = (message) => { 
+    cmdGet.onReciveAttachment = (message) => {
       if (message.status.Err){
-        this.stateBad() 
-        if (cmdGet.onError) { cmdGet.onError("Failed to receive attachment: "+message.status.Ok) } 
+        this.stateBad()
+        if (cmdGet.onError) { cmdGet.onError("Failed to receive attachment: "+message.status.Ok) }
         return;
       }
-      this.stateGood() 
-      if(onAttachment) { onAttachment() } 
+      this.stateGood()
+      if(onAttachment) { onAttachment() }
     }
-    
+
     cmdGet.onReciveAttachmentInfo = (message) => {
       this.stateGood();
-      if(onAttachmentInfo) { onAttachmentInfo(message) } 
+      if(onAttachmentInfo) { onAttachmentInfo(message) }
     }
-    
-    cmdGet.onReciveUndecodedBinary = (message) => { 
+
+    cmdGet.onReciveUndecodedBinary = (message) => {
       this.stateGood();
-      if(onData) { onData( message )} 
+      if(onData) { onData( message )}
     }
 
     cmdGet.onError = (error) => {
       this.stateBad();
-      if(onError) {onError(error)} 
+      if(onError) {onError(error)}
     }
 
     cmdGet.run();
@@ -138,67 +138,67 @@ export class ApiService {
   }
 
   public Connect (
-    problem_name:string, 
-    service:string, 
-    args?:{}, 
-    tty?:boolean, 
-    token?:string, 
+    problem_name:string,
+    service:string,
+    args?:{},
+    tty?:boolean,
+    token?:string,
     files?:Map<string, string>,
     onConnectBegin?:(message:string[] )=>void,
     onConnectStart?:()=>void,
     onConnectStop?:(message:string[])=>void,
     onData?: (data:string)=>void,
-    onBinaryHeader?:(message:Packets.Reply.AttachmentInfo)=>void,
+    onBinaryHeader?:(message:Packets.Reply.BinaryDataHeader)=>void,
     onError?:(data:string)=>void
   ){
     this.stateMaybe()
     let cmdConnect = new Commands.Connect(this._url, problem_name, service, args, tty, token, files);
 
-    cmdConnect.onReciveConnectBegin = (message) => { 
-      if (message.status.Err){ 
-        this.stateBad() 
-        if (cmdConnect.onError) { cmdConnect.onError("Failed to begin connection: "+message.status.Err); } 
+    cmdConnect.onReciveConnectBegin = (message) => {
+      if (message.status.Err){
+        this.stateBad()
+        if (cmdConnect.onError) { cmdConnect.onError("Failed to begin connection: "+message.status.Err); }
         return;
       }
-      this.stateGood() 
+      this.stateGood()
       if(onConnectBegin && message.status.Ok) { onConnectBegin(message.status.Ok) }
     }
 
-    cmdConnect.onReciveConnectStart = (message) => { 
-      if (message.status.Err){ 
-        this.stateBad() 
-        if (cmdConnect.onError) { cmdConnect.onError("Failed to start connect: "+message.status.Err)  } 
+    cmdConnect.onReciveConnectStart = (message) => {
+      if (message.status.Err){
+        this.stateBad()
+        if (cmdConnect.onError) { cmdConnect.onError("Failed to start connect: "+message.status.Err)  }
         return;
       }
-      this.stateGood() 
+      this.stateGood()
       if(onConnectStart) { onConnectStart() }
     }
 
-    cmdConnect.onReciveConnectStop = (message) => { 
-      if (message.status.Err){ 
-        this.stateBad() 
-        if (cmdConnect.onError) { cmdConnect.onError("Failed to stop connection: "+message.status.Err)  } 
+    cmdConnect.onReciveConnectStop = (message) => {
+      if (message.status.Err){
+        this.stateBad()
+        if (cmdConnect.onError) { cmdConnect.onError("Failed to stop connection: "+message.status.Err)  }
         return;
       }
-      this.stateGood() 
+      this.stateGood()
       if(onConnectStop && message.status.Ok) { onConnectStop(message.status.Ok) }
     }
-    
-    cmdConnect.onReciveBinary = (message) => { 
+
+    cmdConnect.onReciveBinary = (message) => {
       this.stateGood();
-      if(onData) { onData(message)} 
+      if(onData) { onData(message)}
     }
 
-    cmdConnect.onReciveBinaryHeader = (message) => { 
+    cmdConnect.onReciveBinaryHeader = (message) => {
       this.stateGood();
-      if(onBinaryHeader) { onBinaryHeader( message )} 
+      if(onBinaryHeader) { onBinaryHeader( message )}
     }
-    
-    cmdConnect.onError = (error) => { 
+
+    cmdConnect.onError = (error) => {
       this.stateBad();
-      if(onError) {onError(error)} 
+      if(onError) {onError(error)}
     }
-    
+
     cmdConnect.run();
     return cmdConnect;
   }

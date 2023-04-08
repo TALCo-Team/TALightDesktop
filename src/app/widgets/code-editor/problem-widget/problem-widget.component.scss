@@ -7,6 +7,19 @@
 
 ::ng-deep {
     
+    ::ng-deep{
+        .p-scrollpanel-wrapper, .p-scrollpanel-content, .p-scrollpanel{
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin: 0px;
+            padding: 0px;
+            word-wrap: break-word;
+            flex-wrap: wrap;
+        }
+    }
+
+    
     .tal-problem-widget-row-problem, .tal-problem-widget-row-service{
         .p-dropdown {
             height: 30px;
@@ -92,7 +105,6 @@
     display: flex;
     flex-direction: column;
     height:100%;
-
     
     .tal-problem-widget-row-problem, .tal-problem-widget-row-service{
         display: flex;
@@ -143,7 +155,8 @@
     .tal-problem-widget-args{
         display: flex;
         flex-direction: column;
-        width: 100%;
+        //width: 100%;
+        //overflow: auto;
 
         font-family: monospace;
         

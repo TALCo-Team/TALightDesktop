@@ -52,8 +52,10 @@ Dependencies:
 
 - NodeJS
 ```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | 
-sh ~/.nvm/nvm.sh install --lts
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+  source ~/.bashrc
+  nvm list-remote
+  nvm install --lts
 ```
 
 - Yarn
@@ -109,5 +111,13 @@ To build a "production" version, the build artifacts will be stored in the `dist
 ```bash
 ng build
 ```
+
+## Building for UniVR endpoint
+Using the command: 
+```bash
+yarn run build:univr
+```
+Dist folder will be customized for UniVR endpoint.
+
 
 __This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 13.3.5.__
