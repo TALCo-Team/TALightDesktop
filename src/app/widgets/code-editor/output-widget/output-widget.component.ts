@@ -138,15 +138,18 @@ export class OutputWidgetComponent {
     let ipt = this.sdtinInput.nativeElement as HTMLInputElement
 
     let toggleColor = (clear?:boolean)=>{
-      if (clear) { ipt.style.borderColor == "" }
-      else {
-        ipt.style.borderColor = ipt.style.borderColor == "" ? color ?? "orange" : ""
+      if (clear) { 
+        ipt.style.borderColor == "" 
+        return
       }
+      
+      ipt.style.borderColor = ipt.style.borderColor == "" ? color ?? "orange" : ""
     }
 
-    if(enable && this.stdinHighlight){ return; }
-    if(!enable && !this.stdinHighlight){ return; }
+    //if(enable && this.stdinHighlight){ return; }
+    //if(!enable && !this.stdinHighlight){ return; }
     if(enable){
+      if (this.stdinHighlight){clearInterval(this.stdinHighlight);}
       this.stdinHighlight = window.setInterval(toggleColor,1000) //window.setInterval -> number; setInterval -> strange object
     }else{
       clearInterval(this.stdinHighlight);

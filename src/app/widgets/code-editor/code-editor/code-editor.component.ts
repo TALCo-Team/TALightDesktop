@@ -36,6 +36,7 @@ export class CodeEditorComponent implements OnInit {
   public selectedService?: ServiceDescriptor;
   public pyodideState = CompilerState.Unknown
   public pyodideStateContent? = ""
+  public apiRun = false
 
   public fsroot = FsService.EmptyFolder;
   public fslist: FsNodeList = [];
@@ -120,10 +121,15 @@ export class CodeEditorComponent implements OnInit {
     if (state == CompilerState.Ready){
       this.didStateChangeReady(content)
     }
+    if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed){
+      this.apiConnectReset();
+    }
     this.pyodideState=state
     this.pyodideStateContent=content
     console.log("CodeEditorComponent:didStateChange:", state)
-    this.outputWidget.didStateChange(state,content)
+    if(!this.apiRun || state != CompilerState.Stdin) { 
+      this.outputWidget.didStateChange(state,content)
+    }
   }
 
   public didStdout(data:string){
@@ -151,7 +157,7 @@ export class CodeEditorComponent implements OnInit {
       this.outputWidget.print(msgs[i],fromAPI?OutputType.STDINAPI:OutputType.STDIN)
       this.project?.driver.sendStdin(msgs[i])
     }
-    if (fromAPI || this.pyodideState != CompilerState.Stdin ){
+    if (!fromAPI || this.pyodideState != CompilerState.Stdin ){
       this.outputWidget.enableStdin(false)
     }
   }
@@ -232,6 +238,7 @@ export class CodeEditorComponent implements OnInit {
   }
 
   async stopAll(){
+    this.apiRun = false
     console.log("stopAll:")
 
     if(this.cmdConnect){this.cmdConnect.tal.closeConnection()}
@@ -241,7 +248,13 @@ export class CodeEditorComponent implements OnInit {
   }
   
   //-------------- API CONNECT
-  public async runProject(useAPI = false){
+  public async runProjectLocal(){
+    this.apiRun = false
+    await this.runProject();
+    this.apiRun = false
+  }
+
+  public async runProject(){
     console.log("runProject:")
     this.outputWidget.clearOutput()
     
@@ -265,16 +278,24 @@ export class CodeEditorComponent implements OnInit {
 
 
   public async runConnectAPI(){
+    this.apiRun = true
     this.outputWidget.clearOutput()
     this.saveFile();
     
     
-    this.apiConnect().then(()=>{
-      //TODO: on success, new files are downloaded 
-      //this.fileExplorer.refreshRoot()
-    })
+    await this.apiConnect()
+    
+    this.apiRun = false
+    this.fileExplorer.refreshRoot()
   }
   
+  async apiConnectReset(){
+    this.current_output_file = undefined;
+    this.cmdConnect = undefined;
+    this.outputWidget.enableStdin(false)
+    console.log("apiConnect:didConnectData:cmdConnect:", this.cmdConnect);
+  }
+
   
   async apiConnect(){
     console.log("apiConnect")
@@ -284,6 +305,7 @@ export class CodeEditorComponent implements OnInit {
       return false
     }
     console.log("apiConnect:service:ok")
+    
     
 
     let config = await this.compiler.readConfig()
@@ -376,8 +398,8 @@ export class CodeEditorComponent implements OnInit {
       this.output_files = message;
     }
     else {
-      this.cmdConnect = undefined;
-      console.log("apiConncect:cmdConnect:value:", this.cmdConnect);
+      this.apiConnectReset();
+      console.log("apiConnect:didConnectClose:cmdConnect:", this.cmdConnect);
     }
   }
 
@@ -388,9 +410,9 @@ export class CodeEditorComponent implements OnInit {
         this.project?.driver.writeFile("/" + this.current_output_file, data)
       };
       if(this.current_output_file === this.output_files[this.output_files.length - 1]){
-        this.cmdConnect = undefined;
+        this.apiConnectReset();
       }
-      console.log("apiConncect:cmdConnect:value:", this.cmdConnect);
+      console.log("apiConnect:didConnectData:cmdConnect:", this.cmdConnect);
     }
     else {
       this.sendStdin(data, true);
