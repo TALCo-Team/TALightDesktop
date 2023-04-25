@@ -3470,7 +3470,7 @@ function CodeEditorComponent_ng_template_3_Template(rf, ctx) {
     })("onRun", function CodeEditorComponent_ng_template_3_Template_tal_execbar_widget_onRun_2_listener() {
       _angular_core__WEBPACK_IMPORTED_MODULE_12__["ɵɵrestoreView"](_r10);
       const ctx_r11 = _angular_core__WEBPACK_IMPORTED_MODULE_12__["ɵɵnextContext"]();
-      return _angular_core__WEBPACK_IMPORTED_MODULE_12__["ɵɵresetView"](ctx_r11.runProject());
+      return _angular_core__WEBPACK_IMPORTED_MODULE_12__["ɵɵresetView"](ctx_r11.runProjectLocal());
     })("onConnect", function CodeEditorComponent_ng_template_3_Template_tal_execbar_widget_onConnect_2_listener() {
       _angular_core__WEBPACK_IMPORTED_MODULE_12__["ɵɵrestoreView"](_r10);
       const ctx_r12 = _angular_core__WEBPACK_IMPORTED_MODULE_12__["ɵɵnextContext"]();
@@ -3563,6 +3563,7 @@ class CodeEditorComponent {
     this.project = null;
     this.pyodideState = src_app_services_compiler_service_compiler_service_types__WEBPACK_IMPORTED_MODULE_1__.CompilerState.Unknown;
     this.pyodideStateContent = "";
+    this.apiRun = false;
     this.fsroot = src_app_services_fs_service_fs_service__WEBPACK_IMPORTED_MODULE_2__.FsService.EmptyFolder;
     this.fslist = [];
     this.fslistfile = [];
@@ -3629,10 +3630,15 @@ class CodeEditorComponent {
     if (state == src_app_services_compiler_service_compiler_service_types__WEBPACK_IMPORTED_MODULE_1__.CompilerState.Ready) {
       this.didStateChangeReady(content);
     }
+    if (state == src_app_services_compiler_service_compiler_service_types__WEBPACK_IMPORTED_MODULE_1__.CompilerState.Success || state == src_app_services_compiler_service_compiler_service_types__WEBPACK_IMPORTED_MODULE_1__.CompilerState.Error || state == src_app_services_compiler_service_compiler_service_types__WEBPACK_IMPORTED_MODULE_1__.CompilerState.Killed) {
+      this.apiConnectReset();
+    }
     this.pyodideState = state;
     this.pyodideStateContent = content;
     console.log("CodeEditorComponent:didStateChange:", state);
-    this.outputWidget.didStateChange(state, content);
+    if (!this.apiRun || state != src_app_services_compiler_service_compiler_service_types__WEBPACK_IMPORTED_MODULE_1__.CompilerState.Stdin) {
+      this.outputWidget.didStateChange(state, content);
+    }
   }
   didStdout(data) {
     console.log("onStdout:");
@@ -3661,7 +3667,7 @@ class CodeEditorComponent {
       this.outputWidget.print(msgs[i], fromAPI ? _output_widget_output_widget_component__WEBPACK_IMPORTED_MODULE_3__.OutputType.STDINAPI : _output_widget_output_widget_component__WEBPACK_IMPORTED_MODULE_3__.OutputType.STDIN);
       this.project?.driver.sendStdin(msgs[i]);
     }
-    if (fromAPI || this.pyodideState != src_app_services_compiler_service_compiler_service_types__WEBPACK_IMPORTED_MODULE_1__.CompilerState.Stdin) {
+    if (!fromAPI || this.pyodideState != src_app_services_compiler_service_compiler_service_types__WEBPACK_IMPORTED_MODULE_1__.CompilerState.Stdin) {
       this.outputWidget.enableStdin(false);
     }
   }
@@ -3741,6 +3747,7 @@ class CodeEditorComponent {
   stopAll() {
     var _this2 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+      _this2.apiRun = false;
       console.log("stopAll:");
       if (_this2.cmdConnect) {
         _this2.cmdConnect.tal.closeConnection();
@@ -3751,78 +3758,95 @@ class CodeEditorComponent {
     })();
   }
   //-------------- API CONNECT
-  runProject(useAPI = false) {
+  runProjectLocal() {
     var _this3 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+      _this3.apiRun = false;
+      yield _this3.runProject();
+      _this3.apiRun = false;
+    })();
+  }
+  runProject() {
+    var _this4 = this;
+    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("runProject:");
-      _this3.outputWidget.clearOutput();
-      let config = yield _this3.compiler.readConfig();
+      _this4.outputWidget.clearOutput();
+      let config = yield _this4.compiler.readConfig();
       if (!config) {
         return false;
       }
       console.log("runProject:config:ok");
       console.log("runProject:main:", config.RUN);
-      let mainFile = _this3.fslistfile.find(item => item.path == config.RUN);
+      let mainFile = _this4.fslistfile.find(item => item.path == config.RUN);
       if (!mainFile) {
         return false;
       }
       console.log("runProject:main:ok");
-      _this3.fileExplorer.selectFile(mainFile);
-      _this3.outputWidget.print("RUN: " + config.RUN, _output_widget_output_widget_component__WEBPACK_IMPORTED_MODULE_3__.OutputType.SYSTEM);
-      _this3.saveFile();
-      yield _this3.compiler.runProject();
+      _this4.fileExplorer.selectFile(mainFile);
+      _this4.outputWidget.print("RUN: " + config.RUN, _output_widget_output_widget_component__WEBPACK_IMPORTED_MODULE_3__.OutputType.SYSTEM);
+      _this4.saveFile();
+      yield _this4.compiler.runProject();
       return true;
     })();
   }
   runConnectAPI() {
-    var _this4 = this;
+    var _this5 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
-      _this4.outputWidget.clearOutput();
-      _this4.saveFile();
-      _this4.apiConnect().then(() => {
-        //TODO: on success, new files are downloaded 
-        //this.fileExplorer.refreshRoot()
-      });
+      _this5.apiRun = true;
+      _this5.outputWidget.clearOutput();
+      _this5.saveFile();
+      yield _this5.apiConnect();
+      _this5.apiRun = false;
+      _this5.fileExplorer.refreshRoot();
+    })();
+  }
+  apiConnectReset() {
+    var _this6 = this;
+    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+      _this6.current_output_file = undefined;
+      _this6.cmdConnect = undefined;
+      _this6.outputWidget.enableStdin(false);
+      console.log("apiConnect:didConnectData:cmdConnect:", _this6.cmdConnect);
     })();
   }
   apiConnect() {
-    var _this5 = this;
+    var _this7 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("apiConnect");
-      if (!_this5.selectedService) {
-        _this5.outputWidget.print("No problem selected", _output_widget_output_widget_component__WEBPACK_IMPORTED_MODULE_3__.OutputType.STDERR);
+      if (!_this7.selectedService) {
+        _this7.outputWidget.print("No problem selected", _output_widget_output_widget_component__WEBPACK_IMPORTED_MODULE_3__.OutputType.STDERR);
         return false;
       }
       console.log("apiConnect:service:ok");
-      let config = yield _this5.compiler.readConfig();
+      let config = yield _this7.compiler.readConfig();
       if (!config) {
         return false;
       }
       console.log("apiConnect:config:ok");
       //Run MAIN
       console.log("apiConnect:runProject");
-      _this5.saveFile();
-      yield _this5.compiler.runProject();
-      _this5.outputWidget.print("API: " + config.RUN, _output_widget_output_widget_component__WEBPACK_IMPORTED_MODULE_3__.OutputType.SYSTEM);
+      _this7.saveFile();
+      yield _this7.compiler.runProject();
+      _this7.outputWidget.print("API: " + config.RUN, _output_widget_output_widget_component__WEBPACK_IMPORTED_MODULE_3__.OutputType.SYSTEM);
       console.log("apiConnect:runProject:running");
       //Open Connection
-      let problem = _this5.selectedService.parent.name;
-      let service = _this5.selectedService.name;
-      let args = _this5.selectedService.exportArgs();
+      let problem = _this7.selectedService.parent.name;
+      let service = _this7.selectedService.name;
+      let args = _this7.selectedService.exportArgs();
       let tty = false; //true: bash code coloring, backspaces, etc
       let token = config.TAL_TOKEN && config.TAL_TOKEN != "" ? config.TAL_TOKEN : undefined;
-      let filePaths = _this5.selectedService.exportFilesPaths();
+      let filePaths = _this7.selectedService.exportFilesPaths();
       let files = new Map();
       filePaths.forEach((fileArgPath, fileArgName) => {
         console.log("apiConnect:params:problem:path:", fileArgName, fileArgPath);
-        let found = _this5.fslistfile.find(item => item.path == fileArgPath);
+        let found = _this7.fslistfile.find(item => item.path == fileArgPath);
         console.log("apiConnect:params:problem:found:", found);
         if (!found) {
           return;
         }
         let content = found.content;
         if (content instanceof ArrayBuffer) {
-          content = _this5.binDecoder.decode(content);
+          content = _this7.binDecoder.decode(content);
         }
         files.set(fileArgName, content);
       });
@@ -3833,33 +3857,33 @@ class CodeEditorComponent {
       console.log("apiConnect:params:token", token);
       console.log("apiConnect:params:files", files);
       let onConnectionStart = () => {
-        _this5.didConnectStart();
+        _this7.didConnectStart();
       };
       let onConnectionBegin = msg => {
-        _this5.didConnectBegin(msg);
+        _this7.didConnectBegin(msg);
       };
       let onConnectionClose = msg => {
-        _this5.didConnectClose(msg);
+        _this7.didConnectClose(msg);
       };
       let onData = data => {
-        _this5.didConnectData(data);
+        _this7.didConnectData(data);
       };
       let onBinaryHeader = msg => {
-        _this5.didRecieveBinaryHeader(msg);
+        _this7.didRecieveBinaryHeader(msg);
       };
-      _this5.cmdConnect = yield _this5.api.Connect(problem, service, args, tty, token, files, onConnectionBegin, onConnectionStart, onConnectionClose, onData, onBinaryHeader);
+      _this7.cmdConnect = yield _this7.api.Connect(problem, service, args, tty, token, files, onConnectionBegin, onConnectionStart, onConnectionClose, onData, onBinaryHeader);
       console.log("apiConnect:DONE");
       return true;
     })();
   }
   didConnectError(error) {
-    var _this6 = this;
+    var _this8 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("apiConnect:didConnectError:", error);
-      _this6.outputWidget.print("API Error: " + error, _output_widget_output_widget_component__WEBPACK_IMPORTED_MODULE_3__.OutputType.STDERR);
-      _this6.cmdConnect = undefined;
-      _this6.outputWidget.enableStdin(false);
-      _this6.project?.driver.stopExecution();
+      _this8.outputWidget.print("API Error: " + error, _output_widget_output_widget_component__WEBPACK_IMPORTED_MODULE_3__.OutputType.STDERR);
+      _this8.cmdConnect = undefined;
+      _this8.outputWidget.enableStdin(false);
+      _this8.project?.driver.stopExecution();
     })();
   }
   didConnectStart() {
@@ -3873,42 +3897,42 @@ class CodeEditorComponent {
     })();
   }
   didConnectClose(message) {
-    var _this7 = this;
+    var _this9 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("apiConnect:didConnectionClose:", message);
       if (message && message.length > 0 && message[0] !== "") {
-        _this7.output_files = message;
+        _this9.output_files = message;
       } else {
-        _this7.cmdConnect = undefined;
-        console.log("apiConncect:cmdConnect:value:", _this7.cmdConnect);
+        _this9.apiConnectReset();
+        console.log("apiConnect:didConnectClose:cmdConnect:", _this9.cmdConnect);
       }
     })();
   }
   didConnectData(data) {
-    var _this8 = this;
+    var _this10 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("apiConnect:didConnectData:", data);
-      if (_this8.output_files && _this8.current_output_file) {
-        if (_this8.current_output_file) {
-          _this8.project?.driver.writeFile("/" + _this8.current_output_file, data);
+      if (_this10.output_files && _this10.current_output_file) {
+        if (_this10.current_output_file) {
+          _this10.project?.driver.writeFile("/" + _this10.current_output_file, data);
         }
         ;
-        if (_this8.current_output_file === _this8.output_files[_this8.output_files.length - 1]) {
-          _this8.cmdConnect = undefined;
+        if (_this10.current_output_file === _this10.output_files[_this10.output_files.length - 1]) {
+          _this10.apiConnectReset();
         }
-        console.log("apiConncect:cmdConnect:value:", _this8.cmdConnect);
+        console.log("apiConnect:didConnectData:cmdConnect:", _this10.cmdConnect);
       } else {
-        _this8.sendStdin(data, true);
+        _this10.sendStdin(data, true);
       }
     })();
   }
   didRecieveBinaryHeader(message) {
-    var _this9 = this;
+    var _this11 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("apiConnect:didRecieveBinaryHeader:", message);
-      _this9.current_output_file = message.name;
-      if (_this9.current_output_file) {
-        _this9.project?.driver.writeFile("/" + _this9.current_output_file, "");
+      _this11.current_output_file = message.name;
+      if (_this11.current_output_file) {
+        _this11.project?.driver.writeFile("/" + _this11.current_output_file, "");
       }
       ;
     })();
@@ -5631,18 +5655,16 @@ class OutputWidgetComponent {
         let toggleColor = (clear) => {
             if (clear) {
                 ipt.style.borderColor == "";
+                return;
             }
-            else {
-                ipt.style.borderColor = ipt.style.borderColor == "" ? color ?? "orange" : "";
-            }
+            ipt.style.borderColor = ipt.style.borderColor == "" ? color ?? "orange" : "";
         };
-        if (enable && this.stdinHighlight) {
-            return;
-        }
-        if (!enable && !this.stdinHighlight) {
-            return;
-        }
+        //if(enable && this.stdinHighlight){ return; }
+        //if(!enable && !this.stdinHighlight){ return; }
         if (enable) {
+            if (this.stdinHighlight) {
+                clearInterval(this.stdinHighlight);
+            }
             this.stdinHighlight = window.setInterval(toggleColor, 1000); //window.setInterval -> number; setInterval -> strange object
         }
         else {
