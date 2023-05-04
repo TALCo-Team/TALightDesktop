@@ -24,8 +24,8 @@ Dependencies:
 - TALight 
 
 Instructions:
-- [Ubuntu](docs/dev_setup_ubuntu.md)
-- [Windows](docs/dev_setup_windows.md)
+- [Ubuntu](doc/dev_setup_ubuntu.md)
+- [Windows](doc/dev_setup_windows.md)
 
 
 
