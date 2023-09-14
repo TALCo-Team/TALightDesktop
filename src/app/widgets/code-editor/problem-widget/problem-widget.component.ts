@@ -4,7 +4,7 @@ import { ApiService } from 'src/app/services/api-service/api.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
 
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
-import { OverlayOptions } from 'primeng/api';
+import { MessageService, OverlayOptions } from 'primeng/api';
 import { ServiceDescriptor, ProblemDescriptor, ArgsMap, FilesMap, FileDescriptor, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 import { Dropdown } from 'primeng/dropdown';
 import { CompilerDriver } from 'src/app/services/compiler-service/compiler-service-driver';
@@ -36,6 +36,7 @@ export class ProblemWidgetComponent {
   @Output('onProblemChanged') public onProblemSelected = new EventEmitter<ProblemDescriptor>();
   @Output('onServiceChanged') public onServiceSelected = new EventEmitter<ServiceDescriptor>();
   @Output('onAttachments') public onAttachments = new EventEmitter<ArrayBuffer>();
+  @Output('onProblemListChanged') public onProblemListChanged = new EventEmitter();
   
   @ViewChild("problemDropdown") public problemDropdown!: ElementRef
   @ViewChild("serviceDropdown") public serviceDropdown!: ElementRef
@@ -64,7 +65,8 @@ export class ProblemWidgetComponent {
   constructor( public zone: NgZone,
                public api: ApiService,
                public pm: ProblemManagerService,
-               public prjmnrg: ProjectManagerService,)
+               public prjmnrg: ProjectManagerService,
+               private messageService: MessageService,)
   {
     this.project = prjmnrg.getCurrentProject();
     this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.problemsDidChange(clear) })
@@ -175,6 +177,13 @@ export class ProblemWidgetComponent {
     this.argDidChange(arg,event)
   }
 
+  async validateArgs() {
+    let result = undefined;
+    if (this.selectedService) { result = this.pm.validateArgs(this.selectedService); }
+
+    return result;
+  }
+
 
 //files
 
@@ -273,6 +282,8 @@ export class ProblemWidgetComponent {
     this.problemsMenu = problemsMenu
     this.loading = false
 
+    this.onProblemListChanged.emit();
+
   }
 
 
@@ -318,7 +329,15 @@ export class ProblemWidgetComponent {
 
   async apiDownloadAttachment() {
     console.log('apiDownloadAttachment:', this.selectedProblem)
-    if (!this.selectedProblem) { return }
+    if (!this.selectedProblem) { 
+      this.messageService.add({
+        key: 'br',
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No problem selected',
+    });
+
+      return }
 
     let onAttachment = () => { console.log("Attachment packet received") };
     let onAttachmentInfo = (info: any) => { console.log('apiDownloadAttachment:info:', info) };

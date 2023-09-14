@@ -2,12 +2,14 @@ import { Component, ElementRef, EventEmitter, Input, NgZone, OnInit, Output, Que
 
 import { ConfirmationService } from 'primeng/api';
 import { OverlayPanel } from 'primeng/overlaypanel';
+import { MessageService } from 'primeng/api';
 import { FsService, Tar } from 'src/app/services/fs-service/fs.service';
 import { FsNodeFile, FsNodeFolder, FsServiceDriver } from 'src/app/services/fs-service/fs.service.types';
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
-import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
-
+import { GoogleLoginProvider, MicrosoftLoginProvider } from'@abacritt/angularx-social-login';
+import { SocialAuthService, SocialUser } from "@abacritt/angularx-social-login";
+import { GithubApiService } from 'src/app/services/github-api-service/github-api.service';
 
 @Component({
   selector: 'tal-file-explorer-widget',
@@ -33,6 +35,28 @@ export class FileExplorerWidgetComponent implements OnInit {
   public selectedFile: FsNodeFile | null = null;
   public selectedFolder: FsNodeFolder | null = null;
   
+  private accessToken = '';
+  user: SocialUser | undefined;
+  loggedIn: boolean = false;
+
+  // TODO: decide if use only a variable or two
+  private googleLogin = false;
+  private microsoftLogin = false;
+
+  /** Variables for Github import/export popup management **/
+  public ExportItems:any;
+  public ImportItems:any;
+  public exportVisible: boolean = false;
+  public importVisible: boolean = false;
+  public reposList:any;
+  public selectedRepo:any;
+  public newRepoOwner:any;
+  public newRepoName:any;
+  public repoNameHelp:any;
+  public exportDropDisabled:boolean = false;
+  public exportButtonRepoDisabled:boolean = true;
+  public importDropDisabled:boolean = false;
+  public importButtonRepoDisabled:boolean = true;
 
   @ViewChild("nameEditing") public nameEditingElement?: ElementRef;
   @ViewChild("newItemName") public newItemNameElement?: ElementRef;
@@ -40,16 +64,19 @@ export class FileExplorerWidgetComponent implements OnInit {
   @ViewChildren(OverlayPanel) public panels?: QueryList<OverlayPanel>;
 
   @Output("onUpdateRoot") public onUpdateRoot = new EventEmitter<FsNodeFolder>();
-
   @Output("onSelectFile") public onSelectFile = new EventEmitter<FsNodeFile>();
-  
-  
   @Output("showHiddenChanged") public showHiddenChanged = new EventEmitter<boolean>(); 
+  @Output('onFileDeleted') public onFileDeleted = new EventEmitter<string>();
+  @Output('onItemRenamed') public onItemRenamed = new EventEmitter();
 
   constructor(
     private confirmationService: ConfirmationService, 
     private fs:FsService,
     private pm: ProjectManagerService,
+    private authService: SocialAuthService,
+    private messageService: MessageService,
+    private githubService: GithubApiService
+
   ) {
     this.pm.onProjectChanged.subscribe( (project)=>{this.didProjectChanged(project)} )  
   }
@@ -57,13 +84,44 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   ngOnInit() {
     this.bindCollapseEvent();
-    //alert('init!');
-    /*
-    let project = this.pm.getCurrentProject()
-    if(project){
-      this.didProjectChanged(project)
-    }
-    */
+
+    // Setting import menù options
+    this.ImportItems = [
+      { label: 'Import from Github', icon: 'pi pi-cloud-download', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.downloadGithub(); }},
+      { label: 'Import from local ', icon: 'pi pi-database', command: (event: any) => {  this.closeAllContextMenus(event.originalEvent); const fileUpload = document.getElementById('fileUpload'); fileUpload?.click(); }}
+       
+    ]
+
+    // Setting export menù options
+    this.ExportItems = [
+      {
+        label: 'Export on Github',
+        icon: 'pi pi-github',
+        items: [
+          { label: 'Export as archive', icon: 'pi pi-folder-open', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.export('Github-archive') } },
+          { label: 'Export code', icon: 'pi pi-code', command: (event: any) => {  this.closeAllContextMenus(event.originalEvent); this.export('Github-code'); /*this.visible = true;*/ }}    
+        ]
+      },
+      { label: 'Export on Google Drive', icon: 'pi pi-google', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.signIn() }},
+      { label: 'Export on One Drive', icon: 'pi pi-microsoft', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.export('Microsoft') }},
+      { label: 'Save locally ', icon: 'pi pi-download', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.export('Local') }}
+       
+    ]
+
+
+    this.authService.authState.subscribe((user) => {
+
+      this.user = user;
+      this.loggedIn = (user != null);
+
+      // User is logged. Now it's possible to proceed with token request
+      // to access Drive API and then export/upload files on Google Drive
+
+      if (this.googleLogin) {
+        this.authService.getAccessToken(GoogleLoginProvider.PROVIDER_ID).then(accessToken => this.accessToken = accessToken).then(() => this.export('Google'))
+      }
+
+    });
     
   }
   
@@ -75,11 +133,12 @@ export class FileExplorerWidgetComponent implements OnInit {
     })
   }
 
-  refreshRoot(onDone?:()=>void){
+  refreshRoot(onDone?:()=>void) {
     this.project?.driver.scanDirectory(this.rootDir).then((folder)=>{
       this.fsroot = folder ?? FsService.EmptyFolder
 
       this.bindCollapseEvent();
+
       this.onUpdateRoot?.emit(this.fsroot);
       if(onDone){onDone()}
     });
@@ -116,7 +175,9 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   public closeAllContextMenus(event: Event) {
+    
     event.preventDefault();
+    console.log("EVENT: \n", event);
     if (this.panels) {
       this.panels.forEach(p => p.hide());
     }
@@ -173,8 +234,13 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   /** EDITING METHODS  **/
   public startEditing(folder: FsNodeFolder, item: FsNodeFile | FsNodeFolder) {
+
+    console.log("START EDITING")
+
+    console.log("FOLDER: ", folder)
+    console.log("ITEM: ", item)
     this.editingItem = item;
-    this.editingValue = item.name;
+    this.editingValue = item.name; //new_name
     this.editingItemFolder = folder;
     this.editingItemError = false;
 
@@ -190,8 +256,34 @@ export class FileExplorerWidgetComponent implements OnInit {
       if (this.editingItem) {
         this.editingValue = this.editingValue.trim();
         if (this.editingValue.length > 0) {
+
+          // change name item
           this.editingItem.name = this.editingValue;
+
+          // create new path item
+          const directoryList = this.editingItem.path.split('/');
+    
+          if (directoryList.length <= 1) {
+              this.editingItem.path = "/" + this.editingValue;
+          }
+          
+          const newpath = directoryList
+              .slice(0, -1) // Remove last element ( previous name )
+              .concat(this.editingValue) // Add new name at the end
+              .join('/'); // Rebuild the path
+          
+          // Change path item in the FS
+          this.project?.driver.renameItem(this.editingItem.path, newpath).then(()=>{
+            this.refreshRoot();
+          })
+
+          this.onItemRenamed.emit({"oldpath": this.editingItem.path});
+
+          // Change path item
+          this.editingItem.path = newpath;
+
           this.onUpdateRoot?.emit(this.fsroot);
+
         }
       }
     }
@@ -205,6 +297,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   public editItemChange() {
+
     this.editingItemError = false;
 
     if (this.editingItemFolder) {
@@ -223,7 +316,7 @@ export class FileExplorerWidgetComponent implements OnInit {
     if (event.target) {
       this.confirmationService.confirm({
         target: event.target,
-        message: 'Sei sicuro di voler eliminare questo file?',
+        message: 'Are you sure you want to delete this file?',
         icon: 'pi pi-exclamation-triangle',
         accept: () => {
           //confirm action
@@ -231,7 +324,8 @@ export class FileExplorerWidgetComponent implements OnInit {
         },
         reject: () => {
           //reject action
-        }
+        },
+        key:'dialogDelete',
       });
     }
   }
@@ -239,25 +333,34 @@ export class FileExplorerWidgetComponent implements OnInit {
   private deleteFile(currentFolder: FsNodeFolder, file: FsNodeFile) {
     this.project?.driver.delete(file.path).then(()=>{
       this.refreshRoot();
+      this.onFileDeleted.emit(file.path)
     })
-    /*
-    if (currentFolder.files.indexOf(file) >= 0) {
-      currentFolder.files.splice(currentFolder.files.indexOf(file), 1);
-      this.change?.emit(this.root);
-    } else {
-      for (let i = 0; i < currentFolder.folders.length; i++) {
-        const folder: TalFolder = currentFolder.folders[i];
-        this.deleteFile(folder, file);
-      }
+
+  }
+
+  public importGithubClick(event: Event) {
+    if (event.target) {
+      this.confirmationService.confirm({
+        target: event.target,
+        message: 'Are you sure you want to proceed with the import?\n\nNOTE: Make sure you have saved or exported the current project otherwise you will lose any changes.',
+        icon: 'pi pi-exclamation-triangle',
+        accept: () => {
+          //confirm action
+          this.downloadFiles();
+        },
+        reject: () => {
+          //reject action
+        },
+        key:'dialogImport'
+      });
     }
-    */
   }
 
   public deleteFolderClick(event: Event, folder: FsNodeFolder) {
     if (event.target) {
       this.confirmationService.confirm({
         target: event.target,
-        message: 'Sei sicuro di voler eliminare questa cartella? Tutti i file e le cartelle contenute verranno eliminate.',
+        message: 'Are you sure you want to delete this folder? All files and folders it contains will be deleted.',
         icon: 'pi pi-exclamation-triangle',
         accept: () => {
           //confirm action
@@ -265,26 +368,42 @@ export class FileExplorerWidgetComponent implements OnInit {
         },
         reject: () => {
           //reject action
-        }
+        },
+        key:'dialogDelete',
       });
     }
   }
 
   private deleteFolder(currentFolder: FsNodeFolder, folder: FsNodeFolder) {
-    this.project?.driver.delete(folder.path).then(()=>{
-      this.refreshRoot();
-    })
-    /*
-    if (currentFolder.folders.indexOf(folder) >= 0) {
-      currentFolder.folders.splice(currentFolder.folders.indexOf(folder), 1);
-      this.change?.emit(this.root);
+    
+    //Delete all files in the folder
+    folder.files.forEach(item => {
+
+      this.project?.driver.delete(item.path).then(()=>{
+        this.refreshRoot();
+        this.onFileDeleted.emit(item.path)
+      })
+    });
+
+    //Delete all subfolders recursively
+    if (folder.folders.length !== 0) {
+      folder.folders.forEach(item => {
+
+        this.deleteFolder(item, item);
+
+        this.project?.driver.delete(folder.path).then(()=>{
+          this.refreshRoot();
+        })
+      });
+
     } else {
-      for (let i = 0; i < currentFolder.folders.length; i++) {
-        const subFolder: TalFolder = currentFolder.folders[i];
-        this.deleteFolder(subFolder, folder);
-      }
+      
+      this.project?.driver.delete(folder.path).then(()=>{
+        this.refreshRoot();
+      })
+      
     }
-    */
+
   }
   /***************/
 
@@ -297,6 +416,7 @@ export class FileExplorerWidgetComponent implements OnInit {
 
 
   public addNewItem(folder: FsNodeFolder, type: "file" | "folder") {
+
     this.newItemValue = "";
     this.newItemFolder = folder;
     this.newItemType = type;
@@ -315,23 +435,24 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   public saveNewItem() {
+
     if (!this.newItemError) {
       this.newItemValue = this.newItemValue.trim();
       if (this.newItemValue.length > 0) {
+
         if (this.newItemFolder) {
           if (this.newItemType === "file") {
             let path = this.newItemFolder.path + "/" + this.newItemValue
             this.project?.driver.writeFile(path, "").then(()=>{
               this.refreshRoot()
             })
-            /*
-            this.newItemFolder.files.push({
-              name: this.newItemValue,
-              content: ""
-            } as TalFile );
-            */
+
           } else {
-            this.project?.driver.createDirectory("./"+this.newItemValue).then(()=>{
+
+            // Double slash on path when folder is created under root does not create problems
+            let path = this.newItemFolder.path + "/" + this.newItemValue 
+            console.log(path)
+            this.project?.driver.createDirectory(path).then(()=>{
               this.refreshRoot()
             })
             
@@ -342,10 +463,7 @@ export class FileExplorerWidgetComponent implements OnInit {
               folders: []
             });
 
-            //this.bindCollapseEvent();
           }
-          //this.refreshRoot()
-          //this.change?.emit(this.root);
         }
       }
     }
@@ -397,17 +515,19 @@ export class FileExplorerWidgetComponent implements OnInit {
         console.log("extractTar:createDirectory:")
         let folder = folders[idx]
         let path = folder.path
-        console.log("extractTar:createDirectory:",path)
-        await this.project?.driver.createDirectory(path)
+        let pathMOD = path.substring(path.indexOf("/"));
+        console.log("extractTar:createDirectory:",pathMOD)
+        await this.project?.driver.createDirectory(pathMOD)
       }
       console.log("extractTar:createDirectory:DONE")
       for(var idx in files){
         console.log("extractTar:writeFile:")
         let file = files[idx]
         let path = file.path
+        let pathMOD = path.substring(path.indexOf("/"));
         let content = file.content
         console.log("extractTar:writeFile:",path,content)
-        await this.project?.driver.writeFile(path, content)
+        await this.project?.driver.writeFile(pathMOD, content)
       }
       console.log("extractTar:writeFile:DONE")
       this.refreshRoot()
@@ -417,18 +537,529 @@ export class FileExplorerWidgetComponent implements OnInit {
     return true
   }
 
-  public export() {
-    let items = this.fs.treeToList(this.fsroot)
-    if(items.length == 0 ) {
-      console.log("export: No files found to be exported")
+  public export(mode:string) {
+    if (mode != 'Github-code') {
+
+      let items = this.fs.treeToList(this.fsroot)
+      if(items.length == 0 ) {
+        console.log("export: No files found to be exported")
+      }
+  
+      console.log("export:items:",items)
+      Tar.pack(items, (tarball:ArrayBuffer)=>{
+        let tarname = "tal-project-"+ Date.now()+".tal.tar"
+        console.log('export:tarball:',tarname,tarball)
+  
+        switch (mode) {
+          case 'Local':
+            this.triggerDownload(tarname, tarball, "application/x-tar");
+            break;
+          case 'Google':
+            this.uploadGoogleDrive(tarname, tarball, "application/x-tar");
+            break;
+          case 'Microsoft':
+            this.uploadOneDrive(tarname, tarball, "application/x-tar");
+            break;
+          case 'Github-archive':
+            this.uploadGitHub('Github-archive', tarname, tarball, "application/x-tar");
+            break;
+          default:
+            break;
+  
+        }
+      })
+
+    } else {
+      this.uploadGitHub('Github-code');
     }
 
-    console.log("export:items:",items)
-    Tar.pack(items, (tarball:ArrayBuffer)=>{
-      let tarname = "tal-project-"+ Date.now()+".tal.tar"
-      console.log('export:tarball:',tarname,tarball)
-      this.triggerDownload(tarname, tarball, "application/x-tar")
+    
+
+  }
+
+  //----------------------------------------------//
+  //------------------- GITHUB -------------------//
+  //----------------------------------------------//
+  
+  private popupwindow(url:string, title:string, w:number, h:number) {
+    var left = (screen.width/2)-(w/2);
+    var top = (screen.height/2)-(h/2);
+
+    return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=yes, width='+w+', height='+h+', top='+top+', left='+left);
+  }
+
+
+  public uploadGitHub(mode:string, filename?:string, content?:ArrayBuffer, mime="application/octet-stream") {
+
+    console.log("GitHub");
+
+    var url = `https://github.com/login/oauth/authorize?client_id=8fd3343f822c2429ad95&scope=user%20repo`;
+    var popupWindow = this.popupwindow(url, "GitHub Login", 400, 530);
+
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("username");
+
+    var codeParam: string | null = "";
+    
+    var self = this;
+    const checkURLChange = setInterval(function() {
+      if (!popupWindow || popupWindow.closed) {
+          clearInterval(checkURLChange);
+          console.log('Popup window closed.');
+
+      } else if (popupWindow.location.href.indexOf("github.com") === -1) { //url does not contains "github.com"
+          console.log('URL in popup window changed:', popupWindow.location.href);
+          
+          const queryString = popupWindow.location.search;
+          const urlParams = new URLSearchParams(queryString);
+          codeParam = urlParams.get("code");
+          console.log("CODE:", codeParam)
+          
+          popupWindow.close();
+          
+          if(codeParam && (localStorage.getItem("accessToken") === null)) {
+      
+            if (mode === 'Github-archive') {
+
+              self.githubService.getAccessToken(codeParam)
+              .then(() => self.githubService.getUserData())
+              .then(() => self.githubService.getRepository('TALightProject-Archives'))
+              .then((data) => {
+                
+                if (data.message == "Not Found") {
+                  self.githubService.createRepository('TALightProject-Archives').then(() => { if (filename && content) { self.uploadFile('TALightProject-Archives', filename, content, mime) }})
+                } else {
+                  if (filename && content) {
+                    self.uploadFile('TALightProject-Archives', filename, content, mime);
+                  }
+                }
+              });
+            
+            } else {
+              self.githubService.getAccessToken(codeParam)
+              .then(() => self.githubService.getUserData())
+              .then(() => self.githubService.getRepoList())
+              .then((data) => {
+                
+                let condition = (repo: { name: string; }) => repo.name == 'TALightProject-Archives';
+                let isPresentRepo = data.findIndex(condition)
+                    
+                if (isPresentRepo !== -1) { data.splice(isPresentRepo, 1); }
+                
+                self.reposList = data
+              })
+              .then(() => self.newRepoOwner = localStorage.getItem("username"))
+              .then(() => {
+                self.newRepoName=''; 
+                self.selectedRepo=undefined; 
+                self.exportVisible = true; 
+                self.detectInput()
+              })
+            }
+          }
+      }
+    }, 1000); // Check every second until condition on the url is satisfied
+
+  }
+
+  public downloadGithub() {
+
+    console.log("GitHub");
+
+    var url = `https://github.com/login/oauth/authorize?client_id=8fd3343f822c2429ad95&scope=user%20repo`;
+    var popupWindow = this.popupwindow(url, "GitHub Login", 400, 530);
+
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("username");
+
+    var codeParam: string | null = "";
+    
+    var self = this;
+    const checkURLChange = setInterval(function() {
+      if (!popupWindow || popupWindow.closed) {
+          clearInterval(checkURLChange);
+          console.log('Popup window closed.');
+
+      } else if (popupWindow.location.href.indexOf("github.com") === -1) { //url does not contains "github.com"
+          console.log('URL in popup window changed:', popupWindow.location.href);
+          
+          const queryString = popupWindow.location.search;
+          const urlParams = new URLSearchParams(queryString);
+          codeParam = urlParams.get("code");
+          console.log("CODE:", codeParam)
+          
+          popupWindow.close();
+          
+          if(codeParam && (localStorage.getItem("accessToken") === null)) {
+      
+              self.githubService.getAccessToken(codeParam)
+              .then(() => self.githubService.getUserData())
+              .then(() => self.githubService.getRepoList())
+              .then((data) => {
+                
+                let condition = (repo: { name: string; }) => repo.name == 'TALightProject-Archives';
+                let isPresentRepo = data.findIndex(condition)
+                    
+                if (isPresentRepo !== -1) { data.splice(isPresentRepo, 1); }
+                
+                self.reposList = data
+              })
+              .then(() => {
+                self.selectedRepo = '' ; 
+                self.importButtonRepoDisabled = true; 
+                self.importVisible = true
+              })
+          }  
+      }
+    }, 1000); // Check every second until condition on the url is satisfied
+    
+  }
+
+
+  public uploadFiles() {
+    this.exportVisible = false;
+
+    let items = this.fs.treeToList(this.fsroot);
+
+    let tree:any = [];
+
+    while (items.length !== 0) {
+      let item = items.shift();
+      let file = item as FsNodeFile;
+
+      let content;
+
+      if( file.content ){
+        console.log("Process:file", file)
+        if ( file.content instanceof ArrayBuffer ) {
+          content = new TextDecoder().decode(file.content);
+        } else{
+          content = file.content
+        }
+  
+        tree.push({
+          path: file.path.slice(1),
+          mode: '100644',
+          type: 'blob',
+          content: content
+        })
+      } 
+    }
+
+    console.log("TREE: ", tree);
+    let parentCommitsha:any;
+
+    let repository:string;
+
+    if (this.exportDropDisabled) {
+      repository = this.newRepoName;
+
+      this.githubService.createRepository(repository)
+      .then(() => this.githubService.getReference(repository))
+      .then((data) => {  parentCommitsha = data.object.sha; })
+      .then(() => this.githubService.createTree(repository, tree))
+      .then((data) => this.githubService.createCommit(repository, data.sha, parentCommitsha))
+      .then((data) => this.githubService.updateReference(repository, data.sha))
+      .then((data) => {
+
+        // Show notify on screen
+        if (!data.error) { 
+          this.showToastMessage('success', 'Upload successful') 
+        } else { 
+          this.showToastMessage('error', 'Upload failed'); 
+        }
+      })
+
+    } else {
+      repository = this.selectedRepo.name;
+
+      this.githubService.getReference(repository)
+      .then((data) => {  parentCommitsha = data.object.sha; })
+      .then(() => this.githubService.createTree(repository, tree))
+      .then((data) => this.githubService.createCommit(repository, data.sha, parentCommitsha))
+      .then((data) => this.githubService.updateReference(repository, data.sha))
+      .then((data) => {
+
+      // Show notify on screen
+      if (!data.error) { 
+        this.showToastMessage('success', 'Upload successful') 
+      } else { 
+        this.showToastMessage('error', 'Upload failed'); 
+      }
+      })
+    }
+
+  }
+
+  
+  public replaceProject(data:any) {
+    // Before delete files and folders from root, then import project from Github
+    this.project?.driver.scanDirectory('/').then((folder)=>{
+      this.fsroot = folder ?? FsService.EmptyFolder
+      this.deleteFolder(this.fsroot, this.fsroot)
+
+      this.refreshRoot();
+
+    }).then(() => this.importProject(data))
+  }
+
+
+  public downloadFiles() {
+
+    this.importVisible = false;
+    
+    this.githubService.getRepositoryAsTar(this.selectedRepo.name)
+    .then((url) => this.githubService.getTar(url))
+    .then(async (response) => { 
+      let data = await response.arrayBuffer(); 
+      this.replaceProject(data); 
     })
+  }
+
+
+  private async uploadFile(repository:string, filename:string, content:ArrayBuffer, mime:string) {
+    console.log("UPLOAD FILE")
+
+    // Prepare data to upload on GitHub
+    var binary = '';
+    var bytes = new Uint8Array( content );
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+      binary += String.fromCharCode( bytes[ i ] );
+    }
+
+    var bodyObj = JSON.stringify({
+      "content": binary
+    });
+
+    await fetch("http://localhost:4000/uploadFile?username=" + localStorage.getItem("username")  + "&filename=" + filename + "&repository=" + repository, {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + localStorage.getItem("accessToken"), // Bearer ACCESSTOKEN
+      "Content-Type": "application/json"
+    },
+    body: bodyObj,
+    }).then((response) => {
+
+      return response.json();
+    }).then((data) => {
+        console.log("UPLOAD RESPONSE:", data);
+
+      // Show notify on screen
+      if (data.commit) { 
+        this.showToastMessage('success', 'Upload successful') 
+      } else { 
+        this.showToastMessage('error', 'Upload failed'); 
+      }
+        
+    })
+  }
+
+
+  public enableButton(mode: any) {
+
+    if (mode === 'export') {
+      this.exportButtonRepoDisabled = false;
+    } else {
+      this.importButtonRepoDisabled = false;
+    }
+    
+  }
+
+  public detectInput() {
+
+      this.repoNameHelp = "Enter new repository name.";
+      setTimeout(() => {
+        let repoLabel = document.getElementById('repoName-help') as HTMLElement;
+        repoLabel.style.color = "black";
+      }, 0)
+
+      if (this.newRepoName.length > 0) {
+        this.exportDropDisabled = true;
+
+        let condition = (repo:any) => repo.name == this.newRepoName
+        let repoFound = this.reposList.findIndex(condition);
+      
+        if (repoFound !== -1) {
+
+          this.repoNameHelp = "The repository '" + this.newRepoName + "' already exists on this account.";
+          setTimeout(() => {
+            let repoLabel = document.getElementById('repoName-help') as HTMLElement;
+            repoLabel.style.color = "red";
+          }, 0)
+
+          this.exportButtonRepoDisabled = true;
+  
+        } else if (this.newRepoName === 'TALightProject-Archives') {
+          
+          this.repoNameHelp = "The repository '" + this.newRepoName + "' is only for uploading archives.";
+          setTimeout(() => {
+            let repoLabel = document.getElementById('repoName-help') as HTMLElement;
+            repoLabel.style.color = "red";
+          }, 0)
+
+          this.exportButtonRepoDisabled = true;
+
+        } else {
+          
+          this.repoNameHelp = "Enter new repository name.";
+          setTimeout(() => {
+            let repoLabel = document.getElementById('repoName-help') as HTMLElement;
+            repoLabel.style.color = "black";
+          }, 0)
+
+          this.exportButtonRepoDisabled = false;
+        }
+      } else {
+        this.exportDropDisabled = false;
+
+        if (this.selectedRepo == undefined) {
+          this.exportButtonRepoDisabled = true;
+        }
+      } 
+  }
+  
+
+  public signIn() {
+
+    // Google sign-in
+    // asl-google-signin-button is a wrapper of a clickable div which is responsible to open sign-in popup
+
+    this.googleLogin = true; // -> TODO: Verify when set tt/ff this flag
+    let element: HTMLElement = document.getElementById("g_upload")?.children[0].children[0].children[0] as HTMLElement;
+    element.click();
+
+  }
+
+
+  public async uploadGoogleDrive(filename:string, content:ArrayBuffer|string, mime="application/octet-stream") {
+    
+    var folderId;
+    var fileMetadata;
+    var data;
+    var response;
+
+    // Search for TALightProjects Folder
+    response = await fetch("https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.folder' and name='TALightProjects'", {
+      method: "GET",
+      headers: { 
+        Authorization: "Bearer " + this.accessToken
+      },
+    });
+    
+    data = await response.json();
+
+    if (data.files.length == 0) {
+
+      // Create TALightProjects Folder
+      fileMetadata = {
+        name: 'TALightProjects',
+        mimeType: 'application/vnd.google-apps.folder',
+      };
+
+      const response = await fetch("https://www.googleapis.com/drive/v3/files", {
+        method: "POST",
+        headers: { 
+          Authorization: "Bearer " + this.accessToken,
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify(fileMetadata)
+      });
+
+      data = await response.json();
+      folderId = data.id
+
+    }
+    else {
+      folderId = data.files[0].id;
+    }
+
+    // Upload file under TALightProjects Folder on Drive 
+    var formData = new FormData();
+
+    fileMetadata = {
+      name: filename,
+      parents: [folderId]
+    };
+ 
+    formData.append("metadata", new Blob([JSON.stringify(fileMetadata)], { type: "application/json" }));
+    formData.append("data", new Blob([content], { type: mime}) , filename );
+
+
+    const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+      method: "POST",
+      body: formData,
+      headers: { Authorization: "Bearer " + this.accessToken },
+    })
+
+    data = await res.json();
+
+    // Reset user connection params
+    this.user = undefined;
+    this.accessToken = '';
+
+    // Show notify on screen
+    if (!data.error) { 
+      this.showToastMessage('success', 'Upload successful') 
+    } else { 
+      this.showToastMessage('error', 'Upload failed'); 
+    }
+
+    this.googleLogin = false;
+    
+  }
+
+  public showToastMessage(severity: string, detail: string) {
+    this.messageService.add({
+      key: 'tl',
+      severity: severity,
+      summary: 'Info',
+      detail: detail,
+  });
+  }
+
+  public async uploadOneDrive(filename:string, content:ArrayBuffer|string, mime="application/octet-stream"){
+
+    this.microsoftLogin = true;
+
+    const response = await this.authService.signIn(MicrosoftLoginProvider.PROVIDER_ID);
+    var res;
+
+    var accessToken = response.authToken;
+
+    // NOTE: With OneDrive it is not necessary to check if the TALightsProjects folder 
+    // exists and possibly create it because this is done automatically by the service
+           
+    // Prepare data for request    
+    var formData = new FormData();
+
+    var fileMetadata = {
+      name: filename,
+    };
+ 
+    formData.append("metadata", new Blob([JSON.stringify(fileMetadata)], { type: "application/json" }));
+    formData.append("content", new Blob([content], { type: mime}) , filename );
+
+    res = await fetch("https://graph.microsoft.com/v1.0/me/drive/root:/TALightsProjects/" + filename + ":/content", {
+      method: "PUT",
+      body: content,
+      headers: { 
+        Authorization: "Bearer " + accessToken,
+        'Content-Type': mime
+      },
+    });
+   
+    const data = await res.json();
+
+    this.microsoftLogin = false;
+
+    // Show notify on screen
+    if (!data.error) { 
+      this.showToastMessage('success', 'Upload successful') 
+    } else { 
+      this.showToastMessage('error', 'Upload failed'); 
+    }
+
   }
 
   public triggerDownload(filename:string, content:ArrayBuffer|string, mime="application/octet-stream"){

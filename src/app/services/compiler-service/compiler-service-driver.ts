@@ -12,7 +12,7 @@ export class CompilerDriver implements ProjectDriver {
   public fsList:FsNodeList=[];
   public fsListfiles:FsNodeFileList=[];
 
-  public mountPoint = "/mnt"
+  public mountPoint = "/TALight"
   public mountRoot = "."
   
   public requestIndex = new Map<UID, CompilerRequestHandler>();
@@ -66,6 +66,7 @@ export class CompilerDriver implements ProjectDriver {
 
         case CompilerMessageType.WriteFile:       this.didReceiveWriteFile(msgSent, msgRecived, resolvePromise); break;
         case CompilerMessageType.ReadFile:        this.didReceiveReadFile(msgSent, msgRecived, resolvePromise); break;
+        case CompilerMessageType.RenameItem:      this.didReceiveRenameItem(msgSent, msgRecived, resolvePromise); break;
         
         case CompilerMessageType.Delete:          this.didReceiveDelete(msgSent, msgRecived, resolvePromise); break;
         case CompilerMessageType.Exists:          this.didReceiveExists(msgSent, msgRecived, resolvePromise); break;
@@ -219,6 +220,20 @@ export class CompilerDriver implements ProjectDriver {
     let node = JSON.parse(this.dataToString(msgRecived.contents[0]),this.internal_jsonReplacer)
     console.log("didReceiveScanDirectory: ", node)
     resolvePromise( node )
+  }
+
+  private didReceiveRenameItem(msgSent:CompilerMessage, msgRecived:CompilerMessage, resolvePromise:PromiseResolver<Boolean> ){
+    //TODO: do the actual thing 
+    //let node = JSON.parse(this.dataToString(msgRecived.contents[0]),this.internal_jsonReplacer)
+    //console.log("didReceiveRenameItem: ", node)
+    
+    if (msgSent.args.length != 1){ 
+      resolvePromise(false); 
+    }
+    let pathSent = msgSent.args[0];
+    let pathRecived = msgRecived.args[0];
+
+    resolvePromise(pathSent == pathRecived)
   }
 
   private internal_jsonReplacer(key:any,value:any){
@@ -534,6 +549,19 @@ export class CompilerDriver implements ProjectDriver {
     }
     
     let resultPromise = this.sendMessage<FsNodeFolder | null>(message);
+    return resultPromise;
+  }
+
+  public async renameItem(oldpath: string, newpath: string): Promise<boolean> {
+    let message: CompilerMessage = {
+      uid: this.requestUID(),
+      type: CompilerMessageType.RenameItem,
+      args: [oldpath, newpath],
+      contents: [],
+    }
+    
+    let resultPromise = this.sendMessage<boolean>(message);
+
     return resultPromise;
   }
 

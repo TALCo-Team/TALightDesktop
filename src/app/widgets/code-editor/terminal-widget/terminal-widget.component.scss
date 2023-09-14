@@ -1,0 +1,36 @@
+
+:host ::ng-deep .dark-panel.p-terminal {
+    
+    height: 400px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: large;
+    line-height: 1.2;
+    border-color: black;
+    background: black;
+    color:rgb(74, 229, 198);
+    
+
+    .p-terminal-welcomeMessage {
+        background: #212121;
+    }
+
+    .p-terminal-response {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: large;
+        color:rgb(197, 134, 192);
+        padding-bottom: 10px;
+    }
+
+    .p-terminal-response {
+        white-space: pre-wrap;
+    }
+
+    .p-terminal-input{
+        font-family: 'Courier New', Courier, monospace;
+        font-size: large;
+    }
+
+    .p-terminal-content{
+        padding-top: 20px;
+    }
+}

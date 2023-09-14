@@ -76,7 +76,9 @@ export class ServiceDescriptor {
     public exportArgs(){
       let args:any = {}
       this.args.forEach(arg=>{
-        args[arg.name]=arg.value
+        if (arg.value !== arg.default) {
+          args[arg.name]=arg.value
+        }
       })
       return args;
     }

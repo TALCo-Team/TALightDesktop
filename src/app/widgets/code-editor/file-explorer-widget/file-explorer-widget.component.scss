@@ -188,3 +188,23 @@ input.tal-item-input{
         border:1px solid var(--red-500);
     }
 }
+
+.gbtn{
+  //border:none;
+  display: none;
+  //cursor: pointer;
+}
+
+::ng-deep {
+  .p-tieredmenu {
+    width: fit-content;
+  }
+  
+  .p-dialog-title {
+    color: rgb(63, 81, 179);
+  }
+
+  .p-dialog-content {
+    white-space: pre-line;
+  }
+}
