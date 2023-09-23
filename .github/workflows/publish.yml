@@ -1,0 +1,56 @@
+name: 'publish'
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: 'Operative System'
+        required: true
+        default: 'ubuntu-20.04'
+        type: choice
+        options:
+          - 'ubuntu-20.04'
+          - 'ubuntu-latest'
+          - 'macos-latest'
+          - 'windows-latest'
+      draftRelease:
+        description: 'Draft Release'
+        required: true
+        default: true
+        type: boolean
+      preRelease:
+        description: 'Pre Release'
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  publish-tauri:
+    permissions: write-all
+    strategy:
+      fail-fast: false
+
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: install dependencies (ubuntu only)
+        if: inputs.os == 'ubuntu-20.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+      - name: install app dependencies and build it
+        run: yarn && yarn tauri build
+      - uses: tauri-apps/tauri-action@v0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: talightdesktop-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
+          releaseName: 'TALightDesktop v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: ${{ inputs.draftRelease }}
+          prerelease: ${{ inputs.preRelease }}
