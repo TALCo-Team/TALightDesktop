@@ -5,6 +5,29 @@
     height:100%;
 }
 
+:host ::ng-deep .tal-problem-widget-args-row { 
+
+    .p-inputtext {
+        //border: 1px solid red;
+        //margin-top: 7px;
+        //margin-bottom: 10px;
+        min-height: 20px;
+        height: 20px;
+        //margin-left: 10px;
+        //padding-bottom: 10px;
+    }
+
+    .tal-square-button {
+        margin-top: 7px;
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-top: 15px;
+        padding-bottom: 15px;
+        
+    }
+    
+}
+
 ::ng-deep {
     
     ::ng-deep{
@@ -18,6 +41,8 @@
             flex-wrap: wrap;
         }
     }
+
+
 
     
     .tal-problem-widget-row-problem, .tal-problem-widget-row-service{

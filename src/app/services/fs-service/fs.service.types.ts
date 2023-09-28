@@ -42,6 +42,8 @@ export interface FsServiceDriver {
 
   readDirectory(fullpath:string): Promise<FsNodeFolder|null>;
 
+  renameItem(oldpath: string, newpath:string): Promise<boolean>;
+
   scanDirectory(fullpath:string): Promise<FsNodeFolder|null>;
 
   delete(fullpath:string): Promise<boolean>;

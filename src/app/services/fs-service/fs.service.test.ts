@@ -24,8 +24,13 @@ export class IndexeddbFsDriver implements FsServiceDriver {
     }
     this.fs = createFs(options);
   }
-  
-  
+
+
+  async renameItem(oldpath: string, newpath: string): Promise<boolean> {
+    //await this.fs.renameFile(oldpath, newpath); TODO
+    return await this.fs.exists(oldpath);
+    //return null;
+  }
 
   async ready(): Promise<boolean>{
     return true;

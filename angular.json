@@ -29,6 +29,7 @@
               }
             },
             "allowedCommonJsDependencies": [
+              "rxjs-compat",
               "lodash"
             ],
             "outputPath": "dist/talight-desktop",

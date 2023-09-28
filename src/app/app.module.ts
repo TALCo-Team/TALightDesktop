@@ -21,6 +21,8 @@ import { SelectProblemViewComponent } from './views/select-problem-view/select-p
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { TopbarModule } from './widgets/topbar/topbar.module';
+import { HttpClientModule } from '@angular/common/http';
+
 
 
 @NgModule({
@@ -28,7 +30,7 @@ import { TopbarModule } from './widgets/topbar/topbar.module';
     AppComponent,
     HomeViewComponent,
     ConnectViewComponent,
-    SelectProblemViewComponent
+    SelectProblemViewComponent,
   ],
   imports: [
     BrowserModule,
@@ -48,7 +50,8 @@ import { TopbarModule } from './widgets/topbar/topbar.module';
     SplitterModule,
     RadioButtonModule,
     CodeEditorModule,
-    TopbarModule
+    TopbarModule,
+    HttpClientModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
