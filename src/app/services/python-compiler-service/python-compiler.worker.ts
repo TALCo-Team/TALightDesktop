@@ -7,22 +7,17 @@ import { FsNodeFolder } from "../fs-service/fs.service.types";
 
 
 let pyodideRoot = "/"
-let pyodideMount = "/mnt"
+let pyodideMount = "/TALight"
 
 // Bootstrap pyodide
 
-//importScripts("https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js");
-
-importScripts("./assets/pyodide/pyodide.js");
-
+importScripts("../../../assets/pyodide/pyodide.js");
 declare var loadPyodide: any;
 
 //let worker: PyodideFsWorker;
 async function main() {
   let worker = new PyodideWorker(pyodideRoot, pyodideMount);
 }
-
-
 
 class PyodideWorker{
   
@@ -103,6 +98,7 @@ class PyodideWorker{
     }
 
     //console.log(loadPyodide)
+    
     this.pyodide = await loadPyodide(options);
     this.fs = this.pyodide.FS;
     await this.pyodide.loadPackage(["micropip"]);
@@ -231,8 +227,9 @@ class PyodideWorker{
     //TOD: unused??
     // localThis.sendState(CompilerState.Stdin)
     console.log('PyodideWorker:onStdin:');   
-    if (this.stdinBuffer.length > 0){}
-    let item = this.stdinBuffer.shift()
+    //if (this.stdinBuffer.length > 0){}    -> What does this do?
+    //let item = this.stdinBuffer.shift()
+    let item = this.stdinBuffer[0];
     console.log('PyodideWorker:onStdin:', item);
     return item
   }
@@ -418,6 +415,9 @@ class PyodideWorker{
       case CompilerMessageType.ScanDirectory:
         action=(request)=>{return this.scanDirectory(request)};
         break;
+      case CompilerMessageType.RenameItem:
+        action=(request)=>{return this.renameItem(request)};
+        break;
       case CompilerMessageType.Delete:
         action=(request)=>{return this.delete(request)};
         break;
@@ -575,6 +575,8 @@ class PyodideWorker{
   }
 
   createDirectory(request:CompilerRequest):CompilerResponse{
+
+    console.log("PYTHON CREATE DIRECTORY")
     let response = this.responseFromRequest(request); 
     if ( request.message.args.length < 1 ){ 
       return this.responseError(response,"createDirectory: Requires at least 1 path as argument");
@@ -582,10 +584,15 @@ class PyodideWorker{
     //TODO: allow for multiple queries;
     let fullpath = request.message.args[0];
     if(!this.internal_exists(this.mount + fullpath)){
+      console.log("CI ENTRO")
+      console.log("ABC: ", this.mount + " " + fullpath) 
+      //var str = this.mount + fullpath.replace('.', '')
+      //console.log(str)
       let res = this.fs.mkdir(this.mount + fullpath);
       console.log('pydiode:mkdir:',res)
       this.syncFS()
     }
+    
     response.message.args = [fullpath];
     return response;
   }
@@ -633,6 +640,30 @@ class PyodideWorker{
       }
     }
     return value
+  }
+
+  renameItem(request:CompilerRequest):CompilerResponse {
+    console.log("PYTHON RENAME ITEM");
+
+    let response = this.responseFromRequest(request);
+
+    console.log("RENAME REQUEST: ", request)
+    console.log("RENAME RESPONSE: ", response)
+
+    const oldpath = this.mount + request.message.args[0];
+    const newpath = this.mount + request.message.args[1];
+
+    console.log("OLDPATH: ", oldpath)
+    console.log("NEWPATH: ", newpath)
+
+    console.log("OLD FS: ", this.fs)
+    //var res = this.fs.rename(oldpath, newpath);
+    this.fs.rename(oldpath, newpath);
+    this.syncFS();
+    //console.log("NEW FS: ", res)
+
+    response.message.args = [oldpath, newpath];
+    return response;
   }
 
 

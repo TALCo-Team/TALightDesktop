@@ -94,7 +94,7 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
 
   // get accessor
   public get value(): string {
-    console.log("MonacoEditor:value:get")
+    //console.log("MonacoEditor:value:get")
     return this.getFileContent(); 
   }
 

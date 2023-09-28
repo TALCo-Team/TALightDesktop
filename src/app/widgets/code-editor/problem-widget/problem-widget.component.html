@@ -9,7 +9,7 @@
   <!-- API: PROBLEMS and SERVICES -->
   <div class="tal-problem-widget-row tal-problem-widget-row-problem">
     <p-dropdown #problemDropdown
-                placeholder="Seleziona un problema" 
+                placeholder="Select a problem" 
                 class="tal-problem-widget-problem-selector" 
                 scrollHeight="50rem"
                 [overlayOptions]="dropdownOptions"
@@ -29,16 +29,16 @@
 
     </p-dropdown>
 
-    <button pButton class="p-button-danger tal-square-button" icon="pi pi-refresh" title="Refresh" pTooltip="Refresh"
+    <button pButton class="p-button-danger tal-square-button" icon="pi pi-refresh" pTooltip="Refresh"
       (click)="reloadProblemList()" *ngIf="!isLoading()"></button>
 
-    <button pButton class="p-button-danger tal-square-button" icon="pi pi-spin pi-spinner" title="Refresh" pTooltip="Refresh" disabled
+    <button pButton class="p-button-danger tal-square-button" icon="pi pi-spin pi-spinner" pTooltip="Refresh" disabled
       *ngIf="isLoading()"></button>
   </div>
 
   <div class="tal-problem-widget-row tal-problem-widget-row-problem">
     <p-dropdown #serviceDropdown
-                placeholder="Seleziona un servizio" 
+                placeholder="Select a service" 
                 class="tal-problem-widget-problem-selector" 
                 scrollHeight="50rem"
                 [overlayOptions]="dropdownOptions"
@@ -58,7 +58,7 @@
     </p-dropdown>
 
     <button pButton class="p-button-help tal-square-button" icon="pi pi-download" (click)="apiDownloadAttachment()"
-      title="Download Attachments" pTooltip="Scarica allegati"></button>
+      pTooltip="Download Attachments"></button>
 
   </div>
 
@@ -93,21 +93,22 @@
                     [title]="arg.value.regex+''"></i>
                 </div>
                 <!-- CELL: name -->
-                <div class="tal-problem-widget-args-row-name" [title]="arg.value.name">{{arg.value.name}}</div>
+                <div class="tal-problem-widget-args-row-name" style="margin-right: 30px;" [title]="arg.value.name">{{arg.value.name}}</div>
 
                 <!-- CELL: field -->
                 <div class="tal-problem-widget-args-row-field">
-                  <input pInputText type="text" class="top-bar-url-input p-inputtext-sm" [(ngModel)]="arg.value.value"
+                  <input pInputText class type="text" class="p-inputtext-sm" [(ngModel)]="arg.value.value"
                     [placeholder]="arg.value.default" [title]="arg.value.name +': '+arg.value.regex" (change)="argDidChange(arg.value,$event)"
                     (blur)="argDidChange(arg.value,$event)" (focus)="argDidFocus(arg.value,$event)">
                 </div>
 
                 <!-- CELL: reset -->
                 <div class="tal-problem-widget-args-row-actions">
-                  <button pButton class="tal-square-button" icon="pi pi-trash" (click)="argDidReset(arg.value,$event)"
+                  <button pButton class="p-button-lg" icon="pi pi-delete-left" (click)="argDidReset(arg.value,$event)"
                     title="Reset to default" pTooltip="Reset to default"></button>
                 </div>
               </div>
+              <!--class="tal-square-button"-->
 
               <!-- regex -->
               <div class="tal-problem-widget-args-subrow" [id]="'args-regex-panel-'+arg.value.key"
@@ -195,3 +196,5 @@
     </p-tabView>
   </div>
 </div>
+
+<p-toast position="bottom-right" key="br"></p-toast>

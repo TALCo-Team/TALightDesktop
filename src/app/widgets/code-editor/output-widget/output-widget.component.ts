@@ -42,7 +42,7 @@ export class OutputWidgetComponent {
   public pyodideStateTooltip = "State: Unknown"
   public stdinHighlight?:TimeoutID;
   
-  constructor( public zone: NgZone){}
+  constructor(  public zone: NgZone) {}
   
   ngOnInit() {}
 

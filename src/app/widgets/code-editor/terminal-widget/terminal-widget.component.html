@@ -1,0 +1,6 @@
+<p style="font-size: large;"><strong> Playground mode</strong> allows you to interact directly with the server</p>
+<br>
+<div spellcheck="false">
+    <p-terminal (keyup.control.C)="pressedCtrlC()" (keyup.arrowup)="UndoHistory()" (keyup.arrowdown)="RedoHistory()" ngDefaultControl [(ngModel)]="response" styleClass="dark-panel" welcomeMessage="TALight Terminal [Version 1.0]"  [prompt]="prompt">
+    </p-terminal>
+</div>

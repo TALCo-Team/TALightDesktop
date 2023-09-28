@@ -1,0 +1,122 @@
+
+:host{
+    width:100%;
+    height:100%;
+}
+
+.row-icon{
+    display: flex;
+    font-size: 1.2rem;
+    position: absolute;
+    right: 5px;
+    top: 5px;
+}
+
+.log-text {
+    line-height: 30px; 
+    margin-right: 30px;
+}
+
+.log-line {
+    margin-top: 0;
+    margin-bottom: 0;
+    vertical-align: middle;
+    min-height: 30px;
+    font-family: monospace;
+    position:relative;
+    overflow:auto;
+    max-height: 100px;
+}
+
+.flash-div {
+    animation: flash 1s ease-in-out 3;
+    animation-play-state: paused;
+}
+  
+  @keyframes flash {
+    0%, 100% {
+        border: 0px;
+    }
+    50% {
+        box-shadow:  2px 2px 2px red,
+              -2px -2px 2px red,
+               2px -2px 2px red,
+              -2px  2px 2px red;
+    }
+  }
+
+
+.container-div {
+    width: 500px;
+    height: 600px;
+    margin: 0 auto;
+    padding: 5px;
+}
+
+.content-api{
+    height: auto;
+    box-shadow:  2px 2px 2px rgb(63, 81, 179),
+              -2px -2px 2px rgb(63, 81, 179),
+               2px -2px 2px rgb(63, 81, 179),
+              -2px  2px 2px rgb(63, 81, 179);
+    padding: 1px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    margin-left: 3px;
+    margin-right: 3px;
+    vertical-align:middle;
+}
+
+p {
+    font-size: 16px;
+    line-height: 1.5;
+    overflow-wrap: break-word;
+}
+
+:host ::ng-deep {
+
+    .p-button {
+        margin-left: 10px;
+        margin-right: 3px;
+    }
+
+    .log-container {
+        border-radius: 3px; 
+        border: 1px solid rgb(63, 81, 179); 
+        background-color: rgb(213, 216, 228); 
+        max-height:500px; 
+        height:auto; 
+        padding: 4px;
+        position: relative;
+    }
+
+    .p-button-bar {
+        position: absolute;
+        right: 0;
+        margin-bottom: 5px; 
+        border-radius: 5px; 
+        background-color: rgb(213, 216, 228); 
+        padding: 5px;
+    }
+
+    .log {
+        padding-top: 30px; 
+        border-radius: 3px; 
+        background-color: white; 
+        border: 1px solid rgb(63, 81, 179); 
+        padding: 5px; 
+        margin-top: 60px; 
+        max-height: 300px; 
+        overflow-y: auto;
+        margin-bottom: 5px;
+        margin-left: 3px; 
+        margin-right: 3px; 
+    }
+}
+
+
+
+
+
+
+

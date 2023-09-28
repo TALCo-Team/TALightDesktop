@@ -33,16 +33,18 @@ export enum CompilerState {
 }
 
 
+
+
 export enum CompilerMessageType {
-  Ready = 'Ready', // Deprecated -> SubscribeState
-  Mount = 'Mount', //TODO
-  Unmount = 'Unmount', //TODO
+  Ready = 'Ready',
+  Mount = 'Mount',
+  Unmount = 'Unmount',
   InstallPackages = 'InstallPackages',
   ExecuteFile = 'ExecuteFile',
   ExecuteCode = 'ExecuteCode',
   StopExecution = 'StopExecution',
   SubscribeNotify = 'SubscribeNotify',
-  SubscribeState  = 'SubscribeState',
+  SubscribeState = 'SubscribeState',
   SubscribeStdout = 'SubscribeStdout',
   SubscribeStderr = 'SubscribeStderr',
   SendStdin = 'SendStdin',
@@ -53,6 +55,7 @@ export enum CompilerMessageType {
   ScanDirectory = 'ScanDirectory',
   Delete = 'Delete',
   Exists = 'Exists',
+  RenameItem = "RenameItem"
 }
 
 

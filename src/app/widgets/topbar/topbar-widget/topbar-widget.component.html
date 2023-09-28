@@ -18,10 +18,10 @@
 
     <div class="tal-bar-url">
 
-        <i #statusDot class="pi pi-circle-fill" pTooltip="Status"></i>
+        <i #statusDot class="pi pi-circle-fill" pTooltip="Status" tooltipPosition="left"></i>
 
         <p-autoComplete #urlInput class="top-bar-url-input p-inputtext-sm"
-            (placeholder)="urlCache"  [(ngModel)]="url"
+            (placeholder)="urlCache"  [(ngModel)]="url" pTooltip="Change URL" tooltipPosition="bottom"
             (change)="changeURL($event)" (onSelect)="changeURL($event)" (onBlur)="changeURL($event)" [suggestions]="urlCache"
             (completeMethod)="filterSuggestions($event)" [dropdown]="true">
 
@@ -34,6 +34,6 @@
 
         </p-autoComplete>        
 
-        <button pButton icon="pi {{changeThemIcon}}" class="tal-square-button" (click)="toggleTheme()"></button>
+        <button pButton icon="pi {{changeThemIcon}}" class="tal-square-button" pTooltip="Change theme" (click)="toggleTheme()"></button>
     </div>
 </div>

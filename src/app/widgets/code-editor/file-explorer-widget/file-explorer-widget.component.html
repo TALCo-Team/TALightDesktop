@@ -1,14 +1,14 @@
 <div class="tal-editor-files-tree">
   <div class="tal-editor-files-header">
     <div class="tal-editor-files-left-bar">
-      <button pButton icon="pi pi-file" class="tal-square-button" title="Nuovo file"
-        (click)="closeAllContextMenus($event); addNewItem(fsroot, 'file')" pTooltip="Nuovo file"></button>
-      <button pButton icon="pi pi-folder" class="tal-square-button" title="Nuova cartella"
-        (click)="closeAllContextMenus($event); addNewItem(fsroot, 'folder')" pTooltip="Nuova cartella"></button>
+      <button pButton icon="pi pi-folder" class="tal-square-button" 
+        (click)="closeAllContextMenus($event); addNewItem(fsroot, 'folder')" pTooltip="New folder"></button>
+      <button pButton icon="pi pi-file" class="tal-square-button" 
+        (click)="closeAllContextMenus($event); addNewItem(fsroot, 'file')" pTooltip="New file"></button>
     </div>
     <div class="tal-editor-files-right-bar">
-      <button pButton icon="pi pi-sync" class="tal-square-button" title="Refresh" (click)="closeAllContextMenus($event); syncFilesystem(fsroot)"
-        pTooltip="Aggiorna"></button>    
+      <button pButton icon="pi pi-sync" class="tal-square-button" (click)="closeAllContextMenus($event); syncFilesystem(fsroot)"
+        pTooltip="Refresh"></button>    
     </div>
   </div>
 
@@ -17,26 +17,70 @@
     <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: fsroot }"></ng-container>
   </div>
 
+  <p-dialog header="Choose or create a repository.." [(visible)]="exportVisible" [style]="{ width: '50vw' }">
+
+    <label htmlFor="exportRepoList" style="margin-top: 20px; font-weight: bold;" >Repository list:</label>
+    <div class="flex flex-column gap-2" style="margin-top: 10px;">
+        <p-dropdown id="exportRepoList" appendTo="body" (onChange)="enableButton('export')" [disabled]="exportDropDisabled" [options]="reposList" [(ngModel)]="selectedRepo" placeholder="Select a repository" optionLabel="full_name"></p-dropdown>
+    </div>
+
+    
+    <div class="flex flex-column gap-2">
+      <label htmlFor="repoName" style="margin-top: 20px; font-weight: bold;">Repository name:</label>
+      <tr>
+        <td><input pInputText [(ngModel)]="newRepoOwner" [style]="{ width: '22vw' }" disabled /></td>
+        <td><p style="font-size: xx-large;"> / </p></td>
+        <td><input pInputText id="repoName" (input)="detectInput()" [style]="{ width: '23vw' }" [(ngModel)]="newRepoName" /></td>
+        <small id="repoName-help">{{repoNameHelp}}</small>
+      </tr>
+      
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button id="exportRepoButton" [disabled]="exportButtonRepoDisabled" icon="pi pi-check" (onClick)="uploadFiles()" label="Ok" ></p-button>
+    </ng-template>
+
+  </p-dialog>
+
+  <p-dialog header="Choose a repository.." [(visible)]="importVisible" [style]="{ width: '30vw' }">
+
+    <label htmlFor="importRepoList" style="margin-top: 20px; font-weight: bold;" >Repository list:</label>
+    <div class="flex flex-column gap-2" style="margin-top: 10px;">
+        <p-dropdown id="importRepoList" appendTo="body" (onChange)="enableButton('import')" [disabled]="importDropDisabled" [options]="reposList" [(ngModel)]="selectedRepo" placeholder="Select a repository" optionLabel="full_name"></p-dropdown>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button id="importRepoButton" [disabled]="importButtonRepoDisabled" icon="pi pi-check" (onClick)="importGithubClick($event)" label="Ok" ></p-button>
+    </ng-template>
+
+  </p-dialog>
+
 
   <div class="tal-editor-files-footer">
     <div class="tal-editor-files-left-bar">
-      <button pButton class="p-button-secondary tal-square-button" icon="pi pi-save" title="Salva/Esporta"
-        (click)="closeAllContextMenus($event); export()" pTooltip="Esporta"></button>
+      <button pButton class="p-button-secondary tal-square-button" icon="pi pi-save"
+      (click)="menuExport.toggle($event)" pTooltip="Save/Export"></button>
+
+      <asl-google-signin-button id="g_upload" class="gbtn"></asl-google-signin-button>
+      <p-tieredMenu #menuExport [model]="ExportItems" [popup]="true"></p-tieredMenu>
+
+      <button pButton class="p-button-secondary tal-square-button" icon="pi pi-upload"
+      (click)="menuImport.toggle($event)" pTooltip="Upload/Import"></button>
+      <input id="fileUpload" #fileUpload type="file" style="display: none;" (change)="upload($event)"/>
       
-      <button pButton class="p-button-secondary tal-square-button" icon="pi pi-upload" title="Upload/Importa"
-        (click)="fileUpload.click()" pTooltip="Upload/Import"></button>
-      <input #fileUpload type="file" style="display: none;" (change)="upload($event)"/>
+      <p-tieredMenu #menuImport [model]="ImportItems" [popup]="true"></p-tieredMenu>
     </div>
+
 
     <div class="tal-editor-files-right-bar">
 
-      <button pButton icon="pi pi-eye" class="tal-square-button" *ngIf="showHidden" title="Toggle show hidden files"
-        (click)="closeAllContextMenus($event); toggleHidden()" pTooltip="Mostra file nascosti"></button>
+      <button pButton icon="pi pi-eye" class="tal-square-button" *ngIf="showHidden"
+        (click)="closeAllContextMenus($event); toggleHidden()" pTooltip="Hide hidden files"></button>
 
-      <button pButton icon="pi pi-eye-slash" class="tal-square-button" *ngIf="!showHidden" title="Toggle show hidden files"
-        (click)="closeAllContextMenus($event); toggleHidden()" pTooltip="Nascondi file nascosti"></button>
+      <button pButton icon="pi pi-eye-slash" class="tal-square-button" *ngIf="!showHidden"
+        (click)="closeAllContextMenus($event); toggleHidden()" pTooltip="Show hidden files"></button>
 
-      <button pButton icon="pi pi-cog" class="tal-square-button" title="Settings"
+      <button pButton icon="pi pi-cog" class="tal-square-button"
         (click)="closeAllContextMenus($event); openSettings()" pTooltip="Settings"></button>
       
     </div>
@@ -44,7 +88,7 @@
     
   </div>
 
-
+<p-toast position="top-left" key="tl"></p-toast>
 
 </div>
 
@@ -72,22 +116,22 @@
               <div class="tal-contextmenu-container">
                 <div class="tal-contextmenu-item" (click)="closeAllContextMenus($event); addNewItem(subfolder, 'file')">
                   <i class="pi pi-plus"></i>
-                  <p>Nuovo file</p>
+                  <p>New file</p>
                 </div>
                 <div class="tal-contextmenu-item"
                   (click)="closeAllContextMenus($event); addNewItem(subfolder, 'folder')">
                   <i class="pi pi-plus"></i>
-                  <p>Nuova cartella</p>
+                  <p>New folder</p>
                 </div>
                 <div class="tal-contextmenu-item"
                   (click)="closeAllContextMenus($event); startEditing(folder, subfolder)">
                   <i class="pi pi-pencil"></i>
-                  <p>Rinomina cartella</p>
+                  <p>Rename folder</p>
                 </div>
                 <div class="tal-contextmenu-item"
                   (click)="closeAllContextMenus($event); deleteFolderClick($event, subfolder)">
                   <i class="pi pi-trash"></i>
-                  <p>Elimina cartella</p>
+                  <p>Delete folder</p>
                 </div>
               </div>
             </ng-template>
@@ -124,11 +168,11 @@
             <div class="tal-contextmenu-container">
               <div class="tal-contextmenu-item" (click)="closeAllContextMenus($event); startEditing(folder, file)">
                 <i class="pi pi-pencil"></i>
-                <p>Rinomina file</p>
+                <p>Rename file</p>
               </div>
               <div class="tal-contextmenu-item" (click)="closeAllContextMenus($event); deleteFileClick($event, file)">
                 <i class="pi pi-trash"></i>
-                <p>Elimina file</p>
+                <p>Delete file</p>
               </div>
             </div>
           </ng-template>
@@ -152,5 +196,9 @@
   </div>
 </ng-template>
 
-<p-confirmDialog acceptLabel="Elimina" acceptIcon="pi pi-trash" rejectLabel="Annulla">
+<p-confirmDialog key="dialogDelete" acceptLabel="Yes, delete it" acceptIcon="pi pi-trash" rejectLabel="No, keep it">
+</p-confirmDialog>
+
+
+<p-confirmDialog key="dialogImport" acceptLabel="Yes, I'll proceed" acceptIcon="pi pi-file-import" rejectLabel="No, maybe later">
 </p-confirmDialog>

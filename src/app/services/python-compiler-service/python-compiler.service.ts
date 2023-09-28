@@ -16,7 +16,7 @@ export class PythonCompilerService {
   createPythonProject(){
     console.log("PythonCompilerService:createPythonProject")
     let pyodideRoot = "/"
-    let pyodideMount = "/mnt"
+    let pyodideMount = "/TALight"
     let ppe = new PyodideProjectEnvironment(pyodideRoot, pyodideMount);
     return ppe;
   }

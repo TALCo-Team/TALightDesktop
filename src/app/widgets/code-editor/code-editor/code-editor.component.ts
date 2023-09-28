@@ -17,6 +17,10 @@ import { ExecbarWidgetComponent } from '../execbar-widget/execbar-widget.compone
 import { FileEditorWidgetComponent } from '../file-editor-widget/file-editor-widget.component';
 import { OutputType, OutputWidgetComponent } from '../output-widget/output-widget.component';
 import { ProblemWidgetComponent } from '../problem-widget/problem-widget.component';
+import { ChangeDetectorRef } from '@angular/core';
+import { LogApiWidgetComponent } from '../log-api-widget/log-api-widget.component';
+import { MessageService } from 'primeng/api';
+import { TerminalWidgetComponent } from '../terminal-widget/terminal-widget.component';
 
 @Component({
   selector: 'tal-code-editor',
@@ -42,11 +46,20 @@ export class CodeEditorComponent implements OnInit {
   public fslist: FsNodeList = [];
   public fslistfile: FsNodeFile[] = [];
 
+  public isPresent: string[] = [];
+  public isPresentName: string[] = [];
+  public files: FsNodeFile[] = [];
+
+  public activeIndex = 0;
+  public activeWidget = 0;
+
   @ViewChild("fileExplorer") public fileExplorer!: FileExplorerWidgetComponent;
   @ViewChild("fileEditor") public fileEditor!: FileEditorWidgetComponent;
   @ViewChild("execBar") public execBar!: ExecbarWidgetComponent;
   @ViewChild("problemWidget") public problemWidget!: ProblemWidgetComponent;
   @ViewChild("outputWidget") public outputWidget!: OutputWidgetComponent;
+  @ViewChild("logApiWidget") public logApiWidget!: LogApiWidgetComponent;
+  @ViewChild("terminalWidget") public terminalWidget!: TerminalWidgetComponent;
 
   private output_files:string[]|undefined = undefined;
   private current_output_file:string|undefined = undefined;
@@ -57,22 +70,24 @@ export class CodeEditorComponent implements OnInit {
     private python:PythonCompilerService,
     private api:ApiService,
     private prj: ProjectManagerService,
+    private cdRef:ChangeDetectorRef,
+    private messageService: MessageService
   ) {
     console.log("CodeEditorComponent:constructor", this.prj)
     //TODO: add switch python/cpp
-    
-   
-    
+
   }
 
-  ngOnInit(): void {
-    
-    
-  }
+  ngOnInit(): void {}
 
   ngAfterViewInit(){
     this.outputWidget.enableStdin(false); 
     this.setPythonProject()
+  }
+
+  ngAfterViewChecked()
+  {
+    this.cdRef.detectChanges();
   }
 
   public didStateChangeReady(content?:string){
@@ -105,6 +120,8 @@ export class CodeEditorComponent implements OnInit {
     let filePathList = new Array<string>()
     this.fslistfile.forEach(item=>filePathList.push(item.path))
     this.problemWidget.filePathList = filePathList
+    this.terminalWidget.fslistfile = this.fslistfile;
+    
   }
   
   public didNotify(data:string){
@@ -112,7 +129,7 @@ export class CodeEditorComponent implements OnInit {
     this.outputWidget!.print(data);
     //TODO: if API connect then:
     if(!this.cmdConnect){return;}
-    this.cmdConnect.sendBinary(data + "\n"); //lo \n va aggiunto all'output del bot python
+    this.cmdConnect.sendBinary(data + "\n"); // The \n must be added to the python bot output
   }
 
   public didStateChange(state:CompilerState,content?:string){
@@ -137,7 +154,7 @@ export class CodeEditorComponent implements OnInit {
     this.outputWidget!.print(data);
     //TODO: if API connect then:
     if(!this.cmdConnect){return;}
-    this.cmdConnect.sendBinary(data + "\n"); //lo \n va aggiunto all'output del bot python
+    this.cmdConnect.sendBinary(data + "\n"); // The \n must be added to the python bot output
   }
 
   public didStderr(data:string){
@@ -171,10 +188,20 @@ export class CodeEditorComponent implements OnInit {
   public onServiceChanged(selectedService: ServiceDescriptor){
     console.log("onServiceChanged:",selectedService)
     this.selectedService=selectedService;
-
   }
 
-  async onAttachments(data: ArrayBuffer){
+  public onProblemListChanged(){
+    this.selectedProblem=undefined
+    this.selectedService=undefined
+
+    if (this.logApiWidget.isActive) {
+      this.logApiWidget.addLine("rtal -s " + this.api.url + " list");
+      this.activeWidget = 1;
+    }
+  }
+
+  async onAttachments(data: ArrayBuffer, widget:string){
+    console.log("onAttachments:EVENT: ", event?.target)
     console.log("onAttachments:",data)
     if(!this.selectedProblem){return;}
     console.log("onAttachments:selectedProblem:",this.selectedProblem)
@@ -182,6 +209,8 @@ export class CodeEditorComponent implements OnInit {
     console.log("onAttachments:data:",data)
 
     console.log("extractTar:unpack:")
+    await this.project?.driver.createDirectory('/data')
+    
     Tar.unpack(data, async (files,folders) => {
       console.log("extractTar:unpack:folders",folders)
       for(var idx in folders){
@@ -204,18 +233,88 @@ export class CodeEditorComponent implements OnInit {
         await this.project?.driver.writeFile(path, content)
       }
       console.log("extractTar:writeFile:DONE")
-      
+
+      if (this.logApiWidget.isActive && widget === "problemWidget") {
+        this.logApiWidget.addLine("rtal -s " + this.api.url + " get " + this.selectedProblem?.name);
+        this.activeWidget = 1;
+      }
       
       this.fileExplorer.refreshRoot()
     });
     
   }
 
+  public onItemRenamed(event: any) {
+    var renamedFileIndex = this.isPresent.indexOf(event.oldpath);
+
+    if (renamedFileIndex != -1) {
+      this.removeItem({"index": renamedFileIndex})
+    }
+  }
+
+
+  public onFileDeleted(filePath: string) {
+    var removedFileIndex = this.isPresent.indexOf(filePath);
+
+    // Removed file is open on the code editor, so now close all associated tabs
+    if (removedFileIndex != -1) {
+      this.removeItem({"index":removedFileIndex}) 
+    }
+  }
+
+  // When a tab is closed, the file is removed from array of paths and names
+  public removeItem(event: any){
+    var Removeindex = event.index;
+    this.isPresentName.splice(Removeindex, 1);
+    this.isPresent.splice(Removeindex, 1);
+    this.files.splice(Removeindex, 1);
+    
+    console.log("Tab is closed: ", this.isPresentName);
+
+    if (Removeindex == this.activeIndex) {
+
+      setTimeout(() => {
+        this.activeIndex = 0;
+        this.execBar.selectedFile = this.files[this.activeIndex];
+        this.fileEditor.selectedFile = this.files[this.activeIndex];
+        this.fileExplorer.selectedFile = this.files[this.activeIndex];
+      } , 0);
+    }
+
+    if (Removeindex < this.activeIndex) {
+      setTimeout(() => this.activeIndex = this.activeIndex - 1 , 0);
+    }
+    
+  }
+
+  public changeFile(event:any){
+    setTimeout(() => {
+      this.activeIndex = event.index;
+      this.execBar.selectedFile = this.files[this.activeIndex];
+      this.fileEditor.selectedFile = this.files[this.activeIndex];
+      this.fileExplorer.selectedFile = this.files[this.activeIndex];
+    } , 0);
+  }
+
+
   public selectFile(file: FsNodeFile) {
-    console.log('selectFile',file)
     this.selectedFile = file;
     this.execBar.selectedFile = this.selectedFile
     this.fileEditor.selectedFile = this.selectedFile 
+
+    if(!this.isPresent.includes(this.selectedFile.path)){
+      this.isPresentName.push(this.selectedFile.name);
+      this.files.push(this.selectedFile);
+      setTimeout(() => this.activeIndex = (this.isPresentName.length)-1 , 0);
+      
+      this.isPresent.push(this.selectedFile.path);
+    }else{
+      this.setActiveIndex(this.selectedFile.path);
+    }
+  }
+
+  public setActiveIndex(path:string){
+    setTimeout(() => this.activeIndex = this.isPresent.indexOf(path) , 0);
   }
 
   public editorDidChange(file: FsNodeFile){
@@ -245,6 +344,10 @@ export class CodeEditorComponent implements OnInit {
     console.log("stopAll:cmdConnect:DONE")
     await this.project?.driver.stopExecution()
     console.log("stopAll:cmdConnect:DONE")
+  }
+  
+  public changeWidget(event:any){
+    this.logApiWidget.flashLine();
   }
   
   //-------------- API CONNECT
@@ -300,8 +403,29 @@ export class CodeEditorComponent implements OnInit {
   async apiConnect(){
     console.log("apiConnect")
 
-    if(!this.selectedService){
+    if(!this.selectedProblem){
+
+      this.messageService.add({
+        key: 'br',
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No problem selected',
+      });
+
       this.outputWidget.print("No problem selected", OutputType.STDERR)
+      return false
+    }
+
+    if(!this.selectedService){
+
+      this.messageService.add({
+        key: 'br',
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No service selected',
+      });
+
+      this.outputWidget.print("No service selected", OutputType.STDERR)
       return false
     }
     console.log("apiConnect:service:ok")
@@ -312,6 +436,20 @@ export class CodeEditorComponent implements OnInit {
     if (!config){return false}
     console.log("apiConnect:config:ok")
 
+    let ArgsInvalid = await this.problemWidget.validateArgs();
+    //console.log("CODE EDITOR:CONNECT:VALIDATE ARGS: ", result)
+
+    if (ArgsInvalid && ArgsInvalid.size > 0) {
+      this.messageService.add({
+        key: 'br',
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Args setted are invalid. Please correct',
+      });
+
+      return false;
+    }
+
     //Run MAIN
     console.log("apiConnect:runProject")
     this.saveFile();
@@ -320,6 +458,7 @@ export class CodeEditorComponent implements OnInit {
     console.log("apiConnect:runProject:running")
 
     //Open Connection
+    console.log("CODE EDITOR:CONNECT:ARGS: ", this.selectedService.args)
     let problem = this.selectedService.parent.name;
     let service = this.selectedService.name;
     let args = this.selectedService.exportArgs();
@@ -354,7 +493,19 @@ export class CodeEditorComponent implements OnInit {
     let onConnectionClose = (msg: string[]) => {this.didConnectClose(msg)};
     let onData = (data: string)=>{ this.didConnectData(data)};
     let onBinaryHeader = (msg: any)=>{ this.didRecieveBinaryHeader(msg)};
+    
+    let newLogLine = "rtal -s " + this.api.url + " connect " + problem + " " + service
+    let keys = Object.keys(args);
+    let values = Object.values(args);
+    
+    for(let i=0;i < keys.length;i++) { newLogLine += " -a " + keys[i] + "=" + values[i]; }
 
+    if (this.logApiWidget.isActive) {
+      this.logApiWidget.addLine(newLogLine);
+    }
+
+    this.activeWidget = 0;
+    
     this.cmdConnect = await this.api.Connect(
       problem, 
       service, 
