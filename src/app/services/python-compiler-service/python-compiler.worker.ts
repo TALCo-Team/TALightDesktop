@@ -11,7 +11,7 @@ let pyodideMount = "/TALight"
 
 // Bootstrap pyodide
 
-importScripts("../../../assets/pyodide/pyodide.js");
+importScripts("assets/pyodide/pyodide.js");
 declare var loadPyodide: any;
 
 //let worker: PyodideFsWorker;
