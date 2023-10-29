@@ -11,7 +11,8 @@ import { Range } from '../../../common/core/range.js';
 import { SnippetParser } from '../../snippet/browser/snippetParser.js';
 import { SnippetSession } from '../../snippet/browser/snippetSession.js';
 import { SuggestController } from '../../suggest/browser/suggestController.js';
-import { minimizeInlineCompletion, normalizedInlineCompletionsEquals } from './inlineCompletionToGhostText.js';
+import { minimizeInlineCompletion } from './inlineCompletionsModel.js';
+import { normalizedInlineCompletionsEquals } from './inlineCompletionToGhostText.js';
 export class SuggestWidgetInlineCompletionProvider extends Disposable {
     constructor(editor, suggestControllerPreselector) {
         super();
@@ -64,8 +65,8 @@ export class SuggestWidgetInlineCompletionProvider extends Disposable {
                             return undefined;
                         }
                         const valid = rangeStartsWith(normalizedItemToPreselect.range, normalizedSuggestItem.range) &&
-                            normalizedItemToPreselect.insertText.startsWith(normalizedSuggestItem.insertText);
-                        return { index, valid, prefixLength: normalizedSuggestItem.insertText.length, suggestItem };
+                            normalizedItemToPreselect.text.startsWith(normalizedSuggestItem.text);
+                        return { index, valid, prefixLength: normalizedSuggestItem.text.length, suggestItem };
                     })
                         .filter(item => item && item.valid);
                     const result = findMaxBy(candidates, compareBy(s => s.prefixLength, numberComparator));
@@ -171,23 +172,20 @@ function suggestItemInfoEquals(a, b) {
 function suggestionToSuggestItemInfo(suggestController, position, item, toggleMode) {
     // additionalTextEdits might not be resolved here, this could be problematic.
     if (Array.isArray(item.completion.additionalTextEdits) && item.completion.additionalTextEdits.length > 0) {
-        // cannot represent additional text edits. TODO: Now we can.
+        // cannot represent additional text edits
         return {
             completionItemKind: item.completion.kind,
             isSnippetText: false,
             normalizedInlineCompletion: {
                 // Dummy element, so that space is reserved, but no text is shown
                 range: Range.fromPositions(position, position),
-                insertText: '',
-                filterText: '',
-                snippetInfo: undefined,
-                additionalTextEdits: [],
+                text: ''
             },
         };
     }
     let { insertText } = item.completion;
     let isSnippetText = false;
-    if (item.completion.insertTextRules & 4 /* CompletionItemInsertTextRule.InsertAsSnippet */) {
+    if (item.completion.insertTextRules & 4 /* InsertAsSnippet */) {
         const snippet = new SnippetParser().parse(insertText);
         const model = suggestController.editor.getModel();
         // Ignore snippets that are too large.
@@ -204,11 +202,8 @@ function suggestionToSuggestItemInfo(suggestController, position, item, toggleMo
         isSnippetText,
         completionItemKind: item.completion.kind,
         normalizedInlineCompletion: {
-            insertText: insertText,
-            filterText: insertText,
+            text: insertText,
             range: Range.fromPositions(position.delta(0, -info.overwriteBefore), position.delta(0, Math.max(info.overwriteAfter, 0))),
-            snippetInfo: undefined,
-            additionalTextEdits: [],
         }
     };
 }

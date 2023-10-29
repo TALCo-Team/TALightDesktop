@@ -127,20 +127,21 @@ export class SingleModelEditStackData {
     }
 }
 export class SingleModelEditStackElement {
-    constructor(label, code, model, beforeCursorState) {
-        this.label = label;
-        this.code = code;
+    constructor(model, beforeCursorState) {
         this.model = model;
         this._data = SingleModelEditStackData.create(model, beforeCursorState);
     }
     get type() {
-        return 0 /* UndoRedoElementType.Resource */;
+        return 0 /* Resource */;
     }
     get resource() {
         if (URI.isUri(this.model)) {
             return this.model;
         }
         return this.model.uri;
+    }
+    get label() {
+        return nls.localize('edit', "Typing");
     }
     toString() {
         const data = (this._data instanceof SingleModelEditStackData ? this._data : SingleModelEditStackData.deserialize(this._data));
@@ -201,10 +202,9 @@ export class SingleModelEditStackElement {
     }
 }
 export class MultiModelEditStackElement {
-    constructor(label, code, editStackElements) {
+    constructor(label, editStackElements) {
+        this.type = 1 /* Workspace */;
         this.label = label;
-        this.code = code;
-        this.type = 1 /* UndoRedoElementType.Workspace */;
         this._isOpen = true;
         this._editStackElementsArr = editStackElements.slice(0);
         this._editStackElementsMap = new Map();
@@ -277,7 +277,7 @@ export class MultiModelEditStackElement {
         return this._editStackElementsArr;
     }
     toString() {
-        const result = [];
+        let result = [];
         for (const editStackElement of this._editStackElementsArr) {
             result.push(`${basename(editStackElement.resource)}: ${editStackElement}`);
         }
@@ -287,10 +287,10 @@ export class MultiModelEditStackElement {
 function getModelEOL(model) {
     const eol = model.getEOL();
     if (eol === '\n') {
-        return 0 /* EndOfLineSequence.LF */;
+        return 0 /* LF */;
     }
     else {
-        return 1 /* EndOfLineSequence.CRLF */;
+        return 1 /* CRLF */;
     }
 }
 export function isEditStackElement(element) {
@@ -324,7 +324,7 @@ export class EditStack {
         if (isEditStackElement(lastElement) && lastElement.canAppend(this._model)) {
             return lastElement;
         }
-        const newElement = new SingleModelEditStackElement(nls.localize('edit', "Typing"), 'undoredo.textBufferEdit', this._model, beforeCursorState);
+        const newElement = new SingleModelEditStackElement(this._model, beforeCursorState);
         this._undoRedoService.pushElement(newElement);
         return newElement;
     }

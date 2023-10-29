@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 import { match as matchGlobPattern } from '../../base/common/glob.js';
 import { normalize } from '../../base/common/path.js';
-export function score(selector, candidateUri, candidateLanguage, candidateIsSynchronized, candidateNotebookUri, candidateNotebookType) {
+export function score(selector, candidateUri, candidateLanguage, candidateIsSynchronized, candidateNotebookType) {
     if (Array.isArray(selector)) {
         // array -> take max individual value
         let ret = 0;
         for (const filter of selector) {
-            const value = score(filter, candidateUri, candidateLanguage, candidateIsSynchronized, candidateNotebookUri, candidateNotebookType);
+            const value = score(filter, candidateUri, candidateLanguage, candidateIsSynchronized, candidateNotebookType);
             if (value === 10) {
                 return value; // already at the highest
             }
@@ -42,11 +42,6 @@ export function score(selector, candidateUri, candidateLanguage, candidateIsSync
         if (!candidateIsSynchronized && !hasAccessToAllModels) {
             return 0;
         }
-        // selector targets a notebook -> use the notebook uri instead
-        // of the "normal" document uri.
-        if (notebookType && candidateNotebookUri) {
-            candidateUri = candidateNotebookUri;
-        }
         let ret = 0;
         if (scheme) {
             if (scheme === candidateUri.scheme) {
@@ -74,7 +69,7 @@ export function score(selector, candidateUri, candidateLanguage, candidateIsSync
             if (notebookType === candidateNotebookType) {
                 ret = 10;
             }
-            else if (notebookType === '*' && candidateNotebookType !== undefined) {
+            else if (notebookType === '*') {
                 ret = Math.max(ret, 5);
             }
             else {

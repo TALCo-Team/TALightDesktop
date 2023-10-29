@@ -41,17 +41,25 @@ StandaloneGotoSymbolQuickAccessProvider = __decorate([
     __param(2, IOutlineModelService)
 ], StandaloneGotoSymbolQuickAccessProvider);
 export { StandaloneGotoSymbolQuickAccessProvider };
-export class GotoSymbolAction extends EditorAction {
+Registry.as(Extensions.Quickaccess).registerQuickAccessProvider({
+    ctor: StandaloneGotoSymbolQuickAccessProvider,
+    prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX,
+    helpEntries: [
+        { description: QuickOutlineNLS.quickOutlineActionLabel, prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX, needsEditor: true },
+        { description: QuickOutlineNLS.quickOutlineByCategoryActionLabel, prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX_BY_CATEGORY, needsEditor: true }
+    ]
+});
+export class GotoLineAction extends EditorAction {
     constructor() {
         super({
-            id: GotoSymbolAction.ID,
+            id: 'editor.action.quickOutline',
             label: QuickOutlineNLS.quickOutlineActionLabel,
             alias: 'Go to Symbol...',
             precondition: EditorContextKeys.hasDocumentSymbolProvider,
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
-                primary: 2048 /* KeyMod.CtrlCmd */ | 1024 /* KeyMod.Shift */ | 45 /* KeyCode.KeyO */,
-                weight: 100 /* KeybindingWeight.EditorContrib */
+                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 45 /* KeyO */,
+                weight: 100 /* EditorContrib */
             },
             contextMenuOpts: {
                 group: 'navigation',
@@ -63,13 +71,4 @@ export class GotoSymbolAction extends EditorAction {
         accessor.get(IQuickInputService).quickAccess.show(AbstractGotoSymbolQuickAccessProvider.PREFIX);
     }
 }
-GotoSymbolAction.ID = 'editor.action.quickOutline';
-registerEditorAction(GotoSymbolAction);
-Registry.as(Extensions.Quickaccess).registerQuickAccessProvider({
-    ctor: StandaloneGotoSymbolQuickAccessProvider,
-    prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX,
-    helpEntries: [
-        { description: QuickOutlineNLS.quickOutlineActionLabel, prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX, commandId: GotoSymbolAction.ID },
-        { description: QuickOutlineNLS.quickOutlineByCategoryActionLabel, prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX_BY_CATEGORY }
-    ]
-});
+registerEditorAction(GotoLineAction);

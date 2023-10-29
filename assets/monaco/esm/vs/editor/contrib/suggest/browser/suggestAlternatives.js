@@ -36,7 +36,7 @@ let SuggestAlternatives = class SuggestAlternatives {
             return;
         }
         // no alternative suggestions -> nothing to do
-        const nextIndex = SuggestAlternatives._moveIndex(true, model, index);
+        let nextIndex = SuggestAlternatives._moveIndex(true, model, index);
         if (nextIndex === index) {
             this.reset();
             return;

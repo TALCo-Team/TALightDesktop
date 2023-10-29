@@ -8,9 +8,11 @@ import { DomEmitter } from './event.js';
 import { createElement } from './formattedTextRenderer.js';
 import { StandardMouseEvent } from './mouseEvent.js';
 import { renderLabelWithIcons } from './ui/iconLabel/iconLabels.js';
+import { raceCancellation } from '../common/async.js';
+import { CancellationTokenSource } from '../common/cancellation.js';
 import { onUnexpectedError } from '../common/errors.js';
 import { Event } from '../common/event.js';
-import { escapeDoubleQuotes, parseHrefAndDimensions, removeMarkdownEscapes } from '../common/htmlContent.js';
+import { parseHrefAndDimensions, removeMarkdownEscapes } from '../common/htmlContent.js';
 import { markdownEscapeEscapedIcons } from '../common/iconLabels.js';
 import { defaultGenerator } from '../common/idGenerator.js';
 import { DisposableStore } from '../common/lifecycle.js';
@@ -24,13 +26,14 @@ import { URI } from '../common/uri.js';
 /**
  * Low-level way create a html element from a markdown string.
  *
- * **Note** that for most cases you should be using [`MarkdownRenderer`](./src/vs/editor/contrib/markdownRenderer/browser/markdownRenderer.ts)
+ * **Note** that for most cases you should be using [`MarkdownRenderer`](./src/vs/editor/browser/core/markdownRenderer.ts)
  * which comes with support for pretty code block rendering and which uses the default way of handling links.
  */
 export function renderMarkdown(markdown, options = {}, markedOptions = {}) {
     var _a;
     const disposables = new DisposableStore();
     let isDisposed = false;
+    const cts = disposables.add(new CancellationTokenSource());
     const element = createElement(options);
     const _uriMassage = function (part) {
         let data;
@@ -80,19 +83,23 @@ export function renderMarkdown(markdown, options = {}, markedOptions = {}) {
         }
         return uri.toString();
     };
+    // signal to code-block render that the
+    // element has been created
+    let signalInnerHTML;
+    const withInnerHTML = new Promise(c => signalInnerHTML = c);
     const renderer = new marked.Renderer();
     renderer.image = (href, title, text) => {
         let dimensions = [];
         let attributes = [];
         if (href) {
             ({ href, dimensions } = parseHrefAndDimensions(href));
-            attributes.push(`src="${escapeDoubleQuotes(href)}"`);
+            attributes.push(`src="${href}"`);
         }
         if (text) {
-            attributes.push(`alt="${escapeDoubleQuotes(text)}"`);
+            attributes.push(`alt="${text}"`);
         }
         if (title) {
-            attributes.push(`title="${escapeDoubleQuotes(title)}"`);
+            attributes.push(`title="${title}"`);
         }
         if (dimensions.length) {
             attributes = attributes.concat(dimensions);
@@ -107,26 +114,50 @@ export function renderMarkdown(markdown, options = {}, markedOptions = {}) {
         if (href === text) { // raw link case
             text = removeMarkdownEscapes(text);
         }
-        title = typeof title === 'string' ? escapeDoubleQuotes(removeMarkdownEscapes(title)) : '';
+        href = _href(href, false);
+        if (markdown.baseUri) {
+            href = resolveWithBaseUri(URI.from(markdown.baseUri), href);
+        }
+        title = typeof title === 'string' ? removeMarkdownEscapes(title) : '';
         href = removeMarkdownEscapes(href);
-        // HTML Encode href
-        href = href.replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-        return `<a href="${href}" title="${title || href}">${text}</a>`;
+        if (!href
+            || /^data:|javascript:/i.test(href)
+            || (/^command:/i.test(href) && !markdown.isTrusted)
+            || /^command:(\/\/\/)?_workbench\.downloadResource/i.test(href)) {
+            // drop the link
+            return text;
+        }
+        else {
+            // HTML Encode href
+            href = href.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+            return `<a data-href="${href}" title="${title || href}">${text}</a>`;
+        }
     };
     renderer.paragraph = (text) => {
         return `<p>${text}</p>`;
     };
-    // Will collect [id, renderedElement] tuples
-    const codeBlocks = [];
     if (options.codeBlockRenderer) {
         renderer.code = (code, lang) => {
-            const id = defaultGenerator.nextId();
             const value = options.codeBlockRenderer(lang !== null && lang !== void 0 ? lang : '', code);
-            codeBlocks.push(value.then(element => [id, element]));
+            // when code-block rendering is async we return sync
+            // but update the node with the real result later.
+            const id = defaultGenerator.nextId();
+            raceCancellation(Promise.all([value, withInnerHTML]), cts.token).then(values => {
+                var _a;
+                if (!isDisposed && values) {
+                    const span = element.querySelector(`div[data-code="${id}"]`);
+                    if (span) {
+                        DOM.reset(span, values[0]);
+                    }
+                    (_a = options.asyncRenderCallback) === null || _a === void 0 ? void 0 : _a.call(options);
+                }
+            }).catch(() => {
+                // ignore
+            });
             return `<div class="code" data-code="${id}">${escape(code)}</div>`;
         };
     }
@@ -208,43 +239,9 @@ export function renderMarkdown(markdown, options = {}, markedOptions = {}) {
             img.src = _href(href, true);
         }
     });
-    markdownHtmlDoc.body.querySelectorAll('a')
-        .forEach(a => {
-        const href = a.getAttribute('href'); // Get the raw 'href' attribute value as text, not the resolved 'href'
-        a.setAttribute('href', ''); // Clear out href. We use the `data-href` for handling clicks instead
-        if (!href
-            || /^data:|javascript:/i.test(href)
-            || (/^command:/i.test(href) && !markdown.isTrusted)
-            || /^command:(\/\/\/)?_workbench\.downloadResource/i.test(href)) {
-            // drop the link
-            a.replaceWith(...a.childNodes);
-        }
-        else {
-            let resolvedHref = _href(href, false);
-            if (markdown.baseUri) {
-                resolvedHref = resolveWithBaseUri(URI.from(markdown.baseUri), href);
-            }
-            a.dataset.href = resolvedHref;
-        }
-    });
     element.innerHTML = sanitizeRenderedMarkdown(markdown, markdownHtmlDoc.body.innerHTML);
-    if (codeBlocks.length > 0) {
-        Promise.all(codeBlocks).then((tuples) => {
-            var _a, _b;
-            if (isDisposed) {
-                return;
-            }
-            const renderedElements = new Map(tuples);
-            const placeholderElements = element.querySelectorAll(`div[data-code]`);
-            for (const placeholderElement of placeholderElements) {
-                const renderedElement = renderedElements.get((_a = placeholderElement.dataset['code']) !== null && _a !== void 0 ? _a : '');
-                if (renderedElement) {
-                    DOM.reset(placeholderElement, renderedElement);
-                }
-            }
-            (_b = options.asyncRenderCallback) === null || _b === void 0 ? void 0 : _b.call(options);
-        });
-    }
+    // signal that async code blocks can be now be inserted
+    signalInnerHTML();
     // signal size changes for image tags
     if (options.asyncRenderCallback) {
         for (const img of element.getElementsByTagName('img')) {
@@ -258,6 +255,7 @@ export function renderMarkdown(markdown, options = {}, markedOptions = {}) {
         element,
         dispose: () => {
             isDisposed = true;
+            cts.cancel();
             disposables.dispose();
         }
     };
@@ -292,13 +290,26 @@ function sanitizeRenderedMarkdown(options, renderedMarkdown) {
             return;
         }
     });
-    const hook = DOM.hookDomPurifyHrefAndSrcSanitizer(allowedSchemes);
+    // build an anchor to map URLs to
+    const anchor = document.createElement('a');
+    // https://github.com/cure53/DOMPurify/blob/main/demos/hooks-scheme-allowlist.html
+    dompurify.addHook('afterSanitizeAttributes', (node) => {
+        // check all href/src attributes for validity
+        for (const attr of ['href', 'src']) {
+            if (node.hasAttribute(attr)) {
+                anchor.href = node.getAttribute(attr);
+                if (!allowedSchemes.includes(anchor.protocol.replace(/:$/, ''))) {
+                    node.removeAttribute(attr);
+                }
+            }
+        }
+    });
     try {
         return dompurify.sanitize(renderedMarkdown, Object.assign(Object.assign({}, config), { RETURN_TRUSTED_TYPE: true }));
     }
     finally {
         dompurify.removeHook('uponSanitizeAttribute');
-        hook.dispose();
+        dompurify.removeHook('afterSanitizeAttributes');
     }
 }
 function getSanitizerOptions(options) {

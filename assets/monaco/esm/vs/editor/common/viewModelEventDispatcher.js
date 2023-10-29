@@ -22,9 +22,8 @@ export class ViewModelEventDispatcher extends Disposable {
     }
     _addOutgoingEvent(e) {
         for (let i = 0, len = this._outgoingEvents.length; i < len; i++) {
-            const mergeResult = (this._outgoingEvents[i].kind === e.kind ? this._outgoingEvents[i].attemptToMerge(e) : null);
-            if (mergeResult) {
-                this._outgoingEvents[i] = mergeResult;
+            if (this._outgoingEvents[i].kind === e.kind) {
+                this._outgoingEvents[i] = this._outgoingEvents[i].merge(e);
                 return;
             }
         }
@@ -138,7 +137,7 @@ export class ViewModelEventsCollector {
 }
 export class ContentSizeChangedEvent {
     constructor(oldContentWidth, oldContentHeight, contentWidth, contentHeight) {
-        this.kind = 0 /* OutgoingViewModelEventKind.ContentSizeChanged */;
+        this.kind = 0 /* ContentSizeChanged */;
         this._oldContentWidth = oldContentWidth;
         this._oldContentHeight = oldContentHeight;
         this.contentWidth = contentWidth;
@@ -149,32 +148,32 @@ export class ContentSizeChangedEvent {
     isNoOp() {
         return (!this.contentWidthChanged && !this.contentHeightChanged);
     }
-    attemptToMerge(other) {
-        if (other.kind !== this.kind) {
-            return null;
+    merge(other) {
+        if (other.kind !== 0 /* ContentSizeChanged */) {
+            return this;
         }
         return new ContentSizeChangedEvent(this._oldContentWidth, this._oldContentHeight, other.contentWidth, other.contentHeight);
     }
 }
 export class FocusChangedEvent {
     constructor(oldHasFocus, hasFocus) {
-        this.kind = 1 /* OutgoingViewModelEventKind.FocusChanged */;
+        this.kind = 1 /* FocusChanged */;
         this.oldHasFocus = oldHasFocus;
         this.hasFocus = hasFocus;
     }
     isNoOp() {
         return (this.oldHasFocus === this.hasFocus);
     }
-    attemptToMerge(other) {
-        if (other.kind !== this.kind) {
-            return null;
+    merge(other) {
+        if (other.kind !== 1 /* FocusChanged */) {
+            return this;
         }
         return new FocusChangedEvent(this.oldHasFocus, other.hasFocus);
     }
 }
 export class ScrollChangedEvent {
     constructor(oldScrollWidth, oldScrollLeft, oldScrollHeight, oldScrollTop, scrollWidth, scrollLeft, scrollHeight, scrollTop) {
-        this.kind = 2 /* OutgoingViewModelEventKind.ScrollChanged */;
+        this.kind = 2 /* ScrollChanged */;
         this._oldScrollWidth = oldScrollWidth;
         this._oldScrollLeft = oldScrollLeft;
         this._oldScrollHeight = oldScrollHeight;
@@ -191,44 +190,38 @@ export class ScrollChangedEvent {
     isNoOp() {
         return (!this.scrollWidthChanged && !this.scrollLeftChanged && !this.scrollHeightChanged && !this.scrollTopChanged);
     }
-    attemptToMerge(other) {
-        if (other.kind !== this.kind) {
-            return null;
+    merge(other) {
+        if (other.kind !== 2 /* ScrollChanged */) {
+            return this;
         }
         return new ScrollChangedEvent(this._oldScrollWidth, this._oldScrollLeft, this._oldScrollHeight, this._oldScrollTop, other.scrollWidth, other.scrollLeft, other.scrollHeight, other.scrollTop);
     }
 }
 export class ViewZonesChangedEvent {
     constructor() {
-        this.kind = 3 /* OutgoingViewModelEventKind.ViewZonesChanged */;
+        this.kind = 3 /* ViewZonesChanged */;
     }
     isNoOp() {
         return false;
     }
-    attemptToMerge(other) {
-        if (other.kind !== this.kind) {
-            return null;
-        }
+    merge(other) {
         return this;
     }
 }
 export class HiddenAreasChangedEvent {
     constructor() {
-        this.kind = 4 /* OutgoingViewModelEventKind.HiddenAreasChanged */;
+        this.kind = 4 /* HiddenAreasChanged */;
     }
     isNoOp() {
         return false;
     }
-    attemptToMerge(other) {
-        if (other.kind !== this.kind) {
-            return null;
-        }
+    merge(other) {
         return this;
     }
 }
 export class CursorStateChangedEvent {
     constructor(oldSelections, selections, oldModelVersionId, modelVersionId, source, reason, reachedMaxCursorCount) {
-        this.kind = 6 /* OutgoingViewModelEventKind.CursorStateChanged */;
+        this.kind = 6 /* CursorStateChanged */;
         this.oldSelections = oldSelections;
         this.selections = selections;
         this.oldModelVersionId = oldModelVersionId;
@@ -260,96 +253,21 @@ export class CursorStateChangedEvent {
         return (CursorStateChangedEvent._selectionsAreEqual(this.oldSelections, this.selections)
             && this.oldModelVersionId === this.modelVersionId);
     }
-    attemptToMerge(other) {
-        if (other.kind !== this.kind) {
-            return null;
+    merge(other) {
+        if (other.kind !== 6 /* CursorStateChanged */) {
+            return this;
         }
         return new CursorStateChangedEvent(this.oldSelections, other.selections, this.oldModelVersionId, other.modelVersionId, other.source, other.reason, this.reachedMaxCursorCount || other.reachedMaxCursorCount);
     }
 }
 export class ReadOnlyEditAttemptEvent {
     constructor() {
-        this.kind = 5 /* OutgoingViewModelEventKind.ReadOnlyEditAttempt */;
+        this.kind = 5 /* ReadOnlyEditAttempt */;
     }
     isNoOp() {
         return false;
     }
-    attemptToMerge(other) {
-        if (other.kind !== this.kind) {
-            return null;
-        }
+    merge(other) {
         return this;
-    }
-}
-export class ModelDecorationsChangedEvent {
-    constructor(event) {
-        this.event = event;
-        this.kind = 7 /* OutgoingViewModelEventKind.ModelDecorationsChanged */;
-    }
-    isNoOp() {
-        return false;
-    }
-    attemptToMerge(other) {
-        return null;
-    }
-}
-export class ModelLanguageChangedEvent {
-    constructor(event) {
-        this.event = event;
-        this.kind = 8 /* OutgoingViewModelEventKind.ModelLanguageChanged */;
-    }
-    isNoOp() {
-        return false;
-    }
-    attemptToMerge(other) {
-        return null;
-    }
-}
-export class ModelLanguageConfigurationChangedEvent {
-    constructor(event) {
-        this.event = event;
-        this.kind = 9 /* OutgoingViewModelEventKind.ModelLanguageConfigurationChanged */;
-    }
-    isNoOp() {
-        return false;
-    }
-    attemptToMerge(other) {
-        return null;
-    }
-}
-export class ModelContentChangedEvent {
-    constructor(event) {
-        this.event = event;
-        this.kind = 10 /* OutgoingViewModelEventKind.ModelContentChanged */;
-    }
-    isNoOp() {
-        return false;
-    }
-    attemptToMerge(other) {
-        return null;
-    }
-}
-export class ModelOptionsChangedEvent {
-    constructor(event) {
-        this.event = event;
-        this.kind = 11 /* OutgoingViewModelEventKind.ModelOptionsChanged */;
-    }
-    isNoOp() {
-        return false;
-    }
-    attemptToMerge(other) {
-        return null;
-    }
-}
-export class ModelTokensChangedEvent {
-    constructor(event) {
-        this.event = event;
-        this.kind = 12 /* OutgoingViewModelEventKind.ModelTokensChanged */;
-    }
-    isNoOp() {
-        return false;
-    }
-    attemptToMerge(other) {
-        return null;
     }
 }

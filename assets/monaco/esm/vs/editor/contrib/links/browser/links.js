@@ -67,7 +67,7 @@ let LinkDetector = class LinkDetector extends Disposable {
             this.cleanUpActiveLinkDecoration();
         }));
         this._register(editor.onDidChangeConfiguration((e) => {
-            if (!e.hasChanged(65 /* EditorOption.links */)) {
+            if (!e.hasChanged(63 /* links */)) {
                 return;
             }
             // Remove any links (for the getting disabled case)
@@ -104,7 +104,7 @@ let LinkDetector = class LinkDetector extends Disposable {
     }
     computeLinksNow() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this.editor.hasModel() || !this.editor.getOption(65 /* EditorOption.links */)) {
+            if (!this.editor.hasModel() || !this.editor.getOption(63 /* links */)) {
                 return;
             }
             const model = this.editor.getModel();
@@ -134,7 +134,7 @@ let LinkDetector = class LinkDetector extends Disposable {
         });
     }
     updateDecorations(links) {
-        const useMetaKey = (this.editor.getOption(72 /* EditorOption.multiCursorModifier */) === 'altKey');
+        const useMetaKey = (this.editor.getOption(70 /* multiCursorModifier */) === 'altKey');
         const oldDecorations = [];
         const keys = Object.keys(this.currentOccurrences);
         for (const decorationId of keys) {
@@ -148,18 +148,16 @@ let LinkDetector = class LinkDetector extends Disposable {
                 newDecorations.push(LinkOccurrence.decoration(link, useMetaKey));
             }
         }
-        this.editor.changeDecorations((changeAccessor) => {
-            const decorations = changeAccessor.deltaDecorations(oldDecorations, newDecorations);
-            this.currentOccurrences = {};
-            this.activeLinkDecorationId = null;
-            for (let i = 0, len = decorations.length; i < len; i++) {
-                const occurence = new LinkOccurrence(links[i], decorations[i]);
-                this.currentOccurrences[occurence.decorationId] = occurence;
-            }
-        });
+        const decorations = this.editor.deltaDecorations(oldDecorations, newDecorations);
+        this.currentOccurrences = {};
+        this.activeLinkDecorationId = null;
+        for (let i = 0, len = decorations.length; i < len; i++) {
+            const occurence = new LinkOccurrence(links[i], decorations[i]);
+            this.currentOccurrences[occurence.decorationId] = occurence;
+        }
     }
     _onEditorMouseMove(mouseEvent, withKey) {
-        const useMetaKey = (this.editor.getOption(72 /* EditorOption.multiCursorModifier */) === 'altKey');
+        const useMetaKey = (this.editor.getOption(70 /* multiCursorModifier */) === 'altKey');
         if (this.isEnabled(mouseEvent, withKey)) {
             this.cleanUpActiveLinkDecoration(); // always remove previous link decoration as their can only be one
             const occurrence = this.getLinkOccurrence(mouseEvent.target.position);
@@ -175,7 +173,7 @@ let LinkDetector = class LinkDetector extends Disposable {
         }
     }
     cleanUpActiveLinkDecoration() {
-        const useMetaKey = (this.editor.getOption(72 /* EditorOption.multiCursorModifier */) === 'altKey');
+        const useMetaKey = (this.editor.getOption(70 /* multiCursorModifier */) === 'altKey');
         if (this.activeLinkDecorationId) {
             const occurrence = this.currentOccurrences[this.activeLinkDecorationId];
             if (occurrence) {
@@ -222,7 +220,7 @@ let LinkDetector = class LinkDetector extends Disposable {
                     }
                 }
             }
-            return this.openerService.open(uri, { openToSide, fromUserGesture, allowContributedOpeners: true, allowCommands: true, fromWorkspace: true });
+            return this.openerService.open(uri, { openToSide, fromUserGesture, allowContributedOpeners: true, allowCommands: true });
         }, err => {
             const messageOrError = err instanceof Error ? err.message : err;
             // different error cases
@@ -256,7 +254,7 @@ let LinkDetector = class LinkDetector extends Disposable {
         return null;
     }
     isEnabled(mouseEvent, withKey) {
-        return Boolean((mouseEvent.target.type === 6 /* MouseTargetType.CONTENT_TEXT */)
+        return Boolean((mouseEvent.target.type === 6 /* CONTENT_TEXT */)
             && (mouseEvent.hasTriggerModifier || (withKey && withKey.keyCodeIsTriggerKey)));
     }
     stop() {
@@ -287,13 +285,13 @@ export { LinkDetector };
 const decoration = {
     general: ModelDecorationOptions.register({
         description: 'detected-link',
-        stickiness: 1 /* TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges */,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
         collapseOnReplaceEdit: true,
         inlineClassName: 'detected-link'
     }),
     active: ModelDecorationOptions.register({
         description: 'detected-link-active',
-        stickiness: 1 /* TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges */,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
         collapseOnReplaceEdit: true,
         inlineClassName: 'detected-link-active'
     })
@@ -342,12 +340,11 @@ function getHoverMessage(link, useMetaKey) {
             const match = link.url.toString().match(/^command:([^?#]+)/);
             if (match) {
                 const commandId = match[1];
-                nativeLabel = nls.localize('tooltip.explanation', "Execute command {0}", commandId);
+                const nativeLabelText = nls.localize('tooltip.explanation', "Execute command {0}", commandId);
+                nativeLabel = ` "${nativeLabelText}"`;
             }
         }
-        const hoverMessage = new MarkdownString('', true)
-            .appendLink(link.url.toString(true).replace(/ /g, '%20'), label, nativeLabel)
-            .appendMarkdown(` (${kb})`);
+        const hoverMessage = new MarkdownString('', true).appendMarkdown(`[${label}](${link.url.toString(true).replace(/ /g, '%20')}${nativeLabel}) (${kb})`);
         return hoverMessage;
     }
     else {

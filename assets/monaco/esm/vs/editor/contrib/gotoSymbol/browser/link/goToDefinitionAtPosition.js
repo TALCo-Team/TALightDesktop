@@ -19,6 +19,7 @@ import { withNullAsUndefined } from '../../../../../base/common/types.js';
 import './goToDefinitionAtPosition.css';
 import { EditorState } from '../../../editorState/browser/editorState.js';
 import { registerEditorContribution } from '../../../../browser/editorExtensions.js';
+import { Position } from '../../../../common/core/position.js';
 import { Range } from '../../../../common/core/range.js';
 import { ILanguageService } from '../../../../common/languages/language.js';
 import { ITextModelService } from '../../../../common/services/resolverService.js';
@@ -38,11 +39,11 @@ let GotoDefinitionAtPositionEditorContribution = class GotoDefinitionAtPositionE
         this.languageFeaturesService = languageFeaturesService;
         this.toUnhook = new DisposableStore();
         this.toUnhookForKeyboard = new DisposableStore();
+        this.linkDecorations = [];
         this.currentWordAtPosition = null;
         this.previousPromise = null;
         this.editor = editor;
-        this.linkDecorations = this.editor.createDecorationsCollection();
-        const linkGesture = new ClickLinkGesture(editor);
+        let linkGesture = new ClickLinkGesture(editor);
         this.toUnhook.add(linkGesture);
         this.toUnhook.add(linkGesture.onMouseMoveOrRelevantKeyDown(([mouseEvent, keyboardEvent]) => {
             this.startFindDefinitionFromMouse(mouseEvent, withNullAsUndefined(keyboardEvent));
@@ -92,7 +93,7 @@ let GotoDefinitionAtPositionEditorContribution = class GotoDefinitionAtPositionE
     }
     startFindDefinitionFromMouse(mouseEvent, withKey) {
         // check if we are active and on a content widget
-        if (mouseEvent.target.type === 9 /* MouseTargetType.CONTENT_WIDGET */ && this.linkDecorations.length > 0) {
+        if (mouseEvent.target.type === 9 /* CONTENT_WIDGET */ && this.linkDecorations.length > 0) {
             return;
         }
         if (!this.editor.hasModel() || !this.isEnabled(mouseEvent, withKey)) {
@@ -120,7 +121,7 @@ let GotoDefinitionAtPositionEditorContribution = class GotoDefinitionAtPositionE
         }
         this.currentWordAtPosition = word;
         // Find definition and decorate word if found
-        const state = new EditorState(this.editor, 4 /* CodeEditorStateFlag.Position */ | 1 /* CodeEditorStateFlag.Value */ | 2 /* CodeEditorStateFlag.Selection */ | 8 /* CodeEditorStateFlag.Scroll */);
+        let state = new EditorState(this.editor, 4 /* Position */ | 1 /* Value */ | 2 /* Selection */ | 8 /* Scroll */);
         if (this.previousPromise) {
             this.previousPromise.cancel();
             this.previousPromise = null;
@@ -137,7 +138,7 @@ let GotoDefinitionAtPositionEditorContribution = class GotoDefinitionAtPositionE
             }
             // Single result
             else {
-                const result = results[0];
+                let result = results[0];
                 if (!result.uri) {
                     return;
                 }
@@ -169,7 +170,7 @@ let GotoDefinitionAtPositionEditorContribution = class GotoDefinitionAtPositionE
         }).then(undefined, onUnexpectedError);
     }
     getPreviewValue(textEditorModel, startLineNumber, result) {
-        let rangeToUse = result.range;
+        let rangeToUse = result.targetSelectionRange ? result.range : this.getPreviewRangeBasedOnBrackets(textEditorModel, startLineNumber);
         const numberOfLinesInRange = rangeToUse.endLineNumber - rangeToUse.startLineNumber;
         if (numberOfLinesInRange >= GotoDefinitionAtPositionEditorContribution.MAX_SOURCE_PREVIEW_LINES) {
             rangeToUse = this.getPreviewRangeBasedOnIndentation(textEditorModel, startLineNumber);
@@ -192,12 +193,52 @@ let GotoDefinitionAtPositionEditorContribution = class GotoDefinitionAtPositionE
         const maxLineNumber = Math.min(textEditorModel.getLineCount(), startLineNumber + GotoDefinitionAtPositionEditorContribution.MAX_SOURCE_PREVIEW_LINES);
         let endLineNumber = startLineNumber + 1;
         for (; endLineNumber < maxLineNumber; endLineNumber++) {
-            const endIndent = textEditorModel.getLineFirstNonWhitespaceColumn(endLineNumber);
+            let endIndent = textEditorModel.getLineFirstNonWhitespaceColumn(endLineNumber);
             if (startIndent === endIndent) {
                 break;
             }
         }
         return new Range(startLineNumber, 1, endLineNumber + 1, 1);
+    }
+    getPreviewRangeBasedOnBrackets(textEditorModel, startLineNumber) {
+        const maxLineNumber = Math.min(textEditorModel.getLineCount(), startLineNumber + GotoDefinitionAtPositionEditorContribution.MAX_SOURCE_PREVIEW_LINES);
+        const brackets = [];
+        let ignoreFirstEmpty = true;
+        let currentBracket = textEditorModel.bracketPairs.findNextBracket(new Position(startLineNumber, 1));
+        while (currentBracket !== null) {
+            if (brackets.length === 0) {
+                brackets.push(currentBracket);
+            }
+            else {
+                const lastBracket = brackets[brackets.length - 1];
+                if (lastBracket.open[0] === currentBracket.open[0] && lastBracket.isOpen && !currentBracket.isOpen) {
+                    brackets.pop();
+                }
+                else {
+                    brackets.push(currentBracket);
+                }
+                if (brackets.length === 0) {
+                    if (ignoreFirstEmpty) {
+                        ignoreFirstEmpty = false;
+                    }
+                    else {
+                        return new Range(startLineNumber, 1, currentBracket.range.endLineNumber + 1, 1);
+                    }
+                }
+            }
+            const maxColumn = textEditorModel.getLineMaxColumn(startLineNumber);
+            let nextLineNumber = currentBracket.range.endLineNumber;
+            let nextColumn = currentBracket.range.endColumn;
+            if (maxColumn === currentBracket.range.endColumn) {
+                nextLineNumber++;
+                nextColumn = 1;
+            }
+            if (nextLineNumber > maxLineNumber) {
+                return new Range(startLineNumber, 1, maxLineNumber + 1, 1);
+            }
+            currentBracket = textEditorModel.bracketPairs.findNextBracket(new Position(nextLineNumber, nextColumn));
+        }
+        return new Range(startLineNumber, 1, maxLineNumber + 1, 1);
     }
     addDecoration(range, hoverMessage) {
         const newDecorations = {
@@ -208,15 +249,17 @@ let GotoDefinitionAtPositionEditorContribution = class GotoDefinitionAtPositionE
                 hoverMessage
             }
         };
-        this.linkDecorations.set([newDecorations]);
+        this.linkDecorations = this.editor.deltaDecorations(this.linkDecorations, [newDecorations]);
     }
     removeLinkDecorations() {
-        this.linkDecorations.clear();
+        if (this.linkDecorations.length > 0) {
+            this.linkDecorations = this.editor.deltaDecorations(this.linkDecorations, []);
+        }
     }
     isEnabled(mouseEvent, withKey) {
         return this.editor.hasModel() &&
             mouseEvent.isNoneOrSingleMouseDown &&
-            (mouseEvent.target.type === 6 /* MouseTargetType.CONTENT_TEXT */) &&
+            (mouseEvent.target.type === 6 /* CONTENT_TEXT */) &&
             (mouseEvent.hasTriggerModifier || (withKey ? withKey.keyCodeIsTriggerKey : false)) &&
             this.languageFeaturesService.definitionProvider.has(this.editor.getModel());
     }
@@ -230,7 +273,7 @@ let GotoDefinitionAtPositionEditorContribution = class GotoDefinitionAtPositionE
     gotoDefinition(position, openToSide) {
         this.editor.setPosition(position);
         return this.editor.invokeWithinContext((accessor) => {
-            const canPeek = !openToSide && this.editor.getOption(80 /* EditorOption.definitionLinkOpensInPeek */) && !this.isInPeekEditor(accessor);
+            const canPeek = !openToSide && this.editor.getOption(78 /* definitionLinkOpensInPeek */) && !this.isInPeekEditor(accessor);
             const action = new DefinitionAction({ openToSide, openInPeek: canPeek, muteMessage: true }, { alias: '', label: '', id: '', precondition: undefined });
             return action.run(accessor, this.editor);
         });

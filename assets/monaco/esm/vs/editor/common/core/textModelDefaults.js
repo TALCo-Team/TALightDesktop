@@ -9,8 +9,5 @@ export const EDITOR_MODEL_DEFAULTS = {
     detectIndentation: true,
     trimAutoWhitespace: true,
     largeFileOptimizations: true,
-    bracketPairColorizationOptions: {
-        enabled: true,
-        independentColorPoolPerBracketType: false,
-    },
+    bracketPairColorizationOptions: { enabled: false }
 };

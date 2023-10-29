@@ -85,7 +85,7 @@ export class AbstractEditorNavigationQuickAccessProvider {
     }
     gotoLocation({ editor }, options) {
         editor.setSelection(options.range);
-        editor.revealRangeInCenter(options.range, 0 /* ScrollType.Smooth */);
+        editor.revealRangeInCenter(options.range, 0 /* Smooth */);
         if (!options.preserveFocus) {
             editor.focus();
         }

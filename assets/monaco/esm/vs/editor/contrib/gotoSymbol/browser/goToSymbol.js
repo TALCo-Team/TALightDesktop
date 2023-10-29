@@ -27,7 +27,7 @@ function getLocationLinks(model, position, registry, provide) {
     });
     return Promise.all(promises).then(values => {
         const result = [];
-        for (const value of values) {
+        for (let value of values) {
             if (Array.isArray(value)) {
                 result.push(...value);
             }

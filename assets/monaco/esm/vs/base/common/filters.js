@@ -73,19 +73,19 @@ function _matchesSubString(word, wordToMatchAgainst, i, j) {
 }
 // CamelCase
 function isLower(code) {
-    return 97 /* CharCode.a */ <= code && code <= 122 /* CharCode.z */;
+    return 97 /* a */ <= code && code <= 122 /* z */;
 }
 export function isUpper(code) {
-    return 65 /* CharCode.A */ <= code && code <= 90 /* CharCode.Z */;
+    return 65 /* A */ <= code && code <= 90 /* Z */;
 }
 function isNumber(code) {
-    return 48 /* CharCode.Digit0 */ <= code && code <= 57 /* CharCode.Digit9 */;
+    return 48 /* Digit0 */ <= code && code <= 57 /* Digit9 */;
 }
 function isWhitespace(code) {
-    return (code === 32 /* CharCode.Space */
-        || code === 9 /* CharCode.Tab */
-        || code === 10 /* CharCode.LineFeed */
-        || code === 13 /* CharCode.CarriageReturn */);
+    return (code === 32 /* Space */
+        || code === 9 /* Tab */
+        || code === 10 /* LineFeed */
+        || code === 13 /* CarriageReturn */);
 }
 const wordSeparators = new Set();
 // These are chosen as natural word separators based on writen text.
@@ -303,7 +303,7 @@ export function matchesFuzzy(word, wordToMatchAgainst, enableSeparateSubstringMa
 export function anyScore(pattern, lowPattern, patternPos, word, lowWord, wordPos) {
     const max = Math.min(13, pattern.length);
     for (; patternPos < max; patternPos++) {
-        const result = fuzzyScore(pattern, lowPattern, patternPos, word, lowWord, wordPos, { firstMatchCanBeWeak: false, boostFullMatch: true });
+        const result = fuzzyScore(pattern, lowPattern, patternPos, word, lowWord, wordPos, false);
         if (result) {
             return result;
         }
@@ -386,24 +386,19 @@ function isSeparatorAtPos(value, index) {
     }
     const code = value.codePointAt(index);
     switch (code) {
-        case 95 /* CharCode.Underline */:
-        case 45 /* CharCode.Dash */:
-        case 46 /* CharCode.Period */:
-        case 32 /* CharCode.Space */:
-        case 47 /* CharCode.Slash */:
-        case 92 /* CharCode.Backslash */:
-        case 39 /* CharCode.SingleQuote */:
-        case 34 /* CharCode.DoubleQuote */:
-        case 58 /* CharCode.Colon */:
-        case 36 /* CharCode.DollarSign */:
-        case 60 /* CharCode.LessThan */:
-        case 62 /* CharCode.GreaterThan */:
-        case 40 /* CharCode.OpenParen */:
-        case 41 /* CharCode.CloseParen */:
-        case 91 /* CharCode.OpenSquareBracket */:
-        case 93 /* CharCode.CloseSquareBracket */:
-        case 123 /* CharCode.OpenCurlyBrace */:
-        case 125 /* CharCode.CloseCurlyBrace */:
+        case 95 /* Underline */:
+        case 45 /* Dash */:
+        case 46 /* Period */:
+        case 32 /* Space */:
+        case 47 /* Slash */:
+        case 92 /* Backslash */:
+        case 39 /* SingleQuote */:
+        case 34 /* DoubleQuote */:
+        case 58 /* Colon */:
+        case 36 /* DollarSign */:
+        case 60 /* LessThan */:
+        case 40 /* OpenParen */:
+        case 91 /* OpenSquareBracket */:
             return true;
         case undefined:
             return false;
@@ -420,8 +415,8 @@ function isWhitespaceAtPos(value, index) {
     }
     const code = value.charCodeAt(index);
     switch (code) {
-        case 32 /* CharCode.Space */:
-        case 9 /* CharCode.Tab */:
+        case 32 /* Space */:
+        case 9 /* Tab */:
             return true;
         default:
             return false;
@@ -454,14 +449,7 @@ export var FuzzyScore;
     }
     FuzzyScore.isDefault = isDefault;
 })(FuzzyScore || (FuzzyScore = {}));
-export class FuzzyScoreOptions {
-    constructor(firstMatchCanBeWeak, boostFullMatch) {
-        this.firstMatchCanBeWeak = firstMatchCanBeWeak;
-        this.boostFullMatch = boostFullMatch;
-    }
-}
-FuzzyScoreOptions.default = { boostFullMatch: true, firstMatchCanBeWeak: false };
-export function fuzzyScore(pattern, patternLow, patternStart, word, wordLow, wordStart, options = FuzzyScoreOptions.default) {
+export function fuzzyScore(pattern, patternLow, patternStart, word, wordLow, wordStart, firstMatchCanBeWeak) {
     const patternLen = pattern.length > _maxLen ? _maxLen : pattern.length;
     const wordLen = word.length > _maxLen ? _maxLen : word.length;
     if (patternStart >= patternLen || wordStart >= wordLen || (patternLen - patternStart) > (wordLen - wordStart)) {
@@ -505,18 +493,18 @@ export function fuzzyScore(pattern, patternLow, patternStart, word, wordLow, wor
             if (canComeLeftLeft && (!canComeLeft || leftLeftScore >= leftScore) && (!canComeDiag || leftLeftScore >= diagScore)) {
                 // always prefer choosing left left to jump over a diagonal because that means a match is earlier in the word
                 _table[row][column] = leftLeftScore;
-                _arrows[row][column] = 3 /* Arrow.LeftLeft */;
+                _arrows[row][column] = 3 /* LeftLeft */;
                 _diag[row][column] = 0;
             }
             else if (canComeLeft && (!canComeDiag || leftScore >= diagScore)) {
                 // always prefer choosing left since that means a match is earlier in the word
                 _table[row][column] = leftScore;
-                _arrows[row][column] = 2 /* Arrow.Left */;
+                _arrows[row][column] = 2 /* Left */;
                 _diag[row][column] = 0;
             }
             else if (canComeDiag) {
                 _table[row][column] = diagScore;
-                _arrows[row][column] = 1 /* Arrow.Diag */;
+                _arrows[row][column] = 1 /* Diag */;
                 _diag[row][column] = _diag[row - 1][column - 1] + 1;
             }
             else {
@@ -527,7 +515,7 @@ export function fuzzyScore(pattern, patternLow, patternStart, word, wordLow, wor
     if (_debug) {
         printTables(pattern, patternStart, word, wordStart);
     }
-    if (!hasStrongFirstMatch[0] && !options.firstMatchCanBeWeak) {
+    if (!hasStrongFirstMatch[0] && !firstMatchCanBeWeak) {
         return undefined;
     }
     row--;
@@ -540,10 +528,10 @@ export function fuzzyScore(pattern, patternLow, patternStart, word, wordLow, wor
         let diagColumn = column;
         do {
             const arrow = _arrows[row][diagColumn];
-            if (arrow === 3 /* Arrow.LeftLeft */) {
+            if (arrow === 3 /* LeftLeft */) {
                 diagColumn = diagColumn - 2;
             }
-            else if (arrow === 2 /* Arrow.Left */) {
+            else if (arrow === 2 /* Left */) {
                 diagColumn = diagColumn - 1;
             }
             else {
@@ -574,7 +562,7 @@ export function fuzzyScore(pattern, patternLow, patternStart, word, wordLow, wor
         column = diagColumn - 1;
         result.push(column);
     }
-    if (wordLen === patternLen && options.boostFullMatch) {
+    if (wordLen === patternLen) {
         // the word matches the pattern with all characters!
         // giving the score a total match boost (to come up ahead other words)
         result[0] += 2;
@@ -656,11 +644,11 @@ function _doScore(pattern, patternLow, patternPos, patternStart, word, wordLow, 
 }
 //#endregion
 //#region --- graceful ---
-export function fuzzyScoreGracefulAggressive(pattern, lowPattern, patternPos, word, lowWord, wordPos, options) {
-    return fuzzyScoreWithPermutations(pattern, lowPattern, patternPos, word, lowWord, wordPos, true, options);
+export function fuzzyScoreGracefulAggressive(pattern, lowPattern, patternPos, word, lowWord, wordPos, firstMatchCanBeWeak) {
+    return fuzzyScoreWithPermutations(pattern, lowPattern, patternPos, word, lowWord, wordPos, true, firstMatchCanBeWeak);
 }
-function fuzzyScoreWithPermutations(pattern, lowPattern, patternPos, word, lowWord, wordPos, aggressive, options) {
-    let top = fuzzyScore(pattern, lowPattern, patternPos, word, lowWord, wordPos, options);
+function fuzzyScoreWithPermutations(pattern, lowPattern, patternPos, word, lowWord, wordPos, aggressive, firstMatchCanBeWeak) {
+    let top = fuzzyScore(pattern, lowPattern, patternPos, word, lowWord, wordPos, firstMatchCanBeWeak);
     if (top && !aggressive) {
         // when using the original pattern yield a result we`
         // return it unless we are aggressive and try to find
@@ -676,7 +664,7 @@ function fuzzyScoreWithPermutations(pattern, lowPattern, patternPos, word, lowWo
         for (let movingPatternPos = patternPos + 1; movingPatternPos < tries; movingPatternPos++) {
             const newPattern = nextTypoPermutation(pattern, movingPatternPos);
             if (newPattern) {
-                const candidate = fuzzyScore(newPattern, newPattern.toLowerCase(), patternPos, word, lowWord, wordPos, options);
+                const candidate = fuzzyScore(newPattern, newPattern.toLowerCase(), patternPos, word, lowWord, wordPos, firstMatchCanBeWeak);
                 if (candidate) {
                     candidate[0] -= 3; // permutation penalty
                     if (!top || candidate[0] > top[0]) {

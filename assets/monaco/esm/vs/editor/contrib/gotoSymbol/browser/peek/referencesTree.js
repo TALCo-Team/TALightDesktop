@@ -16,6 +16,7 @@ import { CountBadge } from '../../../../../base/browser/ui/countBadge/countBadge
 import { HighlightedLabel } from '../../../../../base/browser/ui/highlightedlabel/highlightedLabel.js';
 import { IconLabel } from '../../../../../base/browser/ui/iconLabel/iconLabel.js';
 import { createMatches, FuzzyScore } from '../../../../../base/common/filters.js';
+import { getBaseLabel } from '../../../../../base/common/labels.js';
 import { Disposable } from '../../../../../base/common/lifecycle.js';
 import { basename, dirname } from '../../../../../base/common/resources.js';
 import { ITextModelService } from '../../../../common/services/resolverService.js';
@@ -101,9 +102,9 @@ export class IdentityProvider {
 }
 //#region render: File
 let FileReferencesTemplate = class FileReferencesTemplate extends Disposable {
-    constructor(container, _labelService, themeService) {
+    constructor(container, _uriLabel, themeService) {
         super();
-        this._labelService = _labelService;
+        this._uriLabel = _uriLabel;
         const parent = document.createElement('div');
         parent.classList.add('reference-file');
         this.file = this._register(new IconLabel(parent, { supportHighlights: true }));
@@ -112,8 +113,8 @@ let FileReferencesTemplate = class FileReferencesTemplate extends Disposable {
         container.appendChild(parent);
     }
     set(element, matches) {
-        const parent = dirname(element.uri);
-        this.file.setLabel(this._labelService.getUriBasenameLabel(element.uri), this._labelService.getUriLabel(parent, { relative: true }), { title: this._labelService.getUriLabel(element.uri), matches });
+        let parent = dirname(element.uri);
+        this.file.setLabel(getBaseLabel(element.uri), this._uriLabel.getUriLabel(parent, { relative: true }), { title: this._uriLabel.getUriLabel(element.uri), matches });
         const len = element.children.length;
         this.badge.setCount(len);
         if (len > 1) {

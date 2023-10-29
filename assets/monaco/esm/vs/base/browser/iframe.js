@@ -10,8 +10,8 @@ function getParentWindowIfSameOrigin(w) {
     }
     // Cannot really tell if we have access to the parent window unless we try to access something in it
     try {
-        const location = w.location;
-        const parentLocation = w.parent.location;
+        let location = w.location;
+        let parentLocation = w.parent.location;
         if (location.origin !== 'null' && parentLocation.origin !== 'null' && location.origin !== parentLocation.origin) {
             hasDifferentOriginAncestorFlag = true;
             return null;
@@ -54,6 +54,16 @@ export class IframeUtils {
         return sameOriginWindowChainCache.slice(0);
     }
     /**
+     * Returns true if the current execution environment is chained in a list of iframes which at one point ends in a window with a different origin.
+     * Returns false if the current execution environment is not running inside an iframe or if the entire chain of iframes have the same origin.
+     */
+    static hasDifferentOriginAncestor() {
+        if (!sameOriginWindowChainCache) {
+            this.getSameOriginWindowChain();
+        }
+        return hasDifferentOriginAncestorFlag;
+    }
+    /**
      * Returns the position of `childWindow` relative to `ancestorWindow`
      */
     static getPositionOfChildWindowRelativeToAncestorWindow(childWindow, ancestorWindow) {
@@ -64,7 +74,7 @@ export class IframeUtils {
             };
         }
         let top = 0, left = 0;
-        const windowChain = this.getSameOriginWindowChain();
+        let windowChain = this.getSameOriginWindowChain();
         for (const windowChainEl of windowChain) {
             top += windowChainEl.window.scrollY;
             left += windowChainEl.window.scrollX;
@@ -74,7 +84,7 @@ export class IframeUtils {
             if (!windowChainEl.iframeElement) {
                 break;
             }
-            const boundingRect = windowChainEl.iframeElement.getBoundingClientRect();
+            let boundingRect = windowChainEl.iframeElement.getBoundingClientRect();
             top += boundingRect.top;
             left += boundingRect.left;
         }

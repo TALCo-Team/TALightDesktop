@@ -76,12 +76,14 @@ class WebWorker {
         return this.id;
     }
     postMessage(message, transfer) {
-        var _a;
-        (_a = this.worker) === null || _a === void 0 ? void 0 : _a.then(w => w.postMessage(message, transfer));
+        if (this.worker) {
+            this.worker.then(w => w.postMessage(message, transfer));
+        }
     }
     dispose() {
-        var _a;
-        (_a = this.worker) === null || _a === void 0 ? void 0 : _a.then(w => w.terminate());
+        if (this.worker) {
+            this.worker.then(w => w.terminate());
+        }
         this.worker = null;
     }
 }
@@ -91,7 +93,7 @@ export class DefaultWorkerFactory {
         this._webWorkerFailedBeforeError = false;
     }
     create(moduleId, onMessageCallback, onErrorCallback) {
-        const workerId = (++DefaultWorkerFactory.LAST_WORKER_ID);
+        let workerId = (++DefaultWorkerFactory.LAST_WORKER_ID);
         if (this._webWorkerFailedBeforeError) {
             throw this._webWorkerFailedBeforeError;
         }

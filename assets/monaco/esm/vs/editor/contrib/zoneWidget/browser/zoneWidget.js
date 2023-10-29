@@ -57,9 +57,10 @@ class Arrow {
     constructor(_editor) {
         this._editor = _editor;
         this._ruleName = Arrow._IdGenerator.nextId();
-        this._decorations = this._editor.createDecorationsCollection();
+        this._decorations = [];
         this._color = null;
         this._height = -1;
+        //
     }
     dispose() {
         this.hide();
@@ -86,17 +87,10 @@ class Arrow {
             // the arrow isn't pretty at column 1 and we need to push it out a little
             where = { lineNumber: where.lineNumber, column: 2 };
         }
-        this._decorations.set([{
-                range: Range.fromPositions(where),
-                options: {
-                    description: 'zone-widget-arrow',
-                    className: this._ruleName,
-                    stickiness: 1 /* TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges */
-                }
-            }]);
+        this._decorations = this._editor.deltaDecorations(this._decorations, [{ range: Range.fromPositions(where), options: { description: 'zone-widget-arrow', className: this._ruleName, stickiness: 1 /* NeverGrowsWhenTypingAtEdges */ } }]);
     }
     hide() {
-        this._decorations.clear();
+        this._editor.deltaDecorations(this._decorations, []);
     }
 }
 Arrow._IdGenerator = new IdGenerator('.arrow-decoration-');
@@ -105,12 +99,12 @@ export class ZoneWidget {
         this._arrow = null;
         this._overlayWidget = null;
         this._resizeSash = null;
+        this._positionMarkerId = [];
         this._viewZone = null;
         this._disposables = new DisposableStore();
         this.container = null;
         this._isShowing = false;
         this.editor = editor;
-        this._positionMarkerId = this.editor.createDecorationsCollection();
         this.options = objects.deepClone(options);
         objects.mixin(this.options, defaultOptions, false);
         this.domNode = document.createElement('div');
@@ -138,7 +132,8 @@ export class ZoneWidget {
                 this._viewZone = null;
             });
         }
-        this._positionMarkerId.clear();
+        this.editor.deltaDecorations(this._positionMarkerId, []);
+        this._positionMarkerId = [];
         this._disposables.dispose();
     }
     create() {
@@ -168,12 +163,12 @@ export class ZoneWidget {
     }
     _applyStyles() {
         if (this.container && this.options.frameColor) {
-            const frameColor = this.options.frameColor.toString();
+            let frameColor = this.options.frameColor.toString();
             this.container.style.borderTopColor = frameColor;
             this.container.style.borderBottomColor = frameColor;
         }
         if (this._arrow && this.options.arrowColor) {
-            const arrowColor = this.options.arrowColor.toString();
+            let arrowColor = this.options.arrowColor.toString();
             this._arrow.color = arrowColor;
         }
     }
@@ -193,7 +188,7 @@ export class ZoneWidget {
     _onViewZoneHeight(height) {
         this.domNode.style.height = `${height}px`;
         if (this.container) {
-            const containerHeight = height - this._decoratingElementsHeight();
+            let containerHeight = height - this._decoratingElementsHeight();
             this.container.style.height = `${containerHeight}px`;
             const layoutInfo = this.editor.getLayoutInfo();
             this._doLayout(containerHeight, this._getWidth(layoutInfo));
@@ -203,7 +198,15 @@ export class ZoneWidget {
         }
     }
     get position() {
-        const range = this._positionMarkerId.getRange(0);
+        const [id] = this._positionMarkerId;
+        if (!id) {
+            return undefined;
+        }
+        const model = this.editor.getModel();
+        if (!model) {
+            return undefined;
+        }
+        const range = model.getDecorationRange(id);
         if (!range) {
             return undefined;
         }
@@ -214,7 +217,7 @@ export class ZoneWidget {
         this._isShowing = true;
         this._showImpl(range, heightInLines);
         this._isShowing = false;
-        this._positionMarkerId.set([{ range, options: ModelDecorationOptions.EMPTY }]);
+        this._positionMarkerId = this.editor.deltaDecorations(this._positionMarkerId, [{ range, options: ModelDecorationOptions.EMPTY }]);
     }
     hide() {
         if (this._viewZone) {
@@ -234,14 +237,14 @@ export class ZoneWidget {
         }
     }
     _decoratingElementsHeight() {
-        const lineHeight = this.editor.getOption(61 /* EditorOption.lineHeight */);
+        let lineHeight = this.editor.getOption(59 /* lineHeight */);
         let result = 0;
         if (this.options.showArrow) {
-            const arrowHeight = Math.round(lineHeight / 3);
+            let arrowHeight = Math.round(lineHeight / 3);
             result += 2 * arrowHeight;
         }
         if (this.options.showFrame) {
-            const frameThickness = Math.round(lineHeight / 9);
+            let frameThickness = Math.round(lineHeight / 9);
             result += 2 * frameThickness;
         }
         return result;
@@ -255,7 +258,7 @@ export class ZoneWidget {
         // Render the widget as zone (rendering) and widget (lifecycle)
         const viewZoneDomNode = document.createElement('div');
         viewZoneDomNode.style.overflow = 'hidden';
-        const lineHeight = this.editor.getOption(61 /* EditorOption.lineHeight */);
+        const lineHeight = this.editor.getOption(59 /* lineHeight */);
         // adjust heightInLines to viewport
         const maxHeightInLines = Math.max(12, (this.editor.getLayoutInfo().height / lineHeight) * 0.8);
         heightInLines = Math.min(heightInLines, maxHeightInLines);
@@ -291,7 +294,7 @@ export class ZoneWidget {
             this.container.style.borderTopWidth = width + 'px';
             this.container.style.borderBottomWidth = width + 'px';
         }
-        const containerHeight = heightInLines * lineHeight - this._decoratingElementsHeight();
+        let containerHeight = heightInLines * lineHeight - this._decoratingElementsHeight();
         if (this.container) {
             this.container.style.top = arrowHeight + 'px';
             this.container.style.height = containerHeight + 'px';
@@ -316,10 +319,10 @@ export class ZoneWidget {
     }
     revealLine(lineNumber, isLastLine) {
         if (isLastLine) {
-            this.editor.revealLineInCenter(lineNumber, 0 /* ScrollType.Smooth */);
+            this.editor.revealLineInCenter(lineNumber, 0 /* Smooth */);
         }
         else {
-            this.editor.revealLine(lineNumber, 0 /* ScrollType.Smooth */);
+            this.editor.revealLine(lineNumber, 0 /* Smooth */);
         }
     }
     setCssClass(className, classToReplace) {
@@ -352,9 +355,9 @@ export class ZoneWidget {
         if (this._resizeSash) {
             return;
         }
-        this._resizeSash = this._disposables.add(new Sash(this.domNode, this, { orientation: 1 /* Orientation.HORIZONTAL */ }));
+        this._resizeSash = this._disposables.add(new Sash(this.domNode, this, { orientation: 1 /* HORIZONTAL */ }));
         if (!this.options.isResizeable) {
-            this._resizeSash.state = 0 /* SashState.Disabled */;
+            this._resizeSash.state = 0 /* Disabled */;
         }
         let data;
         this._disposables.add(this._resizeSash.onDidStart((e) => {
@@ -370,9 +373,9 @@ export class ZoneWidget {
         }));
         this._disposables.add(this._resizeSash.onDidChange((evt) => {
             if (data) {
-                const lineDelta = (evt.currentY - data.startY) / this.editor.getOption(61 /* EditorOption.lineHeight */);
-                const roundedLineDelta = lineDelta < 0 ? Math.ceil(lineDelta) : Math.floor(lineDelta);
-                const newHeightInLines = data.heightInLines + roundedLineDelta;
+                let lineDelta = (evt.currentY - data.startY) / this.editor.getOption(59 /* lineHeight */);
+                let roundedLineDelta = lineDelta < 0 ? Math.ceil(lineDelta) : Math.floor(lineDelta);
+                let newHeightInLines = data.heightInLines + roundedLineDelta;
                 if (newHeightInLines > 5 && newHeightInLines < 35) {
                     this._relayout(newHeightInLines);
                 }

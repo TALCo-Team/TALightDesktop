@@ -29,7 +29,7 @@ export class InstantiationService {
         return new InstantiationService(services, this._strict, this);
     }
     invokeFunction(fn, ...args) {
-        const _trace = Trace.traceInvocation(fn);
+        let _trace = Trace.traceInvocation(fn);
         let _done = false;
         try {
             const accessor = {
@@ -67,20 +67,20 @@ export class InstantiationService {
     }
     _createInstance(ctor, args = [], _trace) {
         // arguments defined by service decorators
-        const serviceDependencies = _util.getServiceDependencies(ctor).sort((a, b) => a.index - b.index);
-        const serviceArgs = [];
+        let serviceDependencies = _util.getServiceDependencies(ctor).sort((a, b) => a.index - b.index);
+        let serviceArgs = [];
         for (const dependency of serviceDependencies) {
-            const service = this._getOrCreateServiceInstance(dependency.id, _trace);
+            let service = this._getOrCreateServiceInstance(dependency.id, _trace);
             if (!service) {
                 this._throwIfStrict(`[createInstance] ${ctor.name} depends on UNKNOWN service ${dependency.id}.`, false);
             }
             serviceArgs.push(service);
         }
-        const firstServiceArgPos = serviceDependencies.length > 0 ? serviceDependencies[0].index : args.length;
+        let firstServiceArgPos = serviceDependencies.length > 0 ? serviceDependencies[0].index : args.length;
         // check for argument mismatches, adjust static args if needed
         if (args.length !== firstServiceArgPos) {
-            console.trace(`[createInstance] First service dependency of ${ctor.name} at position ${firstServiceArgPos + 1} conflicts with ${args.length} static arguments`);
-            const delta = firstServiceArgPos - args.length;
+            console.warn(`[createInstance] First service dependency of ${ctor.name} at position ${firstServiceArgPos + 1} conflicts with ${args.length} static arguments`);
+            let delta = firstServiceArgPos - args.length;
             if (delta > 0) {
                 args = args.concat(new Array(delta));
             }
@@ -103,7 +103,7 @@ export class InstantiationService {
         }
     }
     _getServiceInstanceOrDescriptor(id) {
-        const instanceOrDesc = this._services.get(id);
+        let instanceOrDesc = this._services.get(id);
         if (!instanceOrDesc && this._parent) {
             return this._parent._getServiceInstanceOrDescriptor(id);
         }
@@ -112,7 +112,7 @@ export class InstantiationService {
         }
     }
     _getOrCreateServiceInstance(id, _trace) {
-        const thing = this._getServiceInstanceOrDescriptor(id);
+        let thing = this._getServiceInstanceOrDescriptor(id);
         if (thing instanceof SyncDescriptor) {
             return this._safeCreateAndCacheServiceInstance(id, thing, _trace.branch(id, true));
         }
@@ -145,8 +145,8 @@ export class InstantiationService {
                 throw new CyclicDependencyError(graph);
             }
             // check all dependencies for existence and if they need to be created first
-            for (const dependency of _util.getServiceDependencies(item.desc.ctor)) {
-                const instanceOrDesc = this._getServiceInstanceOrDescriptor(dependency.id);
+            for (let dependency of _util.getServiceDependencies(item.desc.ctor)) {
+                let instanceOrDesc = this._getServiceInstanceOrDescriptor(dependency.id);
                 if (!instanceOrDesc) {
                     this._throwIfStrict(`[createInstance] ${id} depends on ${dependency.id} which is NOT registered.`, true);
                 }
@@ -208,7 +208,7 @@ export class InstantiationService {
                     if (key in target) {
                         return target[key];
                     }
-                    const obj = idle.value;
+                    let obj = idle.value;
                     let prop = obj[key];
                     if (typeof prop !== 'function') {
                         return prop;
@@ -226,7 +226,7 @@ export class InstantiationService {
     }
     _throwIfStrict(msg, printWarning) {
         if (printWarning) {
-            console.warn(msg);
+            console.warn(printWarning);
         }
         if (this._strict) {
             throw new Error(msg);
@@ -241,28 +241,28 @@ export class Trace {
         this._dep = [];
     }
     static traceInvocation(ctor) {
-        return !_enableTracing ? Trace._None : new Trace(1 /* TraceType.Invocation */, ctor.name || ctor.toString().substring(0, 42).replace(/\n/g, ''));
+        return !_enableTracing ? Trace._None : new Trace(1 /* Invocation */, ctor.name || ctor.toString().substring(0, 42).replace(/\n/g, ''));
     }
     static traceCreation(ctor) {
-        return !_enableTracing ? Trace._None : new Trace(0 /* TraceType.Creation */, ctor.name);
+        return !_enableTracing ? Trace._None : new Trace(0 /* Creation */, ctor.name);
     }
     branch(id, first) {
-        const child = new Trace(2 /* TraceType.Branch */, id.toString());
+        let child = new Trace(2 /* Branch */, id.toString());
         this._dep.push([id, first, child]);
         return child;
     }
     stop() {
-        const dur = Date.now() - this._start;
+        let dur = Date.now() - this._start;
         Trace._totals += dur;
         let causedCreation = false;
         function printChild(n, trace) {
-            const res = [];
-            const prefix = new Array(n + 1).join('\t');
+            let res = [];
+            let prefix = new Array(n + 1).join('\t');
             for (const [id, first, child] of trace._dep) {
                 if (first && child) {
                     causedCreation = true;
                     res.push(`${prefix}CREATES -> ${id}`);
-                    const nested = printChild(n + 1, child);
+                    let nested = printChild(n + 1, child);
                     if (nested) {
                         res.push(nested);
                     }
@@ -273,8 +273,8 @@ export class Trace {
             }
             return res.join('\n');
         }
-        const lines = [
-            `${this.type === 0 /* TraceType.Creation */ ? 'CREATE' : 'CALL'} ${this.name}`,
+        let lines = [
+            `${this.type === 0 /* Creation */ ? 'CREATE' : 'CALL'} ${this.name}`,
             `${printChild(1, this)}`,
             `DONE, took ${dur.toFixed(2)}ms (grand total ${Trace._totals.toFixed(2)}ms)`
         ];

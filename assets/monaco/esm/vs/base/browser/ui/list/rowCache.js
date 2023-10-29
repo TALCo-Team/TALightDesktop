@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 import { $ } from '../../dom.js';
 function removeFromParent(element) {
-    var _a;
     try {
-        (_a = element.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(element);
+        if (element.parentElement) {
+            element.parentElement.removeChild(element);
+        }
     }
     catch (e) {
         // this will throw if this happens due to a blur event, nasty business

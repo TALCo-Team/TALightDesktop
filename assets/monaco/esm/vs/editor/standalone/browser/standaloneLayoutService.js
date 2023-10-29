@@ -20,7 +20,6 @@ let StandaloneLayoutService = class StandaloneLayoutService {
     constructor(_codeEditorService) {
         this._codeEditorService = _codeEditorService;
         this.onDidLayout = Event.None;
-        this.offset = { top: 0, quickPickTop: 0 };
     }
     get dimension() {
         if (!this._dimension) {

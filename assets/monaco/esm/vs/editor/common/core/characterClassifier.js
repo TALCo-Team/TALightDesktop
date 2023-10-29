@@ -40,12 +40,12 @@ export class CharacterClassifier {
 }
 export class CharacterSet {
     constructor() {
-        this._actual = new CharacterClassifier(0 /* Boolean.False */);
+        this._actual = new CharacterClassifier(0 /* False */);
     }
     add(charCode) {
-        this._actual.set(charCode, 1 /* Boolean.True */);
+        this._actual.set(charCode, 1 /* True */);
     }
     has(charCode) {
-        return (this._actual.get(charCode) === 1 /* Boolean.True */);
+        return (this._actual.get(charCode) === 1 /* True */);
     }
 }

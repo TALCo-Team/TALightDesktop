@@ -76,7 +76,7 @@ class ModelData {
         this.model.setMode(languageSelection.languageId);
     }
 }
-const DEFAULT_EOL = (platform.isLinux || platform.isMacintosh) ? 1 /* DefaultEndOfLine.LF */ : 2 /* DefaultEndOfLine.CRLF */;
+const DEFAULT_EOL = (platform.isLinux || platform.isMacintosh) ? 1 /* LF */ : 2 /* CRLF */;
 class DisposedModelInfo {
     constructor(uri, initialUndoRedoSnapshot, time, sharesUndoRedoStack, heapSize, sha1, versionId, alternativeVersionId) {
         this.uri = uri;
@@ -144,10 +144,10 @@ let ModelService = class ModelService extends Disposable {
         let newDefaultEOL = DEFAULT_EOL;
         const eol = config.eol;
         if (eol === '\r\n') {
-            newDefaultEOL = 2 /* DefaultEndOfLine.CRLF */;
+            newDefaultEOL = 2 /* CRLF */;
         }
         else if (eol === '\n') {
-            newDefaultEOL = 1 /* DefaultEndOfLine.LF */;
+            newDefaultEOL = 1 /* LF */;
         }
         let trimAutoWhitespace = EDITOR_MODEL_DEFAULTS.trimAutoWhitespace;
         if (config.editor && typeof config.editor.trimAutoWhitespace !== 'undefined') {
@@ -164,8 +164,7 @@ let ModelService = class ModelService extends Disposable {
         let bracketPairColorizationOptions = EDITOR_MODEL_DEFAULTS.bracketPairColorizationOptions;
         if (((_a = config.editor) === null || _a === void 0 ? void 0 : _a.bracketPairColorization) && typeof config.editor.bracketPairColorization === 'object') {
             bracketPairColorizationOptions = {
-                enabled: !!config.editor.bracketPairColorization.enabled,
-                independentColorPoolPerBracketType: !!config.editor.bracketPairColorization.independentColorPoolPerBracketType
+                enabled: !!config.editor.bracketPairColorization.enabled
             };
         }
         return {
@@ -188,7 +187,7 @@ let ModelService = class ModelService extends Disposable {
         if (eol && typeof eol === 'string' && eol !== 'auto') {
             return eol;
         }
-        return platform.OS === 3 /* platform.OperatingSystem.Linux */ || platform.OS === 2 /* platform.OperatingSystem.Macintosh */ ? '\n' : '\r\n';
+        return platform.OS === 3 /* Linux */ || platform.OS === 2 /* Macintosh */ ? '\n' : '\r\n';
     }
     _shouldRestoreUndoStack() {
         const result = this._configurationService.getValue('files.restoreUndoStack');
@@ -224,7 +223,7 @@ let ModelService = class ModelService extends Disposable {
     }
     static _setModelOptionsForModel(model, newOptions, currentOptions) {
         if (currentOptions && currentOptions.defaultEOL !== newOptions.defaultEOL && model.getLineCount() === 1) {
-            model.setEOL(newOptions.defaultEOL === 1 /* DefaultEndOfLine.LF */ ? 0 /* EndOfLineSequence.LF */ : 1 /* EndOfLineSequence.CRLF */);
+            model.setEOL(newOptions.defaultEOL === 1 /* LF */ ? 0 /* LF */ : 1 /* CRLF */);
         }
         if (currentOptions
             && (currentOptions.detectIndentation === newOptions.detectIndentation)
@@ -372,7 +371,7 @@ let ModelService = class ModelService extends Disposable {
     _schemaShouldMaintainUndoRedoElements(resource) {
         return (resource.scheme === Schemas.file
             || resource.scheme === Schemas.vscodeRemote
-            || resource.scheme === Schemas.vscodeUserData
+            || resource.scheme === Schemas.userData
             || resource.scheme === Schemas.vscodeNotebookCell
             || resource.scheme === 'fake-fs' // for tests
         );
@@ -474,7 +473,7 @@ let SemanticColoringFeature = class SemanticColoringFeature extends Disposable {
             delete this._watchers[model.uri.toString()];
         };
         const handleSettingOrThemeChange = () => {
-            for (const model of modelService.getModels()) {
+            for (let model of modelService.getModels()) {
                 const curr = this._watchers[model.uri.toString()];
                 if (isSemanticColoringEnabled(model, themeService, configurationService)) {
                     if (!curr) {
@@ -505,13 +504,6 @@ let SemanticColoringFeature = class SemanticColoringFeature extends Disposable {
             }
         }));
         this._register(themeService.onDidColorThemeChange(handleSettingOrThemeChange));
-    }
-    dispose() {
-        // Dispose all watchers
-        for (const watcher of Object.values(this._watchers)) {
-            watcher.dispose();
-        }
-        super.dispose();
     }
 };
 SemanticColoringFeature = __decorate([
@@ -622,7 +614,7 @@ let ModelSemanticColoring = class ModelSemanticColoring extends Disposable {
             // there is no provider
             if (this._currentDocumentResponse) {
                 // there are semantic tokens set
-                this._model.tokenization.setSemanticTokens(null, false);
+                this._model.setSemanticTokens(null, false);
             }
             return;
         }
@@ -666,8 +658,6 @@ let ModelSemanticColoring = class ModelSemanticColoring extends Disposable {
         });
     }
     static _copy(src, srcOffset, dest, destOffset, length) {
-        // protect against overflows
-        length = Math.min(length, dest.length - destOffset, src.length - srcOffset);
         for (let i = 0; i < length; i++) {
             dest[destOffset + i] = src[srcOffset + i];
         }
@@ -691,18 +681,18 @@ let ModelSemanticColoring = class ModelSemanticColoring extends Disposable {
             return;
         }
         if (!provider || !styling) {
-            this._model.tokenization.setSemanticTokens(null, false);
+            this._model.setSemanticTokens(null, false);
             return;
         }
         if (!tokens) {
-            this._model.tokenization.setSemanticTokens(null, true);
+            this._model.setSemanticTokens(null, true);
             rescheduleIfNeeded();
             return;
         }
         if (isSemanticTokensEdits(tokens)) {
             if (!currentResponse) {
                 // not possible!
-                this._model.tokenization.setSemanticTokens(null, true);
+                this._model.setSemanticTokens(null, true);
                 return;
             }
             if (tokens.edits.length === 0) {
@@ -723,12 +713,6 @@ let ModelSemanticColoring = class ModelSemanticColoring extends Disposable {
                 let destLastStart = destData.length;
                 for (let i = tokens.edits.length - 1; i >= 0; i--) {
                     const edit = tokens.edits[i];
-                    if (edit.start > srcData.length) {
-                        styling.warnInvalidEditStart(currentResponse.resultId, tokens.resultId, i, edit.start, srcData.length);
-                        // The edits are invalid and there's no way to recover
-                        this._model.tokenization.setSemanticTokens(null, true);
-                        return;
-                    }
                     const copyCount = srcLastStart - (edit.start + edit.deleteCount);
                     if (copyCount > 0) {
                         ModelSemanticColoring._copy(srcData, srcLastStart - copyCount, destData, destLastStart - copyCount, copyCount);
@@ -766,10 +750,10 @@ let ModelSemanticColoring = class ModelSemanticColoring extends Disposable {
                     }
                 }
             }
-            this._model.tokenization.setSemanticTokens(result, true);
+            this._model.setSemanticTokens(result, true);
         }
         else {
-            this._model.tokenization.setSemanticTokens(null, true);
+            this._model.setSemanticTokens(null, true);
         }
         rescheduleIfNeeded();
     }

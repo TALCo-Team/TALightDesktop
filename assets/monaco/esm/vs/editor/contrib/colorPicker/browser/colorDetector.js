@@ -45,7 +45,7 @@ let ColorDetector = class ColorDetector extends Disposable {
         this._localToDispose = this._register(new DisposableStore());
         this._decorationsIds = [];
         this._colorDatas = new Map();
-        this._colorDecoratorIds = this._editor.createDecorationsCollection();
+        this._colorDecoratorIds = new Set();
         this._ruleFactory = new DynamicCssRules(this._editor);
         this._colorDecorationClassRefs = this._register(new DisposableStore());
         this._debounceInformation = languageFeatureDebounceService.for(_languageFeaturesService.colorProvider, 'Document Colors', { min: ColorDetector.RECOMPUTE_TIME });
@@ -56,7 +56,7 @@ let ColorDetector = class ColorDetector extends Disposable {
         this._register(_editor.onDidChangeModelLanguage(() => this.onModelChanged()));
         this._register(_languageFeaturesService.colorProvider.onDidChange(() => this.onModelChanged()));
         this._register(_editor.onDidChangeConfiguration(() => {
-            const prevIsEnabled = this._isEnabled;
+            let prevIsEnabled = this._isEnabled;
             this._isEnabled = this.isEnabled();
             if (prevIsEnabled !== this._isEnabled) {
                 if (this._isEnabled) {
@@ -86,7 +86,7 @@ let ColorDetector = class ColorDetector extends Disposable {
                 return colorDecorators['enable'];
             }
         }
-        return this._editor.getOption(17 /* EditorOption.colorDecorators */);
+        return this._editor.getOption(17 /* colorDecorators */);
     }
     static get(editor) {
         return editor.getContribution(this.ID);
@@ -154,19 +154,17 @@ let ColorDetector = class ColorDetector extends Disposable {
             },
             options: ModelDecorationOptions.EMPTY
         }));
-        this._editor.changeDecorations((changeAccessor) => {
-            this._decorationsIds = changeAccessor.deltaDecorations(this._decorationsIds, decorations);
-            this._colorDatas = new Map();
-            this._decorationsIds.forEach((id, i) => this._colorDatas.set(id, colorDatas[i]));
-        });
+        this._decorationsIds = this._editor.deltaDecorations(this._decorationsIds, decorations);
+        this._colorDatas = new Map();
+        this._decorationsIds.forEach((id, i) => this._colorDatas.set(id, colorDatas[i]));
     }
     updateColorDecorators(colorData) {
         this._colorDecorationClassRefs.clear();
-        const decorations = [];
+        let decorations = [];
         for (let i = 0; i < colorData.length && decorations.length < MAX_DECORATORS; i++) {
             const { red, green, blue, alpha } = colorData[i].colorInfo.color;
             const rgba = new RGBA(Math.round(red * 255), Math.round(green * 255), Math.round(blue * 255), alpha);
-            const color = `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a})`;
+            let color = `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a})`;
             const ref = this._colorDecorationClassRefs.add(this._ruleFactory.createClassNameRef({
                 backgroundColor: color
             }));
@@ -188,12 +186,11 @@ let ColorDetector = class ColorDetector extends Disposable {
                 }
             });
         }
-        this._colorDecoratorIds.set(decorations);
+        this._colorDecoratorIds = new Set(this._editor.deltaDecorations([...this._colorDecoratorIds], decorations));
     }
     removeAllDecorations() {
-        this._editor.removeDecorations(this._decorationsIds);
-        this._decorationsIds = [];
-        this._colorDecoratorIds.clear();
+        this._decorationsIds = this._editor.deltaDecorations(this._decorationsIds, []);
+        this._colorDecoratorIds = new Set(this._editor.deltaDecorations([...this._colorDecoratorIds], []));
         this._colorDecorationClassRefs.clear();
     }
     getColorData(position) {
@@ -209,8 +206,8 @@ let ColorDetector = class ColorDetector extends Disposable {
         }
         return this._colorDatas.get(decorations[0].id);
     }
-    isColorDecoration(decoration) {
-        return this._colorDecoratorIds.has(decoration);
+    isColorDecorationId(decorationId) {
+        return this._colorDecoratorIds.has(decorationId);
     }
 };
 ColorDetector.ID = 'editor.contrib.colorDetector';

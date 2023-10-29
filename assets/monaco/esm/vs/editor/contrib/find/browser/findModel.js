@@ -20,24 +20,24 @@ export const CONTEXT_FIND_WIDGET_NOT_VISIBLE = CONTEXT_FIND_WIDGET_VISIBLE.toNeg
 export const CONTEXT_FIND_INPUT_FOCUSED = new RawContextKey('findInputFocussed', false);
 export const CONTEXT_REPLACE_INPUT_FOCUSED = new RawContextKey('replaceInputFocussed', false);
 export const ToggleCaseSensitiveKeybinding = {
-    primary: 512 /* KeyMod.Alt */ | 33 /* KeyCode.KeyC */,
-    mac: { primary: 2048 /* KeyMod.CtrlCmd */ | 512 /* KeyMod.Alt */ | 33 /* KeyCode.KeyC */ }
+    primary: 512 /* Alt */ | 33 /* KeyC */,
+    mac: { primary: 2048 /* CtrlCmd */ | 512 /* Alt */ | 33 /* KeyC */ }
 };
 export const ToggleWholeWordKeybinding = {
-    primary: 512 /* KeyMod.Alt */ | 53 /* KeyCode.KeyW */,
-    mac: { primary: 2048 /* KeyMod.CtrlCmd */ | 512 /* KeyMod.Alt */ | 53 /* KeyCode.KeyW */ }
+    primary: 512 /* Alt */ | 53 /* KeyW */,
+    mac: { primary: 2048 /* CtrlCmd */ | 512 /* Alt */ | 53 /* KeyW */ }
 };
 export const ToggleRegexKeybinding = {
-    primary: 512 /* KeyMod.Alt */ | 48 /* KeyCode.KeyR */,
-    mac: { primary: 2048 /* KeyMod.CtrlCmd */ | 512 /* KeyMod.Alt */ | 48 /* KeyCode.KeyR */ }
+    primary: 512 /* Alt */ | 48 /* KeyR */,
+    mac: { primary: 2048 /* CtrlCmd */ | 512 /* Alt */ | 48 /* KeyR */ }
 };
 export const ToggleSearchScopeKeybinding = {
-    primary: 512 /* KeyMod.Alt */ | 42 /* KeyCode.KeyL */,
-    mac: { primary: 2048 /* KeyMod.CtrlCmd */ | 512 /* KeyMod.Alt */ | 42 /* KeyCode.KeyL */ }
+    primary: 512 /* Alt */ | 42 /* KeyL */,
+    mac: { primary: 2048 /* CtrlCmd */ | 512 /* Alt */ | 42 /* KeyL */ }
 };
 export const TogglePreserveCaseKeybinding = {
-    primary: 512 /* KeyMod.Alt */ | 46 /* KeyCode.KeyP */,
-    mac: { primary: 2048 /* KeyMod.CtrlCmd */ | 512 /* KeyMod.Alt */ | 46 /* KeyCode.KeyP */ }
+    primary: 512 /* Alt */ | 46 /* KeyP */,
+    mac: { primary: 2048 /* CtrlCmd */ | 512 /* Alt */ | 46 /* KeyP */ }
 };
 export const FIND_IDS = {
     StartFindAction: 'actions.find',
@@ -72,9 +72,9 @@ export class FindModelBoundToEditorModel {
         this._updateDecorationsScheduler = new RunOnceScheduler(() => this.research(false), 100);
         this._toDispose.add(this._updateDecorationsScheduler);
         this._toDispose.add(this._editor.onDidChangeCursorPosition((e) => {
-            if (e.reason === 3 /* CursorChangeReason.Explicit */
-                || e.reason === 5 /* CursorChangeReason.Undo */
-                || e.reason === 6 /* CursorChangeReason.Redo */) {
+            if (e.reason === 3 /* Explicit */
+                || e.reason === 5 /* Undo */
+                || e.reason === 6 /* Redo */) {
                 this._decorations.setStartPosition(this._editor.getPosition());
             }
         }));
@@ -108,7 +108,7 @@ export class FindModelBoundToEditorModel {
             return;
         }
         if (e.searchString || e.isReplaceRevealed || e.isRegex || e.wholeWord || e.matchCase || e.searchScope) {
-            const model = this._editor.getModel();
+            let model = this._editor.getModel();
             if (model.isTooLargeForSyncing()) {
                 this._startSearchingTimer.cancel();
                 this._startSearchingTimer.setIfNotSet(() => {
@@ -164,7 +164,7 @@ export class FindModelBoundToEditorModel {
                 return findScope;
             });
         }
-        const findMatches = this._findMatches(findScopes, false, MATCHES_LIMIT);
+        let findMatches = this._findMatches(findScopes, false, MATCHES_LIMIT);
         this._decorations.set(findMatches, findScopes);
         const editorSelection = this._editor.getSelection();
         let currentMatchesPosition = this._decorations.getCurrentMatchesPosition(editorSelection);
@@ -175,7 +175,7 @@ export class FindModelBoundToEditorModel {
             currentMatchesPosition = matchAfterSelection > 0 ? matchAfterSelection - 1 + 1 /** match position is one based */ : currentMatchesPosition;
         }
         this._state.changeMatchInfo(currentMatchesPosition, this._decorations.getCount(), undefined);
-        if (moveCursor && this._editor.getOption(37 /* EditorOption.find */).cursorMoveOnType) {
+        if (moveCursor && this._editor.getOption(35 /* find */).cursorMoveOnType) {
             this._moveToNextMatch(this._decorations.getStartPosition());
         }
     }
@@ -184,26 +184,26 @@ export class FindModelBoundToEditorModel {
     }
     _cannotFind() {
         if (!this._hasMatches()) {
-            const findScope = this._decorations.getFindScope();
+            let findScope = this._decorations.getFindScope();
             if (findScope) {
                 // Reveal the selection so user is reminded that 'selection find' is on.
-                this._editor.revealRangeInCenterIfOutsideViewport(findScope, 0 /* ScrollType.Smooth */);
+                this._editor.revealRangeInCenterIfOutsideViewport(findScope, 0 /* Smooth */);
             }
             return true;
         }
         return false;
     }
     _setCurrentFindMatch(match) {
-        const matchesPosition = this._decorations.setCurrentFindMatch(match);
+        let matchesPosition = this._decorations.setCurrentFindMatch(match);
         this._state.changeMatchInfo(matchesPosition, this._decorations.getCount(), match);
         this._editor.setSelection(match);
-        this._editor.revealRangeInCenterIfOutsideViewport(match, 0 /* ScrollType.Smooth */);
+        this._editor.revealRangeInCenterIfOutsideViewport(match, 0 /* Smooth */);
     }
     _prevSearchPosition(before) {
-        const isUsingLineStops = this._state.isRegex && (this._state.searchString.indexOf('^') >= 0
+        let isUsingLineStops = this._state.isRegex && (this._state.searchString.indexOf('^') >= 0
             || this._state.searchString.indexOf('$') >= 0);
         let { lineNumber, column } = before;
-        const model = this._editor.getModel();
+        let model = this._editor.getModel();
         if (isUsingLineStops || column === 1) {
             if (lineNumber === 1) {
                 lineNumber = model.getLineCount();
@@ -242,8 +242,8 @@ export class FindModelBoundToEditorModel {
         if (this._cannotFind()) {
             return;
         }
-        const findScope = this._decorations.getFindScope();
-        const searchRange = FindModelBoundToEditorModel._getSearchRange(this._editor.getModel(), findScope);
+        let findScope = this._decorations.getFindScope();
+        let searchRange = FindModelBoundToEditorModel._getSearchRange(this._editor.getModel(), findScope);
         // ...(----)...|...
         if (searchRange.getEndPosition().isBefore(before)) {
             before = searchRange.getEndPosition();
@@ -252,14 +252,14 @@ export class FindModelBoundToEditorModel {
         if (before.isBefore(searchRange.getStartPosition())) {
             before = searchRange.getEndPosition();
         }
-        const { lineNumber, column } = before;
-        const model = this._editor.getModel();
+        let { lineNumber, column } = before;
+        let model = this._editor.getModel();
         let position = new Position(lineNumber, column);
-        let prevMatch = model.findPreviousMatch(this._state.searchString, position, this._state.isRegex, this._state.matchCase, this._state.wholeWord ? this._editor.getOption(119 /* EditorOption.wordSeparators */) : null, false);
+        let prevMatch = model.findPreviousMatch(this._state.searchString, position, this._state.isRegex, this._state.matchCase, this._state.wholeWord ? this._editor.getOption(117 /* wordSeparators */) : null, false);
         if (prevMatch && prevMatch.range.isEmpty() && prevMatch.range.getStartPosition().equals(position)) {
             // Looks like we're stuck at this position, unacceptable!
             position = this._prevSearchPosition(position);
-            prevMatch = model.findPreviousMatch(this._state.searchString, position, this._state.isRegex, this._state.matchCase, this._state.wholeWord ? this._editor.getOption(119 /* EditorOption.wordSeparators */) : null, false);
+            prevMatch = model.findPreviousMatch(this._state.searchString, position, this._state.isRegex, this._state.matchCase, this._state.wholeWord ? this._editor.getOption(117 /* wordSeparators */) : null, false);
         }
         if (!prevMatch) {
             // there is precisely one match and selection is on top of it
@@ -274,10 +274,10 @@ export class FindModelBoundToEditorModel {
         this._moveToPrevMatch(this._editor.getSelection().getStartPosition());
     }
     _nextSearchPosition(after) {
-        const isUsingLineStops = this._state.isRegex && (this._state.searchString.indexOf('^') >= 0
+        let isUsingLineStops = this._state.isRegex && (this._state.searchString.indexOf('^') >= 0
             || this._state.searchString.indexOf('$') >= 0);
         let { lineNumber, column } = after;
-        const model = this._editor.getModel();
+        let model = this._editor.getModel();
         if (isUsingLineStops || column === model.getLineMaxColumn(lineNumber)) {
             if (lineNumber === model.getLineCount()) {
                 lineNumber = 1;
@@ -314,7 +314,7 @@ export class FindModelBoundToEditorModel {
             }
             return;
         }
-        const nextMatch = this._getNextMatch(after, false, true);
+        let nextMatch = this._getNextMatch(after, false, true);
         if (nextMatch) {
             this._setCurrentFindMatch(nextMatch.range);
         }
@@ -323,8 +323,8 @@ export class FindModelBoundToEditorModel {
         if (this._cannotFind()) {
             return null;
         }
-        const findScope = this._decorations.getFindScope();
-        const searchRange = FindModelBoundToEditorModel._getSearchRange(this._editor.getModel(), findScope);
+        let findScope = this._decorations.getFindScope();
+        let searchRange = FindModelBoundToEditorModel._getSearchRange(this._editor.getModel(), findScope);
         // ...(----)...|...
         if (searchRange.getEndPosition().isBefore(after)) {
             after = searchRange.getStartPosition();
@@ -333,14 +333,14 @@ export class FindModelBoundToEditorModel {
         if (after.isBefore(searchRange.getStartPosition())) {
             after = searchRange.getStartPosition();
         }
-        const { lineNumber, column } = after;
-        const model = this._editor.getModel();
+        let { lineNumber, column } = after;
+        let model = this._editor.getModel();
         let position = new Position(lineNumber, column);
-        let nextMatch = model.findNextMatch(this._state.searchString, position, this._state.isRegex, this._state.matchCase, this._state.wholeWord ? this._editor.getOption(119 /* EditorOption.wordSeparators */) : null, captureMatches);
+        let nextMatch = model.findNextMatch(this._state.searchString, position, this._state.isRegex, this._state.matchCase, this._state.wholeWord ? this._editor.getOption(117 /* wordSeparators */) : null, captureMatches);
         if (forceMove && nextMatch && nextMatch.range.isEmpty() && nextMatch.range.getStartPosition().equals(position)) {
             // Looks like we're stuck at this position, unacceptable!
             position = this._nextSearchPosition(position);
-            nextMatch = model.findNextMatch(this._state.searchString, position, this._state.isRegex, this._state.matchCase, this._state.wholeWord ? this._editor.getOption(119 /* EditorOption.wordSeparators */) : null, captureMatches);
+            nextMatch = model.findNextMatch(this._state.searchString, position, this._state.isRegex, this._state.matchCase, this._state.wholeWord ? this._editor.getOption(117 /* wordSeparators */) : null, captureMatches);
         }
         if (!nextMatch) {
             // there is precisely one match and selection is on top of it
@@ -364,14 +364,14 @@ export class FindModelBoundToEditorModel {
         if (!this._hasMatches()) {
             return;
         }
-        const replacePattern = this._getReplacePattern();
-        const selection = this._editor.getSelection();
-        const nextMatch = this._getNextMatch(selection.getStartPosition(), true, false);
+        let replacePattern = this._getReplacePattern();
+        let selection = this._editor.getSelection();
+        let nextMatch = this._getNextMatch(selection.getStartPosition(), true, false);
         if (nextMatch) {
             if (selection.equalsRange(nextMatch.range)) {
                 // selection sits on a find match => replace it!
-                const replaceString = replacePattern.buildReplaceString(nextMatch.matches, this._state.preserveCase);
-                const command = new ReplaceCommand(selection, replaceString);
+                let replaceString = replacePattern.buildReplaceString(nextMatch.matches, this._state.preserveCase);
+                let command = new ReplaceCommand(selection, replaceString);
                 this._executeEditorCommand('replace', command);
                 this._decorations.setStartPosition(new Position(selection.startLineNumber, selection.startColumn + replaceString.length));
                 this.research(true);
@@ -384,7 +384,7 @@ export class FindModelBoundToEditorModel {
     }
     _findMatches(findScopes, captureMatches, limitResultCount) {
         const searchRanges = (findScopes || [null]).map((scope) => FindModelBoundToEditorModel._getSearchRange(this._editor.getModel(), scope));
-        return this._editor.getModel().findMatches(this._state.searchString, searchRanges, this._state.isRegex, this._state.matchCase, this._state.wholeWord ? this._editor.getOption(119 /* EditorOption.wordSeparators */) : null, captureMatches, limitResultCount);
+        return this._editor.getModel().findMatches(this._state.searchString, searchRanges, this._state.isRegex, this._state.matchCase, this._state.wholeWord ? this._editor.getOption(117 /* wordSeparators */) : null, captureMatches, limitResultCount);
     }
     replaceAll() {
         if (!this._hasMatches()) {
@@ -401,7 +401,7 @@ export class FindModelBoundToEditorModel {
         this.research(false);
     }
     _largeReplaceAll() {
-        const searchParams = new SearchParams(this._state.searchString, this._state.isRegex, this._state.matchCase, this._state.wholeWord ? this._editor.getOption(119 /* EditorOption.wordSeparators */) : null);
+        const searchParams = new SearchParams(this._state.searchString, this._state.isRegex, this._state.matchCase, this._state.wholeWord ? this._editor.getOption(117 /* wordSeparators */) : null);
         const searchData = searchParams.parseSearchRequest();
         if (!searchData) {
             return;
@@ -418,7 +418,7 @@ export class FindModelBoundToEditorModel {
             searchRegex = new RegExp(searchRegex.source, mod);
         }
         const model = this._editor.getModel();
-        const modelText = model.getValue(1 /* EndOfLinePreference.LF */);
+        const modelText = model.getValue(1 /* LF */);
         const fullModelRange = model.getFullModelRange();
         const replacePattern = this._getReplacePattern();
         let resultText;
@@ -431,32 +431,32 @@ export class FindModelBoundToEditorModel {
         else {
             resultText = modelText.replace(searchRegex, replacePattern.buildReplaceString(null, preserveCase));
         }
-        const command = new ReplaceCommandThatPreservesSelection(fullModelRange, resultText, this._editor.getSelection());
+        let command = new ReplaceCommandThatPreservesSelection(fullModelRange, resultText, this._editor.getSelection());
         this._executeEditorCommand('replaceAll', command);
     }
     _regularReplaceAll(findScopes) {
         const replacePattern = this._getReplacePattern();
         // Get all the ranges (even more than the highlighted ones)
-        const matches = this._findMatches(findScopes, replacePattern.hasReplacementPatterns || this._state.preserveCase, 1073741824 /* Constants.MAX_SAFE_SMALL_INTEGER */);
-        const replaceStrings = [];
+        let matches = this._findMatches(findScopes, replacePattern.hasReplacementPatterns || this._state.preserveCase, 1073741824 /* MAX_SAFE_SMALL_INTEGER */);
+        let replaceStrings = [];
         for (let i = 0, len = matches.length; i < len; i++) {
             replaceStrings[i] = replacePattern.buildReplaceString(matches[i].matches, this._state.preserveCase);
         }
-        const command = new ReplaceAllCommand(this._editor.getSelection(), matches.map(m => m.range), replaceStrings);
+        let command = new ReplaceAllCommand(this._editor.getSelection(), matches.map(m => m.range), replaceStrings);
         this._executeEditorCommand('replaceAll', command);
     }
     selectAllMatches() {
         if (!this._hasMatches()) {
             return;
         }
-        const findScopes = this._decorations.getFindScopes();
+        let findScopes = this._decorations.getFindScopes();
         // Get all the ranges (even more than the highlighted ones)
-        const matches = this._findMatches(findScopes, false, 1073741824 /* Constants.MAX_SAFE_SMALL_INTEGER */);
+        let matches = this._findMatches(findScopes, false, 1073741824 /* MAX_SAFE_SMALL_INTEGER */);
         let selections = matches.map(m => new Selection(m.range.startLineNumber, m.range.startColumn, m.range.endLineNumber, m.range.endColumn));
         // If one of the ranges is the editor selection, then maintain it as primary
-        const editorSelection = this._editor.getSelection();
+        let editorSelection = this._editor.getSelection();
         for (let i = 0, len = selections.length; i < len; i++) {
-            const sel = selections[i];
+            let sel = selections[i];
             if (sel.equalsRange(editorSelection)) {
                 selections = [editorSelection].concat(selections.slice(0, i)).concat(selections.slice(i + 1));
                 break;

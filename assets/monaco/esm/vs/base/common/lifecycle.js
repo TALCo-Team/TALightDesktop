@@ -86,7 +86,7 @@ export function isDisposable(thing) {
 }
 export function dispose(arg) {
     if (Iterable.is(arg)) {
-        const errors = [];
+        let errors = [];
         for (const d of arg) {
             if (d) {
                 try {
@@ -244,22 +244,6 @@ export class MutableDisposable {
             setParentOfDisposable(oldValue, null);
         }
         return oldValue;
-    }
-}
-export class RefCountedDisposable {
-    constructor(_disposable) {
-        this._disposable = _disposable;
-        this._counter = 1;
-    }
-    acquire() {
-        this._counter++;
-        return this;
-    }
-    release() {
-        if (--this._counter === 0) {
-            this._disposable.dispose();
-        }
-        return this;
     }
 }
 /**

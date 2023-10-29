@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-.monaco-custom-toggle {
+.monaco-custom-checkbox {
 	margin-left: 2px;
 	float: left;
 	cursor: pointer;
@@ -19,26 +19,23 @@
 	-ms-user-select: none;
 }
 
-.monaco-custom-toggle:hover {
+.monaco-custom-checkbox:hover {
 	background-color: var(--vscode-inputOption-hoverBackground);
 }
 
-.hc-black .monaco-custom-toggle:hover,
-.hc-light .monaco-custom-toggle:hover {
+.hc-black .monaco-custom-checkbox:hover {
 	border: 1px dashed var(--vscode-focusBorder);
 }
 
-.hc-black .monaco-custom-toggle,
-.hc-light .monaco-custom-toggle {
+.hc-black .monaco-custom-checkbox {
 	background: none;
 }
 
-.hc-black .monaco-custom-toggle:hover,
-.hc-light .monaco-custom-toggle:hover {
+.hc-black .monaco-custom-checkbox:hover {
 	background: none;
 }
 
-.monaco-custom-toggle.monaco-checkbox {
+.monaco-custom-checkbox.monaco-simple-checkbox {
 	height: 18px;
 	width: 18px;
 	border: 1px solid transparent;
@@ -51,6 +48,6 @@
 }
 
 /* hide check when unchecked */
-.monaco-custom-toggle.monaco-checkbox:not(.checked)::before {
+.monaco-custom-checkbox.monaco-simple-checkbox:not(.checked)::before {
 	visibility: hidden;
 }

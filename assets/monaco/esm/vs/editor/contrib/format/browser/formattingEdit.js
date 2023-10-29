@@ -7,8 +7,8 @@ import { Range } from '../../../common/core/range.js';
 export class FormattingEdit {
     static _handleEolEdits(editor, edits) {
         let newEol = undefined;
-        const singleEdits = [];
-        for (const edit of edits) {
+        let singleEdits = [];
+        for (let edit of edits) {
             if (typeof edit.eol === 'number') {
                 newEol = edit.eol;
             }

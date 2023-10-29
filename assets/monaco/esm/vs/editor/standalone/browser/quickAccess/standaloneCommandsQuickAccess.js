@@ -55,17 +55,22 @@ StandaloneCommandsQuickAccessProvider = __decorate([
     __param(5, IDialogService)
 ], StandaloneCommandsQuickAccessProvider);
 export { StandaloneCommandsQuickAccessProvider };
+Registry.as(Extensions.Quickaccess).registerQuickAccessProvider({
+    ctor: StandaloneCommandsQuickAccessProvider,
+    prefix: StandaloneCommandsQuickAccessProvider.PREFIX,
+    helpEntries: [{ description: QuickCommandNLS.quickCommandHelp, needsEditor: true }]
+});
 export class GotoLineAction extends EditorAction {
     constructor() {
         super({
-            id: GotoLineAction.ID,
+            id: 'editor.action.quickCommand',
             label: QuickCommandNLS.quickCommandActionLabel,
             alias: 'Command Palette',
             precondition: undefined,
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
-                primary: 59 /* KeyCode.F1 */,
-                weight: 100 /* KeybindingWeight.EditorContrib */
+                primary: 59 /* F1 */,
+                weight: 100 /* EditorContrib */
             },
             contextMenuOpts: {
                 group: 'z_commands',
@@ -77,10 +82,4 @@ export class GotoLineAction extends EditorAction {
         accessor.get(IQuickInputService).quickAccess.show(StandaloneCommandsQuickAccessProvider.PREFIX);
     }
 }
-GotoLineAction.ID = 'editor.action.quickCommand';
 registerEditorAction(GotoLineAction);
-Registry.as(Extensions.Quickaccess).registerQuickAccessProvider({
-    ctor: StandaloneCommandsQuickAccessProvider,
-    prefix: StandaloneCommandsQuickAccessProvider.PREFIX,
-    helpEntries: [{ description: QuickCommandNLS.quickCommandHelp, commandId: GotoLineAction.ID }]
-});

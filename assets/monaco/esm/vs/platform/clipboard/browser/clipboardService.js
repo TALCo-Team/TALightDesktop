@@ -33,7 +33,6 @@ let BrowserClipboardService = class BrowserClipboardService extends Disposable {
         this.logService = logService;
         this.mapTextToType = new Map(); // unsupported in web (only in-memory)
         this.findText = ''; // unsupported in web (only in-memory)
-        this.resources = [];
         if (isSafari || isWebkitWebView) {
             this.installWebKitWriteTextWorkaround();
         }
@@ -140,11 +139,6 @@ let BrowserClipboardService = class BrowserClipboardService extends Disposable {
     writeFindText(text) {
         return __awaiter(this, void 0, void 0, function* () {
             this.findText = text;
-        });
-    }
-    readResources() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.resources;
         });
     }
 };

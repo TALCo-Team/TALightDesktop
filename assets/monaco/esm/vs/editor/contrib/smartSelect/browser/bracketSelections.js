@@ -40,24 +40,23 @@ export class BracketSelectionRangeProvider {
                 resolve();
                 break;
             }
-            const bracket = model.bracketPairs.findNextBracket(pos);
+            let bracket = model.bracketPairs.findNextBracket(pos);
             if (!bracket) {
                 resolve();
                 break;
             }
-            const d = Date.now() - t1;
+            let d = Date.now() - t1;
             if (d > BracketSelectionRangeProvider._maxDuration) {
                 setTimeout(() => BracketSelectionRangeProvider._bracketsRightYield(resolve, round + 1, model, pos, ranges));
                 break;
             }
-            if (bracket.bracketInfo.isOpeningBracket) {
-                const key = bracket.bracketInfo.bracketText;
+            const key = bracket.close[0];
+            if (bracket.isOpen) {
                 // wait for closing
-                const val = counts.has(key) ? counts.get(key) : 0;
+                let val = counts.has(key) ? counts.get(key) : 0;
                 counts.set(key, val + 1);
             }
             else {
-                const key = bracket.bracketInfo.getClosedBrackets()[0].bracketText;
                 // process closing
                 let val = counts.has(key) ? counts.get(key) : 0;
                 val -= 1;
@@ -86,32 +85,31 @@ export class BracketSelectionRangeProvider {
                 resolve();
                 break;
             }
-            const bracket = model.bracketPairs.findPrevBracket(pos);
+            let bracket = model.bracketPairs.findPrevBracket(pos);
             if (!bracket) {
                 resolve();
                 break;
             }
-            const d = Date.now() - t1;
+            let d = Date.now() - t1;
             if (d > BracketSelectionRangeProvider._maxDuration) {
                 setTimeout(() => BracketSelectionRangeProvider._bracketsLeftYield(resolve, round + 1, model, pos, ranges, bucket));
                 break;
             }
-            if (!bracket.bracketInfo.isOpeningBracket) {
-                const key = bracket.bracketInfo.getClosedBrackets()[0].bracketText;
+            const key = bracket.close[0];
+            if (!bracket.isOpen) {
                 // wait for opening
-                const val = counts.has(key) ? counts.get(key) : 0;
+                let val = counts.has(key) ? counts.get(key) : 0;
                 counts.set(key, val + 1);
             }
             else {
-                const key = bracket.bracketInfo.bracketText;
                 // opening
                 let val = counts.has(key) ? counts.get(key) : 0;
                 val -= 1;
                 counts.set(key, Math.max(0, val));
                 if (val < 0) {
-                    const list = ranges.get(key);
+                    let list = ranges.get(key);
                     if (list) {
-                        const closing = list.shift();
+                        let closing = list.shift();
                         if (list.size === 0) {
                             ranges.delete(key);
                         }

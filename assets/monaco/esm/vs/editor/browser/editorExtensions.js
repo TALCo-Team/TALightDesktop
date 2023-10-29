@@ -149,7 +149,7 @@ export class EditorCommand extends Command {
             }
         };
     }
-    static runEditorCommand(accessor, args, precondition, runner) {
+    runCommand(accessor, args) {
         const codeEditorService = accessor.get(ICodeEditorService);
         // Find the editor with text focus or active
         const editor = codeEditorService.getFocusedCodeEditor() || codeEditorService.getActiveCodeEditor();
@@ -159,15 +159,12 @@ export class EditorCommand extends Command {
         }
         return editor.invokeWithinContext((editorAccessor) => {
             const kbService = editorAccessor.get(IContextKeyService);
-            if (!kbService.contextMatchesRules(withNullAsUndefined(precondition))) {
+            if (!kbService.contextMatchesRules(withNullAsUndefined(this.precondition))) {
                 // precondition does not hold
                 return;
             }
-            return runner(editorAccessor, editor, args);
+            return this.runEditorCommand(editorAccessor, editor, args);
         });
-    }
-    runCommand(accessor, args) {
-        return EditorCommand.runEditorCommand(accessor, args, this.precondition, (accessor, editor, args) => this.runEditorCommand(accessor, editor, args));
     }
 }
 export class EditorAction extends EditorCommand {
@@ -363,8 +360,8 @@ export const UndoCommand = registerCommand(new MultiCommand({
     id: 'undo',
     precondition: undefined,
     kbOpts: {
-        weight: 0 /* KeybindingWeight.EditorCore */,
-        primary: 2048 /* KeyMod.CtrlCmd */ | 56 /* KeyCode.KeyZ */
+        weight: 0 /* EditorCore */,
+        primary: 2048 /* CtrlCmd */ | 56 /* KeyZ */
     },
     menuOpts: [{
             menuId: MenuId.MenubarEditMenu,
@@ -383,10 +380,10 @@ export const RedoCommand = registerCommand(new MultiCommand({
     id: 'redo',
     precondition: undefined,
     kbOpts: {
-        weight: 0 /* KeybindingWeight.EditorCore */,
-        primary: 2048 /* KeyMod.CtrlCmd */ | 55 /* KeyCode.KeyY */,
-        secondary: [2048 /* KeyMod.CtrlCmd */ | 1024 /* KeyMod.Shift */ | 56 /* KeyCode.KeyZ */],
-        mac: { primary: 2048 /* KeyMod.CtrlCmd */ | 1024 /* KeyMod.Shift */ | 56 /* KeyCode.KeyZ */ }
+        weight: 0 /* EditorCore */,
+        primary: 2048 /* CtrlCmd */ | 55 /* KeyY */,
+        secondary: [2048 /* CtrlCmd */ | 1024 /* Shift */ | 56 /* KeyZ */],
+        mac: { primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 56 /* KeyZ */ }
     },
     menuOpts: [{
             menuId: MenuId.MenubarEditMenu,
@@ -405,9 +402,9 @@ export const SelectAllCommand = registerCommand(new MultiCommand({
     id: 'editor.action.selectAll',
     precondition: undefined,
     kbOpts: {
-        weight: 0 /* KeybindingWeight.EditorCore */,
+        weight: 0 /* EditorCore */,
         kbExpr: null,
-        primary: 2048 /* KeyMod.CtrlCmd */ | 31 /* KeyCode.KeyA */
+        primary: 2048 /* CtrlCmd */ | 31 /* KeyA */
     },
     menuOpts: [{
             menuId: MenuId.MenubarSelectionMenu,

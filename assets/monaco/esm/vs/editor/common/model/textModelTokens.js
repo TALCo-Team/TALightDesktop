@@ -121,10 +121,9 @@ export class TokenizationStateStore {
     }
 }
 export class TextModelTokenization extends Disposable {
-    constructor(_textModel, _tokenizationPart, _languageIdCodec) {
+    constructor(_textModel, _languageIdCodec) {
         super();
         this._textModel = _textModel;
-        this._tokenizationPart = _tokenizationPart;
         this._languageIdCodec = _languageIdCodec;
         this._isScheduled = false;
         this._isDisposed = false;
@@ -135,7 +134,7 @@ export class TextModelTokenization extends Disposable {
                 return;
             }
             this._resetTokenizationState();
-            this._tokenizationPart.clearTokens();
+            this._textModel.clearTokens();
         }));
         this._resetTokenizationState();
     }
@@ -163,11 +162,11 @@ export class TextModelTokenization extends Disposable {
     }
     handleDidChangeLanguage(e) {
         this._resetTokenizationState();
-        this._tokenizationPart.clearTokens();
+        this._textModel.clearTokens();
     }
     //#endregion
     _resetTokenizationState() {
-        const [tokenizationSupport, initialState] = initializeTokenization(this._textModel, this._tokenizationPart);
+        const [tokenizationSupport, initialState] = initializeTokenization(this._textModel);
         if (tokenizationSupport && initialState) {
             this._tokenizationStateStore = new TokenizationStateStore(tokenizationSupport, initialState);
         }
@@ -230,30 +229,30 @@ export class TextModelTokenization extends Disposable {
                 break;
             }
         } while (this._hasLinesToTokenize());
-        this._tokenizationPart.setTokens(builder.finalize(), this._isTokenizationComplete());
+        this._textModel.setTokens(builder.finalize(), !this._hasLinesToTokenize());
     }
     tokenizeViewport(startLineNumber, endLineNumber) {
         const builder = new ContiguousMultilineTokensBuilder();
         this._tokenizeViewport(builder, startLineNumber, endLineNumber);
-        this._tokenizationPart.setTokens(builder.finalize(), this._isTokenizationComplete());
+        this._textModel.setTokens(builder.finalize(), !this._hasLinesToTokenize());
     }
     reset() {
         this._resetTokenizationState();
-        this._tokenizationPart.clearTokens();
+        this._textModel.clearTokens();
     }
     forceTokenization(lineNumber) {
         const builder = new ContiguousMultilineTokensBuilder();
         this._updateTokensUntilLine(builder, lineNumber);
-        this._tokenizationPart.setTokens(builder.finalize(), this._isTokenizationComplete());
+        this._textModel.setTokens(builder.finalize(), !this._hasLinesToTokenize());
     }
     getTokenTypeIfInsertingCharacter(position, character) {
         if (!this._tokenizationStateStore) {
-            return 0 /* StandardTokenType.Other */;
+            return 0 /* Other */;
         }
         this.forceTokenization(position.lineNumber);
         const lineStartState = this._tokenizationStateStore.getBeginState(position.lineNumber - 1);
         if (!lineStartState) {
-            return 0 /* StandardTokenType.Other */;
+            return 0 /* Other */;
         }
         const languageId = this._textModel.getLanguageId();
         const lineContent = this._textModel.getLineContent(position.lineNumber);
@@ -264,7 +263,7 @@ export class TextModelTokenization extends Disposable {
         const r = safeTokenize(this._languageIdCodec, languageId, this._tokenizationStateStore.tokenizationSupport, text, true, lineStartState);
         const lineTokens = new LineTokens(r.tokens, text, this._languageIdCodec);
         if (lineTokens.getCount() === 0) {
-            return 0 /* StandardTokenType.Other */;
+            return 0 /* Other */;
         }
         const tokenIndex = lineTokens.findTokenIndexAtOffset(position.column - 1);
         return lineTokens.getStandardTokenType(tokenIndex);
@@ -299,7 +298,7 @@ export class TextModelTokenization extends Disposable {
         if (lineNumber < firstInvalidLineNumber) {
             return true;
         }
-        if (this._textModel.getLineLength(lineNumber) < 2048 /* Constants.CHEAP_TOKENIZATION_LENGTH_LIMIT */) {
+        if (this._textModel.getLineLength(lineNumber) < 2048 /* CHEAP_TOKENIZATION_LENGTH_LIMIT */) {
             return true;
         }
         return false;
@@ -309,12 +308,6 @@ export class TextModelTokenization extends Disposable {
             return false;
         }
         return (this._tokenizationStateStore.invalidLineStartIndex < this._textModel.getLineCount());
-    }
-    _isTokenizationComplete() {
-        if (!this._tokenizationStateStore) {
-            return false;
-        }
-        return (this._tokenizationStateStore.invalidLineStartIndex >= this._textModel.getLineCount());
     }
     _tokenizeOneInvalidLine(builder) {
         if (!this._tokenizationStateStore || !this._hasLinesToTokenize()) {
@@ -364,12 +357,12 @@ export class TextModelTokenization extends Disposable {
                 continue;
             }
             if (newNonWhitespaceIndex < nonWhitespaceColumn) {
-                fakeLines.push(this._textModel.getLineContent(i));
-                nonWhitespaceColumn = newNonWhitespaceIndex;
                 initialState = this._tokenizationStateStore.getBeginState(i - 1);
                 if (initialState) {
                     break;
                 }
+                fakeLines.push(this._textModel.getLineContent(i));
+                nonWhitespaceColumn = newNonWhitespaceIndex;
             }
         }
         if (!initialState) {
@@ -390,11 +383,11 @@ export class TextModelTokenization extends Disposable {
         }
     }
 }
-function initializeTokenization(textModel, tokenizationPart) {
+function initializeTokenization(textModel) {
     if (textModel.isTooLargeForTokenization()) {
         return [null, null];
     }
-    const tokenizationSupport = TokenizationRegistry.get(tokenizationPart.getLanguageId());
+    const tokenizationSupport = TokenizationRegistry.get(textModel.getLanguageId());
     if (!tokenizationSupport) {
         return [null, null];
     }

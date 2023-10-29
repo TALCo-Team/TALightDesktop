@@ -51,13 +51,13 @@ class DomCharWidthReader {
         const testElements = [];
         for (const request of this._requests) {
             let parent;
-            if (request.type === 0 /* CharWidthRequestType.Regular */) {
+            if (request.type === 0 /* Regular */) {
                 parent = regularDomNode;
             }
-            if (request.type === 2 /* CharWidthRequestType.Bold */) {
+            if (request.type === 2 /* Bold */) {
                 parent = boldDomNode;
             }
-            if (request.type === 1 /* CharWidthRequestType.Italic */) {
+            if (request.type === 1 /* Italic */) {
                 parent = italicDomNode;
             }
             parent.appendChild(document.createElement('br'));

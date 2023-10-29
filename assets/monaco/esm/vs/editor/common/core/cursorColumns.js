@@ -21,7 +21,7 @@ import * as strings from '../../../base/common/strings.js';
  */
 export class CursorColumns {
     static _nextVisibleColumn(codePoint, visibleColumn, tabSize) {
-        if (codePoint === 9 /* CharCode.Tab */) {
+        if (codePoint === 9 /* Tab */) {
             return CursorColumns.nextRenderTabStop(visibleColumn, tabSize);
         }
         if (strings.isFullWidthCharacter(codePoint) || strings.isEmojiImprecise(codePoint)) {

@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import * as nls from '../../../nls.js';
 import { Emitter } from '../../../base/common/event.js';
+import { LanguageConfigurationRegistry } from './languageConfigurationRegistry.js';
 import { Registry } from '../../../platform/registry/common/platform.js';
 import { Mimes } from '../../../base/common/mime.js';
 import { Extensions as ConfigurationExtensions } from '../../../platform/configuration/common/configurationRegistry.js';
@@ -45,6 +46,26 @@ ModesRegistry.registerLanguage({
     aliases: [nls.localize('plainText.alias', "Plain Text"), 'text'],
     mimetypes: [Mimes.text]
 });
+LanguageConfigurationRegistry.register(PLAINTEXT_LANGUAGE_ID, {
+    brackets: [
+        ['(', ')'],
+        ['[', ']'],
+        ['{', '}'],
+    ],
+    surroundingPairs: [
+        { open: '{', close: '}' },
+        { open: '[', close: ']' },
+        { open: '(', close: ')' },
+        { open: '<', close: '>' },
+        { open: '\"', close: '\"' },
+        { open: '\'', close: '\'' },
+        { open: '`', close: '`' },
+    ],
+    colorizedBracketPairs: [],
+    folding: {
+        offSide: true
+    }
+}, 0);
 Registry.as(ConfigurationExtensions.Configuration)
     .registerDefaultConfigurations([{
         overrides: {

@@ -4,17 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 export class ViewCompositionStartEvent {
     constructor() {
-        this.type = 0 /* ViewEventType.ViewCompositionStart */;
+        this.type = 0 /* ViewCompositionStart */;
     }
 }
 export class ViewCompositionEndEvent {
     constructor() {
-        this.type = 1 /* ViewEventType.ViewCompositionEnd */;
+        this.type = 1 /* ViewCompositionEnd */;
     }
 }
 export class ViewConfigurationChangedEvent {
     constructor(source) {
-        this.type = 2 /* ViewEventType.ViewConfigurationChanged */;
+        this.type = 2 /* ViewConfigurationChanged */;
         this._source = source;
     }
     hasChanged(id) {
@@ -23,14 +23,14 @@ export class ViewConfigurationChangedEvent {
 }
 export class ViewCursorStateChangedEvent {
     constructor(selections, modelSelections) {
-        this.type = 3 /* ViewEventType.ViewCursorStateChanged */;
+        this.type = 3 /* ViewCursorStateChanged */;
         this.selections = selections;
         this.modelSelections = modelSelections;
     }
 }
 export class ViewDecorationsChangedEvent {
     constructor(source) {
-        this.type = 4 /* ViewEventType.ViewDecorationsChanged */;
+        this.type = 4 /* ViewDecorationsChanged */;
         if (source) {
             this.affectsMinimap = source.affectsMinimap;
             this.affectsOverviewRuler = source.affectsOverviewRuler;
@@ -43,52 +43,44 @@ export class ViewDecorationsChangedEvent {
 }
 export class ViewFlushedEvent {
     constructor() {
-        this.type = 5 /* ViewEventType.ViewFlushed */;
+        this.type = 5 /* ViewFlushed */;
         // Nothing to do
     }
 }
 export class ViewFocusChangedEvent {
     constructor(isFocused) {
-        this.type = 6 /* ViewEventType.ViewFocusChanged */;
+        this.type = 6 /* ViewFocusChanged */;
         this.isFocused = isFocused;
     }
 }
 export class ViewLanguageConfigurationEvent {
     constructor() {
-        this.type = 7 /* ViewEventType.ViewLanguageConfigurationChanged */;
+        this.type = 7 /* ViewLanguageConfigurationChanged */;
     }
 }
 export class ViewLineMappingChangedEvent {
     constructor() {
-        this.type = 8 /* ViewEventType.ViewLineMappingChanged */;
+        this.type = 8 /* ViewLineMappingChanged */;
         // Nothing to do
     }
 }
 export class ViewLinesChangedEvent {
-    constructor(
-    /**
-     * The first line that has changed.
-     */
-    fromLineNumber, 
-    /**
-     * The number of lines that have changed.
-     */
-    count) {
+    constructor(fromLineNumber, toLineNumber) {
+        this.type = 9 /* ViewLinesChanged */;
         this.fromLineNumber = fromLineNumber;
-        this.count = count;
-        this.type = 9 /* ViewEventType.ViewLinesChanged */;
+        this.toLineNumber = toLineNumber;
     }
 }
 export class ViewLinesDeletedEvent {
     constructor(fromLineNumber, toLineNumber) {
-        this.type = 10 /* ViewEventType.ViewLinesDeleted */;
+        this.type = 10 /* ViewLinesDeleted */;
         this.fromLineNumber = fromLineNumber;
         this.toLineNumber = toLineNumber;
     }
 }
 export class ViewLinesInsertedEvent {
     constructor(fromLineNumber, toLineNumber) {
-        this.type = 11 /* ViewEventType.ViewLinesInserted */;
+        this.type = 11 /* ViewLinesInserted */;
         this.fromLineNumber = fromLineNumber;
         this.toLineNumber = toLineNumber;
     }
@@ -131,12 +123,12 @@ export class ViewRevealRangeRequestEvent {
         this.verticalType = verticalType;
         this.revealHorizontal = revealHorizontal;
         this.scrollType = scrollType;
-        this.type = 12 /* ViewEventType.ViewRevealRangeRequest */;
+        this.type = 12 /* ViewRevealRangeRequest */;
     }
 }
 export class ViewScrollChangedEvent {
     constructor(source) {
-        this.type = 13 /* ViewEventType.ViewScrollChanged */;
+        this.type = 13 /* ViewScrollChanged */;
         this.scrollWidth = source.scrollWidth;
         this.scrollLeft = source.scrollLeft;
         this.scrollHeight = source.scrollHeight;
@@ -150,24 +142,24 @@ export class ViewScrollChangedEvent {
 export class ViewThemeChangedEvent {
     constructor(theme) {
         this.theme = theme;
-        this.type = 14 /* ViewEventType.ViewThemeChanged */;
+        this.type = 14 /* ViewThemeChanged */;
     }
 }
 export class ViewTokensChangedEvent {
     constructor(ranges) {
-        this.type = 15 /* ViewEventType.ViewTokensChanged */;
+        this.type = 15 /* ViewTokensChanged */;
         this.ranges = ranges;
     }
 }
 export class ViewTokensColorsChangedEvent {
     constructor() {
-        this.type = 16 /* ViewEventType.ViewTokensColorsChanged */;
+        this.type = 16 /* ViewTokensColorsChanged */;
         // Nothing to do
     }
 }
 export class ViewZonesChangedEvent {
     constructor() {
-        this.type = 17 /* ViewEventType.ViewZonesChanged */;
+        this.type = 17 /* ViewZonesChanged */;
         // Nothing to do
     }
 }

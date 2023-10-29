@@ -19,9 +19,9 @@ class TransposeLettersAction extends EditorAction {
                 kbExpr: EditorContextKeys.textInputFocus,
                 primary: 0,
                 mac: {
-                    primary: 256 /* KeyMod.WinCtrl */ | 50 /* KeyCode.KeyT */
+                    primary: 256 /* WinCtrl */ | 50 /* KeyT */
                 },
-                weight: 100 /* KeybindingWeight.EditorContrib */
+                weight: 100 /* EditorContrib */
             }
         });
     }
@@ -29,30 +29,30 @@ class TransposeLettersAction extends EditorAction {
         if (!editor.hasModel()) {
             return;
         }
-        const model = editor.getModel();
-        const commands = [];
-        const selections = editor.getSelections();
-        for (const selection of selections) {
+        let model = editor.getModel();
+        let commands = [];
+        let selections = editor.getSelections();
+        for (let selection of selections) {
             if (!selection.isEmpty()) {
                 continue;
             }
-            const lineNumber = selection.startLineNumber;
-            const column = selection.startColumn;
-            const lastColumn = model.getLineMaxColumn(lineNumber);
+            let lineNumber = selection.startLineNumber;
+            let column = selection.startColumn;
+            let lastColumn = model.getLineMaxColumn(lineNumber);
             if (lineNumber === 1 && (column === 1 || (column === 2 && lastColumn === 2))) {
                 // at beginning of file, nothing to do
                 continue;
             }
             // handle special case: when at end of line, transpose left two chars
             // otherwise, transpose left and right chars
-            const endPosition = (column === lastColumn) ?
+            let endPosition = (column === lastColumn) ?
                 selection.getPosition() :
                 MoveOperations.rightPosition(model, selection.getPosition().lineNumber, selection.getPosition().column);
-            const middlePosition = MoveOperations.leftPosition(model, endPosition);
-            const beginPosition = MoveOperations.leftPosition(model, middlePosition);
-            const leftChar = model.getValueInRange(Range.fromPositions(beginPosition, middlePosition));
-            const rightChar = model.getValueInRange(Range.fromPositions(middlePosition, endPosition));
-            const replaceRange = Range.fromPositions(beginPosition, endPosition);
+            let middlePosition = MoveOperations.leftPosition(model, endPosition);
+            let beginPosition = MoveOperations.leftPosition(model, middlePosition);
+            let leftChar = model.getValueInRange(Range.fromPositions(beginPosition, middlePosition));
+            let rightChar = model.getValueInRange(Range.fromPositions(middlePosition, endPosition));
+            let replaceRange = Range.fromPositions(beginPosition, endPosition);
             commands.push(new ReplaceCommand(replaceRange, rightChar + leftChar));
         }
         if (commands.length > 0) {

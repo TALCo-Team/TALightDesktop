@@ -2,7 +2,7 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 9594:
+/***/ 3809:
 /*!*********************************************************************!*\
   !*** ./src/app/services/compiler-service/compiler-service.types.ts ***!
   \*********************************************************************/
@@ -45,15 +45,16 @@ var CompilerMessageType;
     CompilerMessageType["ScanDirectory"] = "ScanDirectory";
     CompilerMessageType["Delete"] = "Delete";
     CompilerMessageType["Exists"] = "Exists";
+    CompilerMessageType["RenameItem"] = "RenameItem";
 })(CompilerMessageType || (CompilerMessageType = {}));
 
 
 /***/ }),
 
-/***/ 8046:
-/*!*******************************************************************************************************************!*\
-  !*** ./node_modules/@angular-builders/custom-webpack/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js ***!
-  \*******************************************************************************************************************/
+/***/ 3918:
+/*!****************************************************************************************************************!*\
+  !*** ./node_modules/@angular-devkit/build-angular/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js ***!
+  \****************************************************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -161,23 +162,22 @@ var __webpack_exports__ = {};
   !*** ./src/app/services/python-compiler-service/python-compiler.worker.ts ***!
   \****************************************************************************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./node_modules/@angular-builders/custom-webpack/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js */ 8046);
-/* harmony import */ var _compiler_service_compiler_service_types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../compiler-service/compiler-service.types */ 9594);
+/* harmony import */ var _home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./node_modules/@angular-devkit/build-angular/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js */ 3918);
+/* harmony import */ var _compiler_service_compiler_service_types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../compiler-service/compiler-service.types */ 3809);
 
 /// <reference lib="webworker" />
 // Configs
 
 let pyodideRoot = "/";
-let pyodideMount = "/mnt";
+let pyodideMount = "/TALight";
 // Bootstrap pyodide
-//importScripts("https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js");
-importScripts("./assets/pyodide/pyodide.js");
+importScripts("../../../assets/pyodide/pyodide.js");
 //let worker: PyodideFsWorker;
 function main() {
   return _main.apply(this, arguments);
 }
 function _main() {
-  _main = (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+  _main = (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
     let worker = new PyodideWorker(pyodideRoot, pyodideMount);
   });
   return _main.apply(this, arguments);
@@ -211,7 +211,7 @@ class PyodideWorker {
       readyResolver(value);
     };
     addEventListener("message", /*#__PURE__*/function () {
-      var _ref = (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* (payload) {
+      var _ref = (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* (payload) {
         _this.onData(payload.data);
       });
       return function (_x) {
@@ -237,7 +237,7 @@ class PyodideWorker {
   }
   initPydiode() {
     var _this2 = this;
-    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("loadPyodide: ...");
       let options = {
         stdin: () => {
@@ -262,13 +262,13 @@ class PyodideWorker {
   }
   setCustomHooks() {
     var _this3 = this;
-    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       let oldInput = _this3.pyodide.globals.input;
       console.log("setCustomHooks:oldInput:", oldInput);
       //Globals: Input
       let localThis = _this3;
       _this3.pyodide.globals.set('input', /*#__PURE__*/function () {
-        var _ref2 = (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* (prompt) {
+        var _ref2 = (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* (prompt) {
           if (prompt && prompt.trim().length > 0) {
             localThis.sendStdout(prompt);
           }
@@ -303,7 +303,7 @@ class PyodideWorker {
 
   load(root, mount) {
     var _this4 = this;
-    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_builders_custom_webpack_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
+    return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       _this4.root = root;
       _this4.mount = mount;
       console.log("PyodideFsWorker: load");
@@ -380,8 +380,9 @@ class PyodideWorker {
     //TOD: unused??
     // localThis.sendState(CompilerState.Stdin)
     console.log('PyodideWorker:onStdin:');
-    if (this.stdinBuffer.length > 0) {}
-    let item = this.stdinBuffer.shift();
+    //if (this.stdinBuffer.length > 0){}    -> What does this do?
+    //let item = this.stdinBuffer.shift()
+    let item = this.stdinBuffer[0];
     console.log('PyodideWorker:onStdin:', item);
     return item;
   }
@@ -579,6 +580,11 @@ class PyodideWorker {
           return this.scanDirectory(request);
         };
         break;
+      case _compiler_service_compiler_service_types__WEBPACK_IMPORTED_MODULE_1__.CompilerMessageType.RenameItem:
+        action = request => {
+          return this.renameItem(request);
+        };
+        break;
       case _compiler_service_compiler_service_types__WEBPACK_IMPORTED_MODULE_1__.CompilerMessageType.Delete:
         action = request => {
           return this.delete(request);
@@ -728,6 +734,7 @@ class PyodideWorker {
     return response;
   }
   createDirectory(request) {
+    console.log("PYTHON CREATE DIRECTORY");
     let response = this.responseFromRequest(request);
     if (request.message.args.length < 1) {
       return this.responseError(response, "createDirectory: Requires at least 1 path as argument");
@@ -735,6 +742,10 @@ class PyodideWorker {
     //TODO: allow for multiple queries;
     let fullpath = request.message.args[0];
     if (!this.internal_exists(this.mount + fullpath)) {
+      console.log("CI ENTRO");
+      console.log("ABC: ", this.mount + " " + fullpath);
+      //var str = this.mount + fullpath.replace('.', '')
+      //console.log(str)
       let res = this.fs.mkdir(this.mount + fullpath);
       console.log('pydiode:mkdir:', res);
       this.syncFS();
@@ -781,6 +792,23 @@ class PyodideWorker {
       };
     }
     return value;
+  }
+  renameItem(request) {
+    console.log("PYTHON RENAME ITEM");
+    let response = this.responseFromRequest(request);
+    console.log("RENAME REQUEST: ", request);
+    console.log("RENAME RESPONSE: ", response);
+    const oldpath = this.mount + request.message.args[0];
+    const newpath = this.mount + request.message.args[1];
+    console.log("OLDPATH: ", oldpath);
+    console.log("NEWPATH: ", newpath);
+    console.log("OLD FS: ", this.fs);
+    //var res = this.fs.rename(oldpath, newpath);
+    this.fs.rename(oldpath, newpath);
+    this.syncFS();
+    //console.log("NEW FS: ", res)
+    response.message.args = [oldpath, newpath];
+    return response;
   }
   scanDirectory_recursive(fullpath, recursive = false) {
     let res = this.fs.lookupPath(this.mount + fullpath);

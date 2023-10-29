@@ -16,15 +16,14 @@ import { $, append, reset } from '../../../../base/browser/dom.js';
 import { Color } from '../../../../base/common/color.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
 import { EditorAction, registerEditorAction, registerEditorContribution } from '../../../browser/editorExtensions.js';
-import { TokenizationRegistry } from '../../../common/languages.js';
-import { TokenMetadata } from '../../../common/encodedTokenAttributes.js';
+import { TokenMetadata, TokenizationRegistry } from '../../../common/languages.js';
 import { NullState, nullTokenize, nullTokenizeEncoded } from '../../../common/languages/nullTokenize.js';
 import { ILanguageService } from '../../../common/languages/language.js';
 import { IStandaloneThemeService } from '../../common/standaloneTheme.js';
 import { editorHoverBackground, editorHoverBorder, editorHoverForeground } from '../../../../platform/theme/common/colorRegistry.js';
 import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
 import { InspectTokensNLS } from '../../../common/standaloneStrings.js';
-import { isHighContrast } from '../../../../platform/theme/common/theme.js';
+import { ColorScheme } from '../../../../platform/theme/common/theme.js';
 let InspectTokensController = class InspectTokensController extends Disposable {
     constructor(editor, standaloneColorService, languageService) {
         super();
@@ -34,7 +33,7 @@ let InspectTokensController = class InspectTokensController extends Disposable {
         this._register(this._editor.onDidChangeModel((e) => this.stop()));
         this._register(this._editor.onDidChangeModelLanguage((e) => this.stop()));
         this._register(TokenizationRegistry.onDidChange((e) => this.stop()));
-        this._register(this._editor.onKeyUp((e) => e.keyCode === 9 /* KeyCode.Escape */ && this.stop()));
+        this._register(this._editor.onKeyUp((e) => e.keyCode === 9 /* Escape */ && this.stop()));
     }
     static get(editor) {
         return editor.getContribution(InspectTokensController.ID);
@@ -85,10 +84,10 @@ function renderTokenText(tokenText) {
     for (let charIndex = 0, len = tokenText.length; charIndex < len; charIndex++) {
         const charCode = tokenText.charCodeAt(charIndex);
         switch (charCode) {
-            case 9 /* CharCode.Tab */:
+            case 9 /* Tab */:
                 result += '\u2192'; // &rarr;
                 break;
-            case 32 /* CharCode.Space */:
+            case 32 /* Space */:
                 result += '\u00B7'; // &middot;
                 break;
             default:
@@ -182,25 +181,25 @@ class InspectTokensWidget extends Disposable {
     }
     _tokenTypeToString(tokenType) {
         switch (tokenType) {
-            case 0 /* StandardTokenType.Other */: return 'Other';
-            case 1 /* StandardTokenType.Comment */: return 'Comment';
-            case 2 /* StandardTokenType.String */: return 'String';
-            case 3 /* StandardTokenType.RegEx */: return 'RegEx';
+            case 0 /* Other */: return 'Other';
+            case 1 /* Comment */: return 'Comment';
+            case 2 /* String */: return 'String';
+            case 3 /* RegEx */: return 'RegEx';
             default: return '??';
         }
     }
     _fontStyleToString(fontStyle) {
         let r = '';
-        if (fontStyle & 1 /* FontStyle.Italic */) {
+        if (fontStyle & 1 /* Italic */) {
             r += 'italic ';
         }
-        if (fontStyle & 2 /* FontStyle.Bold */) {
+        if (fontStyle & 2 /* Bold */) {
             r += 'bold ';
         }
-        if (fontStyle & 4 /* FontStyle.Underline */) {
+        if (fontStyle & 4 /* Underline */) {
             r += 'underline ';
         }
-        if (fontStyle & 8 /* FontStyle.Strikethrough */) {
+        if (fontStyle & 8 /* Strikethrough */) {
             r += 'strikethrough ';
         }
         if (r.length === 0) {
@@ -233,7 +232,7 @@ class InspectTokensWidget extends Disposable {
     getPosition() {
         return {
             position: this._editor.getPosition(),
-            preference: [2 /* ContentWidgetPositionPreference.BELOW */, 1 /* ContentWidgetPositionPreference.ABOVE */]
+            preference: [2 /* BELOW */, 1 /* ABOVE */]
         };
     }
 }
@@ -243,7 +242,7 @@ registerEditorAction(InspectTokens);
 registerThemingParticipant((theme, collector) => {
     const border = theme.getColor(editorHoverBorder);
     if (border) {
-        const borderWidth = isHighContrast(theme.type) ? 2 : 1;
+        const borderWidth = theme.type === ColorScheme.HIGH_CONTRAST ? 2 : 1;
         collector.addRule(`.monaco-editor .tokens-inspect-widget { border: ${borderWidth}px solid ${border}; }`);
         collector.addRule(`.monaco-editor .tokens-inspect-widget .tokens-inspect-separator { background-color: ${border}; }`);
     }

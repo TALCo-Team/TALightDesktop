@@ -156,7 +156,7 @@ export class AbstractScrollableElement extends Widget {
         this._mouseWheelToDispose = [];
         this._setListeningToMouseWheel(this._options.handleMouseWheel);
         this.onmouseover(this._listenOnDomNode, (e) => this._onMouseOver(e));
-        this.onmouseleave(this._listenOnDomNode, (e) => this._onMouseLeave(e));
+        this.onnonbubblingmouseout(this._listenOnDomNode, (e) => this._onMouseOut(e));
         this._hideTimeout = this._register(new TimeoutTimer());
         this._isDragging = false;
         this._mouseIsOver = false;
@@ -183,11 +183,11 @@ export class AbstractScrollableElement extends Widget {
         };
     }
     /**
-     * Delegate a pointer down event to the vertical scrollbar.
+     * Delegate a mouse down event to the vertical scrollbar.
      * This is to help with clicking somewhere else and having the scrollbar react.
      */
-    delegateVerticalScrollbarPointerDown(browserEvent) {
-        this._verticalScrollbar.delegatePointerDown(browserEvent);
+    delegateVerticalScrollbarMouseDown(browserEvent) {
+        this._verticalScrollbar.delegateMouseDown(browserEvent);
     }
     getScrollDimensions() {
         return this._scrollable.getScrollDimensions();
@@ -394,7 +394,7 @@ export class AbstractScrollableElement extends Widget {
         this._isDragging = false;
         this._hide();
     }
-    _onMouseLeave(e) {
+    _onMouseOut(e) {
         this._mouseIsOver = false;
         this._hide();
     }
@@ -509,11 +509,11 @@ function resolveOptions(opts) {
         mouseWheelSmoothScroll: (typeof opts.mouseWheelSmoothScroll !== 'undefined' ? opts.mouseWheelSmoothScroll : true),
         arrowSize: (typeof opts.arrowSize !== 'undefined' ? opts.arrowSize : 11),
         listenOnDomNode: (typeof opts.listenOnDomNode !== 'undefined' ? opts.listenOnDomNode : null),
-        horizontal: (typeof opts.horizontal !== 'undefined' ? opts.horizontal : 1 /* ScrollbarVisibility.Auto */),
+        horizontal: (typeof opts.horizontal !== 'undefined' ? opts.horizontal : 1 /* Auto */),
         horizontalScrollbarSize: (typeof opts.horizontalScrollbarSize !== 'undefined' ? opts.horizontalScrollbarSize : 10),
         horizontalSliderSize: (typeof opts.horizontalSliderSize !== 'undefined' ? opts.horizontalSliderSize : 0),
         horizontalHasArrows: (typeof opts.horizontalHasArrows !== 'undefined' ? opts.horizontalHasArrows : false),
-        vertical: (typeof opts.vertical !== 'undefined' ? opts.vertical : 1 /* ScrollbarVisibility.Auto */),
+        vertical: (typeof opts.vertical !== 'undefined' ? opts.vertical : 1 /* Auto */),
         verticalScrollbarSize: (typeof opts.verticalScrollbarSize !== 'undefined' ? opts.verticalScrollbarSize : 10),
         verticalHasArrows: (typeof opts.verticalHasArrows !== 'undefined' ? opts.verticalHasArrows : false),
         verticalSliderSize: (typeof opts.verticalSliderSize !== 'undefined' ? opts.verticalSliderSize : 0),

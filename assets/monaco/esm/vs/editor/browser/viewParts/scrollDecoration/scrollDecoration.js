@@ -15,7 +15,7 @@ export class ScrollDecorationViewPart extends ViewPart {
         this._updateWidth();
         this._shouldShow = false;
         const options = this._context.configuration.options;
-        const scrollbar = options.get(94 /* EditorOption.scrollbar */);
+        const scrollbar = options.get(92 /* scrollbar */);
         this._useShadows = scrollbar.useShadows;
         this._domNode = createFastDomNode(document.createElement('div'));
         this._domNode.setAttribute('role', 'presentation');
@@ -37,18 +37,18 @@ export class ScrollDecorationViewPart extends ViewPart {
     }
     _updateWidth() {
         const options = this._context.configuration.options;
-        const layoutInfo = options.get(133 /* EditorOption.layoutInfo */);
+        const layoutInfo = options.get(131 /* layoutInfo */);
         if (layoutInfo.minimap.renderMinimap === 0 || (layoutInfo.minimap.minimapWidth > 0 && layoutInfo.minimap.minimapLeft === 0)) {
             this._width = layoutInfo.width;
         }
         else {
-            this._width = layoutInfo.width - layoutInfo.verticalScrollbarWidth;
+            this._width = layoutInfo.width - layoutInfo.minimap.minimapWidth - layoutInfo.verticalScrollbarWidth;
         }
     }
     // --- begin event handlers
     onConfigurationChanged(e) {
         const options = this._context.configuration.options;
-        const scrollbar = options.get(94 /* EditorOption.scrollbar */);
+        const scrollbar = options.get(92 /* scrollbar */);
         this._useShadows = scrollbar.useShadows;
         this._updateWidth();
         this._updateShouldShow();

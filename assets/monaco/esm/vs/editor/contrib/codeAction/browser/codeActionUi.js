@@ -45,24 +45,17 @@ let CodeActionUi = class CodeActionUi extends Disposable {
         this._editor = _editor;
         this.delegate = delegate;
         this._activeCodeActions = this._register(new MutableDisposable());
-        this.previewOn = false;
         _CodeActionUi_disposed.set(this, false);
         this._codeActionWidget = new Lazy(() => {
             return this._register(instantiationService.createInstance(CodeActionMenu, this._editor, {
-                onSelectCodeAction: (action, trigger) => __awaiter(this, void 0, void 0, function* () {
-                    if (this.previewOn) {
-                        this.delegate.applyCodeAction(action, /* retrigger */ true, Boolean(this.previewOn));
-                    }
-                    else {
-                        this.delegate.applyCodeAction(action, /* retrigger */ true, Boolean(trigger.preview));
-                    }
-                    this.previewOn = false;
+                onSelectCodeAction: (action) => __awaiter(this, void 0, void 0, function* () {
+                    this.delegate.applyCodeAction(action, /* retrigger */ true);
                 })
             }));
         });
         this._lightBulbWidget = new Lazy(() => {
             const widget = this._register(instantiationService.createInstance(LightBulbWidget, this._editor, quickFixActionId, preferredFixActionId));
-            this._register(widget.onClick(e => this.showCodeActionList(e.trigger, e.actions, e, { includeDisabledActions: false, fromLightbulb: true })));
+            this._register(widget.onClick(e => this.showCodeActionList(e.trigger, e.actions, e, { includeDisabledActions: false })));
             return widget;
         });
     }
@@ -70,34 +63,10 @@ let CodeActionUi = class CodeActionUi extends Disposable {
         __classPrivateFieldSet(this, _CodeActionUi_disposed, true, "f");
         super.dispose();
     }
-    hideCodeActionWidget() {
-        if (this._codeActionWidget.hasValue()) {
-            this._codeActionWidget.getValue().hideCodeActionWidget();
-        }
-    }
-    onEnter() {
-        if (this._codeActionWidget.hasValue()) {
-            this._codeActionWidget.getValue().onEnterSet();
-        }
-    }
-    onPreviewEnter() {
-        this.previewOn = true;
-        this.onEnter();
-    }
-    navigateList(navUp) {
-        if (this._codeActionWidget.hasValue()) {
-            if (navUp) {
-                this._codeActionWidget.getValue().navigateListWithKeysUp();
-            }
-            else {
-                this._codeActionWidget.getValue().navigateListWithKeysDown();
-            }
-        }
-    }
     update(newState) {
         var _a, _b, _c, _d, _e;
         return __awaiter(this, void 0, void 0, function* () {
-            if (newState.type !== 1 /* CodeActionsState.Type.Triggered */) {
+            if (newState.type !== 1 /* Triggered */) {
                 (_a = this._lightBulbWidget.rawValue) === null || _a === void 0 ? void 0 : _a.hide();
                 return;
             }
@@ -113,14 +82,14 @@ let CodeActionUi = class CodeActionUi extends Disposable {
                 return;
             }
             this._lightBulbWidget.getValue().update(actions, newState.trigger, newState.position);
-            if (newState.trigger.type === 1 /* CodeActionTriggerType.Invoke */) {
+            if (newState.trigger.type === 1 /* Invoke */) {
                 if ((_b = newState.trigger.filter) === null || _b === void 0 ? void 0 : _b.include) { // Triggered for specific scope
                     // Check to see if we want to auto apply.
                     const validActionToApply = this.tryGetValidActionToApply(newState.trigger, actions);
                     if (validActionToApply) {
                         try {
                             this._lightBulbWidget.getValue().hide();
-                            yield this.delegate.applyCodeAction(validActionToApply, false, false);
+                            yield this.delegate.applyCodeAction(validActionToApply, false);
                         }
                         finally {
                             actions.dispose();
@@ -147,7 +116,7 @@ let CodeActionUi = class CodeActionUi extends Disposable {
                     }
                 }
                 this._activeCodeActions.value = actions;
-                this._codeActionWidget.getValue().show(newState.trigger, actions, newState.position, { includeDisabledActions, fromLightbulb: false });
+                this._codeActionWidget.getValue().show(newState.trigger, actions, newState.position, { includeDisabledActions });
             }
             else {
                 // auto magically triggered
@@ -165,8 +134,8 @@ let CodeActionUi = class CodeActionUi extends Disposable {
         if (!actions.allActions.length) {
             return undefined;
         }
-        if ((trigger.autoApply === "first" /* CodeActionAutoApply.First */ && actions.validActions.length === 0)
-            || (trigger.autoApply === "ifSingle" /* CodeActionAutoApply.IfSingle */ && actions.allActions.length === 1)) {
+        if ((trigger.autoApply === "first" /* First */ && actions.validActions.length === 0)
+            || (trigger.autoApply === "ifSingle" /* IfSingle */ && actions.allActions.length === 1)) {
             return actions.allActions.find(({ action }) => action.disabled);
         }
         return undefined;
@@ -175,8 +144,8 @@ let CodeActionUi = class CodeActionUi extends Disposable {
         if (!actions.validActions.length) {
             return undefined;
         }
-        if ((trigger.autoApply === "first" /* CodeActionAutoApply.First */ && actions.validActions.length > 0)
-            || (trigger.autoApply === "ifSingle" /* CodeActionAutoApply.IfSingle */ && actions.validActions.length === 1)) {
+        if ((trigger.autoApply === "first" /* First */ && actions.validActions.length > 0)
+            || (trigger.autoApply === "ifSingle" /* IfSingle */ && actions.validActions.length === 1)) {
             return actions.validActions[0];
         }
         return undefined;

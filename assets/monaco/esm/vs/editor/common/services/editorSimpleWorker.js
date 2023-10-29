@@ -248,28 +248,25 @@ export class EditorSimpleWorker {
             if (!original || !modified) {
                 return null;
             }
-            return EditorSimpleWorker.computeDiff(original, modified, ignoreTrimWhitespace, maxComputationTime);
+            const originalLines = original.getLinesContent();
+            const modifiedLines = modified.getLinesContent();
+            const diffComputer = new DiffComputer(originalLines, modifiedLines, {
+                shouldComputeCharChanges: true,
+                shouldPostProcessCharChanges: true,
+                shouldIgnoreTrimWhitespace: ignoreTrimWhitespace,
+                shouldMakePrettyDiff: true,
+                maxComputationTime: maxComputationTime
+            });
+            const diffResult = diffComputer.computeDiff();
+            const identical = (diffResult.changes.length > 0 ? false : this._modelsAreIdentical(original, modified));
+            return {
+                quitEarly: diffResult.quitEarly,
+                identical: identical,
+                changes: diffResult.changes
+            };
         });
     }
-    static computeDiff(originalTextModel, modifiedTextModel, ignoreTrimWhitespace, maxComputationTime) {
-        const originalLines = originalTextModel.getLinesContent();
-        const modifiedLines = modifiedTextModel.getLinesContent();
-        const diffComputer = new DiffComputer(originalLines, modifiedLines, {
-            shouldComputeCharChanges: true,
-            shouldPostProcessCharChanges: true,
-            shouldIgnoreTrimWhitespace: ignoreTrimWhitespace,
-            shouldMakePrettyDiff: true,
-            maxComputationTime: maxComputationTime
-        });
-        const diffResult = diffComputer.computeDiff();
-        const identical = (diffResult.changes.length > 0 ? false : this._modelsAreIdentical(originalTextModel, modifiedTextModel));
-        return {
-            quitEarly: diffResult.quitEarly,
-            identical: identical,
-            changes: diffResult.changes
-        };
-    }
-    static _modelsAreIdentical(original, modified) {
+    _modelsAreIdentical(original, modified) {
         const originalLineCount = original.getLineCount();
         const modifiedLineCount = modified.getLineCount();
         if (originalLineCount !== modifiedLineCount) {
@@ -356,12 +353,12 @@ export class EditorSimpleWorker {
             const sw = new StopWatch(true);
             const wordDefRegExp = new RegExp(wordDef, wordDefFlags);
             const seen = new Set();
-            outer: for (const url of modelUrls) {
+            outer: for (let url of modelUrls) {
                 const model = this._getModel(url);
                 if (!model) {
                     continue;
                 }
-                for (const word of model.words(wordDefRegExp)) {
+                for (let word of model.words(wordDefRegExp)) {
                     if (word === leadingWord || !isNaN(Number(word))) {
                         continue;
                     }

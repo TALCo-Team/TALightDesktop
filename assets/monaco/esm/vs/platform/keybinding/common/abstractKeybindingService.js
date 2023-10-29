@@ -49,7 +49,6 @@ export class AbstractKeybindingService extends Disposable {
         return this._dispatch(e, target);
     }
     softDispatch(e, target) {
-        this._log(`/ Soft dispatching keyboard event`);
         const keybinding = this.resolveKeyboardEvent(e);
         if (keybinding.isChord()) {
             console.warn('Unexpected keyboard event mapped to a chord');
@@ -58,7 +57,6 @@ export class AbstractKeybindingService extends Disposable {
         const [firstPart,] = keybinding.getDispatchParts();
         if (firstPart === null) {
             // cannot be dispatched, probably only modifier keys
-            this._log(`\\ Keyboard event cannot be dispatched`);
             return null;
         }
         const contextValue = this._contextKeyService.getContext(target);
@@ -169,12 +167,10 @@ export class AbstractKeybindingService extends Disposable {
         if (resolveResult && resolveResult.enterChord) {
             shouldPreventDefault = true;
             this._enterChordMode(firstPart, keypressLabel);
-            this._log(`+ Entering chord mode...`);
             return shouldPreventDefault;
         }
         if (this._currentChord) {
             if (!resolveResult || !resolveResult.commandId) {
-                this._log(`+ Leaving chord mode: Nothing bound to "${this._currentChord.label} ${keypressLabel}".`);
                 this._notificationService.status(nls.localize('missing.chord', "The key combination ({0}, {1}) is not a command.", this._currentChord.label, keypressLabel), { hideAfter: 10 * 1000 /* 10s */ });
                 shouldPreventDefault = true;
             }
@@ -184,7 +180,6 @@ export class AbstractKeybindingService extends Disposable {
             if (!resolveResult.bubble) {
                 shouldPreventDefault = true;
             }
-            this._log(`+ Invoking command ${resolveResult.commandId}.`);
             if (typeof resolveResult.commandArgs === 'undefined') {
                 this._commandService.executeCommand(resolveResult.commandId).then(undefined, err => this._notificationService.warn(err));
             }
@@ -204,8 +199,8 @@ export class AbstractKeybindingService extends Disposable {
         }
         // weak check for certain ranges. this is properly implemented in a subclass
         // with access to the KeyboardMapperFactory.
-        if ((event.keyCode >= 31 /* KeyCode.KeyA */ && event.keyCode <= 56 /* KeyCode.KeyZ */)
-            || (event.keyCode >= 21 /* KeyCode.Digit0 */ && event.keyCode <= 30 /* KeyCode.Digit9 */)) {
+        if ((event.keyCode >= 31 /* KeyA */ && event.keyCode <= 56 /* KeyZ */)
+            || (event.keyCode >= 21 /* Digit0 */ && event.keyCode <= 30 /* Digit9 */)) {
             return true;
         }
         return false;

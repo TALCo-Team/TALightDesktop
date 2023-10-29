@@ -28,9 +28,7 @@
 }
 
 .monaco-editor.hc-black .suggest-widget,
-.monaco-editor.hc-black .suggest-details,
-.monaco-editor.hc-light .suggest-widget,
-.monaco-editor.hc-light .suggest-details {
+.monaco-editor.hc-black .suggest-details {
 	border-width: 2px;
 }
 
@@ -135,8 +133,7 @@
 	justify-content: space-between;
 }
 
-.monaco-editor .suggest-widget .monaco-list .monaco-list-row>.contents>.main>.left,
-.monaco-editor .suggest-widget .monaco-list .monaco-list-row>.contents>.main>.right {
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row>.contents>.main>.left, .monaco-editor .suggest-widget .monaco-list .monaco-list-row>.contents>.main>.right {
 	display: flex;
 }
 
@@ -326,8 +323,7 @@
 	margin-right: 4px;
 }
 
-.monaco-editor .suggest-widget.no-icons .monaco-list .monaco-list-row .icon,
-.monaco-editor .suggest-widget.no-icons .monaco-list .monaco-list-row .suggest-icon::before {
+.monaco-editor .suggest-widget.no-icons .monaco-list .monaco-list-row .icon, .monaco-editor .suggest-widget.no-icons .monaco-list .monaco-list-row .suggest-icon::before {
 	display: none;
 }
 

@@ -45,7 +45,7 @@ export class ConfigKeysIterator {
         let justSeps = true;
         for (; this._to < this._value.length; this._to++) {
             const ch = this._value.charCodeAt(this._to);
-            if (ch === 46 /* CharCode.Period */) {
+            if (ch === 46 /* Period */) {
                 if (justSeps) {
                     this._from++;
                 }
@@ -80,7 +80,7 @@ export class PathIterator {
         this._valueLen = key.length;
         for (let pos = key.length - 1; pos >= 0; pos--, this._valueLen--) {
             const ch = this._value.charCodeAt(pos);
-            if (!(ch === 47 /* CharCode.Slash */ || this._splitOnBackslash && ch === 92 /* CharCode.Backslash */)) {
+            if (!(ch === 47 /* Slash */ || this._splitOnBackslash && ch === 92 /* Backslash */)) {
                 break;
             }
         }
@@ -95,7 +95,7 @@ export class PathIterator {
         let justSeps = true;
         for (; this._to < this._valueLen; this._to++) {
             const ch = this._value.charCodeAt(this._to);
-            if (ch === 47 /* CharCode.Slash */ || this._splitOnBackslash && ch === 92 /* CharCode.Backslash */) {
+            if (ch === 47 /* Slash */ || this._splitOnBackslash && ch === 92 /* Backslash */) {
                 if (justSeps) {
                     this._from++;
                 }
@@ -119,9 +119,8 @@ export class PathIterator {
     }
 }
 export class UriIterator {
-    constructor(_ignorePathCasing, _ignoreQueryAndFragment) {
+    constructor(_ignorePathCasing) {
         this._ignorePathCasing = _ignorePathCasing;
-        this._ignoreQueryAndFragment = _ignoreQueryAndFragment;
         this._states = [];
         this._stateIdx = 0;
     }
@@ -129,31 +128,29 @@ export class UriIterator {
         this._value = key;
         this._states = [];
         if (this._value.scheme) {
-            this._states.push(1 /* UriIteratorState.Scheme */);
+            this._states.push(1 /* Scheme */);
         }
         if (this._value.authority) {
-            this._states.push(2 /* UriIteratorState.Authority */);
+            this._states.push(2 /* Authority */);
         }
         if (this._value.path) {
             this._pathIterator = new PathIterator(false, !this._ignorePathCasing(key));
             this._pathIterator.reset(key.path);
             if (this._pathIterator.value()) {
-                this._states.push(3 /* UriIteratorState.Path */);
+                this._states.push(3 /* Path */);
             }
         }
-        if (!this._ignoreQueryAndFragment(key)) {
-            if (this._value.query) {
-                this._states.push(4 /* UriIteratorState.Query */);
-            }
-            if (this._value.fragment) {
-                this._states.push(5 /* UriIteratorState.Fragment */);
-            }
+        if (this._value.query) {
+            this._states.push(4 /* Query */);
+        }
+        if (this._value.fragment) {
+            this._states.push(5 /* Fragment */);
         }
         this._stateIdx = 0;
         return this;
     }
     next() {
-        if (this._states[this._stateIdx] === 3 /* UriIteratorState.Path */ && this._pathIterator.hasNext()) {
+        if (this._states[this._stateIdx] === 3 /* Path */ && this._pathIterator.hasNext()) {
             this._pathIterator.next();
         }
         else {
@@ -162,41 +159,41 @@ export class UriIterator {
         return this;
     }
     hasNext() {
-        return (this._states[this._stateIdx] === 3 /* UriIteratorState.Path */ && this._pathIterator.hasNext())
+        return (this._states[this._stateIdx] === 3 /* Path */ && this._pathIterator.hasNext())
             || this._stateIdx < this._states.length - 1;
     }
     cmp(a) {
-        if (this._states[this._stateIdx] === 1 /* UriIteratorState.Scheme */) {
+        if (this._states[this._stateIdx] === 1 /* Scheme */) {
             return compareIgnoreCase(a, this._value.scheme);
         }
-        else if (this._states[this._stateIdx] === 2 /* UriIteratorState.Authority */) {
+        else if (this._states[this._stateIdx] === 2 /* Authority */) {
             return compareIgnoreCase(a, this._value.authority);
         }
-        else if (this._states[this._stateIdx] === 3 /* UriIteratorState.Path */) {
+        else if (this._states[this._stateIdx] === 3 /* Path */) {
             return this._pathIterator.cmp(a);
         }
-        else if (this._states[this._stateIdx] === 4 /* UriIteratorState.Query */) {
+        else if (this._states[this._stateIdx] === 4 /* Query */) {
             return compare(a, this._value.query);
         }
-        else if (this._states[this._stateIdx] === 5 /* UriIteratorState.Fragment */) {
+        else if (this._states[this._stateIdx] === 5 /* Fragment */) {
             return compare(a, this._value.fragment);
         }
         throw new Error();
     }
     value() {
-        if (this._states[this._stateIdx] === 1 /* UriIteratorState.Scheme */) {
+        if (this._states[this._stateIdx] === 1 /* Scheme */) {
             return this._value.scheme;
         }
-        else if (this._states[this._stateIdx] === 2 /* UriIteratorState.Authority */) {
+        else if (this._states[this._stateIdx] === 2 /* Authority */) {
             return this._value.authority;
         }
-        else if (this._states[this._stateIdx] === 3 /* UriIteratorState.Path */) {
+        else if (this._states[this._stateIdx] === 3 /* Path */) {
             return this._pathIterator.value();
         }
-        else if (this._states[this._stateIdx] === 4 /* UriIteratorState.Query */) {
+        else if (this._states[this._stateIdx] === 4 /* Query */) {
             return this._value.query;
         }
-        else if (this._states[this._stateIdx] === 5 /* UriIteratorState.Fragment */) {
+        else if (this._states[this._stateIdx] === 5 /* Fragment */) {
             return this._value.fragment;
         }
         throw new Error();
@@ -241,8 +238,8 @@ export class TernarySearchTree {
     constructor(segments) {
         this._iter = segments;
     }
-    static forUris(ignorePathCasing = () => false, ignoreQueryAndFragment = () => false) {
-        return new TernarySearchTree(new UriIterator(ignorePathCasing, ignoreQueryAndFragment));
+    static forUris(ignorePathCasing = () => false) {
+        return new TernarySearchTree(new UriIterator(ignorePathCasing));
     }
     static forStrings() {
         return new TernarySearchTree(new StringIterator());
@@ -271,7 +268,7 @@ export class TernarySearchTree {
                     node.left = new TernarySearchTreeNode();
                     node.left.segment = iter.value();
                 }
-                stack.push([-1 /* Dir.Left */, node]);
+                stack.push([-1 /* Left */, node]);
                 node = node.left;
             }
             else if (val < 0) {
@@ -280,7 +277,7 @@ export class TernarySearchTree {
                     node.right = new TernarySearchTreeNode();
                     node.right.segment = iter.value();
                 }
-                stack.push([1 /* Dir.Right */, node]);
+                stack.push([1 /* Right */, node]);
                 node = node.right;
             }
             else if (iter.hasNext()) {
@@ -290,7 +287,7 @@ export class TernarySearchTree {
                     node.mid = new TernarySearchTreeNode();
                     node.mid.segment = iter.value();
                 }
-                stack.push([0 /* Dir.Mid */, node]);
+                stack.push([0 /* Mid */, node]);
                 node = node.mid;
             }
             else {
@@ -310,20 +307,20 @@ export class TernarySearchTree {
                 // needs rotate
                 const d1 = stack[i][0];
                 const d2 = stack[i + 1][0];
-                if (d1 === 1 /* Dir.Right */ && d2 === 1 /* Dir.Right */) {
+                if (d1 === 1 /* Right */ && d2 === 1 /* Right */) {
                     //right, right -> rotate left
                     stack[i][1] = node.rotateLeft();
                 }
-                else if (d1 === -1 /* Dir.Left */ && d2 === -1 /* Dir.Left */) {
+                else if (d1 === -1 /* Left */ && d2 === -1 /* Left */) {
                     // left, left -> rotate right
                     stack[i][1] = node.rotateRight();
                 }
-                else if (d1 === 1 /* Dir.Right */ && d2 === -1 /* Dir.Left */) {
+                else if (d1 === 1 /* Right */ && d2 === -1 /* Left */) {
                     // right, left -> double rotate right, left
                     node.right = stack[i + 1][1] = stack[i + 1][1].rotateRight();
                     stack[i][1] = node.rotateLeft();
                 }
-                else if (d1 === -1 /* Dir.Left */ && d2 === 1 /* Dir.Right */) {
+                else if (d1 === -1 /* Left */ && d2 === 1 /* Right */) {
                     // left, right -> double rotate left, right
                     node.left = stack[i + 1][1] = stack[i + 1][1].rotateLeft();
                     stack[i][1] = node.rotateRight();
@@ -334,13 +331,13 @@ export class TernarySearchTree {
                 // patch path to parent
                 if (i > 0) {
                     switch (stack[i - 1][0]) {
-                        case -1 /* Dir.Left */:
+                        case -1 /* Left */:
                             stack[i - 1][1].left = stack[i][1];
                             break;
-                        case 1 /* Dir.Right */:
+                        case 1 /* Right */:
                             stack[i - 1][1].right = stack[i][1];
                             break;
-                        case 0 /* Dir.Mid */:
+                        case 0 /* Mid */:
                             stack[i - 1][1].mid = stack[i][1];
                             break;
                     }
@@ -400,18 +397,18 @@ export class TernarySearchTree {
             const val = iter.cmp(node.segment);
             if (val > 0) {
                 // left
-                stack.push([-1 /* Dir.Left */, node]);
+                stack.push([-1 /* Left */, node]);
                 node = node.left;
             }
             else if (val < 0) {
                 // right
-                stack.push([1 /* Dir.Right */, node]);
+                stack.push([1 /* Right */, node]);
                 node = node.right;
             }
             else if (iter.hasNext()) {
                 // mid
                 iter.next();
-                stack.push([0 /* Dir.Mid */, node]);
+                stack.push([0 /* Mid */, node]);
                 node = node.mid;
             }
             else {
@@ -451,13 +448,13 @@ export class TernarySearchTree {
                 if (stack.length > 0) {
                     const [dir, parent] = stack[stack.length - 1];
                     switch (dir) {
-                        case -1 /* Dir.Left */:
+                        case -1 /* Left */:
                             parent.left = newChild;
                             break;
-                        case 0 /* Dir.Mid */:
+                        case 0 /* Mid */:
                             parent.mid = newChild;
                             break;
-                        case 1 /* Dir.Right */:
+                        case 1 /* Right */:
                             parent.right = newChild;
                             break;
                     }
@@ -499,13 +496,13 @@ export class TernarySearchTree {
             // patch path to parent
             if (i > 0) {
                 switch (stack[i - 1][0]) {
-                    case -1 /* Dir.Left */:
+                    case -1 /* Left */:
                         stack[i - 1][1].left = stack[i][1];
                         break;
-                    case 1 /* Dir.Right */:
+                    case 1 /* Right */:
                         stack[i - 1][1].right = stack[i][1];
                         break;
-                    case 0 /* Dir.Mid */:
+                    case 0 /* Mid */:
                         stack[i - 1][1].mid = stack[i][1];
                         break;
                 }
@@ -585,27 +582,22 @@ export class TernarySearchTree {
     *[Symbol.iterator]() {
         yield* this._entries(this._root);
     }
-    _entries(node) {
-        const result = [];
-        this._dfsEntries(node, result);
-        return result[Symbol.iterator]();
-    }
-    _dfsEntries(node, bucket) {
+    *_entries(node) {
         // DFS
         if (!node) {
             return;
         }
         if (node.left) {
-            this._dfsEntries(node.left, bucket);
+            yield* this._entries(node.left);
         }
         if (node.value) {
-            bucket.push([node.key, node.value]);
+            yield [node.key, node.value];
         }
         if (node.mid) {
-            this._dfsEntries(node.mid, bucket);
+            yield* this._entries(node.mid);
         }
         if (node.right) {
-            this._dfsEntries(node.right, bucket);
+            yield* this._entries(node.right);
         }
     }
 }
@@ -651,27 +643,27 @@ export class ResourceMap {
         if (typeof thisArg !== 'undefined') {
             clb = clb.bind(thisArg);
         }
-        for (const [_, entry] of this.map) {
+        for (let [_, entry] of this.map) {
             clb(entry.value, entry.uri, this);
         }
     }
     *values() {
-        for (const entry of this.map.values()) {
+        for (let entry of this.map.values()) {
             yield entry.value;
         }
     }
     *keys() {
-        for (const entry of this.map.values()) {
+        for (let entry of this.map.values()) {
             yield entry.uri;
         }
     }
     *entries() {
-        for (const entry of this.map.values()) {
+        for (let entry of this.map.values()) {
             yield [entry.uri, entry.value];
         }
     }
     *[(_a = Symbol.toStringTag, Symbol.iterator)]() {
-        for (const [, entry] of this.map) {
+        for (let [, entry] of this.map) {
             yield [entry.uri, entry.value];
         }
     }
@@ -710,34 +702,34 @@ export class LinkedMap {
     has(key) {
         return this._map.has(key);
     }
-    get(key, touch = 0 /* Touch.None */) {
+    get(key, touch = 0 /* None */) {
         const item = this._map.get(key);
         if (!item) {
             return undefined;
         }
-        if (touch !== 0 /* Touch.None */) {
+        if (touch !== 0 /* None */) {
             this.touch(item, touch);
         }
         return item.value;
     }
-    set(key, value, touch = 0 /* Touch.None */) {
+    set(key, value, touch = 0 /* None */) {
         let item = this._map.get(key);
         if (item) {
             item.value = value;
-            if (touch !== 0 /* Touch.None */) {
+            if (touch !== 0 /* None */) {
                 this.touch(item, touch);
             }
         }
         else {
             item = { key, value, next: undefined, previous: undefined };
             switch (touch) {
-                case 0 /* Touch.None */:
+                case 0 /* None */:
                     this.addItemLast(item);
                     break;
-                case 1 /* Touch.AsOld */:
+                case 1 /* AsOld */:
                     this.addItemFirst(item);
                     break;
-                case 2 /* Touch.AsNew */:
+                case 2 /* AsNew */:
                     this.addItemLast(item);
                     break;
                 default:
@@ -958,10 +950,10 @@ export class LinkedMap {
         if (!this._head || !this._tail) {
             throw new Error('Invalid list');
         }
-        if ((touch !== 1 /* Touch.AsOld */ && touch !== 2 /* Touch.AsNew */)) {
+        if ((touch !== 1 /* AsOld */ && touch !== 2 /* AsNew */)) {
             return;
         }
-        if (touch === 1 /* Touch.AsOld */) {
+        if (touch === 1 /* AsOld */) {
             if (item === this._head) {
                 return;
             }
@@ -986,7 +978,7 @@ export class LinkedMap {
             this._head = item;
             this._state++;
         }
-        else if (touch === 2 /* Touch.AsNew */) {
+        else if (touch === 2 /* AsNew */) {
             if (item === this._tail) {
                 return;
             }
@@ -1038,14 +1030,14 @@ export class LRUCache extends LinkedMap {
         this._limit = limit;
         this.checkTrim();
     }
-    get(key, touch = 2 /* Touch.AsNew */) {
+    get(key, touch = 2 /* AsNew */) {
         return super.get(key, touch);
     }
     peek(key) {
-        return super.get(key, 0 /* Touch.None */);
+        return super.get(key, 0 /* None */);
     }
     set(key, value) {
-        super.set(key, value, 2 /* Touch.AsNew */);
+        super.set(key, value, 2 /* AsNew */);
         this.checkTrim();
         return this;
     }

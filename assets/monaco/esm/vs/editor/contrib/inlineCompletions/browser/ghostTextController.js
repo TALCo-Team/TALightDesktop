@@ -23,14 +23,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { Emitter } from '../../../../base/common/event.js';
 import { Disposable, MutableDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
 import { firstNonWhitespaceIndex } from '../../../../base/common/strings.js';
-import { EditorAction } from '../../../browser/editorExtensions.js';
+import { EditorAction, EditorCommand, registerEditorCommand } from '../../../browser/editorExtensions.js';
 import { CursorColumns } from '../../../common/core/cursorColumns.js';
 import { EditorContextKeys } from '../../../common/editorContextKeys.js';
+import { inlineSuggestCommitId } from './consts.js';
 import { GhostTextModel } from './ghostTextModel.js';
 import { GhostTextWidget } from './ghostTextWidget.js';
 import * as nls from '../../../../nls.js';
 import { ContextKeyExpr, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
 import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
+import { KeybindingsRegistry } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
 let GhostTextController = class GhostTextController extends Disposable {
     constructor(editor, instantiationService) {
         super();
@@ -43,10 +45,10 @@ let GhostTextController = class GhostTextController extends Disposable {
             this.updateModelController();
         }));
         this._register(this.editor.onDidChangeConfiguration((e) => {
-            if (e.hasChanged(108 /* EditorOption.suggest */)) {
+            if (e.hasChanged(106 /* suggest */)) {
                 this.updateModelController();
             }
-            if (e.hasChanged(57 /* EditorOption.inlineSuggest */)) {
+            if (e.hasChanged(55 /* inlineSuggest */)) {
                 this.updateModelController();
             }
         }));
@@ -61,8 +63,8 @@ let GhostTextController = class GhostTextController extends Disposable {
     }
     // Don't call this method when not necessary. It will recreate the activeController.
     updateModelController() {
-        const suggestOptions = this.editor.getOption(108 /* EditorOption.suggest */);
-        const inlineSuggestOptions = this.editor.getOption(57 /* EditorOption.inlineSuggest */);
+        const suggestOptions = this.editor.getOption(106 /* suggest */);
+        const inlineSuggestOptions = this.editor.getOption(55 /* inlineSuggest */);
         this.activeController.value = undefined;
         // ActiveGhostTextController is only created if one of those settings is set or if the inline completions are triggered explicitly.
         this.activeController.value =
@@ -181,6 +183,33 @@ ActiveGhostTextController = __decorate([
     __param(2, IContextKeyService)
 ], ActiveGhostTextController);
 export { ActiveGhostTextController };
+const GhostTextCommand = EditorCommand.bindToContribution(GhostTextController.get);
+export const commitInlineSuggestionAction = new GhostTextCommand({
+    id: inlineSuggestCommitId,
+    precondition: GhostTextController.inlineSuggestionVisible,
+    handler(x) {
+        x.commit();
+        x.editor.focus();
+    }
+});
+registerEditorCommand(commitInlineSuggestionAction);
+KeybindingsRegistry.registerKeybindingRule({
+    primary: 2 /* Tab */,
+    weight: 200,
+    id: commitInlineSuggestionAction.id,
+    when: ContextKeyExpr.and(commitInlineSuggestionAction.precondition, EditorContextKeys.tabMovesFocus.toNegated(), GhostTextController.inlineSuggestionHasIndentationLessThanTabSize),
+});
+registerEditorCommand(new GhostTextCommand({
+    id: 'editor.action.inlineSuggest.hide',
+    precondition: GhostTextController.inlineSuggestionVisible,
+    kbOpts: {
+        weight: 100,
+        primary: 9 /* Escape */,
+    },
+    handler(x) {
+        x.hide();
+    }
+}));
 export class ShowNextInlineSuggestionAction extends EditorAction {
     constructor() {
         super({
@@ -190,7 +219,7 @@ export class ShowNextInlineSuggestionAction extends EditorAction {
             precondition: ContextKeyExpr.and(EditorContextKeys.writable, GhostTextController.inlineSuggestionVisible),
             kbOpts: {
                 weight: 100,
-                primary: 512 /* KeyMod.Alt */ | 89 /* KeyCode.BracketRight */,
+                primary: 512 /* Alt */ | 89 /* BracketRight */,
             },
         });
     }
@@ -214,7 +243,7 @@ export class ShowPreviousInlineSuggestionAction extends EditorAction {
             precondition: ContextKeyExpr.and(EditorContextKeys.writable, GhostTextController.inlineSuggestionVisible),
             kbOpts: {
                 weight: 100,
-                primary: 512 /* KeyMod.Alt */ | 87 /* KeyCode.BracketLeft */,
+                primary: 512 /* Alt */ | 87 /* BracketLeft */,
             },
         });
     }

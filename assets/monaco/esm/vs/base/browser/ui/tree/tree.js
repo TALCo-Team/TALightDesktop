@@ -7,7 +7,6 @@ export var TreeMouseEventTarget;
     TreeMouseEventTarget[TreeMouseEventTarget["Unknown"] = 0] = "Unknown";
     TreeMouseEventTarget[TreeMouseEventTarget["Twistie"] = 1] = "Twistie";
     TreeMouseEventTarget[TreeMouseEventTarget["Element"] = 2] = "Element";
-    TreeMouseEventTarget[TreeMouseEventTarget["Filter"] = 3] = "Filter";
 })(TreeMouseEventTarget || (TreeMouseEventTarget = {}));
 export class TreeError extends Error {
     constructor(user, message) {

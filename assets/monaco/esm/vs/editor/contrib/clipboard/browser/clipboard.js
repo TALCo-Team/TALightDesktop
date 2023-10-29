@@ -38,9 +38,9 @@ export const CutAction = supportsCut ? registerCommand(new MultiCommand({
     // Do not bind cut keybindings in the browser,
     // since browsers do that for us and it avoids security prompts
     platform.isNative ? {
-        primary: 2048 /* KeyMod.CtrlCmd */ | 54 /* KeyCode.KeyX */,
-        win: { primary: 2048 /* KeyMod.CtrlCmd */ | 54 /* KeyCode.KeyX */, secondary: [1024 /* KeyMod.Shift */ | 20 /* KeyCode.Delete */] },
-        weight: 100 /* KeybindingWeight.EditorContrib */
+        primary: 2048 /* CtrlCmd */ | 54 /* KeyX */,
+        win: { primary: 2048 /* CtrlCmd */ | 54 /* KeyX */, secondary: [1024 /* Shift */ | 20 /* Delete */] },
+        weight: 100 /* EditorContrib */
     } : undefined),
     menuOpts: [{
             menuId: MenuId.MenubarEditMenu,
@@ -73,9 +73,9 @@ export const CopyAction = supportsCopy ? registerCommand(new MultiCommand({
     // Do not bind copy keybindings in the browser,
     // since browsers do that for us and it avoids security prompts
     platform.isNative ? {
-        primary: 2048 /* KeyMod.CtrlCmd */ | 33 /* KeyCode.KeyC */,
-        win: { primary: 2048 /* KeyMod.CtrlCmd */ | 33 /* KeyCode.KeyC */, secondary: [2048 /* KeyMod.CtrlCmd */ | 19 /* KeyCode.Insert */] },
-        weight: 100 /* KeybindingWeight.EditorContrib */
+        primary: 2048 /* CtrlCmd */ | 33 /* KeyC */,
+        win: { primary: 2048 /* CtrlCmd */ | 33 /* KeyC */, secondary: [2048 /* CtrlCmd */ | 19 /* Insert */] },
+        weight: 100 /* EditorContrib */
     } : undefined),
     menuOpts: [{
             menuId: MenuId.MenubarEditMenu,
@@ -101,7 +101,6 @@ export const CopyAction = supportsCopy ? registerCommand(new MultiCommand({
 })) : undefined;
 MenuRegistry.appendMenuItem(MenuId.MenubarEditMenu, { submenu: MenuId.MenubarCopy, title: { value: nls.localize('copy as', "Copy As"), original: 'Copy As', }, group: '2_ccp', order: 3 });
 MenuRegistry.appendMenuItem(MenuId.EditorContext, { submenu: MenuId.EditorContextCopy, title: { value: nls.localize('copy as', "Copy As"), original: 'Copy As', }, group: CLIPBOARD_CONTEXT_MENU_GROUP, order: 3 });
-MenuRegistry.appendMenuItem(MenuId.EditorContext, { submenu: MenuId.EditorContextShare, title: { value: nls.localize('share', "Share"), original: 'Share', }, group: '11_share', order: -1 });
 export const PasteAction = supportsPaste ? registerCommand(new MultiCommand({
     id: 'editor.action.clipboardPasteAction',
     precondition: undefined,
@@ -109,10 +108,10 @@ export const PasteAction = supportsPaste ? registerCommand(new MultiCommand({
     // Do not bind paste keybindings in the browser,
     // since browsers do that for us and it avoids security prompts
     platform.isNative ? {
-        primary: 2048 /* KeyMod.CtrlCmd */ | 52 /* KeyCode.KeyV */,
-        win: { primary: 2048 /* KeyMod.CtrlCmd */ | 52 /* KeyCode.KeyV */, secondary: [1024 /* KeyMod.Shift */ | 19 /* KeyCode.Insert */] },
-        linux: { primary: 2048 /* KeyMod.CtrlCmd */ | 52 /* KeyCode.KeyV */, secondary: [1024 /* KeyMod.Shift */ | 19 /* KeyCode.Insert */] },
-        weight: 100 /* KeybindingWeight.EditorContrib */
+        primary: 2048 /* CtrlCmd */ | 52 /* KeyV */,
+        win: { primary: 2048 /* CtrlCmd */ | 52 /* KeyV */, secondary: [1024 /* Shift */ | 19 /* Insert */] },
+        linux: { primary: 2048 /* CtrlCmd */ | 52 /* KeyV */, secondary: [1024 /* Shift */ | 19 /* Insert */] },
+        weight: 100 /* EditorContrib */
     } : undefined),
     menuOpts: [{
             menuId: MenuId.MenubarEditMenu,
@@ -148,7 +147,7 @@ class ExecCommandCopyWithSyntaxHighlightingAction extends EditorAction {
             kbOpts: {
                 kbExpr: EditorContextKeys.textInputFocus,
                 primary: 0,
-                weight: 100 /* KeybindingWeight.EditorContrib */
+                weight: 100 /* EditorContrib */
             }
         });
     }
@@ -156,7 +155,7 @@ class ExecCommandCopyWithSyntaxHighlightingAction extends EditorAction {
         if (!editor.hasModel()) {
             return;
         }
-        const emptySelectionClipboard = editor.getOption(33 /* EditorOption.emptySelectionClipboard */);
+        const emptySelectionClipboard = editor.getOption(32 /* emptySelectionClipboard */);
         if (!emptySelectionClipboard && editor.getSelection().isEmpty()) {
             return;
         }
@@ -176,7 +175,7 @@ function registerExecCommandImpl(target, browserCommand) {
         const focusedEditor = accessor.get(ICodeEditorService).getFocusedCodeEditor();
         if (focusedEditor && focusedEditor.hasTextFocus()) {
             // Do not execute if there is no selection and empty selection clipboard is off
-            const emptySelectionClipboard = focusedEditor.getOption(33 /* EditorOption.emptySelectionClipboard */);
+            const emptySelectionClipboard = focusedEditor.getOption(32 /* emptySelectionClipboard */);
             const selection = focusedEditor.getSelection();
             if (selection && selection.isEmpty() && !emptySelectionClipboard) {
                 return true;
@@ -213,11 +212,11 @@ if (PasteAction) {
                         let multicursorText = null;
                         let mode = null;
                         if (metadata) {
-                            pasteOnNewLine = (focusedEditor.getOption(33 /* EditorOption.emptySelectionClipboard */) && !!metadata.isFromEmptySelection);
+                            pasteOnNewLine = (focusedEditor.getOption(32 /* emptySelectionClipboard */) && !!metadata.isFromEmptySelection);
                             multicursorText = (typeof metadata.multicursorText !== 'undefined' ? metadata.multicursorText : null);
                             mode = metadata.mode;
                         }
-                        focusedEditor.trigger('keyboard', "paste" /* Handler.Paste */, {
+                        focusedEditor.trigger('keyboard', "paste" /* Paste */, {
                             text: clipboardText,
                             pasteOnNewLine,
                             multicursorText,

@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as strings from '../../../base/common/strings.js';
-import { CursorColumns } from './cursorColumns.js';
 function _normalizeIndentationFromWhitespace(str, indentSize, insertSpaces) {
     let spacesCnt = 0;
     for (let i = 0; i < str.length; i++) {
         if (str.charAt(i) === '\t') {
-            spacesCnt = CursorColumns.nextIndentTabStop(spacesCnt, indentSize);
+            spacesCnt += indentSize;
         }
         else {
             spacesCnt++;

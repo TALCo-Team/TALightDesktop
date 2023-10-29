@@ -31,7 +31,7 @@ export var ThemeIcon;
         if (!match) {
             return undefined;
         }
-        const [, name] = match;
+        let [, name] = match;
         return { id: name };
     }
     ThemeIcon.fromString = fromString;
@@ -75,8 +75,7 @@ export var ThemeIcon;
 export function getThemeTypeSelector(type) {
     switch (type) {
         case ColorScheme.DARK: return 'vs-dark';
-        case ColorScheme.HIGH_CONTRAST_DARK: return 'hc-black';
-        case ColorScheme.HIGH_CONTRAST_LIGHT: return 'hc-light';
+        case ColorScheme.HIGH_CONTRAST: return 'hc-black';
         default: return 'vs';
     }
 }
@@ -102,7 +101,7 @@ class ThemingRegistry {
         return this.themingParticipants;
     }
 }
-const themingRegistry = new ThemingRegistry();
+let themingRegistry = new ThemingRegistry();
 platform.Registry.add(Extensions.ThemingContribution, themingRegistry);
 export function registerThemingParticipant(participant) {
     return themingRegistry.onColorThemeChange(participant);

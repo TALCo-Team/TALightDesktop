@@ -43,7 +43,7 @@ let EditorConfiguration = class EditorConfiguration extends Disposable {
         this._rawOptions = deepCloneAndMigrateOptions(options);
         this._validatedOptions = EditorOptionsUtil.validateOptions(this._rawOptions);
         this.options = this._computeOptions();
-        if (this.options.get(10 /* EditorOption.automaticLayout */)) {
+        if (this.options.get(10 /* automaticLayout */)) {
             this._containerObserver.startObserving();
         }
         this._register(EditorZoom.onDidChangeZoomLevel(() => this._recomputeOptions()));
@@ -92,7 +92,7 @@ let EditorConfiguration = class EditorConfiguration extends Disposable {
             emptySelectionClipboard: browser.isWebKit || browser.isFirefox,
             pixelRatio: browser.PixelRatio.value,
             accessibilitySupport: (this._accessibilityService.isScreenReaderOptimized()
-                ? 2 /* AccessibilitySupport.Enabled */
+                ? 2 /* Enabled */
                 : this._accessibilityService.getAccessibilitySupport())
         };
     }
@@ -165,7 +165,6 @@ function getExtraEditorClassName() {
     if (browser.isSafari) {
         // See https://github.com/microsoft/vscode/issues/108822
         extra += 'no-minimap-shadow ';
-        extra += 'enable-user-select ';
     }
     if (platform.isMacintosh) {
         extra += 'mac ';

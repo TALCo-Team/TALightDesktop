@@ -6,7 +6,6 @@ import { isFirefox } from '../../browser.js';
 import { DataTransfers } from '../../dnd.js';
 import { $, addDisposableListener, append, EventHelper, EventType } from '../../dom.js';
 import { EventType as TouchEventType, Gesture } from '../../touch.js';
-import { setupCustomHover } from '../iconLabel/iconLabelHover.js';
 import { Action, ActionRunner, Separator } from '../../../common/actions.js';
 import { Disposable } from '../../../common/lifecycle.js';
 import * as platform from '../../../common/platform.js';
@@ -29,9 +28,6 @@ export class BaseActionViewItem extends Disposable {
                 this.handleActionChangeEvent(event);
             }));
         }
-    }
-    get action() {
-        return this._action;
     }
     handleActionChangeEvent(event) {
         if (event.enabled !== undefined) {
@@ -153,29 +149,8 @@ export class BaseActionViewItem extends Disposable {
     updateLabel() {
         // implement in subclass
     }
-    getTooltip() {
-        return this.getAction().tooltip;
-    }
     updateTooltip() {
-        var _a;
-        if (!this.element) {
-            return;
-        }
-        const title = (_a = this.getTooltip()) !== null && _a !== void 0 ? _a : '';
-        this.element.setAttribute('aria-label', title);
-        if (!this.options.hoverDelegate) {
-            this.element.title = title;
-        }
-        else {
-            this.element.title = '';
-            if (!this.customHover) {
-                this.customHover = setupCustomHover(this.options.hoverDelegate, this.element, title);
-                this._store.add(this.customHover);
-            }
-            else {
-                this.customHover.update(title);
-            }
-        }
+        // implement in subclass
     }
     updateClass() {
         // implement in subclass
@@ -249,7 +224,7 @@ export class ActionViewItem extends BaseActionViewItem {
             this.label.textContent = this.getAction().label;
         }
     }
-    getTooltip() {
+    updateTooltip() {
         let title = null;
         if (this.getAction().tooltip) {
             title = this.getAction().tooltip;
@@ -260,10 +235,11 @@ export class ActionViewItem extends BaseActionViewItem {
                 title = nls.localize({ key: 'titleLabel', comment: ['action title', 'action keybinding'] }, "{0} ({1})", title, this.options.keybinding);
             }
         }
-        return title !== null && title !== void 0 ? title : undefined;
+        if (title && this.label) {
+            this.label.title = title;
+        }
     }
     updateClass() {
-        var _a;
         if (this.cssClass && this.label) {
             this.label.classList.remove(...this.cssClass.split(' '));
         }
@@ -278,24 +254,29 @@ export class ActionViewItem extends BaseActionViewItem {
             this.updateEnabled();
         }
         else {
-            (_a = this.label) === null || _a === void 0 ? void 0 : _a.classList.remove('codicon');
+            if (this.label) {
+                this.label.classList.remove('codicon');
+            }
         }
     }
     updateEnabled() {
-        var _a, _b;
         if (this.getAction().enabled) {
             if (this.label) {
                 this.label.removeAttribute('aria-disabled');
                 this.label.classList.remove('disabled');
             }
-            (_a = this.element) === null || _a === void 0 ? void 0 : _a.classList.remove('disabled');
+            if (this.element) {
+                this.element.classList.remove('disabled');
+            }
         }
         else {
             if (this.label) {
                 this.label.setAttribute('aria-disabled', 'true');
                 this.label.classList.add('disabled');
             }
-            (_b = this.element) === null || _b === void 0 ? void 0 : _b.classList.add('disabled');
+            if (this.element) {
+                this.element.classList.add('disabled');
+            }
         }
     }
     updateChecked() {

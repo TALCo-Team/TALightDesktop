@@ -5,21 +5,21 @@
 export class FastDomNode {
     constructor(domNode) {
         this.domNode = domNode;
-        this._maxWidth = '';
-        this._width = '';
-        this._height = '';
-        this._top = '';
-        this._left = '';
-        this._bottom = '';
-        this._right = '';
+        this._maxWidth = -1;
+        this._width = -1;
+        this._height = -1;
+        this._top = -1;
+        this._left = -1;
+        this._bottom = -1;
+        this._right = -1;
         this._fontFamily = '';
         this._fontWeight = '';
-        this._fontSize = '';
+        this._fontSize = -1;
         this._fontStyle = '';
         this._fontFeatureSettings = '';
         this._textDecoration = '';
-        this._lineHeight = '';
-        this._letterSpacing = '';
+        this._lineHeight = -1;
+        this._letterSpacing = -100;
         this._className = '';
         this._display = '';
         this._position = '';
@@ -30,61 +30,61 @@ export class FastDomNode {
         this._contain = 'none';
         this._boxShadow = '';
     }
-    setMaxWidth(_maxWidth) {
-        const maxWidth = numberAsPixels(_maxWidth);
+    setMaxWidth(maxWidth) {
         if (this._maxWidth === maxWidth) {
             return;
         }
         this._maxWidth = maxWidth;
-        this.domNode.style.maxWidth = this._maxWidth;
+        this.domNode.style.maxWidth = this._maxWidth + 'px';
     }
-    setWidth(_width) {
-        const width = numberAsPixels(_width);
+    setWidth(width) {
         if (this._width === width) {
             return;
         }
         this._width = width;
-        this.domNode.style.width = this._width;
+        this.domNode.style.width = this._width + 'px';
     }
-    setHeight(_height) {
-        const height = numberAsPixels(_height);
+    setHeight(height) {
         if (this._height === height) {
             return;
         }
         this._height = height;
-        this.domNode.style.height = this._height;
+        this.domNode.style.height = this._height + 'px';
     }
-    setTop(_top) {
-        const top = numberAsPixels(_top);
+    setTop(top) {
         if (this._top === top) {
             return;
         }
         this._top = top;
-        this.domNode.style.top = this._top;
+        this.domNode.style.top = this._top + 'px';
     }
-    setLeft(_left) {
-        const left = numberAsPixels(_left);
+    unsetTop() {
+        if (this._top === -1) {
+            return;
+        }
+        this._top = -1;
+        this.domNode.style.top = '';
+    }
+    setLeft(left) {
         if (this._left === left) {
             return;
         }
         this._left = left;
-        this.domNode.style.left = this._left;
+        this.domNode.style.left = this._left + 'px';
     }
-    setBottom(_bottom) {
-        const bottom = numberAsPixels(_bottom);
+    setBottom(bottom) {
         if (this._bottom === bottom) {
             return;
         }
         this._bottom = bottom;
-        this.domNode.style.bottom = this._bottom;
+        this.domNode.style.bottom = this._bottom + 'px';
     }
-    setRight(_right) {
-        const right = numberAsPixels(_right);
+    setRight(right) {
         if (this._right === right) {
             return;
         }
         this._right = right;
-        this.domNode.style.right = this._right;
+        this.domNode.style.right = this._right + 'px';
     }
     setFontFamily(fontFamily) {
         if (this._fontFamily === fontFamily) {
@@ -100,13 +100,12 @@ export class FastDomNode {
         this._fontWeight = fontWeight;
         this.domNode.style.fontWeight = this._fontWeight;
     }
-    setFontSize(_fontSize) {
-        const fontSize = numberAsPixels(_fontSize);
+    setFontSize(fontSize) {
         if (this._fontSize === fontSize) {
             return;
         }
         this._fontSize = fontSize;
-        this.domNode.style.fontSize = this._fontSize;
+        this.domNode.style.fontSize = this._fontSize + 'px';
     }
     setFontStyle(fontStyle) {
         if (this._fontStyle === fontStyle) {
@@ -129,21 +128,19 @@ export class FastDomNode {
         this._textDecoration = textDecoration;
         this.domNode.style.textDecoration = this._textDecoration;
     }
-    setLineHeight(_lineHeight) {
-        const lineHeight = numberAsPixels(_lineHeight);
+    setLineHeight(lineHeight) {
         if (this._lineHeight === lineHeight) {
             return;
         }
         this._lineHeight = lineHeight;
-        this.domNode.style.lineHeight = this._lineHeight;
+        this.domNode.style.lineHeight = this._lineHeight + 'px';
     }
-    setLetterSpacing(_letterSpacing) {
-        const letterSpacing = numberAsPixels(_letterSpacing);
+    setLetterSpacing(letterSpacing) {
         if (this._letterSpacing === letterSpacing) {
             return;
         }
         this._letterSpacing = letterSpacing;
-        this.domNode.style.letterSpacing = this._letterSpacing;
+        this.domNode.style.letterSpacing = this._letterSpacing + 'px';
     }
     setClassName(className) {
         if (this._className === className) {
@@ -224,9 +221,6 @@ export class FastDomNode {
     removeChild(child) {
         this.domNode.removeChild(child.domNode);
     }
-}
-function numberAsPixels(value) {
-    return (typeof value === 'number' ? `${value}px` : value);
 }
 export function createFastDomNode(domNode) {
     return new FastDomNode(domNode);

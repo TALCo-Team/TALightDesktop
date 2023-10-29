@@ -31,7 +31,7 @@ let RenameInputField = class RenameInputField {
         this._visibleContextKey = CONTEXT_RENAME_INPUT_VISIBLE.bindTo(contextKeyService);
         this._editor.addContentWidget(this);
         this._disposables.add(this._editor.onDidChangeConfiguration(e => {
-            if (e.hasChanged(46 /* EditorOption.fontInfo */)) {
+            if (e.hasChanged(44 /* fontInfo */)) {
                 this._updateFont();
             }
         }));
@@ -89,7 +89,7 @@ let RenameInputField = class RenameInputField {
         if (!this._input || !this._label) {
             return;
         }
-        const fontInfo = this._editor.getOption(46 /* EditorOption.fontInfo */);
+        const fontInfo = this._editor.getOption(44 /* fontInfo */);
         this._input.style.fontFamily = fontInfo.fontFamily;
         this._input.style.fontWeight = fontInfo.fontWeight;
         this._input.style.fontSize = `${fontInfo.fontSize}px`;
@@ -101,7 +101,7 @@ let RenameInputField = class RenameInputField {
         }
         return {
             position: this._position,
-            preference: [2 /* ContentWidgetPositionPreference.BELOW */, 1 /* ContentWidgetPositionPreference.ABOVE */]
+            preference: [2 /* BELOW */, 1 /* ABOVE */]
         };
     }
     afterRender(position) {
@@ -111,12 +111,14 @@ let RenameInputField = class RenameInputField {
         }
     }
     acceptInput(wantsPreview) {
-        var _a;
-        (_a = this._currentAcceptInput) === null || _a === void 0 ? void 0 : _a.call(this, wantsPreview);
+        if (this._currentAcceptInput) {
+            this._currentAcceptInput(wantsPreview);
+        }
     }
     cancelInput(focusEditor) {
-        var _a;
-        (_a = this._currentCancelInput) === null || _a === void 0 ? void 0 : _a.call(this, focusEditor);
+        if (this._currentCancelInput) {
+            this._currentCancelInput(focusEditor);
+        }
     }
     getInput(where, value, selectionStart, selectionEnd, supportPreview, token) {
         this._domNode.classList.toggle('preview', supportPreview);
@@ -155,7 +157,7 @@ let RenameInputField = class RenameInputField {
         });
     }
     _show() {
-        this._editor.revealLineInCenterIfOutsideViewport(this._position.lineNumber, 0 /* ScrollType.Smooth */);
+        this._editor.revealLineInCenterIfOutsideViewport(this._position.lineNumber, 0 /* Smooth */);
         this._visible = true;
         this._visibleContextKey.set(true);
         this._editor.layoutContentWidget(this);

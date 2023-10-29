@@ -81,92 +81,92 @@ export class ViewEventHandler extends Disposable {
         for (let i = 0, len = events.length; i < len; i++) {
             const e = events[i];
             switch (e.type) {
-                case 0 /* viewEvents.ViewEventType.ViewCompositionStart */:
+                case 0 /* ViewCompositionStart */:
                     if (this.onCompositionStart(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 1 /* viewEvents.ViewEventType.ViewCompositionEnd */:
+                case 1 /* ViewCompositionEnd */:
                     if (this.onCompositionEnd(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 2 /* viewEvents.ViewEventType.ViewConfigurationChanged */:
+                case 2 /* ViewConfigurationChanged */:
                     if (this.onConfigurationChanged(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 3 /* viewEvents.ViewEventType.ViewCursorStateChanged */:
+                case 3 /* ViewCursorStateChanged */:
                     if (this.onCursorStateChanged(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 4 /* viewEvents.ViewEventType.ViewDecorationsChanged */:
+                case 4 /* ViewDecorationsChanged */:
                     if (this.onDecorationsChanged(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 5 /* viewEvents.ViewEventType.ViewFlushed */:
+                case 5 /* ViewFlushed */:
                     if (this.onFlushed(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 6 /* viewEvents.ViewEventType.ViewFocusChanged */:
+                case 6 /* ViewFocusChanged */:
                     if (this.onFocusChanged(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 7 /* viewEvents.ViewEventType.ViewLanguageConfigurationChanged */:
+                case 7 /* ViewLanguageConfigurationChanged */:
                     if (this.onLanguageConfigurationChanged(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 8 /* viewEvents.ViewEventType.ViewLineMappingChanged */:
+                case 8 /* ViewLineMappingChanged */:
                     if (this.onLineMappingChanged(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 9 /* viewEvents.ViewEventType.ViewLinesChanged */:
+                case 9 /* ViewLinesChanged */:
                     if (this.onLinesChanged(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 10 /* viewEvents.ViewEventType.ViewLinesDeleted */:
+                case 10 /* ViewLinesDeleted */:
                     if (this.onLinesDeleted(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 11 /* viewEvents.ViewEventType.ViewLinesInserted */:
+                case 11 /* ViewLinesInserted */:
                     if (this.onLinesInserted(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 12 /* viewEvents.ViewEventType.ViewRevealRangeRequest */:
+                case 12 /* ViewRevealRangeRequest */:
                     if (this.onRevealRangeRequest(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 13 /* viewEvents.ViewEventType.ViewScrollChanged */:
+                case 13 /* ViewScrollChanged */:
                     if (this.onScrollChanged(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 15 /* viewEvents.ViewEventType.ViewTokensChanged */:
+                case 15 /* ViewTokensChanged */:
                     if (this.onTokensChanged(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 14 /* viewEvents.ViewEventType.ViewThemeChanged */:
+                case 14 /* ViewThemeChanged */:
                     if (this.onThemeChanged(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 16 /* viewEvents.ViewEventType.ViewTokensColorsChanged */:
+                case 16 /* ViewTokensColorsChanged */:
                     if (this.onTokensColorsChanged(e)) {
                         shouldRender = true;
                     }
                     break;
-                case 17 /* viewEvents.ViewEventType.ViewZonesChanged */:
+                case 17 /* ViewZonesChanged */:
                     if (this.onZonesChanged(e)) {
                         shouldRender = true;
                     }

@@ -2,21 +2,11 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
 import * as strings from '../../../base/common/strings.js';
 import { CursorColumns } from '../core/cursorColumns.js';
 import { Range } from '../core/range.js';
 import { Selection } from '../core/selection.js';
-import { getEnterAction } from '../languages/enterAction.js';
-import { ILanguageConfigurationService } from '../languages/languageConfigurationRegistry.js';
+import { LanguageConfigurationRegistry } from '../languages/languageConfigurationRegistry.js';
 const repeatCache = Object.create(null);
 export function cachedStringRepeat(str, count) {
     if (count <= 0) {
@@ -31,9 +21,8 @@ export function cachedStringRepeat(str, count) {
     }
     return cache[count];
 }
-let ShiftCommand = class ShiftCommand {
-    constructor(range, opts, _languageConfigurationService) {
-        this._languageConfigurationService = _languageConfigurationService;
+export class ShiftCommand {
+    constructor(range, opts) {
         this._opts = opts;
         this._selection = range;
         this._selectionId = null;
@@ -118,13 +107,13 @@ let ShiftCommand = class ShiftCommand {
                     if (contentStartVisibleColumn % indentSize !== 0) {
                         // The current line is "miss-aligned", so let's see if this is expected...
                         // This can only happen when it has trailing commas in the indent
-                        if (model.tokenization.isCheapToTokenize(lineNumber - 1)) {
-                            const enterAction = getEnterAction(this._opts.autoIndent, model, new Range(lineNumber - 1, model.getLineMaxColumn(lineNumber - 1), lineNumber - 1, model.getLineMaxColumn(lineNumber - 1)), this._languageConfigurationService);
+                        if (model.isCheapToTokenize(lineNumber - 1)) {
+                            const enterAction = LanguageConfigurationRegistry.getEnterAction(this._opts.autoIndent, model, new Range(lineNumber - 1, model.getLineMaxColumn(lineNumber - 1), lineNumber - 1, model.getLineMaxColumn(lineNumber - 1)));
                             if (enterAction) {
                                 extraSpaces = previousLineExtraSpaces;
                                 if (enterAction.appendText) {
                                     for (let j = 0, lenJ = enterAction.appendText.length; j < lenJ && extraSpaces < indentSize; j++) {
-                                        if (enterAction.appendText.charCodeAt(j) === 32 /* CharCode.Space */) {
+                                        if (enterAction.appendText.charCodeAt(j) === 32 /* Space */) {
                                             extraSpaces++;
                                         }
                                         else {
@@ -137,7 +126,7 @@ let ShiftCommand = class ShiftCommand {
                                 }
                                 // Act as if `prefixSpaces` is not part of the indentation
                                 for (let j = 0; j < extraSpaces; j++) {
-                                    if (indentationEndIndex === 0 || lineText.charCodeAt(indentationEndIndex - 1) !== 32 /* CharCode.Space */) {
+                                    if (indentationEndIndex === 0 || lineText.charCodeAt(indentationEndIndex - 1) !== 32 /* Space */) {
                                         break;
                                     }
                                     indentationEndIndex--;
@@ -193,7 +182,7 @@ let ShiftCommand = class ShiftCommand {
                     indentationEndIndex = Math.min(indentationEndIndex, indentSize);
                     for (let i = 0; i < indentationEndIndex; i++) {
                         const chr = lineText.charCodeAt(i);
-                        if (chr === 9 /* CharCode.Tab */) {
+                        if (chr === 9 /* Tab */) {
                             indentationEndIndex = i + 1;
                             break;
                         }
@@ -224,15 +213,11 @@ let ShiftCommand = class ShiftCommand {
             if (resultStartColumn <= initialStartColumn) {
                 return result;
             }
-            if (result.getDirection() === 0 /* SelectionDirection.LTR */) {
+            if (result.getDirection() === 0 /* LTR */) {
                 return new Selection(result.startLineNumber, initialStartColumn, result.endLineNumber, result.endColumn);
             }
             return new Selection(result.endLineNumber, result.endColumn, result.startLineNumber, initialStartColumn);
         }
         return result;
     }
-};
-ShiftCommand = __decorate([
-    __param(2, ILanguageConfigurationService)
-], ShiftCommand);
-export { ShiftCommand };
+}

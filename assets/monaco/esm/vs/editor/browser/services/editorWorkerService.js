@@ -170,7 +170,7 @@ class WordBasedCompletionItemProvider {
                 duration: data.duration,
                 suggestions: data.words.map((word) => {
                     return {
-                        kind: 18 /* languages.CompletionItemKind.Text */,
+                        kind: 18 /* Text */,
                         label: word,
                         insertText: word,
                         range: { insert, replace }
@@ -247,7 +247,7 @@ class EditorModelManager extends Disposable {
         }
     }
     dispose() {
-        for (const modelUrl in this._syncedModels) {
+        for (let modelUrl in this._syncedModels) {
             dispose(this._syncedModels[modelUrl]);
         }
         this._syncedModels = Object.create(null);
@@ -268,7 +268,7 @@ class EditorModelManager extends Disposable {
     _checkStopModelSync() {
         const currentTime = (new Date()).getTime();
         const toRemove = [];
-        for (const modelUrl in this._syncedModelsLastUsedTime) {
+        for (let modelUrl in this._syncedModelsLastUsedTime) {
             const elapsedTime = currentTime - this._syncedModelsLastUsedTime[modelUrl];
             if (elapsedTime > STOP_SYNC_MODEL_DELTA_TIME_MS) {
                 toRemove.push(modelUrl);

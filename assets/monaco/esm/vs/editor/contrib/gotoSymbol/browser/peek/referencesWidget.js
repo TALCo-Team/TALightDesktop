@@ -67,7 +67,7 @@ class DecorationsManager {
         if (!model) {
             return;
         }
-        for (const ref of this._model.references) {
+        for (let ref of this._model.references) {
             if (ref.uri.toString() === model.uri.toString()) {
                 this._addDecorations(ref.parent);
                 return;
@@ -82,7 +82,7 @@ class DecorationsManager {
         const newDecorations = [];
         const newDecorationsActualIndex = [];
         for (let i = 0, len = reference.children.length; i < len; i++) {
-            const oneReference = reference.children[i];
+            let oneReference = reference.children[i];
             if (this._decorationIgnoreSet.has(oneReference.id)) {
                 continue;
             }
@@ -95,12 +95,10 @@ class DecorationsManager {
             });
             newDecorationsActualIndex.push(i);
         }
-        this._editor.changeDecorations((changeAccessor) => {
-            const decorations = changeAccessor.deltaDecorations([], newDecorations);
-            for (let i = 0; i < decorations.length; i++) {
-                this._decorations.set(decorations[i], reference.children[newDecorationsActualIndex[i]]);
-            }
-        });
+        const decorations = this._editor.deltaDecorations([], newDecorations);
+        for (let i = 0; i < decorations.length; i++) {
+            this._decorations.set(decorations[i], reference.children[newDecorationsActualIndex[i]]);
+        }
     }
     _onDecorationChanged() {
         const toRemove = [];
@@ -108,7 +106,7 @@ class DecorationsManager {
         if (!model) {
             return;
         }
-        for (const [decorationId, reference] of this._decorations) {
+        for (let [decorationId, reference] of this._decorations) {
             const newRange = model.getDecorationRange(decorationId);
             if (!newRange) {
                 continue;
@@ -138,16 +136,16 @@ class DecorationsManager {
         for (let i = 0, len = toRemove.length; i < len; i++) {
             this._decorations.delete(toRemove[i]);
         }
-        this._editor.removeDecorations(toRemove);
+        this._editor.deltaDecorations(toRemove, []);
     }
     removeDecorations() {
-        this._editor.removeDecorations([...this._decorations.keys()]);
+        this._editor.deltaDecorations([...this._decorations.keys()], []);
         this._decorations.clear();
     }
 }
 DecorationsManager.DecorationOptions = ModelDecorationOptions.register({
     description: 'reference-decoration',
-    stickiness: 1 /* TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges */,
+    stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
     className: 'reference-decoration'
 });
 export class LayoutData {
@@ -222,6 +220,7 @@ let ReferenceWidget = class ReferenceWidget extends peekView.PeekViewWidget {
         });
     }
     show(where) {
+        this.editor.revealRangeInCenterIfOutsideViewport(where, 0 /* Smooth */);
         super.show(where, this.layoutData.heightInLines || 18);
     }
     focusOnReferenceTree() {
@@ -247,10 +246,10 @@ let ReferenceWidget = class ReferenceWidget extends peekView.PeekViewWidget {
         // message pane
         this._messageContainer = dom.append(containerElement, dom.$('div.messages'));
         dom.hide(this._messageContainer);
-        this._splitView = new SplitView(containerElement, { orientation: 1 /* Orientation.HORIZONTAL */ });
+        this._splitView = new SplitView(containerElement, { orientation: 1 /* HORIZONTAL */ });
         // editor
         this._previewContainer = dom.append(containerElement, dom.$('div.preview.inline'));
-        const options = {
+        let options = {
             scrollBeyondLastLine: false,
             scrollbar: {
                 verticalScrollbarSize: 14,
@@ -285,7 +284,7 @@ let ReferenceWidget = class ReferenceWidget extends peekView.PeekViewWidget {
         if (this._defaultTreeKeyboardSupport) {
             // the tree will consume `Escape` and prevent the widget from closing
             this._callOnDispose.add(dom.addStandardDisposableListener(this._treeContainer, 'keydown', (e) => {
-                if (e.equals(9 /* KeyCode.Escape */)) {
+                if (e.equals(9 /* Escape */)) {
                     this._keybindingService.dispatchEvent(e, e.target);
                     e.stopPropagation();
                 }
@@ -322,7 +321,7 @@ let ReferenceWidget = class ReferenceWidget extends peekView.PeekViewWidget {
             }
         }, undefined));
         // listen on selection and focus
-        const onEvent = (element, kind) => {
+        let onEvent = (element, kind) => {
             if (element instanceof OneReference) {
                 if (kind === 'show') {
                     this._revealReference(element, false);
@@ -468,7 +467,7 @@ let ReferenceWidget = class ReferenceWidget extends peekView.PeekViewWidget {
             // show in editor
             const model = ref.object;
             if (model) {
-                const scrollType = this._preview.getModel() === model.textEditorModel ? 0 /* ScrollType.Smooth */ : 1 /* ScrollType.Immediate */;
+                const scrollType = this._preview.getModel() === model.textEditorModel ? 0 /* Smooth */ : 1 /* Immediate */;
                 const sel = Range.lift(reference.range).collapseToStart();
                 this._previewModelReference = ref;
                 this._preview.setModel(model.textEditorModel);

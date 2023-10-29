@@ -35,8 +35,9 @@ import { DisposableStore } from '../../../../base/common/lifecycle.js';
 import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
 export class TreeElement {
     remove() {
-        var _a;
-        (_a = this.parent) === null || _a === void 0 ? void 0 : _a.children.delete(this.id);
+        if (this.parent) {
+            this.parent.children.delete(this.id);
+        }
     }
     static findId(candidate, container) {
         // complex id-computation which contains the origin/extension,
@@ -97,8 +98,8 @@ export class OutlineModel extends TreeElement {
         const provider = registry.ordered(textModel);
         const promises = provider.map((provider, index) => {
             var _a;
-            const id = TreeElement.findId(`provider_${index}`, result);
-            const group = new OutlineGroup(id, result, (_a = provider.displayName) !== null && _a !== void 0 ? _a : 'Unknown Outline Provider', index);
+            let id = TreeElement.findId(`provider_${index}`, result);
+            let group = new OutlineGroup(id, result, (_a = provider.displayName) !== null && _a !== void 0 ? _a : 'Unknown Outline Provider', index);
             return Promise.resolve(provider.provideDocumentSymbols(textModel, cts.token)).then(result => {
                 for (const info of result || []) {
                     OutlineModel._makeOutlineElement(info, group);
@@ -134,8 +135,8 @@ export class OutlineModel extends TreeElement {
         });
     }
     static _makeOutlineElement(info, container) {
-        const id = TreeElement.findId(info, container);
-        const res = new OutlineElement(id, container, info);
+        let id = TreeElement.findId(info, container);
+        let res = new OutlineElement(id, container, info);
         if (info.children) {
             for (const childInfo of info.children) {
                 OutlineModel._makeOutlineElement(childInfo, res);
@@ -159,8 +160,8 @@ export class OutlineModel extends TreeElement {
         }
         else {
             // adopt all elements of the first group
-            const group = Iterable.first(this._groups.values());
-            for (const [, child] of group.children) {
+            let group = Iterable.first(this._groups.values());
+            for (let [, child] of group.children) {
                 child.parent = this;
                 this.children.set(child.id, child);
             }
@@ -225,7 +226,7 @@ let OutlineModelService = class OutlineModelService {
             const provider = registry.ordered(textModel);
             let data = this._cache.get(textModel.id);
             if (!data || data.versionId !== textModel.getVersionId() || !equals(data.provider, provider)) {
-                const source = new CancellationTokenSource();
+                let source = new CancellationTokenSource();
                 data = {
                     versionId: textModel.getVersionId(),
                     provider,

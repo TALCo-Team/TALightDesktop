@@ -37,7 +37,7 @@ let stackElementCounter = 0;
 class ResourceStackElement {
     constructor(actual, resourceLabel, strResource, groupId, groupOrder, sourceId, sourceOrder) {
         this.id = (++stackElementCounter);
-        this.type = 0 /* UndoRedoElementType.Resource */;
+        this.type = 0 /* Resource */;
         this.actual = actual;
         this.label = actual.label;
         this.confirmBeforeUndo = actual.confirmBeforeUndo || false;
@@ -72,12 +72,12 @@ class RemovedResources {
         const externalRemoval = [];
         const noParallelUniverses = [];
         for (const [, element] of this.elements) {
-            const dest = (element.reason === 0 /* RemovedResourceReason.ExternalRemoval */
+            const dest = (element.reason === 0 /* ExternalRemoval */
                 ? externalRemoval
                 : noParallelUniverses);
             dest.push(element.resourceLabel);
         }
-        const messages = [];
+        let messages = [];
         if (externalRemoval.length > 0) {
             messages.push(nls.localize({ key: 'externalRemoval', comment: ['{0} is a list of filenames'] }, "The following files have been closed and modified on disk: {0}.", externalRemoval.join(', ')));
         }
@@ -102,7 +102,7 @@ class RemovedResources {
 class WorkspaceStackElement {
     constructor(actual, resourceLabels, strResources, groupId, groupOrder, sourceId, sourceOrder) {
         this.id = (++stackElementCounter);
-        this.type = 1 /* UndoRedoElementType.Workspace */;
+        this.type = 1 /* Workspace */;
         this.actual = actual;
         this.label = actual.label;
         this.confirmBeforeUndo = actual.confirmBeforeUndo || false;
@@ -140,7 +140,7 @@ class WorkspaceStackElement {
                 this.invalidatedResources = new RemovedResources();
             }
             if (!this.invalidatedResources.has(strResource)) {
-                this.invalidatedResources.set(strResource, new ResourceReasonPair(resourceLabel, 0 /* RemovedResourceReason.ExternalRemoval */));
+                this.invalidatedResources.set(strResource, new ResourceReasonPair(resourceLabel, 0 /* ExternalRemoval */));
             }
         }
     }
@@ -159,19 +159,19 @@ class ResourceEditStack {
     }
     dispose() {
         for (const element of this._past) {
-            if (element.type === 1 /* UndoRedoElementType.Workspace */) {
-                element.removeResource(this.resourceLabel, this.strResource, 0 /* RemovedResourceReason.ExternalRemoval */);
+            if (element.type === 1 /* Workspace */) {
+                element.removeResource(this.resourceLabel, this.strResource, 0 /* ExternalRemoval */);
             }
         }
         for (const element of this._future) {
-            if (element.type === 1 /* UndoRedoElementType.Workspace */) {
-                element.removeResource(this.resourceLabel, this.strResource, 0 /* RemovedResourceReason.ExternalRemoval */);
+            if (element.type === 1 /* Workspace */) {
+                element.removeResource(this.resourceLabel, this.strResource, 0 /* ExternalRemoval */);
             }
         }
         this.versionId++;
     }
     toString() {
-        const result = [];
+        let result = [];
         result.push(`* ${this.strResource}:`);
         for (let i = 0; i < this._past.length; i++) {
             result.push(`   * [UNDO] ${this._past[i]}`);
@@ -187,7 +187,7 @@ class ResourceEditStack {
         this.versionId++;
     }
     _setElementValidFlag(element, isValid) {
-        if (element.type === 1 /* UndoRedoElementType.Workspace */) {
+        if (element.type === 1 /* Workspace */) {
             element.setValid(this.resourceLabel, this.strResource, isValid);
         }
         else {
@@ -209,8 +209,8 @@ class ResourceEditStack {
     pushElement(element) {
         // remove the future
         for (const futureElement of this._future) {
-            if (futureElement.type === 1 /* UndoRedoElementType.Workspace */) {
-                futureElement.removeResource(this.resourceLabel, this.strResource, 1 /* RemovedResourceReason.NoParallelUniverses */);
+            if (futureElement.type === 1 /* Workspace */) {
+                futureElement.removeResource(this.resourceLabel, this.strResource, 1 /* NoParallelUniverses */);
             }
         }
         this._future = [];
@@ -238,8 +238,8 @@ class ResourceEditStack {
                 isOK = false;
                 removePastAfter = 0;
             }
-            if (!isOK && element.type === 1 /* UndoRedoElementType.Workspace */) {
-                element.removeResource(this.resourceLabel, this.strResource, 0 /* RemovedResourceReason.ExternalRemoval */);
+            if (!isOK && element.type === 1 /* Workspace */) {
+                element.removeResource(this.resourceLabel, this.strResource, 0 /* ExternalRemoval */);
             }
         }
         let removeFutureBefore = -1;
@@ -249,8 +249,8 @@ class ResourceEditStack {
                 isOK = false;
                 removeFutureBefore = i;
             }
-            if (!isOK && element.type === 1 /* UndoRedoElementType.Workspace */) {
-                element.removeResource(this.resourceLabel, this.strResource, 0 /* RemovedResourceReason.ExternalRemoval */);
+            if (!isOK && element.type === 1 /* Workspace */) {
+                element.removeResource(this.resourceLabel, this.strResource, 0 /* ExternalRemoval */);
             }
         }
         if (removePastAfter !== -1) {
@@ -376,14 +376,14 @@ let UndoRedoService = class UndoRedoService {
     _print(label) {
         console.log(`------------------------------------`);
         console.log(`AFTER ${label}: `);
-        const str = [];
+        let str = [];
         for (const element of this._editStacks) {
             str.push(element[1].toString());
         }
         console.log(str.join('\n'));
     }
     pushElement(element, group = UndoRedoGroup.None, source = UndoRedoSource.None) {
-        if (element.type === 0 /* UndoRedoElementType.Resource */) {
+        if (element.type === 0 /* Resource */) {
             const resourceLabel = getResourceLabel(element.resource);
             const strResource = this.getUriComparisonKey(element.resource);
             this._pushElement(new ResourceStackElement(element, resourceLabel, strResource, group.id, group.nextOrder(), source.id, source.nextOrder()));
@@ -628,7 +628,7 @@ let UndoRedoService = class UndoRedoService {
         });
     }
     _invokeResourcePrepare(element, callback) {
-        if (element.actual.type !== 1 /* UndoRedoElementType.Workspace */ || typeof element.actual.prepareUndoRedo === 'undefined') {
+        if (element.actual.type !== 1 /* Workspace */ || typeof element.actual.prepareUndoRedo === 'undefined') {
             // no preparation needed
             return callback(Disposable.None);
         }
@@ -857,7 +857,7 @@ let UndoRedoService = class UndoRedoService {
             return this._confirmAndContinueUndo(strResource, sourceId, element);
         }
         try {
-            if (element.type === 1 /* UndoRedoElementType.Workspace */) {
+            if (element.type === 1 /* Workspace */) {
                 return this._workspaceUndo(strResource, element, undoConfirmed);
             }
             else {
@@ -1070,7 +1070,7 @@ let UndoRedoService = class UndoRedoService {
             }
         }
         try {
-            if (element.type === 1 /* UndoRedoElementType.Workspace */) {
+            if (element.type === 1 /* Workspace */) {
                 return this._workspaceRedo(strResource, element);
             }
             else {
