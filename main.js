@@ -2270,10 +2270,14 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class GithubApiService {
-  constructor() {}
+  constructor(baseUrl) {
+    this.baseUrl = baseUrl;
+    baseUrl = 'http://localhost:4000/';
+  }
   getAccessToken(codeParam) {
+    var _this = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
-      yield fetch("http://localhost:4000/getAccessToken?code=" + codeParam, {
+      yield fetch(_this.baseUrl + "getAccessToken?code=" + codeParam, {
         method: "GET"
       }).then(response => {
         return response.json();
@@ -2286,9 +2290,10 @@ class GithubApiService {
     })();
   }
   getUserData() {
+    var _this2 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("GET USER DATA");
-      yield fetch("http://localhost:4000/getUserData", {
+      yield fetch(_this2.baseUrl + "getUserData", {
         method: "GET",
         headers: {
           "Authorization": "Bearer " + localStorage.getItem("accessToken") // Bearer ACCESSTOKEN
@@ -2301,8 +2306,9 @@ class GithubApiService {
     })();
   }
   getRepoList() {
+    var _this3 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
-      return yield fetch("http://localhost:4000/getRepoList?username=" + localStorage.getItem("username"), {
+      return yield fetch(_this3.baseUrl + "getRepoList?username=" + localStorage.getItem("username"), {
         method: "GET",
         headers: {
           "Authorization": "Bearer " + localStorage.getItem("accessToken") // Bearer ACCESSTOKEN
@@ -2311,9 +2317,10 @@ class GithubApiService {
     })();
   }
   getRepository(repository) {
+    var _this4 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("GET REPO");
-      return yield fetch("http://localhost:4000/getRepository?username=" + localStorage.getItem("username") + "&repository=" + repository, {
+      return yield fetch(_this4.baseUrl + "getRepository?username=" + localStorage.getItem("username") + "&repository=" + repository, {
         method: "GET",
         headers: {
           "Authorization": "Bearer " + localStorage.getItem("accessToken") // Bearer ACCESSTOKEN
@@ -2322,9 +2329,10 @@ class GithubApiService {
     })();
   }
   createRepository(repository) {
+    var _this5 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("CREATE REPO");
-      yield fetch("http://localhost:4000/createRepository?repository=" + repository, {
+      yield fetch(_this5.baseUrl + "createRepository?repository=" + repository, {
         method: "GET",
         headers: {
           "Authorization": "Bearer " + localStorage.getItem("accessToken") // Bearer ACCESSTOKEN
@@ -2335,9 +2343,10 @@ class GithubApiService {
     })();
   }
   getReference(repository) {
+    var _this6 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("GET REFERENCE");
-      return yield fetch("http://localhost:4000/getReference?username=" + localStorage.getItem("username") + "&repository=" + repository, {
+      return yield fetch(_this6.baseUrl + "getReference?username=" + localStorage.getItem("username") + "&repository=" + repository, {
         method: "GET",
         headers: {
           "Authorization": "Bearer " + localStorage.getItem("accessToken"),
@@ -2347,12 +2356,13 @@ class GithubApiService {
     })();
   }
   createTree(repository, tree) {
+    var _this7 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("CREATE TREE");
       var bodyObj = JSON.stringify({
         "content": tree
       });
-      return yield fetch("http://localhost:4000/createTree?username=" + localStorage.getItem("username") + "&repository=" + repository, {
+      return yield fetch(_this7.baseUrl + "createTree?username=" + localStorage.getItem("username") + "&repository=" + repository, {
         method: "POST",
         headers: {
           "Authorization": "Bearer " + localStorage.getItem("accessToken"),
@@ -2363,6 +2373,7 @@ class GithubApiService {
     })();
   }
   createCommit(repository, data, sha) {
+    var _this8 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("CREATE COMMIT");
       let parentCommitsha = sha;
@@ -2370,7 +2381,7 @@ class GithubApiService {
         "sha": parentCommitsha,
         "content": data
       });
-      return yield fetch("http://localhost:4000/createCommit?username=" + localStorage.getItem("username") + "&repository=" + repository, {
+      return yield fetch(_this8.baseUrl + "createCommit?username=" + localStorage.getItem("username") + "&repository=" + repository, {
         method: "POST",
         headers: {
           "Authorization": "Bearer " + localStorage.getItem("accessToken"),
@@ -2381,12 +2392,13 @@ class GithubApiService {
     })();
   }
   updateReference(repository, data) {
+    var _this9 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("UPDATE REFERENCE");
       let bodyObj = JSON.stringify({
         "content": data
       });
-      return yield fetch("http://localhost:4000/updateReference?username=" + localStorage.getItem("username") + "&repository=" + repository, {
+      return yield fetch(_this9.baseUrl + "updateReference?username=" + localStorage.getItem("username") + "&repository=" + repository, {
         method: "POST",
         headers: {
           "Authorization": "Bearer " + localStorage.getItem("accessToken"),
@@ -2397,9 +2409,10 @@ class GithubApiService {
     })();
   }
   getRepositoryAsTar(repository) {
+    var _this10 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("GET TAR URL");
-      return yield fetch("http://localhost:4000/getRepositoryAsTar?username=" + localStorage.getItem("username") + "&repository=" + repository, {
+      return yield fetch(_this10.baseUrl + "getRepositoryAsTar?username=" + localStorage.getItem("username") + "&repository=" + repository, {
         method: "GET",
         headers: {
           "Authorization": "Bearer " + localStorage.getItem("accessToken") // Bearer ACCESSTOKEN
@@ -2408,9 +2421,10 @@ class GithubApiService {
     })();
   }
   getTar(url) {
+    var _this11 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
       console.log("GET TAR");
-      return yield fetch("http://localhost:4000/getTar?url=" + url, {
+      return yield fetch(_this11.baseUrl + "getTar?url=" + url, {
         method: "GET",
         headers: {
           "Authorization": "Bearer " + localStorage.getItem("accessToken") // Bearer ACCESSTOKEN
@@ -2421,7 +2435,7 @@ class GithubApiService {
 }
 
 GithubApiService.ɵfac = function GithubApiService_Factory(t) {
-  return new (t || GithubApiService)();
+  return new (t || GithubApiService)(_angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵinject"](String));
 };
 GithubApiService.ɵprov = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineInjectable"]({
   token: GithubApiService,
