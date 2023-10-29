@@ -8,9 +8,9 @@ on:
         required: true
         default: 'https://TALCo-Team.github.io/TALightDesktop/'
         type: string
-  push:
-    branches:
-    - release
+  #push:
+  #  branches:
+  #  - release
 
 
 jobs:
