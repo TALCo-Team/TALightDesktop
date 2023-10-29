@@ -4,13 +4,14 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class GithubApiService {
-
-  constructor() { }
+  constructor(private baseUrl: String) {
+    baseUrl = 'http://localhost:4000/';
+   }
 
 
   public async getAccessToken(codeParam:any) {
               
-    await fetch("http://localhost:4000/getAccessToken?code=" + codeParam, {
+    await fetch(this.baseUrl+"getAccessToken?code=" + codeParam, {
     method: "GET"
     }).then((response) => {
 
@@ -25,7 +26,7 @@ export class GithubApiService {
 
   public async getUserData() {
     console.log("GET USER DATA")
-    await fetch("http://localhost:4000/getUserData", {
+    await fetch(this.baseUrl+"getUserData", {
     method: "GET",
     headers: {
       "Authorization": "Bearer " + localStorage.getItem("accessToken") // Bearer ACCESSTOKEN
@@ -40,7 +41,7 @@ export class GithubApiService {
 
   public async getRepoList() {
               
-    return await fetch("http://localhost:4000/getRepoList?username=" + localStorage.getItem("username"), {
+    return await fetch(this.baseUrl+"getRepoList?username=" + localStorage.getItem("username"), {
     method: "GET",
     headers: {
       "Authorization": "Bearer " + localStorage.getItem("accessToken") // Bearer ACCESSTOKEN
@@ -51,7 +52,7 @@ export class GithubApiService {
 
   public async getRepository(repository: string) {
     console.log("GET REPO")
-    return await fetch("http://localhost:4000/getRepository?username=" + localStorage.getItem("username") + "&repository=" + repository, {
+    return await fetch(this.baseUrl+"getRepository?username=" + localStorage.getItem("username") + "&repository=" + repository, {
     method: "GET",
     headers: {
       "Authorization": "Bearer " + localStorage.getItem("accessToken"), // Bearer ACCESSTOKEN
@@ -62,7 +63,7 @@ export class GithubApiService {
 
   public async createRepository(repository: string) {
     console.log("CREATE REPO")
-    await fetch("http://localhost:4000/createRepository?repository=" + repository, {
+    await fetch(this.baseUrl+"createRepository?repository=" + repository, {
     method: "GET",
     headers: {
       "Authorization": "Bearer " + localStorage.getItem("accessToken"), // Bearer ACCESSTOKEN
@@ -78,7 +79,7 @@ export class GithubApiService {
               
     console.log("GET REFERENCE")
 
-    return await fetch("http://localhost:4000/getReference?username=" + localStorage.getItem("username") + "&repository=" + repository, {
+    return await fetch(this.baseUrl+"getReference?username=" + localStorage.getItem("username") + "&repository=" + repository, {
     method: "GET",
     headers: {
       "Authorization": "Bearer " + localStorage.getItem("accessToken"), // Bearer ACCESSTOKEN
@@ -95,7 +96,7 @@ export class GithubApiService {
       "content": tree
     });
 
-    return await fetch("http://localhost:4000/createTree?username=" + localStorage.getItem("username") + "&repository=" + repository, {
+    return await fetch(this.baseUrl+"createTree?username=" + localStorage.getItem("username") + "&repository=" + repository, {
       method: "POST",
       headers: {
         "Authorization": "Bearer " + localStorage.getItem("accessToken"), // Bearer ACCESSTOKEN
@@ -115,7 +116,7 @@ export class GithubApiService {
       "content": data
     });
 
-    return await fetch("http://localhost:4000/createCommit?username=" + localStorage.getItem("username") + "&repository=" + repository, {
+    return await fetch(this.baseUrl+"createCommit?username=" + localStorage.getItem("username") + "&repository=" + repository, {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + localStorage.getItem("accessToken"), // Bearer ACCESSTOKEN
@@ -133,7 +134,7 @@ export class GithubApiService {
       "content": data
     });
 
-    return await fetch("http://localhost:4000/updateReference?username=" + localStorage.getItem("username") + "&repository=" + repository, {
+    return await fetch(this.baseUrl+"updateReference?username=" + localStorage.getItem("username") + "&repository=" + repository, {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + localStorage.getItem("accessToken"), // Bearer ACCESSTOKEN
@@ -148,7 +149,7 @@ export class GithubApiService {
   public async getRepositoryAsTar(repository:string) {
     console.log("GET TAR URL")
     
-    return await fetch("http://localhost:4000/getRepositoryAsTar?username=" + localStorage.getItem("username") + "&repository=" + repository, {
+    return await fetch(this.baseUrl+"getRepositoryAsTar?username=" + localStorage.getItem("username") + "&repository=" + repository, {
     method: "GET",
     headers: {
       "Authorization": "Bearer " + localStorage.getItem("accessToken") // Bearer ACCESSTOKEN
@@ -160,7 +161,7 @@ export class GithubApiService {
   public async getTar(url:string) {
     console.log("GET TAR")
 
-    return await fetch("http://localhost:4000/getTar?url=" + url, {
+    return await fetch(this.baseUrl+"getTar?url=" + url, {
       method: "GET",
       headers: {
         "Authorization": "Bearer " + localStorage.getItem("accessToken") // Bearer ACCESSTOKEN
