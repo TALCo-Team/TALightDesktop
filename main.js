@@ -2270,9 +2270,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class GithubApiService {
-  constructor(baseUrl) {
-    this.baseUrl = baseUrl;
-    baseUrl = 'http://localhost:4000/';
+  constructor() {
+    this.baseUrl = 'http://localhost:4000/';
   }
   getAccessToken(codeParam) {
     var _this = this;
@@ -2435,7 +2434,7 @@ class GithubApiService {
 }
 
 GithubApiService.ɵfac = function GithubApiService_Factory(t) {
-  return new (t || GithubApiService)(_angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵinject"](String));
+  return new (t || GithubApiService)();
 };
 GithubApiService.ɵprov = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineInjectable"]({
   token: GithubApiService,
