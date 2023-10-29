@@ -171,7 +171,7 @@ __webpack_require__.r(__webpack_exports__);
 let pyodideRoot = "/";
 let pyodideMount = "/TALight";
 // Bootstrap pyodide
-importScripts("../../../assets/pyodide/pyodide.js");
+importScripts("assets/pyodide/pyodide.js");
 //let worker: PyodideFsWorker;
 function main() {
   return _main.apply(this, arguments);
