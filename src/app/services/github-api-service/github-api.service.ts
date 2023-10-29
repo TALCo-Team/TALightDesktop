@@ -4,8 +4,9 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class GithubApiService {
-  constructor(private baseUrl: String) {
-    baseUrl = 'http://localhost:4000/';
+  private baseUrl = 'http://localhost:4000/';
+  constructor() {
+    
    }
 
 
