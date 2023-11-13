@@ -16,7 +16,7 @@ sudo apt install libwebkit2gtk-4.0-dev \
     librsvg2-dev
 
 # NodeJS
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 export NVM_DIR="$HOME/.nvm"
 sh $NVM_DIR/nvm.sh install --lts
 
