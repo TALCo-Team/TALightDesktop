@@ -5,6 +5,12 @@ div.tal-page-container{
     width:100vw;
     height:100vh;
 
+
+    div.tal-page-tutorial{
+        position: absolute;
+        z-index: 1;
+    }
+
     div.tal-page-topbar{
         width:100%;
         display:flex;
@@ -13,14 +19,18 @@ div.tal-page-container{
         border-bottom:solid 1px var(--surface-border);
         padding: 0;
         margin: 0;
+        z-index: 0;
     }
-    
+
     div.tal-page-content {
         width: 100%;
         height: 100%;
         overflow: auto;
         flex:1;
-    }   
+        z-index: 0;
+    }
 
-    
-}   
+
+}
+
+

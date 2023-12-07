@@ -22,6 +22,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { TopbarModule } from './widgets/topbar/topbar.module';
 import { HttpClientModule } from '@angular/common/http';
+import { TutorialComponent } from './widgets/tutorial/tutorial.component';
 
 
 
@@ -31,6 +32,7 @@ import { HttpClientModule } from '@angular/common/http';
     HomeViewComponent,
     ConnectViewComponent,
     SelectProblemViewComponent,
+    TutorialComponent,
   ],
   imports: [
     BrowserModule,
