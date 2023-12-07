@@ -8,14 +8,24 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./tutorial.component.scss']
 })
 export class TutorialComponent implements OnInit {
+  isVisible: boolean = false;
 
   constructor() { }
 
   ngOnInit(): void {
   }
 
+  // TODO
   forwardTutorial(){
     console.log('forwardTutorial')
   }
 
+  // TODO
+  closeTutorial(){
+    
+    console.log('closeTutorial')
+  }
+
+
 }
+
