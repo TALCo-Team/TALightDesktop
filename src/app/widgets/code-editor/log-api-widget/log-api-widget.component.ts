@@ -17,15 +17,17 @@ export class LogApiWidgetComponent implements OnInit {
   @ViewChildren(Tooltip) tooltips!: QueryList <Tooltip>;
   isBlurred: boolean = false;
 
-  constructor( 
+  constructor(
     public zone: NgZone,
     private tutorialService : TutorialService,
     ) {
       this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
-      this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} ) 
+      this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
     }
 
-  ngOnInit(): void {}
+  ngOnInit() {
+    this.isBlurred = true;
+  }
 
 
   private isTutorialShown(tutorial? : any){
@@ -68,7 +70,7 @@ export class LogApiWidgetComponent implements OnInit {
   }
 
   private findTooltipById(searchId: string): Tooltip | undefined {
-    
+
     return this.tooltips.find(tooltip => tooltip.el.nativeElement.id === ("icon-"+searchId));
   }
 

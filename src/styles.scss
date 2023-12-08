@@ -3,7 +3,6 @@
 @import "primeicons/primeicons.css";
 
 
-
 body {
   font-family: var(--font-family);
   background-color: var(--surface-ground);
@@ -109,7 +108,7 @@ div.tal-center-page {
     button {
       margin-top: 2rem;
       align-self: flex-end;
-      
+
     }
   }
 }
@@ -124,7 +123,7 @@ div.tal-contextmenu-container{
     justify-content: flex-start;
     padding:0.8rem 1rem;
     cursor:pointer;
-    
+
     &:hover{
       background: var(--surface-hover);
     }

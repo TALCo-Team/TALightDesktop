@@ -14,16 +14,16 @@ import { TutorialService } from 'src/app/services/tutorial-service/tutorial.serv
 export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit, OnChanges {
   @ViewChild("monacoEditor") public monacoEditor!: EditorComponent;
   public editorOptions: any;
-  
-  
+
+
   @Input("selectedFile") private _selectedFile: FsNodeFile | null = null;
   @Input("language") public language: string = "";
   //Code
-  
-  
-  
+
+
+
   @Output('onChange') public onChange = new EventEmitter<FsNodeFile>();
-  
+
   public binEncoder = new TextEncoder(); // always utf-8
   public binDecoder = new TextDecoder("utf-8");
   isBlurred: boolean = false;
@@ -34,15 +34,15 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
 
   ) {
       this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
-      this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} ) 
+      this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
   }
 
   ngOnInit(): void {
     this.themeService.themeChanged.subscribe((theme) => {
       this.updateEditorOptions();
     });
-    
-    
+    this.isBlurred = true;
+
     this.updateEditorOptions();
   }
 
@@ -56,7 +56,7 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
       this.isBlurred = true
     }
   }
-  
+
 
 
   ngAfterViewInit() {
@@ -65,7 +65,7 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
 
     // this returns null
   }
-  
+
   ngOnChanges(): void {
     this.updateEditorOptions();
   }
@@ -77,12 +77,12 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
   public set selectedFile(selectedFile:FsNodeFile|null){
     this._selectedFile = selectedFile
     if(!this._selectedFile) {
-      this.value = ""; 
-      return; 
+      this.value = "";
+      return;
     }
-    let content = this._selectedFile.content; 
+    let content = this._selectedFile.content;
     if(typeof content === 'string' )
-    { 
+    {
       this.value = content
     }
 
@@ -107,13 +107,13 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
     this._selectedFile.content = text
   }
 
-  
+
 
 
   // get accessor
   public get value(): string {
     //console.log("MonacoEditor:value:get")
-    return this.getFileContent(); 
+    return this.getFileContent();
   }
 
   // Set accessor including call the onchange callback
@@ -127,7 +127,7 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
       console.log("MonacoEditor:value:set:changed")
       this.setFileContent(text);
       this.didChange()
-      
+
     }
   }
   // From ControlValueAccessor interface
@@ -138,7 +138,7 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
     }
   }
 
-  
+
   public didChange(): void {
     console.log("MonacoEditor:didChange")
     this.onChangeCallback();
@@ -166,5 +166,5 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
       automaticLayout: true
     }
   }
-    
+
 }

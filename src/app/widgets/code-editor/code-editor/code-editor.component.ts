@@ -33,7 +33,7 @@ export class CodeEditorComponent implements OnInit {
   public binDecoder = new TextDecoder("utf-8");
 
   public cmdConnect?:Commands.Connect;
-  
+
   public project:ProjectEnvironment | null = null;
 
   public selectedFile?: FsNodeFile;
@@ -64,7 +64,7 @@ export class CodeEditorComponent implements OnInit {
 
   private output_files:string[]|undefined = undefined;
   private current_output_file:string|undefined = undefined;
-  
+
   constructor(
     private fs: FsService,
     private compiler:CompilerService,
@@ -75,8 +75,8 @@ export class CodeEditorComponent implements OnInit {
     private messageService: MessageService,
     private tutorialService : TutorialService,
   ) {
-    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} )  
-    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )  
+    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} )
+    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
     console.log("CodeEditorComponent:constructor", this.prj)
     //TODO: add switch python/cpp
 
@@ -84,7 +84,9 @@ export class CodeEditorComponent implements OnInit {
 
   protected isBlurred = false;
 
-  ngOnInit(): void {}
+  ngOnInit() {
+    this.isBlurred = true;
+  }
 
   private isTutorialShown(tutorial? : any){
 
@@ -98,7 +100,7 @@ export class CodeEditorComponent implements OnInit {
   }
 
   ngAfterViewInit(){
-    this.outputWidget.enableStdin(false); 
+    this.outputWidget.enableStdin(false);
     this.setPythonProject()
   }
 
@@ -138,9 +140,9 @@ export class CodeEditorComponent implements OnInit {
     this.fslistfile.forEach(item=>filePathList.push(item.path))
     this.problemWidget.filePathList = filePathList
     this.terminalWidget.fslistfile = this.fslistfile;
-    
+
   }
-  
+
   public didNotify(data:string){
     console.log("didNotify:")
     this.outputWidget!.print(data);
@@ -161,7 +163,7 @@ export class CodeEditorComponent implements OnInit {
     this.pyodideState=state
     this.pyodideStateContent=content
     console.log("CodeEditorComponent:didStateChange:", state)
-    if(!this.apiRun || state != CompilerState.Stdin) { 
+    if(!this.apiRun || state != CompilerState.Stdin) {
       this.outputWidget.didStateChange(state,content)
     }
   }
@@ -227,7 +229,7 @@ export class CodeEditorComponent implements OnInit {
 
     console.log("extractTar:unpack:")
     await this.project?.driver.createDirectory('/data')
-    
+
     Tar.unpack(data, async (files,folders) => {
       console.log("extractTar:unpack:folders",folders)
       for(var idx in folders){
@@ -255,10 +257,10 @@ export class CodeEditorComponent implements OnInit {
         this.logApiWidget.addLine("rtal -s " + this.api.url + " get " + this.selectedProblem?.name);
         this.activeWidget = 1;
       }
-      
+
       this.fileExplorer.refreshRoot()
     });
-    
+
   }
 
   public onItemRenamed(event: any) {
@@ -275,7 +277,7 @@ export class CodeEditorComponent implements OnInit {
 
     // Removed file is open on the code editor, so now close all associated tabs
     if (removedFileIndex != -1) {
-      this.removeItem({"index":removedFileIndex}) 
+      this.removeItem({"index":removedFileIndex})
     }
   }
 
@@ -285,7 +287,7 @@ export class CodeEditorComponent implements OnInit {
     this.isPresentName.splice(Removeindex, 1);
     this.isPresent.splice(Removeindex, 1);
     this.files.splice(Removeindex, 1);
-    
+
     console.log("Tab is closed: ", this.isPresentName);
 
     if (Removeindex == this.activeIndex) {
@@ -301,7 +303,7 @@ export class CodeEditorComponent implements OnInit {
     if (Removeindex < this.activeIndex) {
       setTimeout(() => this.activeIndex = this.activeIndex - 1 , 0);
     }
-    
+
   }
 
   public changeFile(event:any){
@@ -317,13 +319,13 @@ export class CodeEditorComponent implements OnInit {
   public selectFile(file: FsNodeFile) {
     this.selectedFile = file;
     this.execBar.selectedFile = this.selectedFile
-    this.fileEditor.selectedFile = this.selectedFile 
+    this.fileEditor.selectedFile = this.selectedFile
 
     if(!this.isPresent.includes(this.selectedFile.path)){
       this.isPresentName.push(this.selectedFile.name);
       this.files.push(this.selectedFile);
       setTimeout(() => this.activeIndex = (this.isPresentName.length)-1 , 0);
-      
+
       this.isPresent.push(this.selectedFile.path);
     }else{
       this.setActiveIndex(this.selectedFile.path);
@@ -345,7 +347,7 @@ export class CodeEditorComponent implements OnInit {
   }
 
   public saveFile(){
-    if ( this.selectedFile ){ 
+    if ( this.selectedFile ){
       console.log("saveFile:", this.selectedFile.path, this.fileEditor)
       this.project?.driver.writeFile(this.selectedFile.path, this.selectedFile.content)
     } else {
@@ -362,11 +364,11 @@ export class CodeEditorComponent implements OnInit {
     await this.project?.driver.stopExecution()
     console.log("stopAll:cmdConnect:DONE")
   }
-  
+
   public changeWidget(event:any){
     this.logApiWidget.flashLine();
   }
-  
+
   //-------------- API CONNECT
   public async runProjectLocal(){
     this.apiRun = false
@@ -377,7 +379,7 @@ export class CodeEditorComponent implements OnInit {
   public async runProject(){
     console.log("runProject:")
     this.outputWidget.clearOutput()
-    
+
     let config = await this.compiler.readConfig()
     if (!config){return false}
     console.log("runProject:config:ok")
@@ -391,7 +393,7 @@ export class CodeEditorComponent implements OnInit {
 
     this.outputWidget.print("RUN: "+config.RUN, OutputType.SYSTEM)
     this.saveFile();
-    
+
     await this.compiler.runProject()
     return true
   }
@@ -401,14 +403,14 @@ export class CodeEditorComponent implements OnInit {
     this.apiRun = true
     this.outputWidget.clearOutput()
     this.saveFile();
-    
-    
+
+
     await this.apiConnect()
-    
+
     this.apiRun = false
     this.fileExplorer.refreshRoot()
   }
-  
+
   async apiConnectReset(){
     this.current_output_file = undefined;
     this.cmdConnect = undefined;
@@ -416,7 +418,7 @@ export class CodeEditorComponent implements OnInit {
     console.log("apiConnect:didConnectData:cmdConnect:", this.cmdConnect);
   }
 
-  
+
   async apiConnect(){
     console.log("apiConnect")
 
@@ -446,8 +448,8 @@ export class CodeEditorComponent implements OnInit {
       return false
     }
     console.log("apiConnect:service:ok")
-    
-    
+
+
 
     let config = await this.compiler.readConfig()
     if (!config){return false}
@@ -496,7 +498,7 @@ export class CodeEditorComponent implements OnInit {
       files.set(fileArgName, content)
     })
 
-    
+
     console.log("apiConnect:params:problem",problem)
     console.log("apiConnect:params:service",service)
     console.log("apiConnect:params:args",args)
@@ -504,17 +506,17 @@ export class CodeEditorComponent implements OnInit {
     console.log("apiConnect:params:token",token)
     console.log("apiConnect:params:files",files)
 
-    
+
     let onConnectionStart = () => {this.didConnectStart()};
     let onConnectionBegin = (msg: string[]) => {this.didConnectBegin(msg)};
     let onConnectionClose = (msg: string[]) => {this.didConnectClose(msg)};
     let onData = (data: string)=>{ this.didConnectData(data)};
     let onBinaryHeader = (msg: any)=>{ this.didRecieveBinaryHeader(msg)};
-    
+
     let newLogLine = "rtal -s " + this.api.url + " connect " + problem + " " + service
     let keys = Object.keys(args);
     let values = Object.values(args);
-    
+
     for(let i=0;i < keys.length;i++) { newLogLine += " -a " + keys[i] + "=" + values[i]; }
 
     if (this.logApiWidget.isActive) {
@@ -522,10 +524,10 @@ export class CodeEditorComponent implements OnInit {
     }
 
     this.activeWidget = 0;
-    
+
     this.cmdConnect = await this.api.Connect(
-      problem, 
-      service, 
+      problem,
+      service,
       args,
       tty,
       token,
@@ -537,8 +539,8 @@ export class CodeEditorComponent implements OnInit {
       onBinaryHeader
     );
     console.log("apiConnect:DONE")
-       
-    
+
+
     return true
   }
 

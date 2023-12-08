@@ -17,7 +17,7 @@ export class ServiceMenuEntry {
   constructor(
     public name = "",
     public descriptor: ServiceDescriptor,
-  ){}
+  ) { }
 }
 
 
@@ -25,7 +25,7 @@ export class ProblemMenuEntry {
   constructor(
     public name = "",
     public descriptor: ProblemDescriptor,
-  ){}
+  ) { }
 }
 
 @Component({
@@ -38,7 +38,7 @@ export class ProblemWidgetComponent {
   @Output('onServiceChanged') public onServiceSelected = new EventEmitter<ServiceDescriptor>();
   @Output('onAttachments') public onAttachments = new EventEmitter<ArrayBuffer>();
   @Output('onProblemListChanged') public onProblemListChanged = new EventEmitter();
-  
+
   @ViewChild("problemDropdown") public problemDropdown!: ElementRef
   @ViewChild("serviceDropdown") public serviceDropdown!: ElementRef
   public dropdownOptions: OverlayOptions;
@@ -56,7 +56,7 @@ export class ProblemWidgetComponent {
 
   project: ProjectEnvironment | null = null;
 
-  
+
   regexFormat = true;
   showRegex = true;
   loading = false
@@ -64,33 +64,34 @@ export class ProblemWidgetComponent {
   problemSub: Subscription
   isBlurred: boolean = false;
 
-  constructor( public zone: NgZone,
-               public api: ApiService,
-               public pm: ProblemManagerService,
-               public prjmnrg: ProjectManagerService,
-               private messageService: MessageService,
-               private tutorialService : TutorialService,
+  constructor(public zone: NgZone,
+    public api: ApiService,
+    public pm: ProblemManagerService,
+    public prjmnrg: ProjectManagerService,
+    private messageService: MessageService,
+    private tutorialService: TutorialService,
   ) {
     this.project = prjmnrg.getCurrentProject();
-    this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.problemsDidChange(clear) })
-    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
-    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} ) 
+    this.problemSub = this.pm.onProblemsChanged.subscribe((clear: boolean) => { this.problemsDidChange(clear) })
+    this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
+      this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     // https://primefaces.org/primeng/overlay
     //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
-    this.dropdownOptions = {appendTo:'body'}
+    this.dropdownOptions = { appendTo: 'body' }
   }
-  
+
   ngOnInit() {
     this.reloadProblemList();
+    this.isBlurred = true;
   }
 
-  private isTutorialShown(tutorial? : any){
+  private isTutorialShown(tutorial?: any) {
 
     console.log("ProblemWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "ProblemWidgetComponent"){
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "ProblemWidgetComponent") {
       this.isBlurred = false
     }
-    else{
+    else {
       this.isBlurred = true
     }
   }
@@ -99,97 +100,97 @@ export class ProblemWidgetComponent {
     this.problemSub?.unsubscribe()
   }
 
-  isLoading(){
+  isLoading() {
     return this.loading;
   }
 
-  refreshFilePathList(){
+  refreshFilePathList() {
     this.filePathList = [...this.filePathList]
   }
 
-//args
-  clenupRegex(re:RegExp){
-    let text = re+""
-    text = text.replace(/\/(.*)\//,'$1')
-    text = text.replace(/\^(.*)\$/,'$1')
-    text = text.replace(/\((.*)\)/,'$1')
-    text = text.replace(/\|/g,' OR ')
+  //args
+  clenupRegex(re: RegExp) {
+    let text = re + ""
+    text = text.replace(/\/(.*)\//, '$1')
+    text = text.replace(/\^(.*)\$/, '$1')
+    text = text.replace(/\((.*)\)/, '$1')
+    text = text.replace(/\|/g, ' OR ')
     return text;
   }
 
-  cleanupName(name:string){
-    var pattern = new RegExp('[-_. ]+','g');
+  cleanupName(name: string) {
+    var pattern = new RegExp('[-_. ]+', 'g');
     name = name.replace(pattern, " ")
     name = name.charAt(0).toUpperCase() + name.slice(1);
     return name
   }
 
-  readableRegex(re:RegExp){
-    let text = re+""
-    text = text.replace(/\/(.*)\//,'$1')
-    text = text.replace(/\^(.*)\$/,'$1')
-    text = text.replace(/\[([^\]]*)\]/, (match:string, content:string)=>{
-      if ( content.startsWith('^') ){
-        return ' invalid('+content.slice(1)+') '
+  readableRegex(re: RegExp) {
+    let text = re + ""
+    text = text.replace(/\/(.*)\//, '$1')
+    text = text.replace(/\^(.*)\$/, '$1')
+    text = text.replace(/\[([^\]]*)\]/, (match: string, content: string) => {
+      if (content.startsWith('^')) {
+        return ' invalid(' + content.slice(1) + ') '
       }
-      return ' valid('+content.slice(1)+') '
+      return ' valid(' + content.slice(1) + ') '
     })
-    text = text.replace(/\(([^|]+|)*([^|]+)*\)/g,(match:string, options:string, last:string)=>{
-      console.log('OROR:',match, options, last)
-      return text.replace(/\((.*)\)/,'$1').replace(/\|/g,' OR ')
+    text = text.replace(/\(([^|]+|)*([^|]+)*\)/g, (match: string, options: string, last: string) => {
+      console.log('OROR:', match, options, last)
+      return text.replace(/\((.*)\)/, '$1').replace(/\|/g, ' OR ')
     })
     return text
   }
 
-  async argDidFocus(arg:ArgDescriptor,event:Event){
-    console.log('argDidFocus:',arg,event)
+  async argDidFocus(arg: ArgDescriptor, event: Event) {
+    console.log('argDidFocus:', arg, event)
     let idPanel = 'args-regex-panel-' + arg.key
     let idRegex = 'args-regex-' + arg.key
-    
+
     let panel = document.getElementById(idPanel)
     let regex = document.getElementById(idRegex)
-    
-    if(!(panel instanceof HTMLElement)) {return}
-    if(!(regex instanceof HTMLElement)) {return}
+
+    if (!(panel instanceof HTMLElement)) { return }
+    if (!(regex instanceof HTMLElement)) { return }
     console.log('argDidFocus:show!')
     panel.style.display = "flex"
-    if(regex.style.color == "red"){
+    if (regex.style.color == "red") {
       regex.style.color = "orange"
-    }else{
+    } else {
       regex.style.color = ""
     }
-    
+
   }
 
-  async argDidChange(arg:ArgDescriptor,event:Event){
-    console.log('argDidChange:',arg,event)
+  async argDidChange(arg: ArgDescriptor, event: Event) {
+    console.log('argDidChange:', arg, event)
     let idPanel = 'args-regex-panel-' + arg.key
     let idRegex = 'args-regex-' + arg.key
-    
+
     let panel = document.getElementById(idPanel)
     let regex = document.getElementById(idRegex)
-    
-    if(!(panel instanceof HTMLElement)) {return}
-    if(!(regex instanceof HTMLElement)) {return}
+
+    if (!(panel instanceof HTMLElement)) { return }
+    if (!(regex instanceof HTMLElement)) { return }
 
     console.log('argDidFocus:validate')
     let issues = this.pm.validateArg(arg)
-    if(issues !== null){
+    if (issues !== null) {
       regex.style.color = "red"
       panel.style.display = "flex"
-    }else if(arg.value != arg.default){
+    } else if (arg.value != arg.default) {
       regex.style.color = "green"
       panel.style.display = "flex"
-    }else{
+    } else {
       regex.style.color = ""
       panel.style.display = "none"
     }
   }
 
-  async argDidReset(arg:ArgDescriptor,event:Event){
-    console.log('argDidReset:',arg.key,event)
+  async argDidReset(arg: ArgDescriptor, event: Event) {
+    console.log('argDidReset:', arg.key, event)
     arg.value = arg.default ?? ""
-    this.argDidChange(arg,event)
+    this.argDidChange(arg, event)
   }
 
   async validateArgs() {
@@ -200,74 +201,74 @@ export class ProblemWidgetComponent {
   }
 
 
-//files
+  //files
 
-  async fileDidChange(file:FileDescriptor,event:{ originalEvent: Event, value?: string }){
-    console.log('fileDidChange:',file.key,event)
+  async fileDidChange(file: FileDescriptor, event: { originalEvent: Event, value?: string }) {
+    console.log('fileDidChange:', file.key, event)
     let path = event.value ?? ""
 
     let idDropdown = 'file-dropdown-' + file.key
     let dropdown = document.getElementById(idDropdown)
-    if(!(dropdown instanceof HTMLElement)) {return}
-    console.log('fileDidChange:dropdown:found',dropdown)
-    
-    if (path == ""){
+    if (!(dropdown instanceof HTMLElement)) { return }
+    console.log('fileDidChange:dropdown:found', dropdown)
+
+    if (path == "") {
       dropdown.style.color = ""
       //file.value = ""
       return
     }
 
     let pathExist = await this.project?.driver.exists(path)
-    console.log('fileDidChange:pathExist:',pathExist)
-    if(!pathExist){
+    console.log('fileDidChange:pathExist:', pathExist)
+    if (!pathExist) {
       dropdown.style.color = "red"
       //file.value = ""
-    }else{
+    } else {
       dropdown.style.color = "green"
       //file.value = path
     }
   }
-  
-  async fileDidReset(file:FileDescriptor,event:Event){
-    console.log('fileDidReset:',file.key,event)
+
+  async fileDidReset(file: FileDescriptor, event: Event) {
+    console.log('fileDidReset:', file.key, event)
     let idDropdown = 'file-dropdown-' + file.key
     let dropdown = document.getElementById(idDropdown)
     console.log('fileDidReset:', dropdown)
-    if(!(dropdown instanceof Dropdown)) {return}
+    if (!(dropdown instanceof Dropdown)) { return }
     dropdown.clear(event)
     file.value = ""
-    
+
     this.refreshFilePathList()
   }
 
-//UI
-  async toggleShowRegex(arg:ArgDescriptor,event:Event){
+  //UI
+  async toggleShowRegex(arg: ArgDescriptor, event: Event) {
     let idPanel = 'args-regex-panel-' + arg.key
     let panel = document.getElementById(idPanel)
-    if(!(panel instanceof HTMLElement)) {return}
+    if (!(panel instanceof HTMLElement)) { return }
     panel.style.display = panel.style.display == 'none' ? 'flex' : 'none';
   }
 
-  async toggleRegexFormat(arg:ArgDescriptor,event:Event){
-    let idRegex = 'args-regex-'+arg.key;
+  async toggleRegexFormat(arg: ArgDescriptor, event: Event) {
+    let idRegex = 'args-regex-' + arg.key;
     let regex = document.getElementById(idRegex)
-    if(!(regex instanceof HTMLElement)) {return}
-    
-    if(regex.classList.contains('format-regex-simple')){
+    if (!(regex instanceof HTMLElement)) { return }
+
+    if (regex.classList.contains('format-regex-simple')) {
       regex.classList.remove('format-regex-simple')
       regex.innerText = arg.regex + ""
-    }else{
+    } else {
       regex.classList.add('format-regex-simple')
       regex.innerText = this.clenupRegex(arg.regex)
     }
   }
 
-  async reloadProblemList(){
+  async reloadProblemList() {
     this.selectedProblem = undefined;
     this.selectedService = undefined;
     this.selectedArgs = undefined;
     this.selectedFiles = undefined;
-    
+
 
     this.problemsMenu = []
     this.servicesMenu = []
@@ -278,22 +279,22 @@ export class ProblemWidgetComponent {
     this.pm.updateProblems()
   }
 
-  async problemsDidChange(clear:boolean) {
+  async problemsDidChange(clear: boolean) {
 
     this.problemsMenu = []
     this.servicesMenu = []
     this.loading = true
 
 
-    if(clear) return
-    
+    if (clear) return
+
     let problemsMenu = new Array<ProblemDescriptor>(); // [...this.pm.problemList] // ez ?
-    this.pm.problemList.forEach((problemDesc)=>{      
+    this.pm.problemList.forEach((problemDesc) => {
       problemsMenu.push(problemDesc)
     })
-    problemsMenu = problemsMenu.sort((a,b)=>a.name.toLowerCase()>b.name.toLowerCase()?1:a.name.toLowerCase()<b.name.toLowerCase()?-1:0)
+    problemsMenu = problemsMenu.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 0)
     console.log('updateProblemsUI:problemsMenu:', problemsMenu)
-    
+
     this.problemsMenu = problemsMenu
     this.loading = false
 
@@ -303,7 +304,7 @@ export class ProblemWidgetComponent {
 
 
 
-//API 
+  //API
   async onApiError(message: string) {
     console.log("API Error: ", message)
   }
@@ -312,47 +313,48 @@ export class ProblemWidgetComponent {
     this.selectedService = undefined;
     this.selectedArgs = undefined;
     this.selectedFiles = undefined;
-    
+
     console.log('didSelectProblem:', this.selectedProblem)
-    if (!this.selectedProblem){return}
+    if (!this.selectedProblem) { return }
     this.pm.selectProblem(this.selectedProblem)
-    
+
 
     let servicesMenu = new Array<ServiceDescriptor>();
-    this.selectedProblem.services.forEach((serviceDesc)=>{
+    this.selectedProblem.services.forEach((serviceDesc) => {
       servicesMenu.push(serviceDesc)
     })
-    servicesMenu = servicesMenu.sort((a,b)=>a.name.toLowerCase()>b.name.toLowerCase()?1:a.name.toLowerCase()<b.name.toLowerCase()?-1:0)
+    servicesMenu = servicesMenu.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 0)
     this.servicesMenu = servicesMenu
     console.log('didSelectProblem:servicesMenu:', servicesMenu)
     this.servicesMenu = servicesMenu
-    
+
     this.onProblemSelected.emit(this.selectedProblem)
   }
 
   async didSelectService() {
     console.log('didSelectService:', this.selectedService)
-    if (!this.selectedService){return}
+    if (!this.selectedService) { return }
     this.pm.selectService(this.selectedService)
     this.selectedArgs = this.selectedService.args
     this.selectedFiles = this.selectedService.files
     console.log('didSelectService:selectedArgs:', this.selectedArgs)
-    this.onServiceSelected.emit(this.selectedService)   
+    this.onServiceSelected.emit(this.selectedService)
 
     this.refreshFilePathList()
   }
 
   async apiDownloadAttachment() {
     console.log('apiDownloadAttachment:', this.selectedProblem)
-    if (!this.selectedProblem) { 
+    if (!this.selectedProblem) {
       this.messageService.add({
         key: 'br',
         severity: 'error',
         summary: 'Error',
         detail: 'No problem selected',
-    });
+      });
 
-      return }
+      return
+    }
 
     let onAttachment = () => { console.log("Attachment packet received") };
     let onAttachmentInfo = (info: any) => { console.log('apiDownloadAttachment:info:', info) };

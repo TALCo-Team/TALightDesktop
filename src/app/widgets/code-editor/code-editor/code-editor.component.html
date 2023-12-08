@@ -1,109 +1,96 @@
-
 <div class="tal-editor" [class.blur]="isBlurred">
   <p-splitter [style]="{'height': '100%'}" [panelSizes]="[15,50,35]" [minSizes]="[12,20,20]" stateStorage="local">
 
     <ng-template pTemplate>
       <div class="tal-editor-files">
-        <tal-file-explorer-widget #fileExplorer 
-          (onUpdateRoot)="onUpdateRoot($event)"
-          (onSelectFile)="selectFile($event)"
-          (onFileDeleted)="onFileDeleted($event)"
+        <tal-file-explorer-widget #fileExplorer (onUpdateRoot)="onUpdateRoot($event)"
+          (onSelectFile)="selectFile($event)" (onFileDeleted)="onFileDeleted($event)"
           (onItemRenamed)="onItemRenamed($event)">
         </tal-file-explorer-widget>
       </div>
     </ng-template>
 
     <ng-template pTemplate>
-        <div class="tal-code-editor-container" style="height: 700px; overflow-y: hidden;"> <!--wrapper-->
-          <div class="tal-code-editor-header"> <!--inner-wrap-->
-            <tal-execbar-widget #execBar 
-              (onStop)="stopAll()"
-              (onRun)="runProjectLocal()"
-              (onConnect)="runConnectAPI()"
-              [selectedFile]="selectedFile">
-            </tal-execbar-widget>
-          </div> 
+      <div class="tal-code-editor-container" style="height: 700px; overflow-y: hidden;"> <!--wrapper-->
+        <div class="tal-code-editor-header"> <!--inner-wrap-->
+          <tal-execbar-widget #execBar (onStop)="stopAll()" (onRun)="runProjectLocal()" (onConnect)="runConnectAPI()"
+            [selectedFile]="selectedFile">
+          </tal-execbar-widget>
+        </div>
 
-          <div class="tal-code-editor-header">
-            <div class="mywrapper2"> <!--inner-wrap-->
-              <p-tabView [scrollable]="true" (onClose)="removeItem($event)" (onChange)="changeFile($event)" [activeIndex]="activeIndex">
-            
-                <ng-container *ngFor="let name of isPresentName">
-                  <p-tabPanel [closable]="true">
-                    <ng-template pTemplate="header" class="tal-problem-widget-args-row">
-                      <div class="tal-problem-widget-label">{{name}}</div>
-                    </ng-template>
-                  </p-tabPanel>
-                </ng-container>
-        
-              </p-tabView>
+        <div class="tal-code-editor-header">
+          <div class="mywrapper2"> <!--inner-wrap-->
+            <p-tabView [scrollable]="true" (onClose)="removeItem($event)" (onChange)="changeFile($event)"
+              [activeIndex]="activeIndex">
 
-              <div class="tal-code-editor-container" style="height: 700px; overflow-y: hidden;">
-                <div class="tal-code-editor">
-                  <tal-file-editor-widget #fileEditor
-                    (onChange)="editorDidChange($event)">
-                  </tal-file-editor-widget>
-                </div>
+              <ng-container *ngFor="let name of isPresentName">
+                <p-tabPanel [closable]="true">
+                  <ng-template pTemplate="header" class="tal-problem-widget-args-row">
+                    <div class="tal-problem-widget-label">{{name}}</div>
+                  </ng-template>
+                </p-tabPanel>
+              </ng-container>
+            </p-tabView>
+
+            <div class="tal-code-editor-container" style="height: 700px; overflow-y: hidden;">
+              <div class="tal-code-editor">
+                <tal-file-editor-widget #fileEditor (onChange)="editorDidChange($event)">
+                </tal-file-editor-widget>
               </div>
-
             </div>
           </div>
-
         </div>
+      </div>
     </ng-template>
 
     <ng-template pTemplate>
-      <p-splitter id="tal-problem-column"  [panelSizes]="[15,50]" [minSizes]="[12,20]" layout="vertical" stateStorage="local">
+      <p-splitter id="tal-problem-column" [panelSizes]="[15,50]" [minSizes]="[12,20]" layout="vertical"
+        stateStorage="local">
 
         <ng-template pTemplate>
-          <tal-problem-widget #problemWidget 
-            (onAttachments)="onAttachments($event,'problemWidget')"
-            (onProblemChanged)="onProblemChanged($event)"
-            (onServiceChanged)="onServiceChanged($event)"
+          <tal-problem-widget #problemWidget (onAttachments)="onAttachments($event,'problemWidget')"
+            (onProblemChanged)="onProblemChanged($event)" (onServiceChanged)="onServiceChanged($event)"
             (onProblemListChanged)="onProblemListChanged()">
           </tal-problem-widget>
         </ng-template>
 
-
-  <!-------------------------------------------------------------------------->
+        <!-------------------------------------------------------------------------->
 
         <ng-template pTemplate>
           <div class="mywrapper">
             <p-tabView [(activeIndex)]="activeWidget" (onChange)="changeWidget($event)">
-                <p-tabPanel>
-                  <ng-template pTemplate="header">
-                    <i class="pi pi-desktop"></i>
-                    <span class="labelPanel">Output</span>
-                  </ng-template>
+              <p-tabPanel>
+                <ng-template pTemplate="header">
+                  <i class="pi pi-desktop"></i>
+                  <span class="labelPanel">Output</span>
+                </ng-template>
 
-                  <tal-output-widget #outputWidget
-                    (onStdin)="sendStdin($event)">
-                  </tal-output-widget>
-                </p-tabPanel>
-      
-                <p-tabPanel>
-                  <ng-template pTemplate="header">
-                    <i class="pi pi-list"></i>
-                    <span class="labelPanel">Log API</span>
-                  </ng-template>
+                <tal-output-widget #outputWidget (onStdin)="sendStdin($event)">
+                </tal-output-widget>
+              </p-tabPanel>
 
-                  <tal-log-api-widget #logApiWidget>
-                  </tal-log-api-widget>
-                </p-tabPanel>
-        
-                <p-tabPanel>
-                  <ng-template pTemplate="header">
-                    <i class="pi pi-code"></i>
-                    <span class="labelPanel">Terminal</span>
-                  </ng-template>
+              <p-tabPanel>
+                <ng-template pTemplate="header">
+                  <i class="pi pi-list"></i>
+                  <span class="labelPanel">Log API</span>
+                </ng-template>
 
-                  <tal-terminal-widget #terminalWidget
-                  (onAttachments)="onAttachments($event, 'terminalWidget')"
+                <tal-log-api-widget #logApiWidget>
+                </tal-log-api-widget>
+              </p-tabPanel>
+
+              <p-tabPanel>
+                <ng-template pTemplate="header">
+                  <i class="pi pi-code"></i>
+                  <span class="labelPanel">Terminal</span>
+                </ng-template>
+
+                <tal-terminal-widget #terminalWidget (onAttachments)="onAttachments($event, 'terminalWidget')"
                   (onProblemChanged)="onProblemChanged($event)">
-                  </tal-terminal-widget>
-                  
-                </p-tabPanel>
-              </p-tabView>
+                </tal-terminal-widget>
+
+              </p-tabPanel>
+            </p-tabView>
 
           </div>
 

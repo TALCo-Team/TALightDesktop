@@ -165,12 +165,12 @@ export class FileEditorWidgetComponent implements OnInit {
     private readonly themeService: ThemeService,
     private tutorialService : TutorialService,
   ) {
-    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} )  
-    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )  
+    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} )
+    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
   }
 
-  ngOnInit(): void {
-
+  ngOnInit() {
+    this.isBlurred = true;
   }
   protected isBlurred = false;
 

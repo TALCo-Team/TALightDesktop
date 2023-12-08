@@ -1,4 +1,6 @@
+import { TutorialComponent } from './widgets/tutorial/tutorial.component';
 import { Component } from '@angular/core';
+import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 @Component({
   selector: 'app-root',
@@ -6,6 +8,4 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  
-
 }

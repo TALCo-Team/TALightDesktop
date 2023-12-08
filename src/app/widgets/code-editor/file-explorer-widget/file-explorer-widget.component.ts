@@ -81,7 +81,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   ) {
     this.pm.onProjectChanged.subscribe( (project)=>{this.didProjectChanged(project)} ),
     this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
-    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} ) 
+    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
   }
 
   private isTutorialShown(tutorial? : any){
@@ -94,9 +94,10 @@ export class FileExplorerWidgetComponent implements OnInit {
       this.isBlurred = true
     }
   }
-  
+
   ngOnInit() {
     this.bindCollapseEvent();
+    this.isBlurred = true;
 
     // Setting import menù options
     this.ImportItems = [
