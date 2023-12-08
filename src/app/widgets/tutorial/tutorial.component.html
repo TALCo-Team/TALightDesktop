@@ -1,9 +1,9 @@
 <div class="tutorial_card" [ngStyle]="{'visibility': isVisible ? 'visible' : 'hidden' }">
     <div>
-        <p>Benvenuto nel tutorial! Qui ti mostreremo come funziona TALight Desktop</p>
+        <p>{{tutorialText}}</p>
     </div>
     <div>
-        <p-button (onClick)="forwardTutorial()" > Avanti</p-button>
-        <p-button (onClick)="closeTutorial()"> Chiudi</p-button>
+        <p-button (onClick)="nextTutorialButton()" > Avanti</p-button>
+        <p-button (onClick)="closeTutorialButton()"> Chiudi</p-button>
     </div>
 </div>

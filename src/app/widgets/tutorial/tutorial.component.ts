@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 //Il blur é stato fatto su file-editor-widget e su file-explorer-widget
 
@@ -9,21 +10,48 @@ import { Component, OnInit } from '@angular/core';
 })
 export class TutorialComponent implements OnInit {
   isVisible: boolean = false;
+  indexCurrentTutorial : number = 0
+  tutorialText = "";
 
-  constructor() { }
+  constructor( private tutorialService : TutorialService) {
+    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.showTutorial(tutorial)} )  
+    this.tutorialService.onTutorialClose.subscribe( ()=>{this.closeTutorial()} )  
+   }
 
   ngOnInit(): void {
+    this.isTutorialCompleted()
+    this.tutorialService.nextTutorial(this.indexCurrentTutorial)
+  }
+
+  // TODO if tutorial in cache -> dont show
+  public isTutorialCompleted(){
+    this.isVisible = true
+  }
+
+  public nextTutorialButton(){
+    console.log('TutorialComponent - nextTutorialButton')
+    this.indexCurrentTutorial += 1
+    this.tutorialService.nextTutorial(this.indexCurrentTutorial)
+  }
+
+  public closeTutorialButton(){
+    console.log('TutorialComponent - closeTutorialButton')
+    this.tutorialService.closeTutorial()
+  }
+
+  public showTutorial(tutorial: any){
+    console.log('TutorialComponent - showTutorial')
+    this.tutorialText = tutorial.text
+  }
+
+  public closeTutorial(){
+    console.log('TutorialComponent - closeTutorial')
+    this.isVisible = false
   }
 
   // TODO
-  forwardTutorial(){
-    console.log('forwardTutorial')
-  }
-
-  // TODO
-  closeTutorial(){
-    
-    console.log('closeTutorial')
+  public tutorialPosition(){
+    console.log('TutorialComponent - tutorialPosition')
   }
 
 
