@@ -1,5 +1,6 @@
 import { Component, NgZone, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { Tooltip } from 'primeng/tooltip';
+import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 @Component({
   selector: 'tal-log-api-widget',
@@ -14,10 +15,29 @@ export class LogApiWidgetComponent implements OnInit {
   public isActive:boolean = true;
 
   @ViewChildren(Tooltip) tooltips!: QueryList <Tooltip>;
+  isBlurred: boolean = false;
 
-  constructor( public zone: NgZone ) {}
+  constructor( 
+    public zone: NgZone,
+    private tutorialService : TutorialService,
+    ) {
+      this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
+      this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} ) 
+    }
 
   ngOnInit(): void {}
+
+
+  private isTutorialShown(tutorial? : any){
+
+    console.log("LogApiWidgetComponent:isTutorialShown")
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "LogApiWidgetComponent"){
+      this.isBlurred = false
+    }
+    else{
+      this.isBlurred = true
+    }
+  }
 
   clearOutput() {
     this.zone.run(() => this.outputLines = [])

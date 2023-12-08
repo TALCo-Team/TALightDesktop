@@ -10,6 +10,7 @@ import { ProjectEnvironment } from 'src/app/services/project-manager-service/pro
 import { GoogleLoginProvider, MicrosoftLoginProvider } from'@abacritt/angularx-social-login';
 import { SocialAuthService, SocialUser } from "@abacritt/angularx-social-login";
 import { GithubApiService } from 'src/app/services/github-api-service/github-api.service';
+import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 @Component({
   selector: 'tal-file-explorer-widget',
@@ -75,13 +76,25 @@ export class FileExplorerWidgetComponent implements OnInit {
     private pm: ProjectManagerService,
     private authService: SocialAuthService,
     private messageService: MessageService,
-    private githubService: GithubApiService
-
+    private githubService: GithubApiService,
+    private tutorialService : TutorialService,
   ) {
-    this.pm.onProjectChanged.subscribe( (project)=>{this.didProjectChanged(project)} )
+    this.pm.onProjectChanged.subscribe( (project)=>{this.didProjectChanged(project)} ),
+    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
+    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} ) 
   }
 
+  private isTutorialShown(tutorial? : any){
 
+    console.log("FileExplorerWidgetComponent:isTutorialShown")
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "FileExplorerWidgetComponent"){
+      this.isBlurred = false
+    }
+    else{
+      this.isBlurred = true
+    }
+  }
+  
   ngOnInit() {
     this.bindCollapseEvent();
 
@@ -125,7 +138,7 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   }
 
-  protected isBlurred = true;
+  protected isBlurred = false;
 
   public didProjectChanged(project:ProjectEnvironment){
     console.log("FileExplorerWidgetComponent:didProjectChanged")

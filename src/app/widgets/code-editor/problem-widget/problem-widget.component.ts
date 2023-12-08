@@ -10,6 +10,7 @@ import { Dropdown } from 'primeng/dropdown';
 import { CompilerDriver } from 'src/app/services/compiler-service/compiler-service-driver';
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
+import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 
 export class ServiceMenuEntry {
@@ -61,16 +62,19 @@ export class ProblemWidgetComponent {
   loading = false
 
   problemSub: Subscription
+  isBlurred: boolean = false;
 
   constructor( public zone: NgZone,
                public api: ApiService,
                public pm: ProblemManagerService,
                public prjmnrg: ProjectManagerService,
-               private messageService: MessageService,)
-  {
+               private messageService: MessageService,
+               private tutorialService : TutorialService,
+  ) {
     this.project = prjmnrg.getCurrentProject();
     this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.problemsDidChange(clear) })
-
+    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
+    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} ) 
     // https://primefaces.org/primeng/overlay
     //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
     this.dropdownOptions = {appendTo:'body'}
@@ -78,6 +82,17 @@ export class ProblemWidgetComponent {
   
   ngOnInit() {
     this.reloadProblemList();
+  }
+
+  private isTutorialShown(tutorial? : any){
+
+    console.log("ProblemWidgetComponent:isTutorialShown")
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "ProblemWidgetComponent"){
+      this.isBlurred = false
+    }
+    else{
+      this.isBlurred = true
+    }
   }
 
   ngOnDestroy() {

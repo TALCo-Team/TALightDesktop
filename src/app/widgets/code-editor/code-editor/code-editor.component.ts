@@ -21,6 +21,7 @@ import { ChangeDetectorRef } from '@angular/core';
 import { LogApiWidgetComponent } from '../log-api-widget/log-api-widget.component';
 import { MessageService } from 'primeng/api';
 import { TerminalWidgetComponent } from '../terminal-widget/terminal-widget.component';
+import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 @Component({
   selector: 'tal-code-editor',
@@ -71,14 +72,30 @@ export class CodeEditorComponent implements OnInit {
     private api:ApiService,
     private prj: ProjectManagerService,
     private cdRef:ChangeDetectorRef,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private tutorialService : TutorialService,
   ) {
+    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} )  
+    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )  
     console.log("CodeEditorComponent:constructor", this.prj)
     //TODO: add switch python/cpp
 
   }
 
+  protected isBlurred = false;
+
   ngOnInit(): void {}
+
+  private isTutorialShown(tutorial? : any){
+
+    console.log("CodeEditorComponent:isTutorialShown")
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "CodeEditorComponent"){
+      this.isBlurred = false
+    }
+    else{
+      this.isBlurred = true
+    }
+  }
 
   ngAfterViewInit(){
     this.outputWidget.enableStdin(false); 

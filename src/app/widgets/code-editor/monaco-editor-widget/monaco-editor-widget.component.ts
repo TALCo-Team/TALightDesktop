@@ -4,6 +4,7 @@ import { EditorComponent } from 'ngx-monaco-editor-v2';
 import { noop } from 'rxjs';
 import { FsNodeFile } from 'src/app/services/fs-service/fs.service.types';
 import { ThemeService } from 'src/app/services/theme-service/theme.service';
+import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 @Component({
   selector: 'tal-monaco-editor-widget',
@@ -25,10 +26,15 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
   
   public binEncoder = new TextEncoder(); // always utf-8
   public binDecoder = new TextDecoder("utf-8");
+  isBlurred: boolean = false;
 
   constructor(
     private readonly themeService: ThemeService,
+    private tutorialService : TutorialService,
+
   ) {
+      this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
+      this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} ) 
   }
 
   ngOnInit(): void {
@@ -39,6 +45,18 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
     
     this.updateEditorOptions();
   }
+
+  private isTutorialShown(tutorial? : any){
+
+    console.log("LogApiWidgetComponent:isTutorialShown")
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "LogApiWidgetComponent"){
+      this.isBlurred = false
+    }
+    else{
+      this.isBlurred = true
+    }
+  }
+  
 
 
   ngAfterViewInit() {

@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Output, ViewChild, NgZone, ElementRef } from '@angular/core';
 import { CompilerState } from 'src/app/services/compiler-service/compiler-service.types';
+import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 
 export class OutputMessage{
@@ -41,10 +42,29 @@ export class OutputWidgetComponent {
   public pyodideStateColor = "" //default: lightgray
   public pyodideStateTooltip = "State: Unknown"
   public stdinHighlight?:TimeoutID;
+isBlurred: any;
   
-  constructor(  public zone: NgZone) {}
+  constructor(  
+    public zone: NgZone,
+    private tutorialService : TutorialService,
+    ) {
+      this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
+      this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} ) 
+    }
+  
   
   ngOnInit() {}
+
+  private isTutorialShown(tutorial? : any){
+
+    console.log("OutputWidgetComponent:isTutorialShown")
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "OutputWidgetComponent"){
+      this.isBlurred = false
+    }
+    else{
+      this.isBlurred = true
+    }
+  }
 
   ngOnDestroy() {}
   

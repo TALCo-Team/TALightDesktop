@@ -8,6 +8,7 @@ import { CompilerService } from 'src/app/services/compiler-service/compiler-serv
 import { TerminalApiService } from 'src/app/services/terminal-api-service/terminal-api.service';
 import { Meta } from 'src/app/services/api-service/api.service';
 import { Packets } from 'src/app/services/api-service/api.packets';
+import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 @Component({
   selector: 'tal-terminal-widget',
@@ -60,14 +61,21 @@ export class TerminalWidgetComponent implements OnInit {
   private url!: string;
   private commandSplit!:string[];
   private connectParams = {};
+  isBlurred: boolean = false;
   
   ////////////////////////////////////////////////////////////////////////
 
 
-  constructor(  public zone: NgZone,
-                private terminalService: TerminalService,
-                public api: TerminalApiService,
-                private compiler:CompilerService) {}
+  constructor(  
+    public zone: NgZone,
+    private terminalService: TerminalService,
+    public api: TerminalApiService,
+    private compiler:CompilerService,
+    private tutorialService : TutorialService,
+    ) {
+      this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
+      this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} ) 
+    }
   
   ngOnInit() {
 
@@ -180,6 +188,17 @@ export class TerminalWidgetComponent implements OnInit {
         }
       }
     });
+  }
+
+  private isTutorialShown(tutorial? : any){
+
+    console.log("TerminalWidgetComponent:isTutorialShown")
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "TerminalWidgetComponent"){
+      this.isBlurred = false
+    }
+    else{
+      this.isBlurred = true
+    }
   }
 
   ngOnDestroy() {}

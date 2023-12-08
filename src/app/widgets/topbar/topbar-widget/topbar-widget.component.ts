@@ -4,6 +4,7 @@ import { ApiService, ApiState } from 'src/app/services/api-service/api.service';
 import { NotificationManagerService, NotificationMessage, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
+import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 
 @Component({
@@ -30,12 +31,14 @@ export class TopbarWidgetComponent implements OnInit {
   subProblemError
   subOnNotify
   currentNotification?:NotificationMessage
+  isBlurred: boolean = false;
 
   constructor( public readonly themeService: ThemeService, 
                public api: ApiService,
                public zone: NgZone,
                public pm: ProblemManagerService,
-               public nm: NotificationManagerService
+               public nm: NotificationManagerService,
+               private tutorialService : TutorialService,
              ) {
     this.url = api.url;
     this.lastUrl=this.url+"";
@@ -43,12 +46,25 @@ export class TopbarWidgetComponent implements OnInit {
     this.subApiState = this.api.onApiStateChange.subscribe((state:ApiState)=>{this.updateState(state)})
     this.subProblemError = this.pm.onError.subscribe((_)=>{this.stateBad()})
     this.subOnNotify = this.nm.onNotification.subscribe((msg:NotificationMessage): void=>{this.showNotification(msg)})
+    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
+    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} ) 
   }
 
   ngOnInit(): void {}
 
   public get changeThemIcon(): string {
     return this.themeService.currentTheme == AppTheme.dark ? 'pi-sun' : 'pi-moon';
+  }
+
+  private isTutorialShown(tutorial? : any){
+
+    console.log("TopbarWidgetComponent:isTutorialShown")
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "TopbarWidgetComponent"){
+      this.isBlurred = false
+    }
+    else{
+      this.isBlurred = true
+    }
   }
 
   public toggleTheme() {

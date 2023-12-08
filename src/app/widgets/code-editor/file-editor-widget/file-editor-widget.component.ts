@@ -4,6 +4,7 @@ import { marked } from 'marked';
 import { FsNodeFile } from 'src/app/services/fs-service/fs.service.types';
 import { ThemeService } from 'src/app/services/theme-service/theme.service';
 import { MonacoEditorWidgetComponent } from '../monaco-editor-widget/monaco-editor-widget.component';
+import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 // Editor UI
 export enum EditorType{
@@ -116,8 +117,6 @@ export class FileAssociationChoiceList{
 })
 export class FileEditorWidgetComponent implements OnInit {
 
-  protected isBlurred = false;
-
   EditorType = EditorType
   public editorType = EditorType.None
   public editorOption?:EditorOptions
@@ -164,12 +163,28 @@ export class FileEditorWidgetComponent implements OnInit {
 
   constructor(
     private readonly themeService: ThemeService,
+    private tutorialService : TutorialService,
   ) {
+    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} )  
+    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )  
   }
 
   ngOnInit(): void {
 
   }
+  protected isBlurred = false;
+
+  private isTutorialShown(tutorial? : any){
+
+    console.log("FileEditorWidgetComponent:isTutorialShown")
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "FileEditorWidgetComponent"){
+      this.isBlurred = false
+    }
+    else{
+      this.isBlurred = true
+    }
+  }
+
 
   public get selectedFile():FsNodeFile|null{
     return this._selectedFile;
@@ -260,11 +275,6 @@ export class FileEditorWidgetComponent implements OnInit {
 
   public monacoEditorDidChange(file:FsNodeFile){
     this.onChange.emit(file)
-  }
-
-  protectoggleBlur()
-  {
-    this.isBlurred = !this.isBlurred;
   }
 
 }

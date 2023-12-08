@@ -1,5 +1,5 @@
 
-<div class="log-container">
+<div class="log-container" [class.blur]="isBlurred">
 
     <div class="p-button-bar">
         <p-button id="logIcon"  styleClass="p-button-raised" label="{{label}}" badge="{{outputLines.length}}"  icon="pi {{icon}}" (click)="active()"></p-button>

@@ -9,31 +9,36 @@ export class TutorialService {
   public onTutorialChange = new EventEmitter<any>();
 
   constructor() { }
-
+  
+  //TODO: scrivi effettivamente il tutorial
   private tutorials = [
     {componentName: "Begin", text : "inizio tutorial" },
-    {componentName: "FileExplorerWidgetComponent", text : "tutorial1" },
-    {componentName: "FileEditorWidgetComponent", text : "tutorial2" },
-    {componentName: "CodeEditorComponent", text : "tutorial3" },
+    {componentName: "TopbarWidgetComponent", text : "tutorial0" },
+    {componentName: "CodeEditorComponent", text : "tutorial1" },
+    {componentName: "ExecbarWidgetComponent", text : "tutorial2" },
+    {componentName: "FileEditorWidgetComponent", text : "tutorial3" },
+    {componentName: "FileExplorerWidgetComponent", text : "tutorial4" },
+    {componentName: "LogApiWidgetComponent", text : "tutorial5" },
+    {componentName: "MonacoEditorWidgetComponent", text : "tutorial6" },
+    {componentName: "OutputWidgetComponent", text : "tutorial7" },
+    {componentName: "ProblemWidgetComponent", text : "tutorial8" },
+    {componentName: "TerminalWidgetComponent", text : "tutorial9" },
     {componentName: "End", text : "fine tutorial" },
   ]
 
-  //restituisce il nuovo tutorial se 
   public nextTutorial(indexCurrentTutorial: number){
-    console.log("TutorialService - nextTutorial")
+    console.log("TutorialService:nextTutorial")
     if (this.tutorials.length > indexCurrentTutorial){
       this.onTutorialChange.emit(this.tutorials[indexCurrentTutorial]);
     }
-    else{
+    else {
       this.closeTutorial()
     }
-    
-
   }
 
   // TODO cache dont show tutorial again
   public closeTutorial(){
-    console.log("TutorialService - closeTutorial")
+    console.log("TutorialService:closeTutorial")
     this.onTutorialClose.emit();
   }
 }
