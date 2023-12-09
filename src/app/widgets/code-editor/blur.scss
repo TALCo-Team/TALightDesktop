@@ -1,5 +1,5 @@
-.blur {
-  position: absolute;
+.blur{
+  position: relative;
   background-size: cover;
   position: relative;
   overflow: hidden;
@@ -7,9 +7,15 @@
   -webkit-backdrop-filter: blur(
     3px
   ); /* Per i browser basati su WebKit (Chrome, Safari) */
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(100%);
   /* Blocca il click ai bottoni */
   pointer-events: none;
   /* Permette di bloccare la selezione del testo */
   user-select: none;
+}
+
+.a {
+  color: red;
+  pointer-events: auto;
+  user-select: auto;
 }

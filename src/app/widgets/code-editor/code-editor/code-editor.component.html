@@ -1,4 +1,4 @@
-<div class="tal-editor" [class.blur]="isBlurred">
+<div class="tal-editor">
   <p-splitter [style]="{'height': '100%'}" [panelSizes]="[15,50,35]" [minSizes]="[12,20,20]" stateStorage="local">
 
     <ng-template pTemplate>
@@ -54,11 +54,12 @@
           </tal-problem-widget>
         </ng-template>
 
-        <!-------------------------------------------------------------------------->
-
+        ----------------------------------------------------------------------
+        <!-- ng-template non prende il blur!! -->
         <ng-template pTemplate>
+          <!--Attenzione, blurra tutto il "mywrapper" che é un contenitore delle 3 voci "output", "logAPI", "Terminal".-->
           <div class="mywrapper">
-            <p-tabView [(activeIndex)]="activeWidget" (onChange)="changeWidget($event)">
+            <p-tabView [(activeIndex)]="activeWidget" (onChange)="changeWidget($event)" >
               <p-tabPanel>
                 <ng-template pTemplate="header">
                   <i class="pi pi-desktop"></i>
@@ -68,7 +69,7 @@
                 <tal-output-widget #outputWidget (onStdin)="sendStdin($event)">
                 </tal-output-widget>
               </p-tabPanel>
-
+              <!-- Del tipo, si cambia in modo forzato, si passa da LogAPI a qui-->
               <p-tabPanel>
                 <ng-template pTemplate="header">
                   <i class="pi pi-list"></i>
@@ -78,27 +79,22 @@
                 <tal-log-api-widget #logApiWidget>
                 </tal-log-api-widget>
               </p-tabPanel>
-
+              <!--E da Output a qui, Terminal, sbloccando volta per volta voce per voce-->
               <p-tabPanel>
                 <ng-template pTemplate="header">
-                  <i class="pi pi-code"></i>
+                  <i class="pi pi-code" ></i>
                   <span class="labelPanel">Terminal</span>
                 </ng-template>
 
                 <tal-terminal-widget #terminalWidget (onAttachments)="onAttachments($event, 'terminalWidget')"
                   (onProblemChanged)="onProblemChanged($event)">
                 </tal-terminal-widget>
-
               </p-tabPanel>
             </p-tabView>
-
           </div>
-
         </ng-template>
-
       </p-splitter>
     </ng-template>
-
   </p-splitter>
 </div>
 

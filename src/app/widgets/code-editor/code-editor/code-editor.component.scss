@@ -1,75 +1,67 @@
+@import "../blur.scss"; //CREA PROBLEMI!!
 
-// @import '../blur.scss';  //CREA PROBLEMI!!
+.blur {
+  @extend .blur;
+}
 
-// .blur{
-//     @extend .blur;
-// }
-  
-
-:host{
-    width:100%;
-    height:100%;
+:host {
+  width: 100%;
+  height: 100%;
 }
 
 ::ng-deep {
-    div.tal-editor{
-        flex:1;
-        width:100%;
-        height:100%;
-    }
-
-    div.tal-code-editor-container{
-        display:flex;
-        flex-direction: column;
-        width:100%;
-        height: 1500px;
-    
-        div.tal-code-editor-header{
-            display:flex;
-            width:100%;
-        }
-        
-        div.tal-code-editor{
-            flex:1;
-            width:100%;
-        }
-    }
-}
-
-
-div.tal-editor-files{
-    width:100%;
-}
-
-
-
-
-.mywrapper{
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    width: 100%;
-    //height: 5em;
-}
-
-.mywrapper>p-tabView {
+  div.tal-editor {
     flex: 1;
-}
+    width: 100%;
+    height: 100%;
+  }
 
-.mywrapper2{
+  div.tal-code-editor-container {
     display: flex;
     flex-direction: column;
-    align-items: stretch;
     width: 100%;
-    //height: 5em;
+    height: 1500px;
+
+    div.tal-code-editor-header {
+      display: flex;
+      width: 100%;
+    }
+
+    div.tal-code-editor {
+      flex: 1;
+      width: 100%;
+    }
+  }
 }
 
-.mywrapper2>p-tabView {
-    flex: 1;
+div.tal-editor-files {
+  width: 100%;
+}
+
+.mywrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
+  //height: 5em;
+}
+
+.mywrapper > p-tabView {
+  flex: 1;
+}
+
+.mywrapper2 {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  //height: 5em;
+}
+
+.mywrapper2 > p-tabView {
+  flex: 1;
 }
 
 .labelPanel {
-    padding-left: 8px;
+  padding-left: 8px;
 }
-
-  

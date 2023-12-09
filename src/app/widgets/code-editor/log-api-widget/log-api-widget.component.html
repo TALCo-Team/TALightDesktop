@@ -1,11 +1,11 @@
 
-<div class="log-container" [class.blur]="isBlurred">
+<div class="log-container" >
 
     <div class="p-button-bar">
         <p-button id="logIcon"  styleClass="p-button-raised" label="{{label}}" badge="{{outputLines.length}}"  icon="pi {{icon}}" (click)="active()"></p-button>
         <p-button styleClass="p-button-raised" label="Delete" icon="pi pi-trash" (click)="clearOutput()"></p-button>
     </div>
-    
+
     <div class="log">
         <div class="tal-output-widget-pscroll">
             <div  class="content-api" *ngFor="let line of outputLines">
