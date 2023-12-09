@@ -1,9 +1,14 @@
+
 <div class="tutorial_card" [ngStyle]="{'visibility': isVisible ? 'visible' : 'hidden' }">
+  <div>
+    <p-button label="Chiudi" class="close" styleClass="p-button-text" (onClick)="closeTutorialButton()"></p-button>
+  </div>
     <div>
         <p>{{tutorialText}}</p>
     </div>
     <div>
-        <p-button (onClick)="nextTutorialButton()" > Avanti</p-button>
-        <p-button (onClick)="closeTutorialButton()"> Chiudi</p-button>
+        <p-button label="Avanti" (onClick)="nextTutorialButton()"> </p-button>
+        <p-button label="Indietro"></p-button>
+
     </div>
 </div>

@@ -58,14 +58,14 @@
         <!-- ng-template non prende il blur!! -->
         <ng-template pTemplate>
           <!--Attenzione, blurra tutto il "mywrapper" che é un contenitore delle 3 voci "output", "logAPI", "Terminal".-->
-          <div class="mywrapper">
-            <p-tabView [(activeIndex)]="activeWidget" (onChange)="changeWidget($event)" >
+          <div class="mywrapper" [class.blur]="isBlurred">
+            <p-tabView [(activeIndex)]="activeWidget" (onChange)="changeWidget($event)">
               <p-tabPanel>
                 <ng-template pTemplate="header">
                   <i class="pi pi-desktop"></i>
                   <span class="labelPanel">Output</span>
                 </ng-template>
-
+                <!-- Grazie a questa riga viene creato il Output in questo pannello -->
                 <tal-output-widget #outputWidget (onStdin)="sendStdin($event)">
                 </tal-output-widget>
               </p-tabPanel>
@@ -75,17 +75,17 @@
                   <i class="pi pi-list"></i>
                   <span class="labelPanel">Log API</span>
                 </ng-template>
-
+                <!-- Grazie a questa riga viene creato il LogAPI in questo pannello -->
                 <tal-log-api-widget #logApiWidget>
                 </tal-log-api-widget>
               </p-tabPanel>
               <!--E da Output a qui, Terminal, sbloccando volta per volta voce per voce-->
               <p-tabPanel>
                 <ng-template pTemplate="header">
-                  <i class="pi pi-code" ></i>
+                  <i class="pi pi-code"></i>
                   <span class="labelPanel">Terminal</span>
                 </ng-template>
-
+                <!-- Grazie a questa riga viene creato il terminale in questo pannello -->
                 <tal-terminal-widget #terminalWidget (onAttachments)="onAttachments($event, 'terminalWidget')"
                   (onProblemChanged)="onProblemChanged($event)">
                 </tal-terminal-widget>

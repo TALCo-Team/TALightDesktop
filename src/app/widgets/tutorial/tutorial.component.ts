@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
-//Il blur é stato fatto su file-editor-widget e su file-explorer-widget
 
 @Component({
   selector: 'tal-tutorial',
   templateUrl: './tutorial.component.html',
-  styleUrls: ['./tutorial.component.scss']
+  styleUrls: ['./tutorial.component.scss'],
 })
 export class TutorialComponent implements OnInit {
   isVisible: boolean = false;
@@ -14,8 +13,8 @@ export class TutorialComponent implements OnInit {
   tutorialText = "";
 
   constructor( private tutorialService : TutorialService) {
-    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.showTutorial(tutorial)} )  
-    this.tutorialService.onTutorialClose.subscribe( ()=>{this.closeTutorial()} )  
+    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.showTutorial(tutorial)} )
+    this.tutorialService.onTutorialClose.subscribe( ()=>{this.closeTutorial()} )
    }
 
   ngOnInit(): void {
@@ -42,7 +41,7 @@ export class TutorialComponent implements OnInit {
 
   public showTutorial(tutorial: any){
     console.log("TutorialComponent:showTutorial")
-    this.tutorialText = tutorial.componentName + " " + tutorial.text
+    this.tutorialText = tutorial.text
   }
 
   public closeTutorial(){

@@ -73,7 +73,6 @@
 
 
     <div class="tal-editor-files-right-bar">
-
       <button pButton icon="pi pi-eye" class="tal-square-button" *ngIf="showHidden"
         (click)="closeAllContextMenus($event); toggleHidden()" pTooltip="Hide hidden files"></button>
 
@@ -82,13 +81,10 @@
 
       <button pButton icon="pi pi-cog" class="tal-square-button"
         (click)="closeAllContextMenus($event); openSettings()" pTooltip="Settings"></button>
-
     </div>
-
-
   </div>
 
-<p-toast position="top-left" key="tl"></p-toast>
+  <p-toast position="top-left" key="tl"></p-toast>
 
 </div>
 

@@ -21,11 +21,10 @@ export class ExecbarWidgetComponent implements OnInit {
       this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
     }
 
+  protected isBlurred = false;
   ngOnInit() {
     this.isBlurred = true;
   }
-
-  protected isBlurred = false;
 
   private isTutorialShown(tutorial? : any){
 
