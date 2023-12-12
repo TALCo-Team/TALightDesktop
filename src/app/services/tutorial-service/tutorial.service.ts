@@ -102,10 +102,11 @@ export class TutorialService {
   }
 
   public prevTutorial(indexCurrentTutorial: number) {
-    console.log("SONO DENTRO AL PREVIOUSLY TutorialService:prevTutorial")
     if (indexCurrentTutorial > 0) {
       this.onTutorialChange.emit(this.tutorials[indexCurrentTutorial]);
-      console.log("Ho cliccato indietro")
+    }
+    else if (indexCurrentTutorial === 0) {
+      this.onTutorialChange.emit(this.tutorials[0]);
     }
     else {
       console.log("Non posso tornare indietro")

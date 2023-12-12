@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 
@@ -15,7 +15,7 @@ export class TutorialComponent implements OnInit {
   closeHidden = false;
   testo = "Avanti"
 
-  constructor( private tutorialService : TutorialService) {
+  constructor( private tutorialService : TutorialService, private renderer: Renderer2) {
     this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.showTutorial(tutorial)} )
     this.tutorialService.onTutorialClose.subscribe( ()=>{this.closeTutorial()} )
    }
@@ -76,6 +76,7 @@ export class TutorialComponent implements OnInit {
   // TODO
   public tutorialPosition(){
     console.log("TutorialComponent:tutorialPosition")
+
   }
 
 
