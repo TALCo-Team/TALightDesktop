@@ -23,16 +23,17 @@ export class ExecbarWidgetComponent implements OnInit {
 
 
   ngOnInit() {
-    this.isBlurred = true;
+    // this.isBlurred = true;
   }
 
-  protected isBlurred = false;
+  protected isBlurred = true;
 
   private isTutorialShown(tutorial?: any) {
     console.log("ExecbarWidgetComponent:isTutorialShown")
     if (typeof tutorial === 'undefined' || tutorial.componentName === "ExecbarWidgetComponent") {
       this.isBlurred = false
       console.log(this.isBlurred)
+      console.log("ExecbarWidgetComponent:isTutorialShown IS CALLED!!!!!!!!!!!!!!!!!!!")
     }
     else {
       this.isBlurred = true
