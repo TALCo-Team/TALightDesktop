@@ -32,8 +32,6 @@ export class ExecbarWidgetComponent implements OnInit {
     console.log("ExecbarWidgetComponent:isTutorialShown")
     if (typeof tutorial === 'undefined' || tutorial.componentName === "ExecbarWidgetComponent") {
       this.isBlurred = false
-      console.log(this.isBlurred)
-      console.log("ExecbarWidgetComponent:isTutorialShown IS CALLED!!!!!!!!!!!!!!!!!!!")
     }
     else {
       this.isBlurred = true

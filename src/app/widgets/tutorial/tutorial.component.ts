@@ -11,6 +11,9 @@ export class TutorialComponent implements OnInit {
   isVisible: boolean = false;
   indexCurrentTutorial : number = 0
   tutorialText = "";
+  backButtonDisabled = true;
+  closeHidden = false;
+  testo = "Avanti"
 
   constructor( private tutorialService : TutorialService) {
     this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.showTutorial(tutorial)} )
@@ -20,6 +23,7 @@ export class TutorialComponent implements OnInit {
   ngOnInit(): void {
     this.isTutorialCompleted()
     this.tutorialService.nextTutorial(this.indexCurrentTutorial)  //ÑON BLURRA GLI ALTRI COMPONENTI
+    this.tutorialService.prevTutorial(this.indexCurrentTutorial)
   }
 
   // TODO if tutorial in cache -> dont show
@@ -32,6 +36,26 @@ export class TutorialComponent implements OnInit {
     console.log("TutorialComponent:nextTutorialButton")
     this.indexCurrentTutorial += 1
     this.tutorialService.nextTutorial(this.indexCurrentTutorial)
+    if (this.indexCurrentTutorial > 0) {
+      this.backButtonDisabled = false
+    }
+    if (this.indexCurrentTutorial == 11) {
+      this.closeHidden = true
+      this.testo = "Fine"
+    }
+  }
+
+  public prevTutorialButton(){
+    console.log("TutorialComponent:prevTutorialButton")
+    this.indexCurrentTutorial -= 1
+    this.tutorialService.prevTutorial(this.indexCurrentTutorial)
+    if (this.indexCurrentTutorial > 0) {
+      this.closeHidden = false
+      this.testo = "Avanti"
+    }
+    else {
+      this.backButtonDisabled = true
+    }
   }
 
   public closeTutorialButton(){
