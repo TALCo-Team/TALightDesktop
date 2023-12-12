@@ -8,44 +8,46 @@ import { TutorialService } from 'src/app/services/tutorial-service/tutorial.serv
   styleUrls: ['./execbar-widget.component.scss']
 })
 export class ExecbarWidgetComponent implements OnInit {
-  @Input('selectedFile') selectedFile?:FsNodeFile
+  @Input('selectedFile') selectedFile?: FsNodeFile
 
   @Output('onStop') public onStop = new EventEmitter<void>();
   @Output('onRun') public onRun = new EventEmitter<FsNodeFile>();
   @Output('onConnect') public onConnect = new EventEmitter<FsNodeFile>();
 
   constructor(
-      private tutorialService : TutorialService,
-    ) {
-      this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} )
-      this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
-    }
+    private tutorialService: TutorialService,
+  ) {
+    this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) })
+    this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
+  }
 
-  protected isBlurred = false;
+
   ngOnInit() {
     this.isBlurred = true;
   }
 
-  private isTutorialShown(tutorial? : any){
+  protected isBlurred = false;
 
+  private isTutorialShown(tutorial?: any) {
     console.log("ExecbarWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "ExecbarWidgetComponent"){
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "ExecbarWidgetComponent") {
       this.isBlurred = false
+      console.log(this.isBlurred)
     }
-    else{
+    else {
       this.isBlurred = true
     }
   }
 
-  public onStopClick(){
+  public onStopClick() {
     this.onStop.emit()
   }
 
-  public onRunClick(){
+  public onRunClick() {
     this.onRun.emit(this.selectedFile)
   }
 
-  public onConnectClick(){
+  public onConnectClick() {
     this.onConnect.emit(this.selectedFile)
   }
 
