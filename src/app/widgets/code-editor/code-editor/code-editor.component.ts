@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { Commands } from 'src/app/services/api-service/api.commands';
 import { ApiService } from 'src/app/services/api-service/api.service';
 import { CompilerService } from 'src/app/services/compiler-service/compiler-service.service';
@@ -53,6 +53,7 @@ export class CodeEditorComponent implements OnInit {
 
   public activeIndex = 0;
   public activeWidget = 0;
+  private size= 0;
 
   @ViewChild("fileExplorer") public fileExplorer!: FileExplorerWidgetComponent;
   @ViewChild("fileEditor") public fileEditor!: FileEditorWidgetComponent;
@@ -74,6 +75,7 @@ export class CodeEditorComponent implements OnInit {
     private cdRef:ChangeDetectorRef,
     private messageService: MessageService,
     private tutorialService : TutorialService,
+    private elementRef: ElementRef,
   ) {
     this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} )
     this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
@@ -102,6 +104,7 @@ export class CodeEditorComponent implements OnInit {
   ngAfterViewInit(){
     this.outputWidget.enableStdin(false);
     this.setPythonProject()
+    const componentElement = this.elementRef.nativeElement;
   }
 
   ngAfterViewChecked()

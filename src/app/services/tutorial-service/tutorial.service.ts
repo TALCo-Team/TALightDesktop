@@ -16,19 +16,16 @@ export class TutorialService {
       componentName: "Begin",
       text: `Benvenuto in TALight Desktop! Iniziamo con un tutorial con la spiegazione dei vari componenti.
             Nel caso volessi uscire subito, basta che schiacci il tasto 'Chiudi' in alto a destra su questa finestra.`,
-      stepNumber: 1,
     },
 
     {
       componentName: "TopbarWidgetComponent",
       text: `Nella topbar potrai trovare la disponibilitá del server,
               l'URL del server a cui ti sei connesso e potrai passare anche alla dark mode!`,
-      stepNumber: 2
     },
     {
       componentName: "CodeEditorComponent",
       text: "In questa sezione avrai 3 strumenti importanti: output, Log API ed un terminale",
-      stepNumber: 3
     },
     {
       componentName: "ExecbarWidgetComponent",
@@ -38,42 +35,34 @@ export class TutorialService {
     },
     {
       componentName: "FileEditorWidgetComponent", text: "Come dice il nome, questo é un semplice file editor..",
-      stepNumber: 5
     },
     {
       componentName: "FileExplorerWidgetComponent",
       text: "..e questo, invece un file explorer",
-      stepNumber: 6
     },
     {
       componentName: "LogApiWidgetComponent",
       text: "LogApiWidgetComponent",
-      stepNumber: 7
     },
     {
       componentName: "MonacoEditorWidgetComponent",
       text: "MonacoEditorWidgetComponent",
-      stepNumber: 8
     },
     {
       componentName: "OutputWidgetComponent",
       text: "OutputWidgetComponent",
-      stepNumber: 9
     },
     {
       componentName: "ProblemWidgetComponent",
       text: "Seleziona il problema",
-      stepNumber: 10
     },
     {
       componentName: "TerminalWidgetComponent",
       text: "TerminalWidgetComponent",
-      stepNumber: 11
     },
     {
       componentName: "End",
       text: "Grazie per aver completato il tour! Buon coding!",
-      stepNumber: 12
     },
   ]
   // private tutorials = [
@@ -117,5 +106,10 @@ export class TutorialService {
   public closeTutorial() {
     console.log("TutorialService:closeTutorial")
     this.onTutorialClose.emit();
+  }
+
+  public getSizes(currentElement: any) {
+    
+    return this.tutorials;
   }
 }
