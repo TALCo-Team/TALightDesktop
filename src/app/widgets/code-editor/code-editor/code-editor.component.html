@@ -60,8 +60,7 @@
           <!--Attenzione, blurra tutto il "mywrapper" che é un contenitore delle 3 voci "output", "logAPI", "Terminal".-->
           <div class="mywrapper" [class.blur]="isBlurred">
             <p-tabView [activeIndex]="activeWidget" (onChange)="changeWidget($event)">
-              <!-- [(activeIndex)]="activeWidget"  -->
-              <p-tabPanel>
+              <p-tabPanel [disabled]="OutputDisabled">
                 <ng-template pTemplate="header">
                   <i class="pi pi-desktop"></i>
                   <span class="labelPanel">Output</span>
@@ -71,7 +70,7 @@
                 </tal-output-widget>
               </p-tabPanel>
               <!-- Del tipo, si cambia in modo forzato, si passa da LogAPI a qui-->
-              <p-tabPanel>
+              <p-tabPanel [disabled]="LogApiDisabled">
                 <ng-template pTemplate="header">
                   <i class="pi pi-list"></i>
                   <span class="labelPanel">Log API</span>
@@ -81,7 +80,7 @@
                 </tal-log-api-widget>
               </p-tabPanel>
               <!--E da Output a qui, Terminal, sbloccando volta per volta voce per voce-->
-              <p-tabPanel>
+              <p-tabPanel [disabled]="TerminalDisabled">
                 <ng-template pTemplate="header">
                   <i class="pi pi-code"></i>
                   <span class="labelPanel">Terminal</span>

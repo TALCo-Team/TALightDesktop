@@ -193,7 +193,7 @@ export class TerminalWidgetComponent implements OnInit {
   private isTutorialShown(tutorial? : any){
 
     console.log("TerminalWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "TerminalWidgetComponent" || tutorial.componentName === "CodeEditorComponent"){
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "TerminalWidgetComponent"){
       this.isBlurred = false
     }
     else{
