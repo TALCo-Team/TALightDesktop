@@ -66,9 +66,9 @@ export class CodeEditorComponent implements OnInit {
   private output_files: string[] | undefined = undefined;
   private current_output_file: string | undefined = undefined;
 
-  protected LogApiDisabled = false;
-  protected OutputDisabled = false;
-  protected TerminalDisabled = false;
+  protected LogApiDisabled = true;
+  protected OutputDisabled = true;
+  protected TerminalDisabled = true;
 
   constructor(
     private fs: FsService,
@@ -95,8 +95,16 @@ export class CodeEditorComponent implements OnInit {
   }
 
   private isTutorialShown(tutorial?: any) {
+
     console.log("CodeEditorComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "CodeEditorComponent"
+    if (typeof tutorial === 'undefined')
+    {
+      this.LogApiDisabled = false;
+      this.OutputDisabled = false;
+      this.TerminalDisabled = false;
+      this.isBlurred = false
+    }
+    else if (tutorial.componentName === "CodeEditorComponent"
       || tutorial.componentName === "OutputWidgetComponent"
       || tutorial.componentName === "LogApiWidgetComponent"
       || tutorial.componentName === "TerminalWidgetComponent") {
@@ -122,9 +130,6 @@ export class CodeEditorComponent implements OnInit {
     }
     else
     {
-      this.LogApiDisabled = false;
-      this.OutputDisabled = false;
-      this.TerminalDisabled = false;
       this.isBlurred = true
     }
   }
