@@ -1,14 +1,13 @@
 
 <div class="tutorial_card" [ngStyle]="{'display': isVisible ? 'grid' : 'none' }">
   <div>
-    <p-button label="Chiudi" class="close" styleClass="p-button-text" (onClick)="closeTutorialButton()" [hidden]="closeHidden"></p-button>
+    <p-button icon="pi pi-times" class="close" styleClass="p-button-text" (onClick)="closeTutorialButton()" [hidden]="closeHidden"></p-button>
   </div>
-    <div>
+    <div class="text">
         <p>{{tutorialText}}</p>
     </div>
-    <div>
-        <p-button label= {{testo}} (onClick)="nextTutorialButton()"> </p-button>
+    <div class="alignButtons">
+        <p-button [ngStyle]="{'margin-right':'4px'}"  label= {{testo}} (onClick)="nextTutorialButton()" > </p-button>
         <p-button label="Indietro" (onClick)="prevTutorialButton()" [disabled]="backButtonDisabled"></p-button>
-
     </div>
 </div>

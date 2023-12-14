@@ -16,6 +16,7 @@ export class TutorialService {
       componentName: "Begin",
       text: `Benvenuto in TALight Desktop! Iniziamo con un tutorial con la spiegazione dei vari componenti.
             Nel caso volessi uscire subito, basta che schiacci il tasto 'Chiudi' in alto a destra su questa finestra.`,
+
     },
 
     {
@@ -26,57 +27,69 @@ export class TutorialService {
     {
       componentName: "CodeEditorComponent",
       text: "In questa sezione avrai 3 strumenti importanti: output, Log API ed un terminale",
+
+    },
+    {
+      componentName: "FileEditorWidgetComponent", text: "Come dice il nome, questo é un semplice file editor..",
+
     },
     {
       componentName: "ExecbarWidgetComponent",
       text: `Qui invece sono presenti i bottoni per avviare l'esecuzione,
               fermarla oppure per verificare la soluzione con il server`
-      , stepNumber: 4
-    },
-    {
-      componentName: "FileEditorWidgetComponent", text: "Come dice il nome, questo é un semplice file editor..",
     },
     {
       componentName: "FileExplorerWidgetComponent",
       text: "..e questo, invece un file explorer",
+
     },
     {
       componentName: "LogApiWidgetComponent",
       text: "LogApiWidgetComponent",
+
     },
     {
       componentName: "MonacoEditorWidgetComponent",
       text: "MonacoEditorWidgetComponent",
+
     },
     {
       componentName: "OutputWidgetComponent",
       text: "OutputWidgetComponent",
+
     },
     {
       componentName: "ProblemWidgetComponent",
       text: "Seleziona il problema",
+
     },
     {
       componentName: "TerminalWidgetComponent",
       text: "TerminalWidgetComponent",
+
     },
     {
       componentName: "End",
       text: "Grazie per aver completato il tour! Buon coding!",
+
     },
+
+
   ]
   // private tutorials = [
-  //   { componentName: "Begin", text: "Benvenuto in TALight Desktop! " },
-  //   { componentName: "TopbarWidgetComponent", text: "TopbarWidgetComponent " },
-  //   { componentName: "CodeEditorComponent", text: "CodeEditorComponent" },
-  //   { componentName: "ExecbarWidgetComponent", text: "ExecbarWidgetComponent" },
-  //   { componentName: "FileEditorWidgetComponent", text: "FileEditorWidgetComponent" },
-  //   { componentName: "FileExplorerWidgetComponent", text: "FileExplorerWidgetComponent" },
-  //   { componentName: "LogApiWidgetComponent", text: "LogApiWidgetComponent" },
-  //   { componentName: "MonacoEditorWidgetComponent", text: "MonacoEditorWidgetComponent" },
-  //   { componentName: "OutputWidgetComponent", text: "OutputWidgetComponent" },
-  //   { componentName: "ProblemWidgetComponent", text: "ProblemWidgetComponent" },
-  //   { componentName: "TerminalWidgetComponent", text: "TerminalWidgetComponent" },
+  //   { componentName: "Begin", text: `Benvenuto in TALight Desktop! Iniziamo con un tutorial con la spiegazione dei vari componenti.
+  //              Nel caso volessi uscire subito, basta che schiacci il tasto 'Chiudi' in alto a destra su questa finestra.`, },
+  //   { componentName: "TopbarWidgetComponent", text: `Nella topbar potrai trovare la disponibilitá del server,
+  //                l'URL del server a cui ti sei connesso e potrai passare anche alla dark mode!` },
+  //   { componentName: "CodeEditorComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
+  //   { componentName: "ExecbarWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
+  //   { componentName: "FileEditorWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
+  //   { componentName: "FileExplorerWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
+  //   { componentName: "LogApiWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
+  //   { componentName: "MonacoEditorWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
+  //   { componentName: "OutputWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
+  //   { componentName: "ProblemWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
+  //   { componentName: "TerminalWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
   //   { componentName: "End", text: "Grazie per aver completato il tour! Buon coding!" },
   // ]
 
@@ -90,15 +103,15 @@ export class TutorialService {
     }
   }
 
-  public prevTutorial(indexCurrentTutorial: number) {
+  public previousTutorial(indexCurrentTutorial: number) {
+    console.log("TutorialService:nextTutorial")
     if (indexCurrentTutorial > 0) {
       this.onTutorialChange.emit(this.tutorials[indexCurrentTutorial]);
     }
-    else if (indexCurrentTutorial === 0) {
-      this.onTutorialChange.emit(this.tutorials[0]);
-    }
+    //Altrimenti blocca il pulsante
     else {
-      console.log("Non posso tornare indietro")
+
+      console.log("Impossibile andare indietro")
     }
   }
 
@@ -106,10 +119,5 @@ export class TutorialService {
   public closeTutorial() {
     console.log("TutorialService:closeTutorial")
     this.onTutorialClose.emit();
-  }
-
-  public getSizes(currentElement: any) {
-    
-    return this.tutorials;
   }
 }

@@ -57,15 +57,12 @@ export class TutorialComponent implements OnInit, AfterViewInit{
       this.closeHidden = true
       this.testo = "Fine"
     }
-    this.tutorialPosition()
-    ElementRef el = new ElementRef();
-    const altraComponenteElement =this.codeEditor?.
   }
 
   public prevTutorialButton() {
-    console.log("TutorialComponent:prevTutorialButton")
+    console.log("TutorialComponent:previousTutorialButton")
     this.indexCurrentTutorial -= 1
-    this.tutorialService.prevTutorial(this.indexCurrentTutorial)
+    this.tutorialService.previousTutorial(this.indexCurrentTutorial)
     if (this.indexCurrentTutorial > 0) {
       this.closeHidden = false
       this.testo = "Avanti"
@@ -90,77 +87,78 @@ export class TutorialComponent implements OnInit, AfterViewInit{
     this.isVisible = false
   }
 
-  private calculatePosition(element: ElementRef)
+  private calculatePosition()
   {
-    console.log("Calcolo in corso")
-    const rect = element.nativeElement.getBoundingClientRect();
-    console.log("rect é stato caricato")
-    const x = rect.left+window.scrollX;
-    const y = rect.top+window.scrollY;
-    const width = rect.width;
-    const height = rect.height;
-    return { x, y, width, height };
+    // const element = new ElementRef();
+    // console.log("Calcolo in corso")
+    // const rect = element.nativeElement.getBoundingClientRect();
+    // console.log("rect é stato caricato")
+    // const x = rect.left+window.scrollX;
+    // const y = rect.top+window.scrollY;
+    // const width = rect.width;
+    // const height = rect.height;
+    // return { x, y, width, height };
   }
 
   // TODO: modificare la posizione della card in base al componente
   public tutorialPosition() {
-    console.log("TutorialComponent:tutorialPosition")
-    const cardElement = this.el.nativeElement.querySelector('.tutorial_card');
-    const { x, y, width, height } = this.calculatePosition(this.el.nativeElement.querySelector('.topbar'));
-    switch (this.indexCurrentTutorial) {
-      case 0:
-        console.log("Altezza"+ height);
-        break;
-      case 1:
-        console.log("*************Altezza"+ height);
-        this.renderer.setStyle(cardElement, 'width', '50%');
-        this.renderer.setStyle(cardElement, 'height', '50%');
-        break;
-      case 2:
-        this.renderer.setStyle(cardElement, 'width', '50%');
-        this.renderer.setStyle(cardElement, 'height', '50%');
-        break;
-      case 3:
-        this.renderer.setStyle(cardElement, 'width', '50%');
-        this.renderer.setStyle(cardElement, 'height', '50%');
-        break;
-      case 4:
-        this.renderer.setStyle(cardElement, 'width', '50%');
-        this.renderer.setStyle(cardElement, 'height', '50%');
-        break;
-      case 5:
-        this.renderer.setStyle(cardElement, 'width', '50%');
-        this.renderer.setStyle(cardElement, 'height', '50%');
-        break;
-      case 6:
-        this.renderer.setStyle(cardElement, 'width', '50%');
-        this.renderer.setStyle(cardElement, 'height', '50%');
-        break;
-      case 7:
-        this.renderer.setStyle(cardElement, 'width', '50%');
-        this.renderer.setStyle(cardElement, 'height', '50%');
-        break;
-      case 8:
-        this.renderer.setStyle(cardElement, 'width', '50%');
-        this.renderer.setStyle(cardElement, 'height', '50%');
-        break;
-      case 9:
-        this.renderer.setStyle(cardElement, 'width', '50%');
-        this.renderer.setStyle(cardElement, 'height', '50%');
-        break;
-      case 10:
-        this.renderer.setStyle(cardElement, 'width', '50%');
-        this.renderer.setStyle(cardElement, 'height', '50%');
-        break;
-      case 11:
-        this.renderer.setStyle(cardElement, 'width', '50%');
-        this.renderer.setStyle(cardElement, 'height', '50%');
-        break;
-      default:
-        this.renderer.setStyle(cardElement, 'width', '50%');
-        this.renderer.setStyle(cardElement, 'height', '50%');
-        break;
-    }
+    // console.log("TutorialComponent:tutorialPosition")
+    // const cardElement = this.el.nativeElement.querySelector('.tutorial_card');
+    // const { x, y, width, height } = this.calculatePosition(this.el.nativeElement.querySelector('.topbar'));
+    // switch (this.indexCurrentTutorial) {
+    //   case 0:
+    //     console.log("Altezza"+ height);
+    //     break;
+    //   case 1:
+    //     console.log("*************Altezza"+ height);
+    //     this.renderer.setStyle(cardElement, 'width', '50%');
+    //     this.renderer.setStyle(cardElement, 'height', '50%');
+    //     break;
+    //   case 2:
+    //     this.renderer.setStyle(cardElement, 'width', '50%');
+    //     this.renderer.setStyle(cardElement, 'height', '50%');
+    //     break;
+    //   case 3:
+    //     this.renderer.setStyle(cardElement, 'width', '50%');
+    //     this.renderer.setStyle(cardElement, 'height', '50%');
+    //     break;
+    //   case 4:
+    //     this.renderer.setStyle(cardElement, 'width', '50%');
+    //     this.renderer.setStyle(cardElement, 'height', '50%');
+    //     break;
+    //   case 5:
+    //     this.renderer.setStyle(cardElement, 'width', '50%');
+    //     this.renderer.setStyle(cardElement, 'height', '50%');
+    //     break;
+    //   case 6:
+    //     this.renderer.setStyle(cardElement, 'width', '50%');
+    //     this.renderer.setStyle(cardElement, 'height', '50%');
+    //     break;
+    //   case 7:
+    //     this.renderer.setStyle(cardElement, 'width', '50%');
+    //     this.renderer.setStyle(cardElement, 'height', '50%');
+    //     break;
+    //   case 8:
+    //     this.renderer.setStyle(cardElement, 'width', '50%');
+    //     this.renderer.setStyle(cardElement, 'height', '50%');
+    //     break;
+    //   case 9:
+    //     this.renderer.setStyle(cardElement, 'width', '50%');
+    //     this.renderer.setStyle(cardElement, 'height', '50%');
+    //     break;
+    //   case 10:
+    //     this.renderer.setStyle(cardElement, 'width', '50%');
+    //     this.renderer.setStyle(cardElement, 'height', '50%');
+    //     break;
+    //   case 11:
+    //     this.renderer.setStyle(cardElement, 'width', '50%');
+    //     this.renderer.setStyle(cardElement, 'height', '50%');
+    //     break;
+    //   default:
+    //     this.renderer.setStyle(cardElement, 'width', '50%');
+    //     this.renderer.setStyle(cardElement, 'height', '50%');
+    //     break;
+    // }
   }
 
 }

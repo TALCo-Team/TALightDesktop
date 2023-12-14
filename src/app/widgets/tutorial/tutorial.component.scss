@@ -1,22 +1,60 @@
-.tutorial_card{
-    width: 35%;
-    top: 100px;
-    position: relative;
-    align-content: center;
-    padding: 50px;
-    border: 3px solid #1893e6;
-    border-radius: 10px;
-    -webkit-box-shadow: 5px 5px 7px 0px rgba(0,0,0,0.5);
-    box-shadow: 5px 5px 7px 0px rgba(0,0,0,0.5);
-    z-index: 2;
-    background-color: whitesmoke;
+// .tutorial_card{
+//     width: 35%;
+//     top: 100px;
+//     position: absolute;
+//     align-content: center;
+//     padding: 50px;
+//     border: 3px solid #1893e6;
+//     border-radius: 10px;
+//     -webkit-box-shadow: 5px 5px 7px 0px rgba(0,0,0,0.5);
+//     box-shadow: 5px 5px 7px 0px rgba(0,0,0,0.5);
+//     z-index: 2;
+//     background-color: whitesmoke;
+// }
+
+// .close{
+//   position: absolute;
+//   top: 0;
+//   right: 0;
+//   padding: 5px;
+//   line-height: 14px;
+//   min-width: auto;
+// }
+
+.tutorial_card {
+  position: relative;
+  /* Rimuovi il position: absolute e il top: 0; dalla classe .close */
+  width: 400px;
+  overflow: auto;
+  word-wrap: break-word;
+  top: 100px;
+  padding: 40px 15px 10px;
+  border: 3px solid #1893e6;
+  border-radius: 10px;
+  -webkit-box-shadow: 5px 5px 7px 0px rgba(0,0,0,0.5);
+  box-shadow: 5px 5px 7px 0px rgba(0,0,0,0.5);
+  z-index: 2;
+  background-color: whitesmoke;
 }
 
-.close{
+.close {
   position: absolute;
-  top: 0;
-  right: 0;
-  padding: 5px;
-  line-height: 14px;
-  min-width: auto;
+  right: 2px; /* Posiziona il bottone a 10 pixel dalla parte destra della card */
+  top: 2px; /* Posiziona il bottone a 10 pixel dalla parte superiore della card */
+  line-height: 1px;
+}
+.text{
+  font-size: 15px;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+}
+
+.alignButtons{
+  margin-top: 10px;
+  margin: 0 auto;
+}
+
+.small-btn {
+  width: 50px;
+  height: 25px;
 }
