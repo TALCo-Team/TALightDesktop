@@ -13,8 +13,6 @@ export class TutorialComponent implements OnInit, AfterViewInit {
 
   isVisible: boolean = false;
   indexCurrentTutorial: number = 0
-  private sharedVariableSource = new BehaviorSubject<number>(0);
-  indexCondiviso$ = this.sharedVariableSource.asObservable()
   tutorialTitle = ""
   tutorialText = "";
   backButtonDisabled = true;
@@ -46,7 +44,6 @@ export class TutorialComponent implements OnInit, AfterViewInit {
   public nextTutorialButton() {
     console.log("TutorialComponent:nextTutorialButton")
     this.indexCurrentTutorial += 1
-    this.sharedVariableSource.next(this.indexCurrentTutorial++)
     this.tutorialService.nextTutorial(this.indexCurrentTutorial)
     if (this.indexCurrentTutorial > 0) {
       this.backButtonDisabled = false

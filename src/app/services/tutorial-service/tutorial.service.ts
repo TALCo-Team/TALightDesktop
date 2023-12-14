@@ -73,7 +73,6 @@ export class TutorialService {
     else {
       this.closeTutorial()
     }
-    indexCurrentTutorial += 1
   }
 
   public previousTutorial(indexCurrentTutorial: number) {
@@ -85,10 +84,6 @@ export class TutorialService {
     else {
       console.log("Impossibile andare indietro")
     }
-    indexCurrentTutorial -= 1
-  }
-  public getTutorialIndex() {
-    return this.indexCurrentTutorial
   }
 
   // TODO cache dont show tutorial again

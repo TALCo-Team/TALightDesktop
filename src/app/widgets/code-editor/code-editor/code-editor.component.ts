@@ -95,30 +95,37 @@ export class CodeEditorComponent implements OnInit {
   }
 
   private isTutorialShown(tutorial?: any) {
-
     console.log("CodeEditorComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined'
-      || tutorial.componentName === "CodeEditorComponent"
-      ) {
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "CodeEditorComponent"
+      || tutorial.componentName === "OutputWidgetComponent"
+      || tutorial.componentName === "LogApiWidgetComponent"
+      || tutorial.componentName === "TerminalWidgetComponent") {
       this.isBlurred = false
-      // this.LogApiDisabled = true;
-      // this.OutputDisabled = true;
-      // this.TerminalDisabled = true;
-      // if (tutorial.componentName === "OutputWidgetComponent") {
-      //   this.activeWidget = 0;
-      // }
-      // else if (tutorial.componentName === "LogApiWidgetComponent") {
-      //   this.activeWidget = 1;
-      // }
-      // else if (tutorial.componentName === "TerminalWidgetComponent") {
-      //   this.activeWidget = 2;
-      // }
+      if (tutorial.componentName === "OutputWidgetComponent") {
+        this.activeWidget = 0;
+        this.LogApiDisabled = true;
+        this.OutputDisabled = false;
+        this.TerminalDisabled = true;
+      }
+      else if (tutorial.componentName === "LogApiWidgetComponent") {
+        this.activeWidget = 1;
+        this.LogApiDisabled = false;
+        this.OutputDisabled = true;
+        this.TerminalDisabled = true;
+      }
+      else if (tutorial.componentName === "TerminalWidgetComponent") {
+        this.activeWidget = 2;
+        this.LogApiDisabled = true;
+        this.OutputDisabled = true;
+        this.TerminalDisabled = false;
+      }
     }
-    else {
+    else
+    {
+      this.LogApiDisabled = false;
+      this.OutputDisabled = false;
+      this.TerminalDisabled = false;
       this.isBlurred = true
-      // this.LogApiDisabled = false;
-      // this.OutputDisabled = false;
-      // this.TerminalDisabled = false;
     }
   }
 
