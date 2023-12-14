@@ -1,4 +1,5 @@
 import { EventEmitter, Injectable } from '@angular/core';
+import { get } from 'http';
 
 @Injectable({
   providedIn: 'root'
@@ -7,18 +8,16 @@ export class TutorialService {
 
   public onTutorialClose = new EventEmitter<void>();
   public onTutorialChange = new EventEmitter<any>();
+  protected indexCurrentTutorial: number = 0
 
   constructor() { }
 
-  //TODO: potremmo mettere dei numeri per gestire l'avanti e l'indietro, ordinando quindi i vari step
   private tutorials = [
     {
       componentName: "Begin",
       text: `Benvenuto in TALight Desktop! Iniziamo con un tutorial con la spiegazione dei vari componenti.
             Nel caso volessi uscire subito, basta che schiacci il tasto 'Chiudi' in alto a destra su questa finestra.`,
-
     },
-
     {
       componentName: "TopbarWidgetComponent",
       text: `Nella topbar potrai trovare la disponibilitá del server,
@@ -27,11 +26,9 @@ export class TutorialService {
     {
       componentName: "CodeEditorComponent",
       text: "In questa sezione avrai 3 strumenti importanti: output, Log API ed un terminale",
-
     },
     {
       componentName: "FileEditorWidgetComponent", text: "Come dice il nome, questo é un semplice file editor..",
-
     },
     {
       componentName: "ExecbarWidgetComponent",
@@ -41,57 +38,32 @@ export class TutorialService {
     {
       componentName: "FileExplorerWidgetComponent",
       text: "..e questo, invece un file explorer",
-
     },
     {
       componentName: "LogApiWidgetComponent",
       text: "LogApiWidgetComponent",
-
     },
     {
       componentName: "MonacoEditorWidgetComponent",
       text: "MonacoEditorWidgetComponent",
-
     },
     {
       componentName: "OutputWidgetComponent",
       text: "OutputWidgetComponent",
-
     },
     {
       componentName: "ProblemWidgetComponent",
       text: "Seleziona il problema",
-
     },
     {
       componentName: "TerminalWidgetComponent",
       text: "TerminalWidgetComponent",
-
     },
     {
       componentName: "End",
       text: "Grazie per aver completato il tour! Buon coding!",
-
     },
-
-
   ]
-  // private tutorials = [
-  //   { componentName: "Begin", text: `Benvenuto in TALight Desktop! Iniziamo con un tutorial con la spiegazione dei vari componenti.
-  //              Nel caso volessi uscire subito, basta che schiacci il tasto 'Chiudi' in alto a destra su questa finestra.`, },
-  //   { componentName: "TopbarWidgetComponent", text: `Nella topbar potrai trovare la disponibilitá del server,
-  //                l'URL del server a cui ti sei connesso e potrai passare anche alla dark mode!` },
-  //   { componentName: "CodeEditorComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
-  //   { componentName: "ExecbarWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
-  //   { componentName: "FileEditorWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
-  //   { componentName: "FileExplorerWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
-  //   { componentName: "LogApiWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
-  //   { componentName: "MonacoEditorWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
-  //   { componentName: "OutputWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
-  //   { componentName: "ProblemWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
-  //   { componentName: "TerminalWidgetComponent", text: "Benvenuto in TALight Desktop! aaaaaaaa" },
-  //   { componentName: "End", text: "Grazie per aver completato il tour! Buon coding!" },
-  // ]
 
   public nextTutorial(indexCurrentTutorial: number) {
     console.log("TutorialService:nextTutorial")
@@ -101,18 +73,22 @@ export class TutorialService {
     else {
       this.closeTutorial()
     }
+    indexCurrentTutorial += 1
   }
 
   public previousTutorial(indexCurrentTutorial: number) {
-    console.log("TutorialService:nextTutorial")
-    if (indexCurrentTutorial > 0) {
+    console.log("TutorialService:previousTutorial")
+    if (indexCurrentTutorial >= 0) {
       this.onTutorialChange.emit(this.tutorials[indexCurrentTutorial]);
     }
     //Altrimenti blocca il pulsante
     else {
-
       console.log("Impossibile andare indietro")
     }
+    indexCurrentTutorial -= 1
+  }
+  public getTutorialIndex() {
+    return this.indexCurrentTutorial
   }
 
   // TODO cache dont show tutorial again

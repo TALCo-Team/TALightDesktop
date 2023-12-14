@@ -23,6 +23,7 @@ import { MessageService } from 'primeng/api';
 import { TerminalWidgetComponent } from '../terminal-widget/terminal-widget.component';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
+
 @Component({
   selector: 'tal-code-editor',
   templateUrl: './code-editor.component.html',
@@ -53,7 +54,7 @@ export class CodeEditorComponent implements OnInit {
 
   public activeIndex = 0;
   public activeWidget = 0;
-  private size= 0;
+  public indexTutorial = 1;
 
   @ViewChild("fileExplorer") public fileExplorer!: FileExplorerWidgetComponent;
   @ViewChild("fileEditor") public fileEditor!: FileEditorWidgetComponent;
@@ -93,8 +94,24 @@ export class CodeEditorComponent implements OnInit {
   private isTutorialShown(tutorial? : any){
 
     console.log("CodeEditorComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "CodeEditorComponent"){
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "CodeEditorComponent"
+    || tutorial.componentName === "LogApiWidgetComponent" ||  tutorial.componentName === "OutputWidgetComponent"
+    || tutorial.componentName === "TerminalWidgetComponent"){
       this.isBlurred = false
+      switch(tutorial.componentName){
+        case "OutputWidgetComponent":
+          this.activeWidget = 0;
+          break;
+        case "LogApiWidgetComponent":
+          this.activeWidget = 1;
+          break;
+        case "TerminalWidgetComponent":
+          this.activeWidget = 2;
+          break;
+        default:
+          this.activeWidget = -1;
+          break;
+      }
     }
     else{
       this.isBlurred = true
@@ -401,7 +418,6 @@ export class CodeEditorComponent implements OnInit {
     return true
   }
 
-
   public async runConnectAPI(){
     this.apiRun = true
     this.outputWidget.clearOutput()
@@ -420,7 +436,6 @@ export class CodeEditorComponent implements OnInit {
     this.outputWidget.enableStdin(false)
     console.log("apiConnect:didConnectData:cmdConnect:", this.cmdConnect);
   }
-
 
   async apiConnect(){
     console.log("apiConnect")
@@ -543,7 +558,6 @@ export class CodeEditorComponent implements OnInit {
     );
     console.log("apiConnect:DONE")
 
-
     return true
   }
 
@@ -598,4 +612,6 @@ export class CodeEditorComponent implements OnInit {
     this.current_output_file = message.name;
     if(this.current_output_file){this.project?.driver.writeFile("/" + this.current_output_file, "")};
   }
+
+
 }

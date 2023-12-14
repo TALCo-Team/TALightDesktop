@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, ElementRef, OnInit, Renderer2, ViewChild } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { CodeEditorComponent } from 'src/app/widgets/code-editor/code-editor/code-editor.component';
 @Component({
@@ -6,33 +7,29 @@ import { CodeEditorComponent } from 'src/app/widgets/code-editor/code-editor/cod
   templateUrl: './tutorial.component.html',
   styleUrls: ['./tutorial.component.scss'],
 })
-export class TutorialComponent implements OnInit, AfterViewInit{
+export class TutorialComponent implements OnInit, AfterViewInit {
 
   @ViewChild(CodeEditorComponent) codeEditor: CodeEditorComponent | undefined;
 
   isVisible: boolean = false;
   indexCurrentTutorial: number = 0
+  private sharedVariableSource = new BehaviorSubject<number>(0);
+  indexCondiviso$ = this.sharedVariableSource.asObservable()
+  tutorialTitle = ""
   tutorialText = "";
   backButtonDisabled = true;
   closeHidden = false;
   testo = "Avanti"
 
-  constructor(private tutorialService: TutorialService, private renderer: Renderer2) {
+
+  constructor(private tutorialService: TutorialService) {
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.showTutorial(tutorial) })
     this.tutorialService.onTutorialClose.subscribe(() => { this.closeTutorial() })
   }
   ngAfterViewInit(): void {
-    if(this.codeEditor) {
+    if (this.codeEditor) {
       const codeEditorSizes = this.codeEditor;
     }
-    // const execbar-widget-sizes;
-    // const file-editor-widget-sizes;
-    // const file-explorer-widget-sizes;
-    // const log-api-widget-sizes;
-    // const monaco-editor-widget-sizes;
-    // const output-widget-sizes;
-    // const problem-widget-sizes;
-    // const terminal-widget-sizes;
   }
 
   ngOnInit(): void {
@@ -49,6 +46,7 @@ export class TutorialComponent implements OnInit, AfterViewInit{
   public nextTutorialButton() {
     console.log("TutorialComponent:nextTutorialButton")
     this.indexCurrentTutorial += 1
+    this.sharedVariableSource.next(this.indexCurrentTutorial++)
     this.tutorialService.nextTutorial(this.indexCurrentTutorial)
     if (this.indexCurrentTutorial > 0) {
       this.backButtonDisabled = false
@@ -80,86 +78,12 @@ export class TutorialComponent implements OnInit, AfterViewInit{
   public showTutorial(tutorial: any) {
     console.log("TutorialComponent:showTutorial")
     this.tutorialText = tutorial.text
+    this.tutorialTitle = tutorial.componentName.toUpperCase()
   }
 
   public closeTutorial() {
     console.log("TutorialComponent:closeTutorial")
     this.isVisible = false
   }
-
-  private calculatePosition()
-  {
-    // const element = new ElementRef();
-    // console.log("Calcolo in corso")
-    // const rect = element.nativeElement.getBoundingClientRect();
-    // console.log("rect é stato caricato")
-    // const x = rect.left+window.scrollX;
-    // const y = rect.top+window.scrollY;
-    // const width = rect.width;
-    // const height = rect.height;
-    // return { x, y, width, height };
-  }
-
-  // TODO: modificare la posizione della card in base al componente
-  public tutorialPosition() {
-    // console.log("TutorialComponent:tutorialPosition")
-    // const cardElement = this.el.nativeElement.querySelector('.tutorial_card');
-    // const { x, y, width, height } = this.calculatePosition(this.el.nativeElement.querySelector('.topbar'));
-    // switch (this.indexCurrentTutorial) {
-    //   case 0:
-    //     console.log("Altezza"+ height);
-    //     break;
-    //   case 1:
-    //     console.log("*************Altezza"+ height);
-    //     this.renderer.setStyle(cardElement, 'width', '50%');
-    //     this.renderer.setStyle(cardElement, 'height', '50%');
-    //     break;
-    //   case 2:
-    //     this.renderer.setStyle(cardElement, 'width', '50%');
-    //     this.renderer.setStyle(cardElement, 'height', '50%');
-    //     break;
-    //   case 3:
-    //     this.renderer.setStyle(cardElement, 'width', '50%');
-    //     this.renderer.setStyle(cardElement, 'height', '50%');
-    //     break;
-    //   case 4:
-    //     this.renderer.setStyle(cardElement, 'width', '50%');
-    //     this.renderer.setStyle(cardElement, 'height', '50%');
-    //     break;
-    //   case 5:
-    //     this.renderer.setStyle(cardElement, 'width', '50%');
-    //     this.renderer.setStyle(cardElement, 'height', '50%');
-    //     break;
-    //   case 6:
-    //     this.renderer.setStyle(cardElement, 'width', '50%');
-    //     this.renderer.setStyle(cardElement, 'height', '50%');
-    //     break;
-    //   case 7:
-    //     this.renderer.setStyle(cardElement, 'width', '50%');
-    //     this.renderer.setStyle(cardElement, 'height', '50%');
-    //     break;
-    //   case 8:
-    //     this.renderer.setStyle(cardElement, 'width', '50%');
-    //     this.renderer.setStyle(cardElement, 'height', '50%');
-    //     break;
-    //   case 9:
-    //     this.renderer.setStyle(cardElement, 'width', '50%');
-    //     this.renderer.setStyle(cardElement, 'height', '50%');
-    //     break;
-    //   case 10:
-    //     this.renderer.setStyle(cardElement, 'width', '50%');
-    //     this.renderer.setStyle(cardElement, 'height', '50%');
-    //     break;
-    //   case 11:
-    //     this.renderer.setStyle(cardElement, 'width', '50%');
-    //     this.renderer.setStyle(cardElement, 'height', '50%');
-    //     break;
-    //   default:
-    //     this.renderer.setStyle(cardElement, 'width', '50%');
-    //     this.renderer.setStyle(cardElement, 'height', '50%');
-    //     break;
-    // }
-  }
-
 }
 

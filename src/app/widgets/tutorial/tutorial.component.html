@@ -2,6 +2,7 @@
 <div class="tutorial_card" [ngStyle]="{'display': isVisible ? 'grid' : 'none' }">
   <div>
     <p-button icon="pi pi-times" class="close" styleClass="p-button-text" (onClick)="closeTutorialButton()" [hidden]="closeHidden"></p-button>
+    <p class="title">{{tutorialTitle}}</p>
   </div>
     <div class="text">
         <p>{{tutorialText}}</p>

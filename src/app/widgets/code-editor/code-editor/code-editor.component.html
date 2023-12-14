@@ -59,7 +59,8 @@
         <ng-template pTemplate>
           <!--Attenzione, blurra tutto il "mywrapper" che é un contenitore delle 3 voci "output", "logAPI", "Terminal".-->
           <div class="mywrapper" [class.blur]="isBlurred">
-            <p-tabView [(activeIndex)]="activeWidget" (onChange)="changeWidget($event)">
+            <p-tabView [activeIndex]="activeWidget" (onChange)="changeWidget($event)">
+              <!-- [(activeIndex)]="activeWidget"  -->
               <p-tabPanel>
                 <ng-template pTemplate="header">
                   <i class="pi pi-desktop"></i>
