@@ -1,15 +1,14 @@
-import { AfterViewInit, Component, ElementRef, OnInit, Renderer2, ViewChild } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { AfterViewInit, Component, ElementRef, OnChanges, OnInit, Renderer2, SimpleChanges, ViewChild } from '@angular/core';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { CodeEditorComponent } from 'src/app/widgets/code-editor/code-editor/code-editor.component';
+import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
 @Component({
   selector: 'tal-tutorial',
   templateUrl: './tutorial.component.html',
   styleUrls: ['./tutorial.component.scss'],
 })
-export class TutorialComponent implements OnInit, AfterViewInit {
+export class TutorialComponent implements OnInit {
 
-  @ViewChild(CodeEditorComponent) codeEditor: CodeEditorComponent | undefined;
 
   isVisible: boolean = false;
   indexCurrentTutorial: number = 0
@@ -18,17 +17,14 @@ export class TutorialComponent implements OnInit, AfterViewInit {
   backButtonDisabled = true;
   closeHidden = false;
   testo = "Avanti"
+  theme = "light"
 
 
-  constructor(private tutorialService: TutorialService) {
+  constructor(private tutorialService: TutorialService,) {
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.showTutorial(tutorial) })
     this.tutorialService.onTutorialClose.subscribe(() => { this.closeTutorial() })
   }
-  ngAfterViewInit(): void {
-    if (this.codeEditor) {
-      const codeEditorSizes = this.codeEditor;
-    }
-  }
+
 
   ngOnInit(): void {
     this.isTutorialCompleted()

@@ -47,13 +47,10 @@ p-dropdown{
 
 ngx-monaco-editor{
   height:100% !important;
-
   div.editor-container{
     height:100% !important;
   }
 }
-
-
 
 div.tal-center-page {
   display: flex;
@@ -142,8 +139,6 @@ div.tal-contextmenu-container{
   padding:0 !important;
 }
 
-
-
 .tal-square-button{
   height:30px;
   min-height:30px;
@@ -153,7 +148,6 @@ div.tal-contextmenu-container{
   min-width:30px;
   max-width:30px;
 }
-
 
 ::ng-deep .p-dialog-footer button{
   min-width: fit-content;

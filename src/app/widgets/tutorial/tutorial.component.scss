@@ -31,10 +31,9 @@
   padding: 40px 15px 10px;
   border: 3px solid #1893e6;
   border-radius: 10px;
-  -webkit-box-shadow: 5px 5px 7px 0px rgba(0, 0, 0, 0.5);
-  box-shadow: 5px 5px 7px 0px rgba(0, 0, 0, 0.5);
+  box-shadow: 5px 5px 7px 5px #006ec9;
   z-index: 2;
-  background-color: whitesmoke;
+
 }
 
 .close {
@@ -49,20 +48,12 @@
   top: 7%; /* Posiziona il bottone a 2 pixel dalla parte superiore della card */
   line-height: 1px;
   font-style: italic;
-  color: darkblue;
 }
 .text {
-  font-size: 15px;
-  font-family: "Courier New", Courier, monospace;
-  font-weight: bold;
+  font-size: 16px;
 }
 
 .alignButtons {
   margin-top: 10px;
   margin: 0 auto;
-}
-
-.small-btn {
-  width: 50px;
-  height: 25px;
 }

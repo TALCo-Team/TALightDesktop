@@ -55,7 +55,6 @@ export class TopbarWidgetComponent implements OnInit {
   }
 
   private isTutorialShown(tutorial?: any) {
-
     console.log("TopbarWidgetComponent:isTutorialShown")
     if (typeof tutorial === 'undefined' || tutorial.componentName === "TopbarWidgetComponent") {
       this.isBlurred = false
@@ -158,8 +157,6 @@ export class TopbarWidgetComponent implements OnInit {
       console.log("changeURL:removeURL:done")
     }
     this.urlCache = this.api.urlCache
-
-
 
     console.log("changeURL:urlCache:after:", this.urlCache)
     console.log("changeURL:url:", url)

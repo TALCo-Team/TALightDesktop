@@ -200,7 +200,6 @@ export class ProblemWidgetComponent {
     return result;
   }
 
-
   //files
 
   async fileDidChange(file: FileDescriptor, event: { originalEvent: Event, value?: string }) {
