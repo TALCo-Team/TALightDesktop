@@ -26,7 +26,7 @@ export class TutorialComponent implements AfterViewInit {
     this.tutorialService.onTutorialClose.subscribe(() => { this.closeTutorial() })
   }
 
-  ngAfterViewInit(): void {
+  ngAfterViewInit() {
     if(this.tutorialService.getCachedTutorial() === "true"){
       console.log("Tutorial già completato")
       this.closeTutorialButton()
@@ -38,7 +38,6 @@ export class TutorialComponent implements AfterViewInit {
     }
   }
 
-  // TODO if tutorial in cache -> dont show
   public isTutorialCompleted() {
     console.log("TutorialComponent:isTutorialCompleted")
     this.isVisible = true

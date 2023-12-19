@@ -87,11 +87,12 @@ export class TutorialService {
     }
   }
 
-  // TODO cache dont show tutorial again
   public closeTutorial() {
     console.log("TutorialService:closeTutorial")
+    if (this.getCachedTutorial() !== "true") {
+      sessionStorage.setItem('cached', 'true');
+    }
     this.onTutorialClose.emit();
-    sessionStorage.setItem('cached', 'true');
   }
 
   public getCachedTutorial(){
