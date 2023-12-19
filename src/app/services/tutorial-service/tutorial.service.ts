@@ -10,7 +10,8 @@ export class TutorialService {
   public onTutorialChange = new EventEmitter<any>();
   protected indexCurrentTutorial: number = 0
 
-  constructor() { }
+  constructor() {
+  }
 
   private tutorials = [
     {
@@ -90,5 +91,11 @@ export class TutorialService {
   public closeTutorial() {
     console.log("TutorialService:closeTutorial")
     this.onTutorialClose.emit();
+    sessionStorage.setItem('cached', 'true');
+  }
+
+  public getCachedTutorial(){
+    console.log("TutorialService:getCachedTutorial "+sessionStorage.getItem('cached'))
+    return sessionStorage.getItem('cached');
   }
 }

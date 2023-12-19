@@ -33,7 +33,6 @@
   border-radius: 10px;
   box-shadow: 5px 5px 7px 5px #006ec9;
   z-index: 2;
-
 }
 
 .close {
@@ -42,6 +41,7 @@
   top: 2px; /* Posiziona il bottone a 2 pixel dalla parte superiore della card */
   line-height: 1px;
 }
+
 .title {
   position: absolute;
   left: 2px; /* Posiziona il bottone a 2 pixel dalla parte destra della card */
@@ -49,6 +49,7 @@
   line-height: 1px;
   font-style: italic;
 }
+
 .text {
   font-size: 16px;
 }

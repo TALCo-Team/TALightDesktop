@@ -1,3 +1,4 @@
+import { AsyncAwaitService } from './../../../../../my-first-angular-project/src/app/async-await-serice/async-await.service';
 import { AfterViewInit, Component, ElementRef, OnChanges, OnInit, Renderer2, SimpleChanges, ViewChild } from '@angular/core';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { CodeEditorComponent } from 'src/app/widgets/code-editor/code-editor/code-editor.component';
@@ -7,7 +8,7 @@ import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.ser
   templateUrl: './tutorial.component.html',
   styleUrls: ['./tutorial.component.scss'],
 })
-export class TutorialComponent implements OnInit {
+export class TutorialComponent implements AfterViewInit {
 
 
   isVisible: boolean = false;
@@ -25,10 +26,16 @@ export class TutorialComponent implements OnInit {
     this.tutorialService.onTutorialClose.subscribe(() => { this.closeTutorial() })
   }
 
-
-  ngOnInit(): void {
-    this.isTutorialCompleted()
-    this.tutorialService.nextTutorial(this.indexCurrentTutorial)  //ÑON BLURRA GLI ALTRI COMPONENTI
+  ngAfterViewInit(): void {
+    if(this.tutorialService.getCachedTutorial() === "true"){
+      console.log("Tutorial già completato")
+      this.closeTutorialButton()
+    }
+    else{
+      console.log("Tutorial non ancora completato")
+      this.isTutorialCompleted()
+      this.tutorialService.nextTutorial(this.indexCurrentTutorial)  //ÑON BLURRA GLI ALTRI COMPONENTI
+    }
   }
 
   // TODO if tutorial in cache -> dont show
