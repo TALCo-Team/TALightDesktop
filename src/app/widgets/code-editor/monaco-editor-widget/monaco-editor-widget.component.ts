@@ -87,6 +87,7 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
   public setFileContent(text:string){
     if(!this._selectedFile){return;}
     this._selectedFile.content = text
+    //alert(text);
   }
 
   

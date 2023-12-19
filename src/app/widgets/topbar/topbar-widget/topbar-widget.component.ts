@@ -4,6 +4,14 @@ import { ApiService, ApiState } from 'src/app/services/api-service/api.service';
 import { NotificationManagerService, NotificationMessage, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
+import { ProjectConfig, ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
+import { FsNodeFile, FsNodeFolder, FsNodeList, FsServiceDriver as FsDriver, FsServiceDriver } from "src/app/services/fs-service/fs.service.types"
+import { IndexeddbFsDriver } from 'src/app/services/fs-service/fs.service.test';
+import { FsService } from 'src/app/services/fs-service/fs.service';
+import { ConfigService } from 'src/app/services/config-service/config.service';
+import { switchMap } from 'rxjs';
+import { take } from 'rxjs';
+import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 
 
 @Component({
@@ -30,12 +38,18 @@ export class TopbarWidgetComponent implements OnInit {
   subProblemError
   subOnNotify
   currentNotification?:NotificationMessage
+  projectConfig = new ProjectConfig;
 
   constructor( public readonly themeService: ThemeService, 
                public api: ApiService,
                public zone: NgZone,
                public pm: ProblemManagerService,
-               public nm: NotificationManagerService
+               public nm: NotificationManagerService,
+               private fsService: FsService,
+               private configService: ConfigService,
+               // Aggiungere project manager
+               // il current project mi da accesso al config e da lì al driver
+               public prj: ProjectManagerService
              ) {
     this.url = api.url;
     this.lastUrl=this.url+"";
@@ -43,9 +57,51 @@ export class TopbarWidgetComponent implements OnInit {
     this.subApiState = this.api.onApiStateChange.subscribe((state:ApiState)=>{this.updateState(state)})
     this.subProblemError = this.pm.onError.subscribe((_)=>{this.stateBad()})
     this.subOnNotify = this.nm.onNotification.subscribe((msg:NotificationMessage): void=>{this.showNotification(msg)})
+    this.prj.onProjectChanged.subscribe((_) => {
+        let project = this.prj.getCurrentProject()
+        project?.onProjectConfigChanged.subscribe((_) => {
+          this.writeTofile(project);
+        })
+    })
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.lastUrl = this.api.getLastInsertedUrl();
+    this.url = this.lastUrl;
+    this.projectConfig.TAL_SERVER = this.url;
+    // controllare prima che esista
+    /*let project = this.prj.getCurrentProject()
+    if (project != null) {
+      alert('non è null');
+      if (project != null && project.config != null) {
+        project.config.TAL_SERVER = 'ciao';
+        project.config.save(project.driver);
+      }
+    }*/
+    if (this.urlInput) {
+      this.urlInput.writeValue(this.url);
+      this.projectConfig.TAL_SERVER = this.url;
+    }
+  }
+
+  ngAfterViewInit(): void {
+    let project = this.prj.getCurrentProject()
+    console.log(project);
+    if (project != null && project.config != null) {
+      project.config.TAL_SERVER = 'ciao';
+      project.config.save(project.driver);
+    }
+  }
+
+  public async writeTofile(project: ProjectEnvironment | null) {
+    alert('sto per scrivere');
+    if (project != null && project.config != null) {
+      alert('sto per scrivere');
+      project.config.TAL_SERVER = this.url;
+      alert(project.config.TAL_SERVER);
+      await project.config.save(project.driver);
+    }
+  }
 
   public get changeThemIcon(): string {
     return this.themeService.currentTheme == AppTheme.dark ? 'pi-sun' : 'pi-moon';
@@ -130,7 +186,6 @@ export class TopbarWidgetComponent implements OnInit {
       this.stateMaybe()
       this.pm.updateProblems()
     }
-    
     console.log("changeURL:urlCache:after:", this.urlCache )
     console.log("changeURL:url:", this.url )
     this.lastUrl = this.url + ""
