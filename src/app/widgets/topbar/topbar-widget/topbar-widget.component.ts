@@ -28,6 +28,7 @@ export class TopbarWidgetComponent implements OnInit {
   subOnNotify
   currentNotification?: NotificationMessage
   isBlurred: boolean = false;
+  isTutorialButtonVisible: boolean = false;
 
   constructor(public readonly themeService: ThemeService,
     public api: ApiService,
@@ -50,6 +51,11 @@ export class TopbarWidgetComponent implements OnInit {
     this.isBlurred = true;
   }
 
+  showTutorial() {
+    localStorage.setItem("tutorialCached", "false")
+    this.tutorialService.nextTutorial(-1)
+  }
+
   public get changeThemIcon(): string {
     return this.themeService.currentTheme == AppTheme.dark ? 'pi-sun' : 'pi-moon';
   }
@@ -62,63 +68,71 @@ export class TopbarWidgetComponent implements OnInit {
     else {
       this.isBlurred = true
     }
-  }
+    // Se la card è già stata mostrata oppure sta venendo mostrata, non mostrare il pulsante..
+    if (typeof tutorial !== 'undefined' && localStorage.getItem("tutorialCached") !== "true") {
+      this.isTutorialButtonVisible = false;
+    }
+    //..altrimenti mostralo
+    else {
+      this.isTutorialButtonVisible = true;
+    }
+}
 
   public toggleTheme() {
-    this.themeService.toggleTheme();
-  }
+  this.themeService.toggleTheme();
+}
 
   public iconForNotification() {
-    let icon = "pi-info"
-    switch (this.currentNotification?.type) {
-      default:
-      case NotificationType.System:
-      case NotificationType.Debug:
-      case NotificationType.Info:
-        icon = "pi-info"
-        break;
-      case NotificationType.Warning:
-      case NotificationType.Error:
-        icon = "pi-error"
+  let icon = "pi-info"
+  switch (this.currentNotification?.type) {
+    default:
+    case NotificationType.System:
+    case NotificationType.Debug:
+    case NotificationType.Info:
+      icon = "pi-info"
+      break;
+    case NotificationType.Warning:
+    case NotificationType.Error:
+      icon = "pi-error"
+  }
+  return icon
+}
+
+showNotification(msg: NotificationMessage, timeout = 3) {
+  let box = this.messageBox?.nativeElement as HTMLElement
+  box.style.display = "flex"
+  this.currentNotification = msg
+  setTimeout(() => { this.hideNotification() }, timeout * 1000)
+}
+
+hideNotification() {
+  let box = this.messageBox?.nativeElement as HTMLElement
+  box.style.display = "none"
+  this.currentNotification = undefined
+}
+
+
+filterSuggestions(event: any) {
+  let query = event.query.replace(this.escapeRegEx, '\\$&')
+  let filter = new RegExp(".*" + query + ".*")
+  let urlCache: string[] = []
+  this.api.urlCache.forEach((url: string) => {
+    if (url.match(filter)) {
+      urlCache.push(url)
     }
-    return icon
-  }
-
-  showNotification(msg: NotificationMessage, timeout = 3) {
-    let box = this.messageBox?.nativeElement as HTMLElement
-    box.style.display = "flex"
-    this.currentNotification = msg
-    setTimeout(() => { this.hideNotification() }, timeout * 1000)
-  }
-
-  hideNotification() {
-    let box = this.messageBox?.nativeElement as HTMLElement
-    box.style.display = "none"
-    this.currentNotification = undefined
-  }
-
-
-  filterSuggestions(event: any) {
-    let query = event.query.replace(this.escapeRegEx, '\\$&')
-    let filter = new RegExp(".*" + query + ".*")
-    let urlCache: string[] = []
-    this.api.urlCache.forEach((url: string) => {
-      if (url.match(filter)) {
-        urlCache.push(url)
-      }
-    });
-    this.urlCache = urlCache
-  }
+  });
+  this.urlCache = urlCache
+}
 
   public updateState(state: ApiState) {
-    let dot = this.statusDot!.nativeElement as HTMLElement
-    switch (state) {
-      case ApiState.Idle: dot.style.color = ""; break;
-      case ApiState.Good: dot.style.color = "green"; break;
-      case ApiState.Maybe: dot.style.color = "orange"; break;
-      case ApiState.Bad: dot.style.color = "darkred"; break;
-    }
+  let dot = this.statusDot!.nativeElement as HTMLElement
+  switch (state) {
+    case ApiState.Idle: dot.style.color = ""; break;
+    case ApiState.Good: dot.style.color = "green"; break;
+    case ApiState.Maybe: dot.style.color = "orange"; break;
+    case ApiState.Bad: dot.style.color = "darkred"; break;
   }
+}
 
   public stateIdle() { this.updateState(ApiState.Idle); }
   public stateGood() { this.updateState(ApiState.Good); }
@@ -126,40 +140,40 @@ export class TopbarWidgetComponent implements OnInit {
   public stateBad() { this.updateState(ApiState.Bad); }
 
   public changeURL(event: Event) {
-    if (this.lastUrl == this.url) { return }
-    this.stateIdle()
-    let dot = this.statusDot!.nativeElement as HTMLElement
-    console.log("changeURL:dot:", dot)
-    console.log("changeURL:event:", event)
-    let url = this.url;
-    console.log("changeURL:urlCache:before:", this.urlCache)
-    if (!this.api.setUrl(url)) {
-      this.stateBad()
-      console.log("changeURL:setURL:failed")
-    } else {
-      this.url = this.api.url;
-      console.log("changeURL:setURL:success")
-      this.urlCache = this.api.urlCache
-      this.stateMaybe()
-      this.pm.updateProblems()
-    }
-
-    console.log("changeURL:urlCache:after:", this.urlCache)
-    console.log("changeURL:url:", this.url)
-    this.lastUrl = this.url + ""
+  if (this.lastUrl == this.url) { return }
+  this.stateIdle()
+  let dot = this.statusDot!.nativeElement as HTMLElement
+  console.log("changeURL:dot:", dot)
+  console.log("changeURL:event:", event)
+  let url = this.url;
+  console.log("changeURL:urlCache:before:", this.urlCache)
+  if (!this.api.setUrl(url)) {
+    this.stateBad()
+    console.log("changeURL:setURL:failed")
+  } else {
+    this.url = this.api.url;
+    console.log("changeURL:setURL:success")
+    this.urlCache = this.api.urlCache
+    this.stateMaybe()
+    this.pm.updateProblems()
   }
+
+  console.log("changeURL:urlCache:after:", this.urlCache)
+  console.log("changeURL:url:", this.url)
+  this.lastUrl = this.url + ""
+}
 
   public removeURL(url: string, event: Event) {
-    if (event) { event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation(); }
+  if (event) { event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation(); }
 
-    console.log("changeURL:urlCache:before:", this.urlCache)
-    if (!this.api.removeFromCache(url)) {
-      console.log("changeURL:removeURL:done")
-    }
-    this.urlCache = this.api.urlCache
-
-    console.log("changeURL:urlCache:after:", this.urlCache)
-    console.log("changeURL:url:", url)
+  console.log("changeURL:urlCache:before:", this.urlCache)
+  if (!this.api.removeFromCache(url)) {
+    console.log("changeURL:removeURL:done")
   }
+  this.urlCache = this.api.urlCache
+
+  console.log("changeURL:urlCache:after:", this.urlCache)
+  console.log("changeURL:url:", url)
+}
 
 }

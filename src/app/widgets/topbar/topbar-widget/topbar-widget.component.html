@@ -3,7 +3,10 @@
         <h1>TALight Desktop</h1>
     </div>
 
-    
+    <div>
+      <button pButton class="tutorial" pTooltip="Mostra il tutorial" (click)="showTutorial()" label="Mostra il tutorial" *ngIf=isTutorialButtonVisible></button>
+    </div>
+
     <div class="tal-message-box">
         <div #messageBox *ngIf="!!currentNotification" class="tal-message-box-main tal-message-box-{{currentNotification.type}}" >
             <div class="tal-message-col">
@@ -31,8 +34,7 @@
                     <button pButton icon="pi pi-trash" class="tal-square-button" pTooltip="Remove URL" (click)="removeURL(url, $event)"></button>
                 </div>
             </ng-template>
-
-        </p-autoComplete>        
+        </p-autoComplete>
 
         <button pButton icon="pi {{changeThemIcon}}" class="tal-square-button" pTooltip="Change theme" (click)="toggleTheme()"></button>
     </div>

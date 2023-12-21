@@ -8,7 +8,8 @@ export class TutorialService {
 
   public onTutorialClose = new EventEmitter<void>();
   public onTutorialChange = new EventEmitter<any>();
-  protected indexCurrentTutorial: number = 0
+  public onIndexTutorialChange = new EventEmitter<number>();
+  // protected indexCurrentTutorial: number = 0
 
   constructor() {
   }
@@ -29,7 +30,8 @@ export class TutorialService {
       text: "In questa sezione avrai 3 strumenti importanti: output, Log API ed un terminale",
     },
     {
-      componentName: "FileEditorWidgetComponent", text: "Come dice il nome, questo é un semplice file editor..",
+      componentName: "FileEditorWidgetComponent",
+      text: "Come dice il nome, questo é un semplice file editor..",
     },
     {
       componentName: "ExecbarWidgetComponent",
@@ -69,7 +71,8 @@ export class TutorialService {
   public nextTutorial(indexCurrentTutorial: number) {
     console.log("TutorialService:nextTutorial")
     if (this.tutorials.length > indexCurrentTutorial) {
-      this.onTutorialChange.emit(this.tutorials[indexCurrentTutorial]);
+      this.onTutorialChange.emit(this.tutorials[indexCurrentTutorial+1]);
+      this.onIndexTutorialChange.emit(indexCurrentTutorial+1);
     }
     else {
       this.closeTutorial()
@@ -79,7 +82,8 @@ export class TutorialService {
   public previousTutorial(indexCurrentTutorial: number) {
     console.log("TutorialService:previousTutorial")
     if (indexCurrentTutorial >= 0) {
-      this.onTutorialChange.emit(this.tutorials[indexCurrentTutorial]);
+      this.onTutorialChange.emit(this.tutorials[indexCurrentTutorial-1]);
+      this.onIndexTutorialChange.emit(indexCurrentTutorial-1);
     }
     //Altrimenti blocca il pulsante
     else {
@@ -90,13 +94,23 @@ export class TutorialService {
   public closeTutorial() {
     console.log("TutorialService:closeTutorial")
     if (this.getCachedTutorial() !== "true") {
-      sessionStorage.setItem('cached', 'true');
+      localStorage.setItem('tutorialCached', 'true');
     }
     this.onTutorialClose.emit();
   }
 
   public getCachedTutorial(){
-    console.log("TutorialService:getCachedTutorial "+sessionStorage.getItem('cached'))
-    return sessionStorage.getItem('cached');
+    console.log("TutorialService:getCachedTutorial "+localStorage.getItem('tutorialCached'))
+    return localStorage.getItem('tutorialCached');
   }
+
+  public getSizeTutorial(){
+    console.log("TutorialService:getSizeTutorial")
+    return this.tutorials.length
+  }
+
+  // public setIndexTutorial(){
+  //   console.log("TutorialService:setIndexTutorial")
+  //   this.indexCurrentTutorial = 0
+  // }
 }

@@ -1,4 +1,3 @@
-import { AsyncAwaitService } from './../../../../../my-first-angular-project/src/app/async-await-serice/async-await.service';
 import { AfterViewInit, Component, ElementRef, OnChanges, OnInit, Renderer2, SimpleChanges, ViewChild } from '@angular/core';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { CodeEditorComponent } from 'src/app/widgets/code-editor/code-editor/code-editor.component';
@@ -8,15 +7,13 @@ import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.ser
   templateUrl: './tutorial.component.html',
   styleUrls: ['./tutorial.component.scss'],
 })
+
 export class TutorialComponent implements AfterViewInit {
-
-
   isVisible: boolean = false;
-  indexCurrentTutorial: number = 0
+  indexCurrentTutorial: number = -1
   tutorialTitle = ""
   tutorialText = "";
   backButtonDisabled = true;
-  closeHidden = false;
   testo = "Avanti"
   theme = "light"
 
@@ -24,47 +21,49 @@ export class TutorialComponent implements AfterViewInit {
   constructor(private tutorialService: TutorialService,) {
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.showTutorial(tutorial) })
     this.tutorialService.onTutorialClose.subscribe(() => { this.closeTutorial() })
+    this.tutorialService.onIndexTutorialChange.subscribe((indexCurrentTutorials) => { this.setIndex(indexCurrentTutorials) })
   }
-
+  // É sporca ma l'abbiamo fatto cosí perché é piú facile da capire, meno dispendioso in termini di tempo e risorse
+  // e non abbiamo bisogno di un componente in piú
   ngAfterViewInit() {
-    if(this.tutorialService.getCachedTutorial() === "true"){
-      console.log("Tutorial già completato")
-      this.closeTutorialButton()
-    }
-    else{
-      console.log("Tutorial non ancora completato")
-      this.isTutorialCompleted()
-      this.tutorialService.nextTutorial(this.indexCurrentTutorial)  //ÑON BLURRA GLI ALTRI COMPONENTI
-    }
+    setTimeout(() => {
+      if (this.tutorialService.getCachedTutorial() === "true") {
+        console.log("Tutorial già completato")
+        this.closeTutorialButton()
+      }
+      else {
+        console.log("Tutorial non ancora completato")
+        // this.isTutorialCompleted()
+        this.tutorialService.nextTutorial(this.indexCurrentTutorial)  //ÑON BLURRA GLI ALTRI COMPONENTI
+      }
+    }, 1);
   }
 
-  public isTutorialCompleted() {
-    console.log("TutorialComponent:isTutorialCompleted")
-    this.isVisible = true
+  // public isTutorialCompleted() {
+  //   console.log("TutorialComponent:isTutorialCompleted")
+  //   this.isVisible = true
+  // }
+
+  public setIndex(indexCurrentTutorials: number) {
+    console.log("TutorialComponent:setIndex")
+    this.tutorialTitle = indexCurrentTutorials + ''
+    this.indexCurrentTutorial = indexCurrentTutorials
   }
 
   public nextTutorialButton() {
     console.log("TutorialComponent:nextTutorialButton")
-    this.indexCurrentTutorial += 1
-    this.tutorialService.nextTutorial(this.indexCurrentTutorial)
-    if (this.indexCurrentTutorial > 0) {
-      this.backButtonDisabled = false
+    if (this.indexCurrentTutorial < this.tutorialService.getSizeTutorial() - 1) {
+      this.tutorialService.nextTutorial(this.indexCurrentTutorial)
     }
-    if (this.indexCurrentTutorial == 11) {
-      this.closeHidden = true
-      this.testo = "Fine"
+    else {
+      this.tutorialService.closeTutorial()
     }
   }
 
   public prevTutorialButton() {
     console.log("TutorialComponent:previousTutorialButton")
-    this.indexCurrentTutorial -= 1
     this.tutorialService.previousTutorial(this.indexCurrentTutorial)
-    if (this.indexCurrentTutorial > 0) {
-      this.closeHidden = false
-      this.testo = "Avanti"
-    }
-    else {
+    if ( this.indexCurrentTutorial === 0) {
       this.backButtonDisabled = true
     }
   }
@@ -76,8 +75,22 @@ export class TutorialComponent implements AfterViewInit {
 
   public showTutorial(tutorial: any) {
     console.log("TutorialComponent:showTutorial")
+
+    if (tutorial.componentName === "Begin") {
+      this.testo = "Avanti"
+      this.backButtonDisabled = true
+    }
+    else if (tutorial.componentName === "End") {
+      this.testo = "Fine"
+    }
+    else {
+      this.testo = "Avanti"
+      this.backButtonDisabled = false;
+    }
+
     this.tutorialText = tutorial.text
     this.tutorialTitle = tutorial.componentName.toUpperCase()
+    this.isVisible = true
   }
 
   public closeTutorial() {
