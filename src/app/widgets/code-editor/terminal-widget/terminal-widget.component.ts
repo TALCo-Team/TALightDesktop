@@ -22,17 +22,17 @@ export class TerminalWidgetComponent implements OnInit {
   public selectedProblem?: ProblemDescriptor
   public selectedService?: ServiceDescriptor
 
-  public problemList=new ProblemList();
-  public problems=new ProblemMap();
-  public services=new ServiceMap();
-  public savedParams=new ParamsMap();
+  public problemList = new ProblemList();
+  public problems = new ProblemMap();
+  public services = new ServiceMap();
+  public savedParams = new ParamsMap();
   public response!: string;
 
   public onError = new EventEmitter<any>();
   public onProblemsChanged = new EventEmitter();
   public onResponseComplete = new EventEmitter();
 
-  public terminalHistory:string[] = [];
+  public terminalHistory: string[] = [];
   public terminalHistoryIndex: number = -1;
 
   public prompt: string = "TALight>";
@@ -44,22 +44,22 @@ export class TerminalWidgetComponent implements OnInit {
   public binEncoder = new TextEncoder(); // always utf-8
   public binDecoder = new TextDecoder("utf-8");
 
-  public cmdConnect?:Commands.Connect;
+  public cmdConnect?: Commands.Connect;
 
-  public project:ProjectEnvironment | null = null;
+  public project: ProjectEnvironment | null = null;
 
   public selectedFile?: FsNodeFile;
   public apiRun = false
 
   public fslistfile: FsNodeFile[] = [];
 
-  private output_files:string[]|undefined = undefined;
-  private current_output_file:string|undefined = undefined;
+  private output_files: string[] | undefined = undefined;
+  private current_output_file: string | undefined = undefined;
 
   private problemSearch!: string;
   private command!: string;
   private url!: string;
-  private commandSplit!:string[];
+  private commandSplit!: string[];
   private connectParams = {};
   isBlurred: boolean = false;
 
@@ -70,19 +70,19 @@ export class TerminalWidgetComponent implements OnInit {
     public zone: NgZone,
     private terminalService: TerminalService,
     public api: TerminalApiService,
-    private compiler:CompilerService,
-    private tutorialService : TutorialService,
-    ) {
-      this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
-      this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
-    }
+    private compiler: CompilerService,
+    private tutorialService: TutorialService,
+  ) {
+    this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
+      this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
+  }
 
   ngOnInit() {
     this.isBlurred = true;
     this.terminalService.commandHandler.subscribe(command => {
 
       this.onResponseComplete.subscribe({
-        next: (payload:any)=>{ this.terminalService.sendResponse(this.response) }
+        next: (payload: any) => { this.terminalService.sendResponse(this.response) }
       })
 
       // Prepare command string to analysis
@@ -92,7 +92,7 @@ export class TerminalWidgetComponent implements OnInit {
 
       // When 'rtal connect' is running
       if (this.commandConnectState) {
-        if(!this.cmdConnect){return;}
+        if (!this.cmdConnect) { return; }
         this.cmdConnect.sendBinary(command + "\n");
         this.response = '';
 
@@ -110,7 +110,7 @@ export class TerminalWidgetComponent implements OnInit {
             this.onResponseComplete.emit();
           } else {
 
-            switch(this.commandSplit[1]) {
+            switch (this.commandSplit[1]) {
               case 'help':
               case '--help':
               case '-h':
@@ -178,7 +178,7 @@ export class TerminalWidgetComponent implements OnInit {
 
           setTimeout(() => {
             let length = children.length;
-            for(let index=0; index < length; index++) { terminalContent. removeChild(children[0]) }
+            for (let index = 0; index < length; index++) { terminalContent.removeChild(children[0]) }
           }, 0);
 
         }
@@ -190,18 +190,18 @@ export class TerminalWidgetComponent implements OnInit {
     });
   }
 
-  private isTutorialShown(tutorial? : any){
+  private isTutorialShown(tutorial?: any) {
 
     console.log("TerminalWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "TerminalWidgetComponent" || tutorial.componentName === "CodeEditorComponent"){
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "TerminalWidgetComponent") {
       this.isBlurred = false
     }
-    else{
+    else {
       this.isBlurred = true
     }
   }
 
-  ngOnDestroy() {}
+  ngOnDestroy() { }
 
 
   onGetCommand() {
@@ -229,7 +229,7 @@ export class TerminalWidgetComponent implements OnInit {
 
         this.selectedService = new ServiceDescriptor('', new Packets.Service(''), new ProblemDescriptor('', new Meta('')))
 
-        let condition = (sub:string) => sub == '-a';
+        let condition = (sub: string) => sub == '-a';
         let isPresentArg = this.commandSplit.findIndex(condition)
 
         if (isPresentArg != -1) {
@@ -237,9 +237,9 @@ export class TerminalWidgetComponent implements OnInit {
           let problem;
           let service;
 
-          if(isPresentArg === 4) { problem = this.commandSplit[this.commandSplit.length-2]; service = this.commandSplit[this.commandSplit.length-1]}
-          else if(isPresentArg === 5) {problem = this.commandSplit[4]; service = this.commandSplit[this.commandSplit.length-1]}
-          else if(isPresentArg === 6) {problem = this.commandSplit[4]; service = this.commandSplit[5]}
+          if (isPresentArg === 4) { problem = this.commandSplit[this.commandSplit.length - 2]; service = this.commandSplit[this.commandSplit.length - 1] }
+          else if (isPresentArg === 5) { problem = this.commandSplit[4]; service = this.commandSplit[this.commandSplit.length - 1] }
+          else if (isPresentArg === 6) { problem = this.commandSplit[4]; service = this.commandSplit[5] }
           else {
             this.response = "Syntax Error"
             this.onResponseComplete.emit();
@@ -248,10 +248,10 @@ export class TerminalWidgetComponent implements OnInit {
 
           let params = new Map<string, string>();
 
-         // rtal connect -a param1=value -a param2=value
+          // rtal connect -a param1=value -a param2=value
           for (let index = isPresentArg; index < this.commandSplit.length; index++) {
 
-            if (this.commandSplit[index] === '-a' && index < this.commandSplit.length-1) {
+            if (this.commandSplit[index] === '-a' && index < this.commandSplit.length - 1) {
               index = index + 1;
 
               if (this.commandSplit[index].includes('=')) {
@@ -268,7 +268,7 @@ export class TerminalWidgetComponent implements OnInit {
 
           }
 
-          if (problem!= undefined && service != undefined) {
+          if (problem != undefined && service != undefined) {
             this.selectedService.parent.name = problem;
             this.selectedService.name = service;
             this.connectParams = Object.fromEntries(params);
@@ -297,13 +297,11 @@ export class TerminalWidgetComponent implements OnInit {
         break;
 
     }
-
     this.onResponseComplete.emit();
   }
 
 
   public async apiDownloadAttachment() {
-
     switch (this.api.setUrl(this.url)) {
       case 0:
         let onAttachment = () => { console.log("Attachment packet received") };
@@ -329,28 +327,28 @@ export class TerminalWidgetComponent implements OnInit {
       case -2:
         this.response = this.ErrorMessage05();
         this.onResponseComplete.emit();
-         break;
+        break;
     }
 
   }
 
-  public async getListProblems(url:string) {
-    this.selectedProblem=undefined;
-    this.selectedService=undefined;
-    this.problemList=[];
+  public async getListProblems(url: string) {
+    this.selectedProblem = undefined;
+    this.selectedService = undefined;
+    this.problemList = [];
     this.problems.clear();
     this.services.clear();
 
-    switch(this.api.setUrl(url)) {
+    switch (this.api.setUrl(url)) {
       case 0:
         let req = this.api.problemList((problemMap) => {
 
           console.log('apiProblemList:problemList:', problemMap)
-          problemMap.forEach(( problem, name )=>{
+          problemMap.forEach((problem, name) => {
             let problemDesc = new ProblemDescriptor(name, problem)
             this.problemList.push(problemDesc)
-            this.problems.set(problemDesc.key,problemDesc);
-            problemDesc.services.forEach((serviceDesc)=>{
+            this.problems.set(problemDesc.key, problemDesc);
+            problemDesc.services.forEach((serviceDesc) => {
               this.services.set(serviceDesc.key, serviceDesc)
             })
           })
@@ -392,7 +390,7 @@ export class TerminalWidgetComponent implements OnInit {
     }
     else if (this.commandSplit.length == 5) {
 
-      if(this.commandSplit[4] == '-v' || this.commandSplit[4] == '--verbose') {
+      if (this.commandSplit[4] == '-v' || this.commandSplit[4] == '--verbose') {
 
         // eg. rtal -s <server-url> list -v
 
@@ -403,7 +401,7 @@ export class TerminalWidgetComponent implements OnInit {
         this.problemList.forEach(problem => {
           this.response += "- " + problem.name + "\n";
 
-          var ArrayService:ServiceDescriptor[] = [];
+          var ArrayService: ServiceDescriptor[] = [];
           problem.services.forEach(service => ArrayService.push(service))
 
           ArrayService.sort((a, b) => a.name.localeCompare(b.name));
@@ -411,7 +409,7 @@ export class TerminalWidgetComponent implements OnInit {
           ArrayService.forEach(service => {
             this.response += "  * " + service.name + "\n";
 
-            var ArrayArg:ArgDescriptor[] = [];
+            var ArrayArg: ArgDescriptor[] = [];
             service.args.forEach(arg => ArrayArg.push(arg))
 
             ArrayArg.sort((a, b) => a.name.localeCompare(b.name));
@@ -434,12 +432,12 @@ export class TerminalWidgetComponent implements OnInit {
 
         this.response = "";
 
-        let condition = (problem:any) => problem.name == this.commandSplit[4];
+        let condition = (problem: any) => problem.name == this.commandSplit[4];
         let problemFound = this.problemList.find(condition);
 
-        if (problemFound  != undefined) {
+        if (problemFound != undefined) {
 
-          var ArrayService:ServiceDescriptor[] = [];
+          var ArrayService: ServiceDescriptor[] = [];
           problemFound.services.forEach(service => ArrayService.push(service))
 
           ArrayService.sort((a, b) => a.name.localeCompare(b.name));
@@ -447,7 +445,7 @@ export class TerminalWidgetComponent implements OnInit {
           ArrayService.forEach(service => {
             this.response += "  * " + service.name + "\n";
 
-            var ArrayArg:ArgDescriptor[] = [];
+            var ArrayArg: ArgDescriptor[] = [];
             service.args.forEach(arg => ArrayArg.push(arg))
 
             ArrayArg.sort((a, b) => a.name.localeCompare(b.name));
@@ -474,16 +472,16 @@ export class TerminalWidgetComponent implements OnInit {
 
       let condition = undefined;
 
-      if(this.commandSplit[4] == '-v' || this.commandSplit[4] == '--verbose') { condition = (problem:any) => problem.name == this.commandSplit[5]; }
-      if(this.commandSplit[5] == '-v' || this.commandSplit[5] == '--verbose') { condition = (problem:any) => problem.name == this.commandSplit[4]; }
+      if (this.commandSplit[4] == '-v' || this.commandSplit[4] == '--verbose') { condition = (problem: any) => problem.name == this.commandSplit[5]; }
+      if (this.commandSplit[5] == '-v' || this.commandSplit[5] == '--verbose') { condition = (problem: any) => problem.name == this.commandSplit[4]; }
 
-      if (condition  != undefined) {
+      if (condition != undefined) {
         let problemFound = this.problemList.find(condition);
 
-        if (problemFound  != undefined) {
+        if (problemFound != undefined) {
           // eg. rtal -s <server-url> list -v problem_name OR rtal -s <server-url> list problem_name -v
 
-          var ArrayService:ServiceDescriptor[] = [];
+          var ArrayService: ServiceDescriptor[] = [];
           problemFound.services.forEach(service => ArrayService.push(service))
 
           ArrayService.sort((a, b) => a.name.localeCompare(b.name));
@@ -491,7 +489,7 @@ export class TerminalWidgetComponent implements OnInit {
           ArrayService.forEach(service => {
             this.response += "  * " + service.name + "\n";
 
-            var ArrayArg:ArgDescriptor[] = [];
+            var ArrayArg: ArgDescriptor[] = [];
             service.args.forEach(arg => ArrayArg.push(arg))
 
             ArrayArg.sort((a, b) => a.name.localeCompare(b.name));
@@ -505,15 +503,14 @@ export class TerminalWidgetComponent implements OnInit {
             })
           })
         }
-        else
-        {
+        else {
           this.response = "ERROR: Problem '" + this.commandSplit[4] + "' does not exists\n";
         }
       }
       else {
 
-        if (this.commandSplit[4].startsWith('-')) {this.response = this.ErrorMessage01(this.commandSplit[4])}
-        else if (this.commandSplit[5].startsWith('-')) {this.response = this.ErrorMessage01(this.commandSplit[5])}
+        if (this.commandSplit[4].startsWith('-')) { this.response = this.ErrorMessage01(this.commandSplit[4]) }
+        else if (this.commandSplit[5].startsWith('-')) { this.response = this.ErrorMessage01(this.commandSplit[5]) }
         else { this.response = this.ErrorMessage06(this.commandSplit[5]) }
 
       }
@@ -556,7 +553,7 @@ export class TerminalWidgetComponent implements OnInit {
   ErrorMessage04(): string {
 
     var res =
-      "ERROR: Cannot connect to '"  + this.url + "': HTTP format error: invalid format";
+      "ERROR: Cannot connect to '" + this.url + "': HTTP format error: invalid format";
 
     return res;
   }
@@ -565,7 +562,7 @@ export class TerminalWidgetComponent implements OnInit {
   ErrorMessage05(): string {
 
     var res =
-      "ERROR: Cannot connect to '"  + this.url + "': URL error: URL scheme not supported";
+      "ERROR: Cannot connect to '" + this.url + "': URL error: URL scheme not supported";
 
     return res;
   }
@@ -602,7 +599,7 @@ export class TerminalWidgetComponent implements OnInit {
     var res =
       "rtal 0.2.5" +
       "\n\nUSAGE:\n\trtal [OPTIONS] <SUBCOMMAND>" +
-      "\n\nOPTIONS:"+
+      "\n\nOPTIONS:" +
       "\n\t-h, --help\t\t\tPrint help information" +
       "\n\t-s, --server-url <SERVER_URL>\tServer URL [default ws://127.0.0.1:8008/]" +
       "\n\t-V, --version\t\t\tPrint version information" +
@@ -661,13 +658,13 @@ export class TerminalWidgetComponent implements OnInit {
   }
 
 
-  public async runConnectAPI(){
+  public async runConnectAPI() {
     this.apiRun = true
     await this.apiConnect()
     this.apiRun = false
   }
 
-  async apiConnectReset(){
+  async apiConnectReset() {
     this.current_output_file = undefined;
     this.cmdConnect = undefined;
 
@@ -675,15 +672,15 @@ export class TerminalWidgetComponent implements OnInit {
   }
 
 
-  async apiConnect(){
+  async apiConnect() {
     console.log("apiConnect")
 
-    if(!this.selectedService){ return false }
+    if (!this.selectedService) { return false }
 
     console.log("apiConnect:service:ok")
 
     let config = await this.compiler.readConfig()
-    if (!config){return false}
+    if (!config) { return false }
     console.log("apiConnect:config:ok")
 
     //Open Connection
@@ -691,22 +688,22 @@ export class TerminalWidgetComponent implements OnInit {
     let service = this.selectedService.name;
     let args = this.connectParams;
     let tty = false //true: bash code coloring, backspaces, etc
-    let token =  (config.TAL_TOKEN && config.TAL_TOKEN!=""?config.TAL_TOKEN:undefined)
-    let files =  new Map<string,string>();
+    let token = (config.TAL_TOKEN && config.TAL_TOKEN != "" ? config.TAL_TOKEN : undefined)
+    let files = new Map<string, string>();
 
-    console.log("apiConnect:params:problem",problem)
-    console.log("apiConnect:params:service",service)
-    console.log("apiConnect:params:args",args)
-    console.log("apiConnect:params:tty",tty)
-    console.log("apiConnect:params:token",token)
-    console.log("apiConnect:params:files",files)
+    console.log("apiConnect:params:problem", problem)
+    console.log("apiConnect:params:service", service)
+    console.log("apiConnect:params:args", args)
+    console.log("apiConnect:params:tty", tty)
+    console.log("apiConnect:params:token", token)
+    console.log("apiConnect:params:files", files)
 
-    let onConnectionStart = () => {this.didConnectStart()};
-    let onConnectionBegin = (msg: string[]) => {this.didConnectBegin(msg)};
-    let onConnectionClose = (msg: string[]) => {this.didConnectClose(msg)};
-    let onData = (data: string)=>{ this.didConnectData(data)};
-    let onBinaryHeader = (msg: any)=>{ this.didRecieveBinaryHeader(msg)};
-    let onError = (msg: any)=>{ this.didError(msg)};
+    let onConnectionStart = () => { this.didConnectStart() };
+    let onConnectionBegin = (msg: string[]) => { this.didConnectBegin(msg) };
+    let onConnectionClose = (msg: string[]) => { this.didConnectClose(msg) };
+    let onData = (data: string) => { this.didConnectData(data) };
+    let onBinaryHeader = (msg: any) => { this.didRecieveBinaryHeader(msg) };
+    let onError = (msg: any) => { this.didError(msg) };
 
     this.cmdConnect = await this.api.Connect(
       problem,
@@ -727,7 +724,7 @@ export class TerminalWidgetComponent implements OnInit {
     return true
   }
 
-  async didError(msg:string) {
+  async didError(msg: string) {
     this.cmdConnect = undefined
 
     this.project?.driver.stopExecution()
@@ -739,18 +736,18 @@ export class TerminalWidgetComponent implements OnInit {
     this.onResponseComplete.emit();
   }
 
-  async didConnectStart(){
+  async didConnectStart() {
     console.log("apiConnect:didConnectStart")
   }
 
-  async didConnectBegin(message: string[]){
+  async didConnectBegin(message: string[]) {
     console.log("apiConnect:didConnectBegin:", message)
   }
 
-  async didConnectClose(message: string[]){
-    console.log("apiConnect:didConnectionClose:",message)
+  async didConnectClose(message: string[]) {
+    console.log("apiConnect:didConnectionClose:", message)
 
-    if(message && message.length > 0 && message[0] !== "") {
+    if (message && message.length > 0 && message[0] !== "") {
       this.output_files = message;
     }
     else {
@@ -762,15 +759,15 @@ export class TerminalWidgetComponent implements OnInit {
     this.commandConnectState = false;
   }
 
-  async didConnectData(data: string){
+  async didConnectData(data: string) {
     console.log("apiConnect:didConnectData:", data)
 
-    if(this.output_files && this.current_output_file){
+    if (this.output_files && this.current_output_file) {
 
-      if(this.current_output_file){
+      if (this.current_output_file) {
         this.project?.driver.writeFile("/" + this.current_output_file, data)
       };
-      if(this.current_output_file === this.output_files[this.output_files.length - 1]){
+      if (this.current_output_file === this.output_files[this.output_files.length - 1]) {
         this.apiConnectReset();
       }
       console.log("apiConnect:didConnectData:cmdConnect:", this.cmdConnect);
@@ -783,14 +780,14 @@ export class TerminalWidgetComponent implements OnInit {
     }
   }
 
-  async didRecieveBinaryHeader(message: any){
+  async didRecieveBinaryHeader(message: any) {
     console.log("apiConnect:didRecieveBinaryHeader:", message)
 
     this.current_output_file = message.name;
-    if(this.current_output_file){ this.project?.driver.writeFile("/" + this.current_output_file, "")};
+    if (this.current_output_file) { this.project?.driver.writeFile("/" + this.current_output_file, "") };
   }
 
-  public sendStdin(msg:string, fromAPI=false){
+  public sendStdin(msg: string, fromAPI = false) {
     console.log("sendStdin:")
 
     this.response += msg;

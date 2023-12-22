@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, Output } from '@angular/core';
 import { Commands } from 'src/app/services/api-service/api.commands';
 import { ApiService } from 'src/app/services/api-service/api.service';
 import { CompilerService } from 'src/app/services/compiler-service/compiler-service.service';
@@ -23,6 +23,7 @@ import { MessageService } from 'primeng/api';
 import { TerminalWidgetComponent } from '../terminal-widget/terminal-widget.component';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
+
 @Component({
   selector: 'tal-code-editor',
   templateUrl: './code-editor.component.html',
@@ -32,9 +33,9 @@ export class CodeEditorComponent implements OnInit {
   public binEncoder = new TextEncoder(); // always utf-8
   public binDecoder = new TextDecoder("utf-8");
 
-  public cmdConnect?:Commands.Connect;
+  public cmdConnect?: Commands.Connect;
 
-  public project:ProjectEnvironment | null = null;
+  public project: ProjectEnvironment | null = null;
 
   public selectedFile?: FsNodeFile;
   public selectedProblem?: ProblemDescriptor;
@@ -62,21 +63,26 @@ export class CodeEditorComponent implements OnInit {
   @ViewChild("logApiWidget") public logApiWidget!: LogApiWidgetComponent;
   @ViewChild("terminalWidget") public terminalWidget!: TerminalWidgetComponent;
 
-  private output_files:string[]|undefined = undefined;
-  private current_output_file:string|undefined = undefined;
+  private output_files: string[] | undefined = undefined;
+  private current_output_file: string | undefined = undefined;
+
+  protected LogApiDisabled = true;
+  protected OutputDisabled = true;
+  protected TerminalDisabled = true;
 
   constructor(
     private fs: FsService,
-    private compiler:CompilerService,
-    private python:PythonCompilerService,
-    private api:ApiService,
+    private compiler: CompilerService,
+    private python: PythonCompilerService,
+    private api: ApiService,
     private prj: ProjectManagerService,
-    private cdRef:ChangeDetectorRef,
+    private cdRef: ChangeDetectorRef,
     private messageService: MessageService,
-    private tutorialService : TutorialService,
+    private tutorialService: TutorialService,
+    private elementRef: ElementRef,
   ) {
-    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} )
-    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
+    this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) })
+    this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     console.log("CodeEditorComponent:constructor", this.prj)
     //TODO: add switch python/cpp
 
@@ -88,130 +94,159 @@ export class CodeEditorComponent implements OnInit {
     this.isBlurred = true;
   }
 
-  private isTutorialShown(tutorial? : any){
+  private isTutorialShown(tutorial?: any) {
 
     console.log("CodeEditorComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "CodeEditorComponent"){
+    if (typeof tutorial === 'undefined')
+    {
+      this.LogApiDisabled = false;
+      this.OutputDisabled = false;
+      this.TerminalDisabled = false;
       this.isBlurred = false
     }
-    else{
+    else if (tutorial.componentName === "CodeEditorComponent"
+      || tutorial.componentName === "OutputWidgetComponent"
+      || tutorial.componentName === "LogApiWidgetComponent"
+      || tutorial.componentName === "TerminalWidgetComponent") {
+      this.isBlurred = false
+      if (tutorial.componentName === "OutputWidgetComponent") {
+        this.activeWidget = 0;
+        this.LogApiDisabled = true;
+        this.OutputDisabled = false;
+        this.TerminalDisabled = true;
+      }
+      else if (tutorial.componentName === "LogApiWidgetComponent") {
+        this.activeWidget = 1;
+        this.LogApiDisabled = false;
+        this.OutputDisabled = true;
+        this.TerminalDisabled = true;
+      }
+      else if (tutorial.componentName === "TerminalWidgetComponent") {
+        this.activeWidget = 2;
+        this.LogApiDisabled = true;
+        this.OutputDisabled = true;
+        this.TerminalDisabled = false;
+      }
+    }
+    else
+    {
       this.isBlurred = true
     }
   }
 
-  ngAfterViewInit(){
+  ngAfterViewInit() {
     this.outputWidget.enableStdin(false);
     this.setPythonProject()
+    const componentElement = this.elementRef.nativeElement;
   }
 
-  ngAfterViewChecked()
-  {
+  ngAfterViewChecked() {
     this.cdRef.detectChanges();
   }
 
-  public didStateChangeReady(content?:string){
-    if(this.project){
+  public didStateChangeReady(content?: string) {
+    if (this.project) {
       console.log("didStateChange:Ready:loadProject")
       this.project.loadProject();
     }
   }
 
-  public setPythonProject(forceCreate:boolean=false){
+  public setPythonProject(forceCreate: boolean = false) {
     console.log("CodeEditorComponent:constructor:createPythonProject")
     this.project = this.prj.getCurrentProject()
-    if( forceCreate || !this.project ){
+    if (forceCreate || !this.project) {
       console.log("CodeEditorComponent:constructor:createPythonProject:do!")
       this.project = this.python.createPythonProject()
       this.prj.setCurrentProject(this.project);
     }
-    this.project?.driver.subscribeNotify(true,(msg:string)=>{this.didNotify(msg)})
-    this.project?.driver.subscribeState(true,(state:CompilerState,content?:string)=>{this.didStateChange(state,content)})
-    this.project?.driver.subscribeStdout(true,(msg:string)=>{this.didStdout(msg)})
-    this.project?.driver.subscribeStderr(true,(msg:string)=>{this.didStderr(msg)})
-    console.log("CodeEditorComponent:constructor:createPythonProject:",this.project)
+    this.project?.driver.subscribeNotify(true, (msg: string) => { this.didNotify(msg) })
+    this.project?.driver.subscribeState(true, (state: CompilerState, content?: string) => { this.didStateChange(state, content) })
+    this.project?.driver.subscribeStdout(true, (msg: string) => { this.didStdout(msg) })
+    this.project?.driver.subscribeStderr(true, (msg: string) => { this.didStderr(msg) })
+    console.log("CodeEditorComponent:constructor:createPythonProject:", this.project)
   }
 
 
-  public onUpdateRoot(fsroot:FsNodeFolder){
+  public onUpdateRoot(fsroot: FsNodeFolder) {
     this.fsroot = fsroot;
     this.fslist = this.fs.treeToList(fsroot);
-    this.fslistfile = this.fslist.filter( item=>"content" in item ) as FsNodeFile[]
+    this.fslistfile = this.fslist.filter(item => "content" in item) as FsNodeFile[]
     let filePathList = new Array<string>()
-    this.fslistfile.forEach(item=>filePathList.push(item.path))
+    this.fslistfile.forEach(item => filePathList.push(item.path))
     this.problemWidget.filePathList = filePathList
     this.terminalWidget.fslistfile = this.fslistfile;
 
   }
 
-  public didNotify(data:string){
+  public didNotify(data: string) {
     console.log("didNotify:")
     this.outputWidget!.print(data);
     //TODO: if API connect then:
-    if(!this.cmdConnect){return;}
+    if (!this.cmdConnect) { return; }
     this.cmdConnect.sendBinary(data + "\n"); // The \n must be added to the python bot output
   }
 
-  public didStateChange(state:CompilerState,content?:string){
+  public didStateChange(state: CompilerState, content?: string) {
     console.log("CodeEditorComponent:didStateChange:")
     //this.outputWidget!.print(state,OutputType.SYSTEM);
-    if (state == CompilerState.Ready){
+    if (state == CompilerState.Ready) {
       this.didStateChangeReady(content)
     }
-    if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed){
+    if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
       this.apiConnectReset();
     }
-    this.pyodideState=state
-    this.pyodideStateContent=content
+    this.pyodideState = state
+    this.pyodideStateContent = content
     console.log("CodeEditorComponent:didStateChange:", state)
-    if(!this.apiRun || state != CompilerState.Stdin) {
-      this.outputWidget.didStateChange(state,content)
+    if (!this.apiRun || state != CompilerState.Stdin) {
+      this.outputWidget.didStateChange(state, content)
     }
   }
 
-  public didStdout(data:string){
+  public didStdout(data: string) {
     console.log("onStdout:")
     this.outputWidget!.print(data);
     //TODO: if API connect then:
-    if(!this.cmdConnect){return;}
+    if (!this.cmdConnect) { return; }
     this.cmdConnect.sendBinary(data + "\n"); // The \n must be added to the python bot output
   }
 
-  public didStderr(data:string){
+  public didStderr(data: string) {
     console.log("onStderr:")
     //alert("STDERR: "+data)
     //this.nm.sendNotification("ERROR:",data,NotificationType.Error)
     this.outputWidget.print(data, OutputType.STDERR)
   }
 
-  public sendStdin(msg:string, fromAPI=false){
+  public sendStdin(msg: string, fromAPI = false) {
     console.log("sendStdin:")
     let msgs = msg.split("\n");
-    if(msgs[msgs.length - 1] === "") {msgs.pop();}
+    if (msgs[msgs.length - 1] === "") { msgs.pop(); }
     console.log("sendStdin:split: ", msgs)
 
-    for(let i = 0; i < msgs.length; i++){
-      this.outputWidget.print(msgs[i],fromAPI?OutputType.STDINAPI:OutputType.STDIN)
+    for (let i = 0; i < msgs.length; i++) {
+      this.outputWidget.print(msgs[i], fromAPI ? OutputType.STDINAPI : OutputType.STDIN)
       this.project?.driver.sendStdin(msgs[i])
     }
-    if (!fromAPI || this.pyodideState != CompilerState.Stdin ){
+    if (!fromAPI || this.pyodideState != CompilerState.Stdin) {
       this.outputWidget.enableStdin(false)
     }
   }
 
-  public onProblemChanged(selectedProblem: ProblemDescriptor){
-    console.log("onProblemChanged:",selectedProblem)
-    this.selectedProblem=selectedProblem;
-    this.selectedService=undefined;
+  public onProblemChanged(selectedProblem: ProblemDescriptor) {
+    console.log("onProblemChanged:", selectedProblem)
+    this.selectedProblem = selectedProblem;
+    this.selectedService = undefined;
   }
 
-  public onServiceChanged(selectedService: ServiceDescriptor){
-    console.log("onServiceChanged:",selectedService)
-    this.selectedService=selectedService;
+  public onServiceChanged(selectedService: ServiceDescriptor) {
+    console.log("onServiceChanged:", selectedService)
+    this.selectedService = selectedService;
   }
 
-  public onProblemListChanged(){
-    this.selectedProblem=undefined
-    this.selectedService=undefined
+  public onProblemListChanged() {
+    this.selectedProblem = undefined
+    this.selectedService = undefined
 
     if (this.logApiWidget.isActive) {
       this.logApiWidget.addLine("rtal -s " + this.api.url + " list");
@@ -219,36 +254,36 @@ export class CodeEditorComponent implements OnInit {
     }
   }
 
-  async onAttachments(data: ArrayBuffer, widget:string){
+  async onAttachments(data: ArrayBuffer, widget: string) {
     console.log("onAttachments:EVENT: ", event?.target)
-    console.log("onAttachments:",data)
-    if(!this.selectedProblem){return;}
-    console.log("onAttachments:selectedProblem:",this.selectedProblem)
-    if (!(data instanceof ArrayBuffer ) ) {return;}
-    console.log("onAttachments:data:",data)
+    console.log("onAttachments:", data)
+    if (!this.selectedProblem) { return; }
+    console.log("onAttachments:selectedProblem:", this.selectedProblem)
+    if (!(data instanceof ArrayBuffer)) { return; }
+    console.log("onAttachments:data:", data)
 
     console.log("extractTar:unpack:")
     await this.project?.driver.createDirectory('/data')
 
-    Tar.unpack(data, async (files,folders) => {
-      console.log("extractTar:unpack:folders",folders)
-      for(var idx in folders){
+    Tar.unpack(data, async (files, folders) => {
+      console.log("extractTar:unpack:folders", folders)
+      for (var idx in folders) {
         console.log("extractTar:createDirectory:")
         let folder = folders[idx]
         let path = '/data/' + folder.path
-        console.log("extractTar:createDirectory:",path)
+        console.log("extractTar:createDirectory:", path)
         await this.project?.driver.createDirectory(path)
       }
       console.log("extractTar:createDirectory:DONE")
 
 
-      console.log("extractTar:unpack:files",files)
-      for(var idx in files){
+      console.log("extractTar:unpack:files", files)
+      for (var idx in files) {
         console.log("extractTar:writeFile:")
         let file = files[idx]
         let path = '/data/' + file.path
         let content = file.content
-        console.log("extractTar:writeFile:",path,content)
+        console.log("extractTar:writeFile:", path, content)
         await this.project?.driver.writeFile(path, content)
       }
       console.log("extractTar:writeFile:DONE")
@@ -267,7 +302,7 @@ export class CodeEditorComponent implements OnInit {
     var renamedFileIndex = this.isPresent.indexOf(event.oldpath);
 
     if (renamedFileIndex != -1) {
-      this.removeItem({"index": renamedFileIndex})
+      this.removeItem({ "index": renamedFileIndex })
     }
   }
 
@@ -277,12 +312,12 @@ export class CodeEditorComponent implements OnInit {
 
     // Removed file is open on the code editor, so now close all associated tabs
     if (removedFileIndex != -1) {
-      this.removeItem({"index":removedFileIndex})
+      this.removeItem({ "index": removedFileIndex })
     }
   }
 
   // When a tab is closed, the file is removed from array of paths and names
-  public removeItem(event: any){
+  public removeItem(event: any) {
     var Removeindex = event.index;
     this.isPresentName.splice(Removeindex, 1);
     this.isPresent.splice(Removeindex, 1);
@@ -297,22 +332,22 @@ export class CodeEditorComponent implements OnInit {
         this.execBar.selectedFile = this.files[this.activeIndex];
         this.fileEditor.selectedFile = this.files[this.activeIndex];
         this.fileExplorer.selectedFile = this.files[this.activeIndex];
-      } , 0);
+      }, 0);
     }
 
     if (Removeindex < this.activeIndex) {
-      setTimeout(() => this.activeIndex = this.activeIndex - 1 , 0);
+      setTimeout(() => this.activeIndex = this.activeIndex - 1, 0);
     }
 
   }
 
-  public changeFile(event:any){
+  public changeFile(event: any) {
     setTimeout(() => {
       this.activeIndex = event.index;
       this.execBar.selectedFile = this.files[this.activeIndex];
       this.fileEditor.selectedFile = this.files[this.activeIndex];
       this.fileExplorer.selectedFile = this.files[this.activeIndex];
-    } , 0);
+    }, 0);
   }
 
 
@@ -321,33 +356,33 @@ export class CodeEditorComponent implements OnInit {
     this.execBar.selectedFile = this.selectedFile
     this.fileEditor.selectedFile = this.selectedFile
 
-    if(!this.isPresent.includes(this.selectedFile.path)){
+    if (!this.isPresent.includes(this.selectedFile.path)) {
       this.isPresentName.push(this.selectedFile.name);
       this.files.push(this.selectedFile);
-      setTimeout(() => this.activeIndex = (this.isPresentName.length)-1 , 0);
+      setTimeout(() => this.activeIndex = (this.isPresentName.length) - 1, 0);
 
       this.isPresent.push(this.selectedFile.path);
-    }else{
+    } else {
       this.setActiveIndex(this.selectedFile.path);
     }
   }
 
-  public setActiveIndex(path:string){
-    setTimeout(() => this.activeIndex = this.isPresent.indexOf(path) , 0);
+  public setActiveIndex(path: string) {
+    setTimeout(() => this.activeIndex = this.isPresent.indexOf(path), 0);
   }
 
-  public editorDidChange(file: FsNodeFile){
+  public editorDidChange(file: FsNodeFile) {
     console.log("editorDidChange:")
     this.saveFile()
   }
 
-  public editorDidInput(event: InputEvent){
+  public editorDidInput(event: InputEvent) {
     console.log("Input: ", this.fileEditor)
     this.saveFile()
   }
 
-  public saveFile(){
-    if ( this.selectedFile ){
+  public saveFile() {
+    if (this.selectedFile) {
       console.log("saveFile:", this.selectedFile.path, this.fileEditor)
       this.project?.driver.writeFile(this.selectedFile.path, this.selectedFile.content)
     } else {
@@ -355,51 +390,50 @@ export class CodeEditorComponent implements OnInit {
     }
   }
 
-  async stopAll(){
+  async stopAll() {
     this.apiRun = false
     console.log("stopAll:")
 
-    if(this.cmdConnect){this.cmdConnect.tal.closeConnection()}
+    if (this.cmdConnect) { this.cmdConnect.tal.closeConnection() }
     console.log("stopAll:cmdConnect:DONE")
     await this.project?.driver.stopExecution()
     console.log("stopAll:cmdConnect:DONE")
   }
 
-  public changeWidget(event:any){
+  public changeWidget(event: any) {
     this.logApiWidget.flashLine();
   }
 
   //-------------- API CONNECT
-  public async runProjectLocal(){
+  public async runProjectLocal() {
     this.apiRun = false
     await this.runProject();
     this.apiRun = false
   }
 
-  public async runProject(){
+  public async runProject() {
     console.log("runProject:")
     this.outputWidget.clearOutput()
 
     let config = await this.compiler.readConfig()
-    if (!config){return false}
+    if (!config) { return false }
     console.log("runProject:config:ok")
 
 
     console.log("runProject:main:", config!.RUN)
-    let mainFile = this.fslistfile.find( item => item.path == config!.RUN)
-    if (!mainFile){return false}
+    let mainFile = this.fslistfile.find(item => item.path == config!.RUN)
+    if (!mainFile) { return false }
     console.log("runProject:main:ok")
     this.fileExplorer.selectFile(mainFile)
 
-    this.outputWidget.print("RUN: "+config.RUN, OutputType.SYSTEM)
+    this.outputWidget.print("RUN: " + config.RUN, OutputType.SYSTEM)
     this.saveFile();
 
     await this.compiler.runProject()
     return true
   }
 
-
-  public async runConnectAPI(){
+  public async runConnectAPI() {
     this.apiRun = true
     this.outputWidget.clearOutput()
     this.saveFile();
@@ -411,18 +445,17 @@ export class CodeEditorComponent implements OnInit {
     this.fileExplorer.refreshRoot()
   }
 
-  async apiConnectReset(){
+  async apiConnectReset() {
     this.current_output_file = undefined;
     this.cmdConnect = undefined;
     this.outputWidget.enableStdin(false)
     console.log("apiConnect:didConnectData:cmdConnect:", this.cmdConnect);
   }
 
-
-  async apiConnect(){
+  async apiConnect() {
     console.log("apiConnect")
 
-    if(!this.selectedProblem){
+    if (!this.selectedProblem) {
 
       this.messageService.add({
         key: 'br',
@@ -435,7 +468,7 @@ export class CodeEditorComponent implements OnInit {
       return false
     }
 
-    if(!this.selectedService){
+    if (!this.selectedService) {
 
       this.messageService.add({
         key: 'br',
@@ -452,7 +485,7 @@ export class CodeEditorComponent implements OnInit {
 
 
     let config = await this.compiler.readConfig()
-    if (!config){return false}
+    if (!config) { return false }
     console.log("apiConnect:config:ok")
 
     let ArgsInvalid = await this.problemWidget.validateArgs();
@@ -473,7 +506,7 @@ export class CodeEditorComponent implements OnInit {
     console.log("apiConnect:runProject")
     this.saveFile();
     await this.compiler.runProject()
-    this.outputWidget.print("API: "+config.RUN, OutputType.SYSTEM)
+    this.outputWidget.print("API: " + config.RUN, OutputType.SYSTEM)
     console.log("apiConnect:runProject:running")
 
     //Open Connection
@@ -482,42 +515,42 @@ export class CodeEditorComponent implements OnInit {
     let service = this.selectedService.name;
     let args = this.selectedService.exportArgs();
     let tty = false //true: bash code coloring, backspaces, etc
-    let token =  (config.TAL_TOKEN && config.TAL_TOKEN!=""?config.TAL_TOKEN:undefined)
+    let token = (config.TAL_TOKEN && config.TAL_TOKEN != "" ? config.TAL_TOKEN : undefined)
     let filePaths = this.selectedService.exportFilesPaths();
-    let files =  new Map<string,string>();
+    let files = new Map<string, string>();
 
-    filePaths.forEach((fileArgPath, fileArgName)=>{
+    filePaths.forEach((fileArgPath, fileArgName) => {
       console.log("apiConnect:params:problem:path:", fileArgName, fileArgPath)
       let found = this.fslistfile.find(item => item.path == fileArgPath)
       console.log("apiConnect:params:problem:found:", found)
-      if(!found){return}
+      if (!found) { return }
       let content = found.content
-      if(content instanceof ArrayBuffer){
+      if (content instanceof ArrayBuffer) {
         content = this.binDecoder.decode(content)
       }
       files.set(fileArgName, content)
     })
 
 
-    console.log("apiConnect:params:problem",problem)
-    console.log("apiConnect:params:service",service)
-    console.log("apiConnect:params:args",args)
-    console.log("apiConnect:params:tty",tty)
-    console.log("apiConnect:params:token",token)
-    console.log("apiConnect:params:files",files)
+    console.log("apiConnect:params:problem", problem)
+    console.log("apiConnect:params:service", service)
+    console.log("apiConnect:params:args", args)
+    console.log("apiConnect:params:tty", tty)
+    console.log("apiConnect:params:token", token)
+    console.log("apiConnect:params:files", files)
 
 
-    let onConnectionStart = () => {this.didConnectStart()};
-    let onConnectionBegin = (msg: string[]) => {this.didConnectBegin(msg)};
-    let onConnectionClose = (msg: string[]) => {this.didConnectClose(msg)};
-    let onData = (data: string)=>{ this.didConnectData(data)};
-    let onBinaryHeader = (msg: any)=>{ this.didRecieveBinaryHeader(msg)};
+    let onConnectionStart = () => { this.didConnectStart() };
+    let onConnectionBegin = (msg: string[]) => { this.didConnectBegin(msg) };
+    let onConnectionClose = (msg: string[]) => { this.didConnectClose(msg) };
+    let onData = (data: string) => { this.didConnectData(data) };
+    let onBinaryHeader = (msg: any) => { this.didRecieveBinaryHeader(msg) };
 
     let newLogLine = "rtal -s " + this.api.url + " connect " + problem + " " + service
     let keys = Object.keys(args);
     let values = Object.values(args);
 
-    for(let i=0;i < keys.length;i++) { newLogLine += " -a " + keys[i] + "=" + values[i]; }
+    for (let i = 0; i < keys.length; i++) { newLogLine += " -a " + keys[i] + "=" + values[i]; }
 
     if (this.logApiWidget.isActive) {
       this.logApiWidget.addLine(newLogLine);
@@ -540,31 +573,30 @@ export class CodeEditorComponent implements OnInit {
     );
     console.log("apiConnect:DONE")
 
-
     return true
   }
 
-  async didConnectError(error: string){
+  async didConnectError(error: string) {
     console.log("apiConnect:didConnectError:", error)
-    this.outputWidget.print("API Error: "+error,OutputType.STDERR)
+    this.outputWidget.print("API Error: " + error, OutputType.STDERR)
     this.cmdConnect = undefined
     this.outputWidget.enableStdin(false)
 
     this.project?.driver.stopExecution()
   }
 
-  async didConnectStart(){
+  async didConnectStart() {
     console.log("apiConnect:didConnectStart")
   }
 
-  async didConnectBegin(message: string[]){
+  async didConnectBegin(message: string[]) {
     console.log("apiConnect:didConnectBegin:", message)
   }
 
-  async didConnectClose(message: string[]){
-    console.log("apiConnect:didConnectionClose:",message)
+  async didConnectClose(message: string[]) {
+    console.log("apiConnect:didConnectionClose:", message)
 
-    if(message && message.length > 0 && message[0] !== "") {
+    if (message && message.length > 0 && message[0] !== "") {
       this.output_files = message;
     }
     else {
@@ -573,13 +605,13 @@ export class CodeEditorComponent implements OnInit {
     }
   }
 
-  async didConnectData(data: string){
+  async didConnectData(data: string) {
     console.log("apiConnect:didConnectData:", data)
-    if(this.output_files && this.current_output_file){
-      if(this.current_output_file){
+    if (this.output_files && this.current_output_file) {
+      if (this.current_output_file) {
         this.project?.driver.writeFile("/" + this.current_output_file, data)
       };
-      if(this.current_output_file === this.output_files[this.output_files.length - 1]){
+      if (this.current_output_file === this.output_files[this.output_files.length - 1]) {
         this.apiConnectReset();
       }
       console.log("apiConnect:didConnectData:cmdConnect:", this.cmdConnect);
@@ -589,10 +621,12 @@ export class CodeEditorComponent implements OnInit {
     }
   }
 
-  async didRecieveBinaryHeader(message: any){
+  async didRecieveBinaryHeader(message: any) {
     console.log("apiConnect:didRecieveBinaryHeader:", message)
 
     this.current_output_file = message.name;
-    if(this.current_output_file){this.project?.driver.writeFile("/" + this.current_output_file, "")};
+    if (this.current_output_file) { this.project?.driver.writeFile("/" + this.current_output_file, "") };
   }
+
+
 }
