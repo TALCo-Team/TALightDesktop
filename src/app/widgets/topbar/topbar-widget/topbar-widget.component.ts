@@ -86,11 +86,11 @@ export class TopbarWidgetComponent implements OnInit {
 
   ngAfterViewInit(): void {
     let project = this.prj.getCurrentProject()
-    console.log(project);
-    if (project != null && project.config != null) {
+    //console.log(project);
+    /*if (project != null && project.config != null) {
       project.config.TAL_SERVER = 'ciao';
       project.config.save(project.driver);
-    }
+    }*/
   }
 
   public async writeTofile(project: ProjectEnvironment | null) {
@@ -187,7 +187,10 @@ export class TopbarWidgetComponent implements OnInit {
     }
     console.log("changeURL:urlCache:after:", this.urlCache )
     console.log("changeURL:url:", this.url )
+    alert('scrivo il cambiamento sul file');
     this.lastUrl = this.url + ""
+    let project = this.prj.getCurrentProject();
+    this.writeTofile(project);
   }
 
   public removeURL(url:string, event:Event) {
