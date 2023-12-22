@@ -9,7 +9,6 @@ export class TutorialService {
   public onTutorialClose = new EventEmitter<void>();
   public onTutorialChange = new EventEmitter<any>();
   public onIndexTutorialChange = new EventEmitter<number>();
-  // protected indexCurrentTutorial: number = 0
 
   constructor() {
   }
@@ -26,12 +25,8 @@ export class TutorialService {
               l'URL del server a cui ti sei connesso e potrai passare anche alla dark mode!`,
     },
     {
-      componentName: "CodeEditorComponent",
-      text: "In questa sezione avrai 3 strumenti importanti: output, Log API ed un terminale",
-    },
-    {
-      componentName: "FileEditorWidgetComponent",
-      text: "Come dice il nome, questo é un semplice file editor..",
+      componentName: "FileExplorerWidgetComponent",
+      text: "É un file explorer",
     },
     {
       componentName: "ExecbarWidgetComponent",
@@ -39,24 +34,24 @@ export class TutorialService {
               fermarla oppure per verificare la soluzione con il server`
     },
     {
-      componentName: "FileExplorerWidgetComponent",
-      text: "..e questo, invece un file explorer",
+      componentName: "FileEditorWidgetComponent",
+      text: "Come dice il nome, questo é un semplice file editor",
     },
     {
-      componentName: "LogApiWidgetComponent",
-      text: "LogApiWidgetComponent",
+      componentName: "ProblemWidgetComponent",
+      text: "Seleziona il problema",
     },
     {
-      componentName: "MonacoEditorWidgetComponent",
-      text: "MonacoEditorWidgetComponent",
+      componentName: "CodeEditorComponent",
+      text: "In questa sezione avrai 3 strumenti importanti: output, Log API ed un terminale",
     },
     {
       componentName: "OutputWidgetComponent",
       text: "OutputWidgetComponent",
     },
     {
-      componentName: "ProblemWidgetComponent",
-      text: "Seleziona il problema",
+      componentName: "LogApiWidgetComponent",
+      text: "LogApiWidgetComponent",
     },
     {
       componentName: "TerminalWidgetComponent",
@@ -71,8 +66,8 @@ export class TutorialService {
   public nextTutorial(indexCurrentTutorial: number) {
     console.log("TutorialService:nextTutorial")
     if (this.tutorials.length > indexCurrentTutorial) {
-      this.onTutorialChange.emit(this.tutorials[indexCurrentTutorial+1]);
-      this.onIndexTutorialChange.emit(indexCurrentTutorial+1);
+      this.onTutorialChange.emit(this.tutorials[indexCurrentTutorial + 1]);
+      this.onIndexTutorialChange.emit(indexCurrentTutorial + 1);
     }
     else {
       this.closeTutorial()
@@ -82,8 +77,8 @@ export class TutorialService {
   public previousTutorial(indexCurrentTutorial: number) {
     console.log("TutorialService:previousTutorial")
     if (indexCurrentTutorial >= 0) {
-      this.onTutorialChange.emit(this.tutorials[indexCurrentTutorial-1]);
-      this.onIndexTutorialChange.emit(indexCurrentTutorial-1);
+      this.onTutorialChange.emit(this.tutorials[indexCurrentTutorial - 1]);
+      this.onIndexTutorialChange.emit(indexCurrentTutorial - 1);
     }
     //Altrimenti blocca il pulsante
     else {
@@ -99,18 +94,13 @@ export class TutorialService {
     this.onTutorialClose.emit();
   }
 
-  public getCachedTutorial(){
-    console.log("TutorialService:getCachedTutorial "+localStorage.getItem('tutorialCached'))
+  public getCachedTutorial() {
+    console.log("TutorialService:getCachedTutorial " + localStorage.getItem('tutorialCached'))
     return localStorage.getItem('tutorialCached');
   }
 
-  public getSizeTutorial(){
+  public getSizeTutorial() {
     console.log("TutorialService:getSizeTutorial")
     return this.tutorials.length
   }
-
-  // public setIndexTutorial(){
-  //   console.log("TutorialService:setIndexTutorial")
-  //   this.indexCurrentTutorial = 0
-  // }
 }

@@ -1,7 +1,5 @@
 import { AfterViewInit, Component, ElementRef, OnChanges, OnInit, Renderer2, SimpleChanges, ViewChild } from '@angular/core';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
-import { CodeEditorComponent } from 'src/app/widgets/code-editor/code-editor/code-editor.component';
-import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
 @Component({
   selector: 'tal-tutorial',
   templateUrl: './tutorial.component.html',
@@ -11,7 +9,6 @@ import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.ser
 export class TutorialComponent implements AfterViewInit {
   isVisible: boolean = false;
   indexCurrentTutorial: number = -1
-  tutorialTitle = ""
   tutorialText = "";
   backButtonDisabled = true;
   testo = "Avanti"
@@ -39,14 +36,8 @@ export class TutorialComponent implements AfterViewInit {
     }, 1);
   }
 
-  // public isTutorialCompleted() {
-  //   console.log("TutorialComponent:isTutorialCompleted")
-  //   this.isVisible = true
-  // }
-
   public setIndex(indexCurrentTutorials: number) {
     console.log("TutorialComponent:setIndex")
-    this.tutorialTitle = indexCurrentTutorials + ''
     this.indexCurrentTutorial = indexCurrentTutorials
   }
 
@@ -63,7 +54,7 @@ export class TutorialComponent implements AfterViewInit {
   public prevTutorialButton() {
     console.log("TutorialComponent:previousTutorialButton")
     this.tutorialService.previousTutorial(this.indexCurrentTutorial)
-    if ( this.indexCurrentTutorial === 0) {
+    if (this.indexCurrentTutorial === 0) {
       this.backButtonDisabled = true
     }
   }
@@ -89,7 +80,6 @@ export class TutorialComponent implements AfterViewInit {
     }
 
     this.tutorialText = tutorial.text
-    this.tutorialTitle = tutorial.componentName.toUpperCase()
     this.isVisible = true
   }
 

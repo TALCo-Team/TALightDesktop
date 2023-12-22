@@ -42,19 +42,12 @@
   line-height: 1px;
 }
 
-.title {
-  position: absolute;
-  left: 2px; /* Posiziona il bottone a 2 pixel dalla parte destra della card */
-  top: 7%; /* Posiziona il bottone a 2 pixel dalla parte superiore della card */
-  line-height: 1px;
-  font-style: italic;
-}
-
 .text {
   font-size: 16px;
+  margin-bottom: 7px;
+  margin-top: auto;
 }
 
 .alignButtons {
-  margin-top: 10px;
   margin: 0 auto;
 }
