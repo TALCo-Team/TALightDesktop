@@ -94,9 +94,8 @@ export class TopbarWidgetComponent implements OnInit {
   }
 
   public async writeTofile(project: ProjectEnvironment | null) {
-    alert('sto per scrivere');
+    //alert('write to file')
     if (project != null && project.config != null) {
-      alert('sto per scrivere');
       project.config.TAL_SERVER = this.url;
       alert(project.config.TAL_SERVER);
       await project.config.save(project.driver);

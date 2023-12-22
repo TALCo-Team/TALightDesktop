@@ -67,7 +67,7 @@ export class ProjectConfig {
 
   public static readonly defaultConfig = new ProjectConfig()
 
-  static async load(fs:FsServiceDriver, path?:string){
+  /*static async load(fs:FsServiceDriver, path?:string){
     console.log("ProjectConfig:load")
     if(!path){ path = ProjectConfig.defaultConfig.CONFIG_PATH }
     let config: ProjectConfig;
@@ -86,10 +86,35 @@ export class ProjectConfig {
     
     console.log("ProjectConfig:load:config:",config)
     return config
+  }*/
+
+  static async load (fs:FsServiceDriver, path?: string) {
+    console.log("ProjectConfig:load");
+    if (!path) {
+      path = ProjectConfig.defaultConfig.CONFIG_PATH
+    }
+    let config: ProjectConfig;
+    if (await fs.exists(path)) {
+      return null
+    }
+
+    let configContent = await fs.readFile(path, false) as string;
+    console.log("ProjectConfig:load:found.", configContent)
+
+    try {
+      config = JSON.parse(configContent) as ProjectConfig
+      Object.setPrototypeOf(config, ProjectConfig.prototype)
+    } catch {
+      console.log("ProjectConfig:load:config:JSON:parse: failed")
+      return null
+    }
+
+    console.log("ProjectConfig:load:config.", config)
+    return config
   }
 
   async save(fs:FsServiceDriver){
-    alert('comincio il salvataggio');
+    //alert('comincio il salvataggio');
     console.log('comincio il salvataggio');
     let content = JSON.stringify(this, null, 4)
     let res = await fs.writeFile(this.CONFIG_PATH, content);
