@@ -17,7 +17,9 @@ export class ProblemManagerService {
   
 
   public onProblemsChanged = new EventEmitter<boolean>();
+  public onProblemSelected = new EventEmitter<ProblemDescriptor>();
   public onError = new EventEmitter<any>();
+  public onProblemsLoaded = new EventEmitter<ProblemList>();
     
   constructor(
     public api:ApiService
@@ -37,12 +39,14 @@ export class ProblemManagerService {
       problemMap.forEach(( problem, name )=>{
         let problemDesc = new ProblemDescriptor(name, problem)
         this.problemList.push(problemDesc)
+        console.log('PROVA:\n' + problemDesc.key);
         this.problems.set(problemDesc.key,problemDesc);
         problemDesc.services.forEach((serviceDesc)=>{
           this.services.set(serviceDesc.key, serviceDesc)
         })
       })
       this.onProblemsChanged.emit(false)
+      this.onProblemsLoaded.emit(this.problemList)
     });
     req.onError = (error) => { 
       this.onProblemsChanged.emit(false)
@@ -50,11 +54,29 @@ export class ProblemManagerService {
     };
   }
 
+  findServices (problem: ProblemDescriptor) {
+    problem.services.forEach((service) => {
+      //alert(service.name);
+    })
+  }
+
   
   
   selectProblem(selectedProblem: ProblemDescriptor){
     this.selectedProblem = selectedProblem;
+    //'hai selezionato il problema: '+ selectedProblem.name);
+    localStorage.setItem('problema', selectedProblem.name);
+    this.onProblemSelected.emit(selectedProblem);
     this.selectedService = undefined
+  }
+
+  getProblem(problemName: string, lista: ProblemList) {
+    //alert('sto cercando ' + problemName);
+    //alert('la dimensione è: ' + lista.length)
+    this.problemList.forEach(problem => {
+      console.log("Nome del problema: " + problem.name);
+    })
+    return this.problemList.find(problem => problem.name === problemName);
   }
   
 

@@ -60,15 +60,20 @@ export class TopbarWidgetComponent implements OnInit {
     this.prj.onProjectChanged.subscribe((_) => {
         let project = this.prj.getCurrentProject()
         project?.onProjectConfigChanged.subscribe((_) => {
+          //alert('config pronto in topbar');
           this.writeTofile(project);
         })
     })
   }
 
   ngOnInit(): void {
+
     this.lastUrl = this.api.getLastInsertedUrl();
     this.url = this.lastUrl;
     this.projectConfig.TAL_SERVER = this.url;
+    
+    this.pm.updateProblems();
+
     // controllare prima che esista
     /*let project = this.prj.getCurrentProject()
     if (project != null) {
@@ -96,8 +101,9 @@ export class TopbarWidgetComponent implements OnInit {
   public async writeTofile(project: ProjectEnvironment | null) {
     //alert('write to file')
     if (project != null && project.config != null) {
+      //alert(str);
       project.config.TAL_SERVER = this.url;
-      alert(project.config.TAL_SERVER);
+      //alert(project.config.TAL_SERVER);
       await project.config.save(project.driver);
     }
   }
@@ -187,10 +193,11 @@ export class TopbarWidgetComponent implements OnInit {
     }
     console.log("changeURL:urlCache:after:", this.urlCache )
     console.log("changeURL:url:", this.url )
-    alert('scrivo il cambiamento sul file');
     this.lastUrl = this.url + ""
     let project = this.prj.getCurrentProject();
+    //alert('hai cambiato url!');
     this.writeTofile(project);
+    //alert("il server ora è: " + project?.config?.TAL_SERVER);
   }
 
   public removeURL(url:string, event:Event) {

@@ -36,6 +36,7 @@ export class ApiService {
   }
 
   public getLastInsertedUrl(): string {
+    this._url = localStorage.getItem(this.LAST_INSERTED_URL_KEY) || '';
     return localStorage.getItem(this.LAST_INSERTED_URL_KEY) || '';
   }
 
@@ -95,6 +96,7 @@ export class ApiService {
     this.stateMaybe()
     console.log("problemList:")
     let cmdList = new Commands.ProblemList(this._url);
+    alert('sto prendendo i problemi di: ' + this._url);
     cmdList.onRecieveProblemList = (message)=>{
       console.log("problemList:onRecieveProblemList:",message)
       this.stateGood()

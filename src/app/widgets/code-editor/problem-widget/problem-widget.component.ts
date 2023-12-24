@@ -65,11 +65,28 @@ export class ProblemWidgetComponent {
   constructor( public zone: NgZone,
                public api: ApiService,
                public pm: ProblemManagerService,
-               public prjmnrg: ProjectManagerService,
+               public prj: ProjectManagerService,
                private messageService: MessageService,)
   {
-    this.project = prjmnrg.getCurrentProject();
     this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.problemsDidChange(clear) })
+    this.prj.onProjectChanged.subscribe((_) => {
+      this.project = prj.getCurrentProject();
+      this.pm.onProblemSelected.subscribe((problem) => {
+        //alert('ricevuto problem selected: '+ problem.name);
+        this.writeTofile(this.project);
+        this.project?.onProjectConfigChanged.subscribe((_) => {
+          //alert('config pronto in problem');
+          this.writeTofile(this.project);
+        })
+      })
+    })
+    this.pm.onProblemsLoaded.subscribe((lista) => {
+      alert("cerco " + localStorage.getItem("problema"));
+      this.selectedProblem = this.pm.getProblem(localStorage.getItem("problema") || "", lista);
+      /*if (this.selectedProblem != undefined) {
+        this.pm.findServices(this.selectedProblem);
+      }*/
+    })
 
     // https://primefaces.org/primeng/overlay
     //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
@@ -90,6 +107,20 @@ export class ProblemWidgetComponent {
 
   refreshFilePathList(){
     this.filePathList = [...this.filePathList]
+  }
+
+  public async writeTofile(project: ProjectEnvironment | null) {
+    //alert('write to file')
+    project?.config?.parseFile(project.config);
+    if (project != null && project.config != null) {
+      if (this.selectedProblem != undefined) {
+        project.config.TAL_PROBLEM = this.selectedProblem.name
+      }
+      //project.config.TAL_SERVER = this.url;
+      //alert(project.config.TAL_SERVER);
+      alert('scrivo sul file il problema');
+      await project.config.save(project.driver);
+    }
   }
 
 //args
@@ -311,7 +342,7 @@ export class ProblemWidgetComponent {
     this.servicesMenu = servicesMenu
     console.log('didSelectProblem:servicesMenu:', servicesMenu)
     this.servicesMenu = servicesMenu
-    
+
     this.onProblemSelected.emit(this.selectedProblem)
   }
 

@@ -120,6 +120,19 @@ export class ProjectConfig {
     let res = await fs.writeFile(this.CONFIG_PATH, content);
     return true
   }
+
+  parseFile (obj: any): string {
+    for (var key in obj) {
+      console.log("key: " + key + ", value: " + obj[key])
+      if (key == "TAL_SERVER") {
+        return obj[key];
+      }
+      if (obj[key] instanceof Object) {
+        this.parseFile(obj[key]);
+      }
+    }
+    return "";
+  }
 }
 
 
