@@ -96,7 +96,7 @@ export class ApiService {
     this.stateMaybe()
     console.log("problemList:")
     let cmdList = new Commands.ProblemList(this._url);
-    alert('sto prendendo i problemi di: ' + this._url);
+    //alert('sto prendendo i problemi di: ' + this._url);
     cmdList.onRecieveProblemList = (message)=>{
       console.log("problemList:onRecieveProblemList:",message)
       this.stateGood()

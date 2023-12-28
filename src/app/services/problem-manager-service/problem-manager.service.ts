@@ -42,6 +42,7 @@ export class ProblemManagerService {
         console.log('PROVA:\n' + problemDesc.key);
         this.problems.set(problemDesc.key,problemDesc);
         problemDesc.services.forEach((serviceDesc)=>{
+          //alert('ho preso il servizio: ' + serviceDesc.key);
           this.services.set(serviceDesc.key, serviceDesc)
         })
       })
@@ -64,6 +65,8 @@ export class ProblemManagerService {
   
   selectProblem(selectedProblem: ProblemDescriptor){
     this.selectedProblem = selectedProblem;
+    alert('hai selezionato il problema: ' + selectedProblem.name);
+    alert(' il problema ' + this.selectProblem.name + " ha i servizi: " + this.selectedProblem.services.size);
     //'hai selezionato il problema: '+ selectedProblem.name);
     localStorage.setItem('problema', selectedProblem.name);
     this.onProblemSelected.emit(selectedProblem);

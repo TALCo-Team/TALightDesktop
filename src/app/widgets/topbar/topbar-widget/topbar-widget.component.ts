@@ -72,7 +72,7 @@ export class TopbarWidgetComponent implements OnInit {
     this.url = this.lastUrl;
     this.projectConfig.TAL_SERVER = this.url;
     
-    this.pm.updateProblems();
+    //this.pm.updateProblems();
 
     // controllare prima che esista
     /*let project = this.prj.getCurrentProject()

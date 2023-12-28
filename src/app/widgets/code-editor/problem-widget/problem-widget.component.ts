@@ -81,8 +81,11 @@ export class ProblemWidgetComponent {
       })
     })
     this.pm.onProblemsLoaded.subscribe((lista) => {
-      alert("cerco " + localStorage.getItem("problema"));
+      //alert("cerco " + localStorage.getItem("problema"));
       this.selectedProblem = this.pm.getProblem(localStorage.getItem("problema") || "", lista);
+      if (this.selectedProblem != undefined)
+      this.pm.selectProblem(this.selectedProblem);
+    this.callDidSelect();
       /*if (this.selectedProblem != undefined) {
         this.pm.findServices(this.selectedProblem);
       }*/
@@ -109,6 +112,10 @@ export class ProblemWidgetComponent {
     this.filePathList = [...this.filePathList]
   }
 
+  public async callDidSelect () {
+    this.didSelectProblem();
+  }
+
   public async writeTofile(project: ProjectEnvironment | null) {
     //alert('write to file')
     project?.config?.parseFile(project.config);
@@ -118,7 +125,7 @@ export class ProblemWidgetComponent {
       }
       //project.config.TAL_SERVER = this.url;
       //alert(project.config.TAL_SERVER);
-      alert('scrivo sul file il problema');
+      //alert('scrivo sul file il problema');
       await project.config.save(project.driver);
     }
   }
