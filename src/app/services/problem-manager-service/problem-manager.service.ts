@@ -19,8 +19,10 @@ export class ProblemManagerService {
   public onProblemsChanged = new EventEmitter<boolean>();
   public onProblemSelected = new EventEmitter<ProblemDescriptor>();
   public onError = new EventEmitter<any>();
-  public onProblemsLoaded = new EventEmitter<ProblemList>();
-    
+  public onProblemsLoaded = new EventEmitter<any>();
+   
+  public onServiceSelected = new EventEmitter<ServiceDescriptor>();
+
   constructor(
     public api:ApiService
   ){}
@@ -39,10 +41,8 @@ export class ProblemManagerService {
       problemMap.forEach(( problem, name )=>{
         let problemDesc = new ProblemDescriptor(name, problem)
         this.problemList.push(problemDesc)
-        console.log('PROVA:\n' + problemDesc.key);
         this.problems.set(problemDesc.key,problemDesc);
         problemDesc.services.forEach((serviceDesc)=>{
-          //alert('ho preso il servizio: ' + serviceDesc.key);
           this.services.set(serviceDesc.key, serviceDesc)
         })
       })
@@ -55,34 +55,19 @@ export class ProblemManagerService {
     };
   }
 
-  findServices (problem: ProblemDescriptor) {
-    problem.services.forEach((service) => {
-      //alert(service.name);
-    })
-  }
 
-  
-  
   selectProblem(selectedProblem: ProblemDescriptor){
     this.selectedProblem = selectedProblem;
     alert('hai selezionato il problema: ' + selectedProblem.name);
-    alert(' il problema ' + this.selectProblem.name + " ha i servizi: " + this.selectedProblem.services.size);
-    //'hai selezionato il problema: '+ selectedProblem.name);
     localStorage.setItem('problema', selectedProblem.name);
     this.onProblemSelected.emit(selectedProblem);
-    this.selectedService = undefined
+    this.selectedService = undefined;
   }
 
-  getProblem(problemName: string, lista: ProblemList) {
-    //alert('sto cercando ' + problemName);
-    //alert('la dimensione è: ' + lista.length)
-    this.problemList.forEach(problem => {
-      console.log("Nome del problema: " + problem.name);
-    })
-    return this.problemList.find(problem => problem.name === problemName);
+  getProblem(problemName: string) {
+    return this.problems.get(problemName);
   }
   
-
   selectService(selectedService: ServiceDescriptor){
     let name = selectedService.key;
     if ( this.savedParams.has(name) ){
@@ -92,8 +77,15 @@ export class ProblemManagerService {
       this.savedParams.set(name,selectedService);
       this.selectedService = selectedService;
     }
+
+    alert('hai selezionato il servizio: ' + name);
+    localStorage.setItem('servizio', name);
+    this.onServiceSelected.emit(selectedService);
   }
 
+  getService(serviceName: string) {
+    return this.services.get(serviceName);
+  }
 
   validateArgs(service: ServiceDescriptor){
     let issues = new Map<string,any>();
