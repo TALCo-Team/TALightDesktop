@@ -4,10 +4,11 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class GithubApiService {
-  private baseUrl = 'http://localhost:4000/';
-  constructor() {
-    
-   }
+
+  private baseUrl: String = 'http://localhost:4000/'
+  
+  constructor() {}
+
 
 
   public async getAccessToken(codeParam:any) {
