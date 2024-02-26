@@ -300,7 +300,6 @@ class PyodideWorker {
       */
     })();
   }
-
   load(root, mount) {
     var _this4 = this;
     return (0,_home_runner_work_TALightDesktop_TALightDesktop_node_modules_angular_devkit_build_angular_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])(function* () {
@@ -457,7 +456,6 @@ class PyodideWorker {
     //console.log("execCode: sys:\n", sys)
     //throw error;
   }
-
   sendNotify(title, msg, kind = "") {
     console.log("sendNotify: ", msg);
     this.requestQueueNotify.forEach((request, uid) => {
