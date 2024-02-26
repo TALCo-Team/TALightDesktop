@@ -1,4 +1,5 @@
-<div class="tal-file-editor-switch">
+<div class="tal-file-editor-switch" [class.blur]="isBlurred">
+
 
     <div [hidden]="shouldHide(EditorType.Unknown)" class="tal-file-editor-case-unknown tal-file-editor-case ">
         <div class="tal-center-page">
@@ -32,7 +33,7 @@
             <div #markdownPreview class="tal-markdown-preview-content" ></div>
         </div>
     </div>
-    
+
 
     <div [hidden]="shouldHide(EditorType.Browser)" class="tal-file-editor-case-browser tal-file-editor-case ">
         <div class="tal-browser-viewer">
@@ -40,7 +41,7 @@
         </div>
     </div>
 
-    
+
 
     <div [hidden]="shouldHide(EditorType.Archive)" class="tal-file-editor-case-archive tal-file-editor-case ">
         <div class="tal-archive-viewer tal-center-page">
@@ -52,10 +53,10 @@
                     <li>main.py</li>
                     <li>.talight/talight.json</li>
                 </ul>
-                
+
             </div>
             <div class="tal-placeholder-message">
-                <button #untarButton pButton 
+                <button #untarButton pButton
                     class="tal-square-button"
                     label="Decompress"
                     [title]="'Untar: '+selectedFile?.name"
@@ -65,7 +66,7 @@
         </div>
     </div>
 
-    
+
 </div>
 
 

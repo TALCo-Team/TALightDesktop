@@ -1,51 +1,46 @@
 <!--<div class="container"> -->
-            <div class="tal-output-widget" style="      border-radius: 3px; 
-            border: 1px solid rgb(63, 81, 179); 
-            background-color: rgb(213, 216, 228); 
-            max-height:500px; 
-            height:auto; 
-            padding: 4px;
-            position: relative;">
-                <div class="tal-output-widget-row tal-output-widget-title">
-                    <div class="tal-output-widget-row-label"></div>
-                    <div class="tal-output-widget-row-icon">
-                        <i #pyodideIcon class="pi {{pyodideStateIcon}}" [pTooltip]="pyodideStateTooltip" tooltipPosition="left" [style]="'font-size:100%; color:' + pyodideStateColor"></i>
-                    </div>
-                </div>
-                
-                <div style="max-height:300px; overflow-y: auto; border-radius: 3px; 
-                border: 1px solid rgb(63, 81, 179); background-color: white;">
-                    <div class="tal-output-widget-row tal-output-widget-row-scroll">
-                        <div class="tal-output-widget-pscroll" id="tal-output-widget-scroll-id">
-                            <div class="tal-output-widget-inner-row tal-output-widget-inner-row-{{line.type}}" *ngFor="let line of outputLines" >
-                                <div class="tal-output-widget-icon">
-                                    <i class="pi {{iconForType(line)}}"></i>
-                                </div>
-                                <div class="tal-output-widget-text">{{line.content}}</div>
-                                <br/>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-             
-            
-                <div class="tal-output-widget-row tal-output-widget-row-stdin">
-                    <button pButton class="tal-square-button" icon="pi pi-trash" (click)="clearOutput()"
-                        pTooltip="Clear output"></button>
-                    <input pInput #sdtinInput 
-                            class="tal-output-widget-stdin-input" 
-                            (focus)="focusStdin()"
-                            (blur)="blurStdin()"
-                            (keydown)="sendOnEnter($event)"
-                            placeholder="Write here input program" />
-                    <button pButton #sdtinButton 
-                            icon="pi pi-send" 
-                            class="tal-output-widget-stdin-button  tal-square-button" 
-                            (click)="sendStdin()" 
-                            pTooltip="Send"></button>
-                </div>
-            
-            </div>
+<div class="tal-output-widget" style="border-radius: 3px;
+border: 1px solid rgb(63, 81, 179);
+background-color: rgb(213, 216, 228);
+max-height:500px;
+height:auto;
+padding: 4px;
+position: relative;" [class.blur]="isBlurred">
+  <div class="tal-output-widget-row tal-output-widget-title">
+    <div class="tal-output-widget-row-label"></div>
+    <div class="tal-output-widget-row-icon">
+      <i #pyodideIcon class="pi {{pyodideStateIcon}}" [pTooltip]="pyodideStateTooltip" tooltipPosition="left"
+        [style]="'font-size:100%; color:' + pyodideStateColor"></i>
+    </div>
+  </div>
+
+  <div style="max-height:300px; overflow-y: auto; border-radius: 3px;
+    border: 1px solid rgb(63, 81, 179); background-color: white;">
+    <div class="tal-output-widget-row tal-output-widget-row-scroll">
+      <div class="tal-output-widget-pscroll" id="tal-output-widget-scroll-id">
+        <div class="tal-output-widget-inner-row tal-output-widget-inner-row-{{line.type}}"
+          *ngFor="let line of outputLines">
+          <div class="tal-output-widget-icon">
+            <i class="pi {{iconForType(line)}}"></i>
+          </div>
+          <div class="tal-output-widget-text">{{line.content}}</div>
+          <br />
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="tal-output-widget-row tal-output-widget-row-stdin">
+    <button pButton class="tal-square-button" icon="pi pi-trash" (click)="clearOutput()"
+      pTooltip="Clear output"></button>
+    <input pInput #sdtinInput class="tal-output-widget-stdin-input" (focus)="focusStdin()" (blur)="blurStdin()"
+      (keydown)="sendOnEnter($event)" placeholder="Write here input program" />
+    <button pButton #sdtinButton icon="pi pi-send" class="tal-output-widget-stdin-button  tal-square-button"
+      (click)="sendStdin()" pTooltip="Send"></button>
+  </div>
+
+</div>
 <!--</div>-->
 
 <!-- -->

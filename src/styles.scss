@@ -3,7 +3,6 @@
 @import "primeicons/primeicons.css";
 
 
-
 body {
   font-family: var(--font-family);
   background-color: var(--surface-ground);
@@ -48,13 +47,10 @@ p-dropdown{
 
 ngx-monaco-editor{
   height:100% !important;
-
   div.editor-container{
     height:100% !important;
   }
 }
-
-
 
 div.tal-center-page {
   display: flex;
@@ -109,7 +105,7 @@ div.tal-center-page {
     button {
       margin-top: 2rem;
       align-self: flex-end;
-      
+
     }
   }
 }
@@ -124,7 +120,7 @@ div.tal-contextmenu-container{
     justify-content: flex-start;
     padding:0.8rem 1rem;
     cursor:pointer;
-    
+
     &:hover{
       background: var(--surface-hover);
     }
@@ -143,8 +139,6 @@ div.tal-contextmenu-container{
   padding:0 !important;
 }
 
-
-
 .tal-square-button{
   height:30px;
   min-height:30px;
@@ -154,7 +148,6 @@ div.tal-contextmenu-container{
   min-width:30px;
   max-width:30px;
 }
-
 
 ::ng-deep .p-dialog-footer button{
   min-width: fit-content;

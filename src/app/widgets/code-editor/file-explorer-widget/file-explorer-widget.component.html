@@ -1,14 +1,14 @@
-<div class="tal-editor-files-tree">
+<div class="tal-editor-files-tree" [class.blur]="isBlurred">
   <div class="tal-editor-files-header">
     <div class="tal-editor-files-left-bar">
-      <button pButton icon="pi pi-folder" class="tal-square-button" 
+      <button pButton icon="pi pi-folder" class="tal-square-button"
         (click)="closeAllContextMenus($event); addNewItem(fsroot, 'folder')" pTooltip="New folder"></button>
-      <button pButton icon="pi pi-file" class="tal-square-button" 
+      <button pButton icon="pi pi-file" class="tal-square-button"
         (click)="closeAllContextMenus($event); addNewItem(fsroot, 'file')" pTooltip="New file"></button>
     </div>
     <div class="tal-editor-files-right-bar">
       <button pButton icon="pi pi-sync" class="tal-square-button" (click)="closeAllContextMenus($event); syncFilesystem(fsroot)"
-        pTooltip="Refresh"></button>    
+        pTooltip="Refresh"></button>
     </div>
   </div>
 
@@ -24,7 +24,7 @@
         <p-dropdown id="exportRepoList" appendTo="body" (onChange)="enableButton('export')" [disabled]="exportDropDisabled" [options]="reposList" [(ngModel)]="selectedRepo" placeholder="Select a repository" optionLabel="full_name"></p-dropdown>
     </div>
 
-    
+
     <div class="flex flex-column gap-2">
       <label htmlFor="repoName" style="margin-top: 20px; font-weight: bold;">Repository name:</label>
       <tr>
@@ -33,7 +33,7 @@
         <td><input pInputText id="repoName" (input)="detectInput()" [style]="{ width: '23vw' }" [(ngModel)]="newRepoName" /></td>
         <small id="repoName-help">{{repoNameHelp}}</small>
       </tr>
-      
+
     </div>
 
     <ng-template pTemplate="footer">
@@ -67,13 +67,12 @@
       <button pButton class="p-button-secondary tal-square-button" icon="pi pi-upload"
       (click)="menuImport.toggle($event)" pTooltip="Upload/Import"></button>
       <input id="fileUpload" #fileUpload type="file" style="display: none;" (change)="upload($event)"/>
-      
+
       <p-tieredMenu #menuImport [model]="ImportItems" [popup]="true"></p-tieredMenu>
     </div>
 
 
     <div class="tal-editor-files-right-bar">
-
       <button pButton icon="pi pi-eye" class="tal-square-button" *ngIf="showHidden"
         (click)="closeAllContextMenus($event); toggleHidden()" pTooltip="Hide hidden files"></button>
 
@@ -82,13 +81,10 @@
 
       <button pButton icon="pi pi-cog" class="tal-square-button"
         (click)="closeAllContextMenus($event); openSettings()" pTooltip="Settings"></button>
-      
     </div>
-
-    
   </div>
 
-<p-toast position="top-left" key="tl"></p-toast>
+  <p-toast position="top-left" key="tl"></p-toast>
 
 </div>
 

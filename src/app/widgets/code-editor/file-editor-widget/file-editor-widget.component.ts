@@ -4,6 +4,7 @@ import { marked } from 'marked';
 import { FsNodeFile } from 'src/app/services/fs-service/fs.service.types';
 import { ThemeService } from 'src/app/services/theme-service/theme.service';
 import { MonacoEditorWidgetComponent } from '../monaco-editor-widget/monaco-editor-widget.component';
+import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 // Editor UI
 export enum EditorType{
@@ -27,7 +28,7 @@ export enum MatchMethod{
 export enum MatchType{
   Auto,
   Extension,
-  Mime, //TODO: 
+  Mime, //TODO:
   Default = Auto,
 }
 
@@ -53,18 +54,18 @@ export class FileAssociation{
     public editorType = EditorType.None,
     public editorOption?: EditorOptions,
     public priority=0,
-    public matchMethod = MatchMethod.Auto, 
-    public matchType = MatchType.Auto, 
+    public matchMethod = MatchMethod.Auto,
+    public matchType = MatchType.Auto,
   ){}
-  
+
   match(file:FsNodeFile){
     let parts = file.name.split(".")
     console.log('FileAssociation:match:',parts)
     if (parts.length > 1){
       let ext = parts.splice(-1)[0]
       console.log('FileAssociation:ext:',ext)
-      if(this.pattern==ext) { return true } 
-      if(ext.match(this.pattern)){ return true } 
+      if(this.pattern==ext) { return true }
+      if(ext.match(this.pattern)){ return true }
     } else {
       //TODO: mime-magic matching
     }
@@ -91,10 +92,10 @@ export class FileAssociation{
 
 export class FileAssociationChoiceList{
   public associations: FileAssociation[]
-  constructor(items: FileAssociation[]){ 
+  constructor(items: FileAssociation[]){
     this.associations = Array.from(items)
   }
-  add(item: FileAssociation){ 
+  add(item: FileAssociation){
     if(this.associations.includes(item)){return;}
     this.associations.push(item)
   }
@@ -132,7 +133,7 @@ export class FileEditorWidgetComponent implements OnInit {
     new FileAssociation('txt', EditorType.Code, new EditorOptionsMonaco('text')),
     new FileAssociation('js', EditorType.Code, new EditorOptionsMonaco('javascript')),
     new FileAssociation('yaml', EditorType.Code, new EditorOptionsMonaco('yaml')),
-    
+
     //Markdown
     new FileAssociation('md', EditorType.Markdown, new EditorOptionsMonaco('markdown')),
 
@@ -150,24 +151,40 @@ export class FileEditorWidgetComponent implements OnInit {
     //Other
     new FileAssociation('.*', EditorType.Browser, new EditorOptionsBrowser(true),-10),
   ])
-  
+
   @Input("selectedFile") private _selectedFile: FsNodeFile | null = null;
   @ViewChild("monacoEditor") public monacoEditor!: MonacoEditorWidgetComponent;
   @ViewChild("browserEditor") public browserEditor!: ElementRef;
   @ViewChild("imageViewer") public imageViewer!: ElementRef;
   @ViewChild("markdownPreview") public markdownPreview!: ElementRef;
-  
+
 
   @Output('onChange') public onChange = new EventEmitter<FsNodeFile>();
 
   constructor(
-    private readonly themeService: ThemeService, 
+    private readonly themeService: ThemeService,
+    private tutorialService : TutorialService,
   ) {
+    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} )
+    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
   }
 
-  ngOnInit(): void {
-
+  ngOnInit() {
+    this.isBlurred = true;
   }
+  protected isBlurred = false;
+
+  private isTutorialShown(tutorial? : any){
+
+    console.log("FileEditorWidgetComponent:isTutorialShown")
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "FileEditorWidgetComponent"){
+      this.isBlurred = false
+    }
+    else{
+      this.isBlurred = true
+    }
+  }
+
 
   public get selectedFile():FsNodeFile|null{
     return this._selectedFile;
@@ -180,14 +197,14 @@ export class FileEditorWidgetComponent implements OnInit {
   }
 
   public selectEditor(){
-    if(!this._selectedFile) { 
+    if(!this._selectedFile) {
       this.editorType = EditorType.None
       this.openEditor()
       return
     }
-    
+
     let bestMatch = this.fileAssocList.match(this._selectedFile)
-    if(!bestMatch){ 
+    if(!bestMatch){
       this.editorType = EditorType.None
       this.openEditor()
       return
@@ -197,7 +214,7 @@ export class FileEditorWidgetComponent implements OnInit {
 
     console.log("selectEditor:",this.editorType)
     console.log("selectEditor:editorOption:",this.editorOption)
-    
+
     this.openEditor()
   }
 
@@ -212,7 +229,7 @@ export class FileEditorWidgetComponent implements OnInit {
         }
         markdownBox.innerHTML = await marked( this.selectedFile.content )
         break;
-      case EditorType.Code: 
+      case EditorType.Code:
         let monacoOptions = this.editorOption as EditorOptionsMonaco;
         if(this.selectedFile.content instanceof ArrayBuffer){
           this.selectedFile.content = this.binDecoder.decode(this.selectedFile.content)
@@ -221,7 +238,7 @@ export class FileEditorWidgetComponent implements OnInit {
         this.monacoEditor.language = monacoOptions.language;
         this.monacoEditor.updateEditorOptions()
         break;
-      case EditorType.Browser: 
+      case EditorType.Browser:
         let browserOptions = this.editorOption as EditorOptionsBrowser;
         let iframe = this.browserEditor.nativeElement as HTMLIFrameElement;
         let header = 'data:'+browserOptions.mime+';'
@@ -241,9 +258,9 @@ export class FileEditorWidgetComponent implements OnInit {
         let script = `<script>document.getElementById('${id}').click()</script>`
         let template = `<html><body>${link}${script}</body></html>`
         */
-        
+
         iframe.src = daraurl
-        
+
         break;
     }
   }
@@ -252,7 +269,7 @@ export class FileEditorWidgetComponent implements OnInit {
     return this.editorType !== editorType;
   }
 
-  
+
 
   //MonacoEditor
 

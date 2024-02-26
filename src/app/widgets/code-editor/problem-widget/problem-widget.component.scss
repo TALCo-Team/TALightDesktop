@@ -1,280 +1,261 @@
+@import "../blur.scss";
 
-
-:host{
-    width:100%;
-    height:100%;
+.blur {
+  @extend .blur;
 }
 
-:host ::ng-deep .tal-problem-widget-args-row { 
+:host {
+  width: 100%;
+  height: 100%;
+}
 
-    .p-inputtext {
-        //border: 1px solid red;
-        //margin-top: 7px;
-        //margin-bottom: 10px;
-        min-height: 20px;
-        height: 20px;
-        //margin-left: 10px;
-        //padding-bottom: 10px;
-    }
+:host ::ng-deep .tal-problem-widget-args-row {
+  .p-inputtext {
+    //border: 1px solid red;
+    //margin-top: 7px;
+    //margin-bottom: 10px;
+    min-height: 20px;
+    height: 20px;
+    //margin-left: 10px;
+    //padding-bottom: 10px;
+  }
 
-    .tal-square-button {
-        margin-top: 7px;
-        padding-left: 20px;
-        padding-right: 20px;
-        padding-top: 15px;
-        padding-bottom: 15px;
-        
-    }
-    
+  .tal-square-button {
+    margin-top: 7px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
 }
 
 ::ng-deep {
-    
-    ::ng-deep{
-        .p-scrollpanel-wrapper, .p-scrollpanel-content, .p-scrollpanel{
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            margin: 0px;
-            padding: 0px;
-            word-wrap: break-word;
-            flex-wrap: wrap;
-        }
+  ::ng-deep {
+    .p-scrollpanel-wrapper,
+    .p-scrollpanel-content,
+    .p-scrollpanel {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      margin: 0px;
+      padding: 0px;
+      word-wrap: break-word;
+      flex-wrap: wrap;
+    }
+  }
+
+  .tal-problem-widget-row-problem,
+  .tal-problem-widget-row-service {
+    .p-dropdown {
+      height: 30px;
+      margin-right: 5px;
+    }
+    .p-dropdown-label {
+      height: 30px;
+      padding: 5px !important;
+    }
+  }
+
+  .tal-problem-widget-args-subrow {
+    .p-dropdown {
+      height: 22px;
+    }
+    .p-dropdown-label {
+      height: 22px;
+      padding: 2px !important;
+    }
+    .tal-problem-widget-files-selected {
+      width: 100%;
+    }
+  }
+
+  .tal-problem-widget-args-row-field {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 5;
+
+    p-dropdown,
+    .p-inputwrapper {
+      display: flex;
+      width: 100%;
+    }
+  }
+
+  .tal-problem-widget {
+    .p-tabview-nav li {
+      width: 50%;
+      align-content: center;
     }
 
-
-
-    
-    .tal-problem-widget-row-problem, .tal-problem-widget-row-service{
-        .p-dropdown {
-            height: 30px;
-            margin-right: 5px;
-        }
-        .p-dropdown-label{
-            height: 30px;
-            padding: 5px!important;
-        }
+    .p-tabview-ink-bar {
+      width: 50% !important;
     }
 
-    .tal-problem-widget-args-subrow{
-        .p-dropdown {
-            height: 22px;
-        }
-        .p-dropdown-label{
-            height: 22px;
-            padding: 2px!important;
-        }
-        .tal-problem-widget-files-selected{
-            width: 100%;   
-        }
-    }
-    
-    .tal-problem-widget-args-row-field{
-        display: flex;
-        flex-direction: row;
-        flex-grow:5;
-        
-        p-dropdown, .p-inputwrapper{
-            display: flex;
-            width: 100%;
-        }
-    
+    .p-tabview-nav-link {
+      margin: 0px !important;
+      padding: 0px !important;
+
+      width: 100%;
+      height: 100%;
     }
 
-    .tal-problem-widget{
-        .p-tabview-nav li{
-            width: 50%;
-            align-content: center;
-        }
-
-        .p-tabview-ink-bar{
-            width: 50%!important;
-        }
-        
-        .p-tabview-nav-link{
-            margin: 0px !important;
-            padding:0px !important;
-            
-            width: 100%;
-            height: 100%;
-
-        }
-
-        .p-tabview-panels{
-            margin: 0px;
-            padding:0px;
-        }
+    .p-tabview-panels {
+      margin: 0px;
+      padding: 0px;
     }
+  }
 
-
-    //opens detached inside <body>
-    .tal-problem-widget-problem-selector-panel{
-        .p-dropdown-item {
-            height: 30px;
-            margin: 5px!important;
-            padding: 5px!important;
-        }
+  //opens detached inside <body>
+  .tal-problem-widget-problem-selector-panel {
+    .p-dropdown-item {
+      height: 30px;
+      margin: 5px !important;
+      padding: 5px !important;
     }
+  }
 
-    .tal-problem-widget-files-dropdown-panel{
-        .p-dropdown-item {
-            height: 22px;
-            margin: 2px!important;
-            padding: 2px!important;
-        }
+  .tal-problem-widget-files-dropdown-panel {
+    .p-dropdown-item {
+      height: 22px;
+      margin: 2px !important;
+      padding: 2px !important;
     }
+  }
 }
 
+.tal-problem-widget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 
-.tal-problem-widget{
+  .tal-problem-widget-row-problem,
+  .tal-problem-widget-row-service {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 5px;
+
+    .tal-problem-widget-problem-selector,
+    .tal-problem-widget-service-selector {
+      flex-grow: 2;
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .tal-problem-widget-row-problem:first-child {
+    padding-bottom: 0px;
+  }
+
+  .tal-problem-widget-label {
+    padding: 0.5rem;
+    font-weight: 600;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+  }
+
+  .tal-problem-widget-args-row-title {
+    display: flex;
+    font-weight: bold;
+  }
+
+  .tal-problem-widget-args-row-no-params {
+    flex-grow: 1;
+    height: 100%;
+    display: flex;
+    width: 100%;
+    justify-content: center; // left-right
+    align-items: center; // top-bottom
+    border: 1px solid #444;
+  }
+
+  .tal-problem-widget-args {
     display: flex;
     flex-direction: column;
-    height:100%;
-    
-    .tal-problem-widget-row-problem, .tal-problem-widget-row-service{
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        padding: 5px;
+    //width: 100%;
+    //overflow: auto;
 
-        .tal-problem-widget-problem-selector, .tal-problem-widget-service-selector {
-            flex-grow: 2;
-            display: flex;
-            align-items: center;   
-        }
+    font-family: monospace;
 
+    .tal-problem-widget-args-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #333;
     }
 
-    .tal-problem-widget-row-problem:first-child{
-        padding-bottom: 0px;
+    .tal-problem-widget-args-subrow {
+      display: flex;
+      width: 100%;
+      //background-color: aquamarine;
+      flex-direction: row;
+      align-items: center;
+
+      button {
+        width: 20px;
+        height: 20px;
+        min-height: 20px;
+        max-height: 20px;
+      }
     }
 
+    .tal-problem-widget-args-row:last-child {
+      border: 0px;
+    }
 
-    .tal-problem-widget-label{
-        padding:0.5rem;
-        font-weight:600;
+    .tal-problem-widget-args-row-info {
+      display: flex;
+      width: 20px;
+      padding: 5px;
+    }
+
+    .tal-problem-widget-args-row-name {
+      display: flex;
+      flex-grow: 1;
+      width: 10em;
+      padding-left: 5px;
+      font-size: 80%;
+    }
+
+    .tal-problem-widget-args-row-field {
+      display: flex;
+      flex-grow: 6;
+      padding: 0px 5px;
+      input {
         width: 100%;
-        height: 100%;
-        text-align: center;
+      }
     }
 
-    
-
-    
-
-    .tal-problem-widget-args-row-title{
-        display: flex;
-        font-weight: bold;
+    .tal-problem-widget-args-row-actions {
+      display: flex;
+      padding: 5px;
     }
 
-    .tal-problem-widget-args-row-no-params{
-        flex-grow: 1;
-        height: 100%;
-        display: flex;
-        width: 100%;
-        justify-content: center; // left-right
-        align-items: center;     // top-bottom
-        border: 1px solid #444;
+    .tal-problem-widget-args-subrow-regexpr {
+      font-size: 11px;
+      color: gray;
+      word-wrap: break-word;
+      font-family: monospace;
     }
-
-    .tal-problem-widget-args{
-        display: flex;
-        flex-direction: column;
-        //width: 100%;
-        //overflow: auto;
-
-        font-family: monospace;
-        
-        .tal-problem-widget-args-row{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 5px;
-            border-bottom: 1px solid #333;
-        }
-
-        .tal-problem-widget-args-subrow{
-            display: flex;
-            width:100%;
-            //background-color: aquamarine;
-            flex-direction: row;
-            align-items: center;
-
-            button{
-                width: 20px;
-                height: 20px;
-                min-height: 20px;
-                max-height: 20px;
-            }
-        }
-
-        .tal-problem-widget-args-row:last-child{
-            border: 0px;
-        }
-
-        .tal-problem-widget-args-row-info{
-            display: flex;
-            width: 20px;
-            padding: 5px;
-        }
-
-        .tal-problem-widget-args-row-name{
-            display: flex;
-            flex-grow: 1;
-            width: 10em;
-            padding-left: 5px;
-            font-size: 80%;
-            
-        }
-
-        .tal-problem-widget-args-row-field{
-            display: flex;
-            flex-grow: 6;
-            padding: 0px 5px;
-            input{
-                width: 100%
-            }
-            
-        }
-
-        .tal-problem-widget-args-row-actions{
-            display: flex;
-            padding: 5px;
-        }
-
-        
-        .tal-problem-widget-args-subrow-regexpr{
-            font-size: 11px;
-            color: gray;
-            word-wrap: break-word;
-            font-family: monospace;
-        }
-    }
-
-
-
+  }
 }
 
-
-
-
-
-
-.tal-problem-widget-problem-selected, .tal-problem-widget-problem-item{
-    .problem-label{
-        font-weight: bold;
-        text-transform: c-talize;   
-        padding: 1px 10px 1px 10px;        
-        background-color: #555;
-        border-radius: 20px;
-    }
-    .service-label{
-        padding-left: 3px;
-    }
+.tal-problem-widget-problem-selected,
+.tal-problem-widget-problem-item {
+  .problem-label {
+    font-weight: bold;
+    text-transform: c-talize;
+    padding: 1px 10px 1px 10px;
+    background-color: #555;
+    border-radius: 20px;
+  }
+  .service-label {
+    padding-left: 3px;
+  }
 }
 
-
-
-button{
-    border-radius: 5px;
+button {
+  border-radius: 5px;
 }

@@ -8,9 +8,9 @@ describe('TopbarWidgetComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ TopbarWidgetComponent ]
+      declarations: [TopbarWidgetComponent]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(TopbarWidgetComponent);
     component = fixture.componentInstance;

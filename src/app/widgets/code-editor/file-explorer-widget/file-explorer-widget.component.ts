@@ -10,6 +10,7 @@ import { ProjectEnvironment } from 'src/app/services/project-manager-service/pro
 import { GoogleLoginProvider, MicrosoftLoginProvider } from'@abacritt/angularx-social-login';
 import { SocialAuthService, SocialUser } from "@abacritt/angularx-social-login";
 import { GithubApiService } from 'src/app/services/github-api-service/github-api.service';
+import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
 @Component({
   selector: 'tal-file-explorer-widget',
@@ -21,7 +22,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   public rootDir = "/"
   public showHidden = false
   public fsroot = FsService.EmptyFolder
-  
+
   public editingValue: string = "";
   public editingItem: FsNodeFile | FsNodeFolder | null = null;
   public editingItemFolder: FsNodeFolder | null = null;
@@ -34,7 +35,7 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   public selectedFile: FsNodeFile | null = null;
   public selectedFolder: FsNodeFolder | null = null;
-  
+
   private accessToken = '';
   user: SocialUser | undefined;
   loggedIn: boolean = false;
@@ -65,31 +66,44 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   @Output("onUpdateRoot") public onUpdateRoot = new EventEmitter<FsNodeFolder>();
   @Output("onSelectFile") public onSelectFile = new EventEmitter<FsNodeFile>();
-  @Output("showHiddenChanged") public showHiddenChanged = new EventEmitter<boolean>(); 
+  @Output("showHiddenChanged") public showHiddenChanged = new EventEmitter<boolean>();
   @Output('onFileDeleted') public onFileDeleted = new EventEmitter<string>();
   @Output('onItemRenamed') public onItemRenamed = new EventEmitter();
 
   constructor(
-    private confirmationService: ConfirmationService, 
+    private confirmationService: ConfirmationService,
     private fs:FsService,
     private pm: ProjectManagerService,
     private authService: SocialAuthService,
     private messageService: MessageService,
-    private githubService: GithubApiService
-
+    private githubService: GithubApiService,
+    private tutorialService : TutorialService,
   ) {
-    this.pm.onProjectChanged.subscribe( (project)=>{this.didProjectChanged(project)} )  
+    this.pm.onProjectChanged.subscribe( (project)=>{this.didProjectChanged(project)} ),
+    this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
+    this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
   }
 
+  private isTutorialShown(tutorial? : any){
+
+    console.log("FileExplorerWidgetComponent:isTutorialShown")
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "FileExplorerWidgetComponent"){
+      this.isBlurred = false
+    }
+    else{
+      this.isBlurred = true
+    }
+  }
 
   ngOnInit() {
     this.bindCollapseEvent();
+    this.isBlurred = true;
 
     // Setting import menù options
     this.ImportItems = [
       { label: 'Import from Github', icon: 'pi pi-cloud-download', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.downloadGithub(); }},
       { label: 'Import from local ', icon: 'pi pi-database', command: (event: any) => {  this.closeAllContextMenus(event.originalEvent); const fileUpload = document.getElementById('fileUpload'); fileUpload?.click(); }}
-       
+
     ]
 
     // Setting export menù options
@@ -99,13 +113,13 @@ export class FileExplorerWidgetComponent implements OnInit {
         icon: 'pi pi-github',
         items: [
           { label: 'Export as archive', icon: 'pi pi-folder-open', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.export('Github-archive') } },
-          { label: 'Export code', icon: 'pi pi-code', command: (event: any) => {  this.closeAllContextMenus(event.originalEvent); this.export('Github-code'); /*this.visible = true;*/ }}    
+          { label: 'Export code', icon: 'pi pi-code', command: (event: any) => {  this.closeAllContextMenus(event.originalEvent); this.export('Github-code'); /*this.visible = true;*/ }}
         ]
       },
       { label: 'Export on Google Drive', icon: 'pi pi-google', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.signIn() }},
       { label: 'Export on One Drive', icon: 'pi pi-microsoft', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.export('Microsoft') }},
       { label: 'Save locally ', icon: 'pi pi-download', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.export('Local') }}
-       
+
     ]
 
 
@@ -122,9 +136,11 @@ export class FileExplorerWidgetComponent implements OnInit {
       }
 
     });
-    
+
   }
-  
+
+  protected isBlurred = false;
+
   public didProjectChanged(project:ProjectEnvironment){
     console.log("FileExplorerWidgetComponent:didProjectChanged")
     this.project = project;
@@ -142,7 +158,7 @@ export class FileExplorerWidgetComponent implements OnInit {
       this.onUpdateRoot?.emit(this.fsroot);
       if(onDone){onDone()}
     });
-    
+
   }
 
   private bindCollapseEvent() {
@@ -175,7 +191,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   public closeAllContextMenus(event: Event) {
-    
+
     event.preventDefault();
     console.log("EVENT: \n", event);
     if (this.panels) {
@@ -190,7 +206,7 @@ export class FileExplorerWidgetComponent implements OnInit {
       this.selectedFile = file;
       this.onSelectFile?.emit(file);
     })
-    
+
   }
 
   public selectFolder(folder: FsNodeFolder) {
@@ -216,11 +232,11 @@ export class FileExplorerWidgetComponent implements OnInit {
     })
     if(!configFile){return}
     console.log("openSettings:configFile:",configFile)
-        
+
     this.selectFile(configFile);
-        
+
   }
-  
+
 
   public toggleHidden(){
     this.showHidden = !this.showHidden;
@@ -229,7 +245,7 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   public isVisibile(fsitem: FsNodeFile|FsNodeFolder){
     let isHidden = fsitem.name.startsWith('.');
-    return this.showHidden || ( !this.showHidden && !isHidden ) 
+    return this.showHidden || ( !this.showHidden && !isHidden )
   }
 
   /** EDITING METHODS  **/
@@ -262,16 +278,16 @@ export class FileExplorerWidgetComponent implements OnInit {
 
           // create new path item
           const directoryList = this.editingItem.path.split('/');
-    
+
           if (directoryList.length <= 1) {
               this.editingItem.path = "/" + this.editingValue;
           }
-          
+
           const newpath = directoryList
               .slice(0, -1) // Remove last element ( previous name )
               .concat(this.editingValue) // Add new name at the end
               .join('/'); // Rebuild the path
-          
+
           // Change path item in the FS
           this.project?.driver.renameItem(this.editingItem.path, newpath).then(()=>{
             this.refreshRoot();
@@ -375,7 +391,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   private deleteFolder(currentFolder: FsNodeFolder, folder: FsNodeFolder) {
-    
+
     //Delete all files in the folder
     folder.files.forEach(item => {
 
@@ -397,11 +413,11 @@ export class FileExplorerWidgetComponent implements OnInit {
       });
 
     } else {
-      
+
       this.project?.driver.delete(folder.path).then(()=>{
         this.refreshRoot();
       })
-      
+
     }
 
   }
@@ -409,7 +425,7 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   /** CREATE METHODS **/
   public syncFilesystem(folder: FsNodeFolder) {
-    setTimeout(() => { 
+    setTimeout(() => {
       this.refreshRoot();
     }, 0);
   }
@@ -450,12 +466,12 @@ export class FileExplorerWidgetComponent implements OnInit {
           } else {
 
             // Double slash on path when folder is created under root does not create problems
-            let path = this.newItemFolder.path + "/" + this.newItemValue 
+            let path = this.newItemFolder.path + "/" + this.newItemValue
             console.log(path)
             this.project?.driver.createDirectory(path).then(()=>{
               this.refreshRoot()
             })
-            
+
             this.newItemFolder.folders.push({
               name: this.newItemValue,
               path: "./"+this.newItemValue,
@@ -510,7 +526,7 @@ export class FileExplorerWidgetComponent implements OnInit {
     Tar.unpack(tarball, async (files, folders)=>{
       console.log("extractTar:unpack:files",files)
       console.log("extractTar:unpack:folders",folders)
-  
+
       for(var idx in folders){
         console.log("extractTar:createDirectory:")
         let folder = folders[idx]
@@ -533,7 +549,7 @@ export class FileExplorerWidgetComponent implements OnInit {
       this.refreshRoot()
     })
     console.log("import:data:",tarball)
-        
+
     return true
   }
 
@@ -544,12 +560,12 @@ export class FileExplorerWidgetComponent implements OnInit {
       if(items.length == 0 ) {
         console.log("export: No files found to be exported")
       }
-  
+
       console.log("export:items:",items)
       Tar.pack(items, (tarball:ArrayBuffer)=>{
         let tarname = "tal-project-"+ Date.now()+".tal.tar"
         console.log('export:tarball:',tarname,tarball)
-  
+
         switch (mode) {
           case 'Local':
             this.triggerDownload(tarname, tarball, "application/x-tar");
@@ -565,7 +581,7 @@ export class FileExplorerWidgetComponent implements OnInit {
             break;
           default:
             break;
-  
+
         }
       })
 
@@ -573,14 +589,14 @@ export class FileExplorerWidgetComponent implements OnInit {
       this.uploadGitHub('Github-code');
     }
 
-    
+
 
   }
 
   //----------------------------------------------//
   //------------------- GITHUB -------------------//
   //----------------------------------------------//
-  
+
   private popupwindow(url:string, title:string, w:number, h:number) {
     var left = (screen.width/2)-(w/2);
     var top = (screen.height/2)-(h/2);
@@ -600,7 +616,7 @@ export class FileExplorerWidgetComponent implements OnInit {
     localStorage.removeItem("username");
 
     var codeParam: string | null = "";
-    
+
     var self = this;
     const checkURLChange = setInterval(function() {
       if (!popupWindow || popupWindow.closed) {
@@ -609,23 +625,23 @@ export class FileExplorerWidgetComponent implements OnInit {
 
       } else if (popupWindow.location.href.indexOf("github.com") === -1) { //url does not contains "github.com"
           console.log('URL in popup window changed:', popupWindow.location.href);
-          
+
           const queryString = popupWindow.location.search;
           const urlParams = new URLSearchParams(queryString);
           codeParam = urlParams.get("code");
           console.log("CODE:", codeParam)
-          
+
           popupWindow.close();
-          
+
           if(codeParam && (localStorage.getItem("accessToken") === null)) {
-      
+
             if (mode === 'Github-archive') {
 
               self.githubService.getAccessToken(codeParam)
               .then(() => self.githubService.getUserData())
               .then(() => self.githubService.getRepository('TALightProject-Archives'))
               .then((data) => {
-                
+
                 if (data.message == "Not Found") {
                   self.githubService.createRepository('TALightProject-Archives').then(() => { if (filename && content) { self.uploadFile('TALightProject-Archives', filename, content, mime) }})
                 } else {
@@ -634,25 +650,25 @@ export class FileExplorerWidgetComponent implements OnInit {
                   }
                 }
               });
-            
+
             } else {
               self.githubService.getAccessToken(codeParam)
               .then(() => self.githubService.getUserData())
               .then(() => self.githubService.getRepoList())
               .then((data) => {
-                
+
                 let condition = (repo: { name: string; }) => repo.name == 'TALightProject-Archives';
                 let isPresentRepo = data.findIndex(condition)
-                    
+
                 if (isPresentRepo !== -1) { data.splice(isPresentRepo, 1); }
-                
+
                 self.reposList = data
               })
               .then(() => self.newRepoOwner = localStorage.getItem("username"))
               .then(() => {
-                self.newRepoName=''; 
-                self.selectedRepo=undefined; 
-                self.exportVisible = true; 
+                self.newRepoName='';
+                self.selectedRepo=undefined;
+                self.exportVisible = true;
                 self.detectInput()
               })
             }
@@ -673,7 +689,7 @@ export class FileExplorerWidgetComponent implements OnInit {
     localStorage.removeItem("username");
 
     var codeParam: string | null = "";
-    
+
     var self = this;
     const checkURLChange = setInterval(function() {
       if (!popupWindow || popupWindow.closed) {
@@ -682,37 +698,37 @@ export class FileExplorerWidgetComponent implements OnInit {
 
       } else if (popupWindow.location.href.indexOf("github.com") === -1) { //url does not contains "github.com"
           console.log('URL in popup window changed:', popupWindow.location.href);
-          
+
           const queryString = popupWindow.location.search;
           const urlParams = new URLSearchParams(queryString);
           codeParam = urlParams.get("code");
           console.log("CODE:", codeParam)
-          
+
           popupWindow.close();
-          
+
           if(codeParam && (localStorage.getItem("accessToken") === null)) {
-      
+
               self.githubService.getAccessToken(codeParam)
               .then(() => self.githubService.getUserData())
               .then(() => self.githubService.getRepoList())
               .then((data) => {
-                
+
                 let condition = (repo: { name: string; }) => repo.name == 'TALightProject-Archives';
                 let isPresentRepo = data.findIndex(condition)
-                    
+
                 if (isPresentRepo !== -1) { data.splice(isPresentRepo, 1); }
-                
+
                 self.reposList = data
               })
               .then(() => {
-                self.selectedRepo = '' ; 
-                self.importButtonRepoDisabled = true; 
+                self.selectedRepo = '' ;
+                self.importButtonRepoDisabled = true;
                 self.importVisible = true
               })
-          }  
+          }
       }
     }, 1000); // Check every second until condition on the url is satisfied
-    
+
   }
 
 
@@ -736,14 +752,14 @@ export class FileExplorerWidgetComponent implements OnInit {
         } else{
           content = file.content
         }
-  
+
         tree.push({
           path: file.path.slice(1),
           mode: '100644',
           type: 'blob',
           content: content
         })
-      } 
+      }
     }
 
     console.log("TREE: ", tree);
@@ -763,10 +779,10 @@ export class FileExplorerWidgetComponent implements OnInit {
       .then((data) => {
 
         // Show notify on screen
-        if (!data.error) { 
-          this.showToastMessage('success', 'Upload successful') 
-        } else { 
-          this.showToastMessage('error', 'Upload failed'); 
+        if (!data.error) {
+          this.showToastMessage('success', 'Upload successful')
+        } else {
+          this.showToastMessage('error', 'Upload failed');
         }
       })
 
@@ -781,17 +797,17 @@ export class FileExplorerWidgetComponent implements OnInit {
       .then((data) => {
 
       // Show notify on screen
-      if (!data.error) { 
-        this.showToastMessage('success', 'Upload successful') 
-      } else { 
-        this.showToastMessage('error', 'Upload failed'); 
+      if (!data.error) {
+        this.showToastMessage('success', 'Upload successful')
+      } else {
+        this.showToastMessage('error', 'Upload failed');
       }
       })
     }
 
   }
 
-  
+
   public replaceProject(data:any) {
     // Before delete files and folders from root, then import project from Github
     this.project?.driver.scanDirectory('/').then((folder)=>{
@@ -807,12 +823,12 @@ export class FileExplorerWidgetComponent implements OnInit {
   public downloadFiles() {
 
     this.importVisible = false;
-    
+
     this.githubService.getRepositoryAsTar(this.selectedRepo.name)
     .then((url) => this.githubService.getTar(url))
-    .then(async (response) => { 
-      let data = await response.arrayBuffer(); 
-      this.replaceProject(data); 
+    .then(async (response) => {
+      let data = await response.arrayBuffer();
+      this.replaceProject(data);
     })
   }
 
@@ -846,12 +862,12 @@ export class FileExplorerWidgetComponent implements OnInit {
         console.log("UPLOAD RESPONSE:", data);
 
       // Show notify on screen
-      if (data.commit) { 
-        this.showToastMessage('success', 'Upload successful') 
-      } else { 
-        this.showToastMessage('error', 'Upload failed'); 
+      if (data.commit) {
+        this.showToastMessage('success', 'Upload successful')
+      } else {
+        this.showToastMessage('error', 'Upload failed');
       }
-        
+
     })
   }
 
@@ -863,7 +879,7 @@ export class FileExplorerWidgetComponent implements OnInit {
     } else {
       this.importButtonRepoDisabled = false;
     }
-    
+
   }
 
   public detectInput() {
@@ -879,7 +895,7 @@ export class FileExplorerWidgetComponent implements OnInit {
 
         let condition = (repo:any) => repo.name == this.newRepoName
         let repoFound = this.reposList.findIndex(condition);
-      
+
         if (repoFound !== -1) {
 
           this.repoNameHelp = "The repository '" + this.newRepoName + "' already exists on this account.";
@@ -889,9 +905,9 @@ export class FileExplorerWidgetComponent implements OnInit {
           }, 0)
 
           this.exportButtonRepoDisabled = true;
-  
+
         } else if (this.newRepoName === 'TALightProject-Archives') {
-          
+
           this.repoNameHelp = "The repository '" + this.newRepoName + "' is only for uploading archives.";
           setTimeout(() => {
             let repoLabel = document.getElementById('repoName-help') as HTMLElement;
@@ -901,7 +917,7 @@ export class FileExplorerWidgetComponent implements OnInit {
           this.exportButtonRepoDisabled = true;
 
         } else {
-          
+
           this.repoNameHelp = "Enter new repository name.";
           setTimeout(() => {
             let repoLabel = document.getElementById('repoName-help') as HTMLElement;
@@ -916,9 +932,9 @@ export class FileExplorerWidgetComponent implements OnInit {
         if (this.selectedRepo == undefined) {
           this.exportButtonRepoDisabled = true;
         }
-      } 
+      }
   }
-  
+
 
   public signIn() {
 
@@ -933,7 +949,7 @@ export class FileExplorerWidgetComponent implements OnInit {
 
 
   public async uploadGoogleDrive(filename:string, content:ArrayBuffer|string, mime="application/octet-stream") {
-    
+
     var folderId;
     var fileMetadata;
     var data;
@@ -942,11 +958,11 @@ export class FileExplorerWidgetComponent implements OnInit {
     // Search for TALightProjects Folder
     response = await fetch("https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.folder' and name='TALightProjects'", {
       method: "GET",
-      headers: { 
+      headers: {
         Authorization: "Bearer " + this.accessToken
       },
     });
-    
+
     data = await response.json();
 
     if (data.files.length == 0) {
@@ -959,9 +975,9 @@ export class FileExplorerWidgetComponent implements OnInit {
 
       const response = await fetch("https://www.googleapis.com/drive/v3/files", {
         method: "POST",
-        headers: { 
+        headers: {
           Authorization: "Bearer " + this.accessToken,
-          'Content-Type': 'application/json' 
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(fileMetadata)
       });
@@ -974,14 +990,14 @@ export class FileExplorerWidgetComponent implements OnInit {
       folderId = data.files[0].id;
     }
 
-    // Upload file under TALightProjects Folder on Drive 
+    // Upload file under TALightProjects Folder on Drive
     var formData = new FormData();
 
     fileMetadata = {
       name: filename,
       parents: [folderId]
     };
- 
+
     formData.append("metadata", new Blob([JSON.stringify(fileMetadata)], { type: "application/json" }));
     formData.append("data", new Blob([content], { type: mime}) , filename );
 
@@ -999,14 +1015,14 @@ export class FileExplorerWidgetComponent implements OnInit {
     this.accessToken = '';
 
     // Show notify on screen
-    if (!data.error) { 
-      this.showToastMessage('success', 'Upload successful') 
-    } else { 
-      this.showToastMessage('error', 'Upload failed'); 
+    if (!data.error) {
+      this.showToastMessage('success', 'Upload successful')
+    } else {
+      this.showToastMessage('error', 'Upload failed');
     }
 
     this.googleLogin = false;
-    
+
   }
 
   public showToastMessage(severity: string, detail: string) {
@@ -1027,47 +1043,47 @@ export class FileExplorerWidgetComponent implements OnInit {
 
     var accessToken = response.authToken;
 
-    // NOTE: With OneDrive it is not necessary to check if the TALightsProjects folder 
+    // NOTE: With OneDrive it is not necessary to check if the TALightsProjects folder
     // exists and possibly create it because this is done automatically by the service
-           
-    // Prepare data for request    
+
+    // Prepare data for request
     var formData = new FormData();
 
     var fileMetadata = {
       name: filename,
     };
- 
+
     formData.append("metadata", new Blob([JSON.stringify(fileMetadata)], { type: "application/json" }));
     formData.append("content", new Blob([content], { type: mime}) , filename );
 
     res = await fetch("https://graph.microsoft.com/v1.0/me/drive/root:/TALightsProjects/" + filename + ":/content", {
       method: "PUT",
       body: content,
-      headers: { 
+      headers: {
         Authorization: "Bearer " + accessToken,
         'Content-Type': mime
       },
     });
-   
+
     const data = await res.json();
 
     this.microsoftLogin = false;
 
     // Show notify on screen
-    if (!data.error) { 
-      this.showToastMessage('success', 'Upload successful') 
-    } else { 
-      this.showToastMessage('error', 'Upload failed'); 
+    if (!data.error) {
+      this.showToastMessage('success', 'Upload successful')
+    } else {
+      this.showToastMessage('error', 'Upload failed');
     }
 
   }
 
   public triggerDownload(filename:string, content:ArrayBuffer|string, mime="application/octet-stream"){
     let a = document.createElement("a");
-    
+
     const blob = new Blob([content], {type: mime});
     let url = window.URL.createObjectURL(blob);
-    
+
     a.style.display = "none";
     a.download = filename;
     a.href = url;

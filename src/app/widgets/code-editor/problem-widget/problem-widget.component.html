@@ -1,4 +1,4 @@
-<div class="tal-problem-widget">
+<div class="tal-problem-widget" [class.blur]="isBlurred">
   <!-- ROW:title -->
   <!--
   <div class="tal-problem-widget-args-row">
@@ -8,24 +8,18 @@
 
   <!-- API: PROBLEMS and SERVICES -->
   <div class="tal-problem-widget-row tal-problem-widget-row-problem">
-    <p-dropdown #problemDropdown
-                placeholder="Select a problem" 
-                class="tal-problem-widget-problem-selector" 
-                scrollHeight="50rem"
-                [overlayOptions]="dropdownOptions"
-                panelStyleClass="tal-problem-widget-problem-selector-panel"
-                [options]="problemsMenu"
-                [(ngModel)]="selectedProblem" 
-                optionLabel="name"
-                (onChange)="didSelectProblem()">
-    
-                <ng-template let-option pTemplate="selectedItem">
-                  <div class="tal-problem-widget-problem-selected">{{cleanupName(option.name)}}</div>
-                </ng-template>
+    <p-dropdown #problemDropdown placeholder="Select a problem" class="tal-problem-widget-problem-selector"
+      scrollHeight="50rem" [overlayOptions]="dropdownOptions"
+      panelStyleClass="tal-problem-widget-problem-selector-panel" [options]="problemsMenu" [(ngModel)]="selectedProblem"
+      optionLabel="name" (onChange)="didSelectProblem()">
 
-                <ng-template let-option pTemplate="item">
-                  <div class="tal-problem-widget-problem-item">{{cleanupName(option.name)}}</div>
-                </ng-template>
+      <ng-template let-option pTemplate="selectedItem">
+        <div class="tal-problem-widget-problem-selected">{{cleanupName(option.name)}}</div>
+      </ng-template>
+
+      <ng-template let-option pTemplate="item">
+        <div class="tal-problem-widget-problem-item">{{cleanupName(option.name)}}</div>
+      </ng-template>
 
     </p-dropdown>
 
@@ -37,24 +31,18 @@
   </div>
 
   <div class="tal-problem-widget-row tal-problem-widget-row-problem">
-    <p-dropdown #serviceDropdown
-                placeholder="Select a service" 
-                class="tal-problem-widget-problem-selector" 
-                scrollHeight="50rem"
-                [overlayOptions]="dropdownOptions"
-                panelStyleClass="tal-problem-widget-problem-selector-panel"
-                [options]="servicesMenu"
-                [(ngModel)]="selectedService" 
-                optionLabel="name"
-                (onChange)="didSelectService()">
-    
-                <ng-template let-option pTemplate="selectedItem">
-                  <div class="tal-problem-widget-problem-selected">{{cleanupName(option.name)}}</div>
-                </ng-template>
+    <p-dropdown #serviceDropdown placeholder="Select a service" class="tal-problem-widget-problem-selector"
+      scrollHeight="50rem" [overlayOptions]="dropdownOptions"
+      panelStyleClass="tal-problem-widget-problem-selector-panel" [options]="servicesMenu" [(ngModel)]="selectedService"
+      optionLabel="name" (onChange)="didSelectService()">
 
-                <ng-template let-option pTemplate="item">
-                  <div class="tal-problem-widget-problem-item">{{cleanupName(option.name)}}</div>
-                </ng-template>
+      <ng-template let-option pTemplate="selectedItem">
+        <div class="tal-problem-widget-problem-selected">{{cleanupName(option.name)}}</div>
+      </ng-template>
+
+      <ng-template let-option pTemplate="item">
+        <div class="tal-problem-widget-problem-item">{{cleanupName(option.name)}}</div>
+      </ng-template>
     </p-dropdown>
 
     <button pButton class="p-button-help tal-square-button" icon="pi pi-download" (click)="apiDownloadAttachment()"
@@ -82,9 +70,9 @@
           </div>
 
           <!-- ROW: arg -->
-          <p-scrollPanel class="tal-problem-widget-args-row" >
+          <p-scrollPanel class="tal-problem-widget-args-row">
             <div *ngFor="let arg of selectedArgs | keyvalue; ">
-            
+
               <div class="tal-problem-widget-args-subrow">
                 <!-- CELL: info -->
                 <div class="tal-problem-widget-args-row-info">
@@ -93,13 +81,15 @@
                     [title]="arg.value.regex+''"></i>
                 </div>
                 <!-- CELL: name -->
-                <div class="tal-problem-widget-args-row-name" style="margin-right: 30px;" [title]="arg.value.name">{{arg.value.name}}</div>
+                <div class="tal-problem-widget-args-row-name" style="margin-right: 30px;" [title]="arg.value.name">
+                  {{arg.value.name}}</div>
 
                 <!-- CELL: field -->
                 <div class="tal-problem-widget-args-row-field">
                   <input pInputText class type="text" class="p-inputtext-sm" [(ngModel)]="arg.value.value"
-                    [placeholder]="arg.value.default" [title]="arg.value.name +': '+arg.value.regex" (change)="argDidChange(arg.value,$event)"
-                    (blur)="argDidChange(arg.value,$event)" (focus)="argDidFocus(arg.value,$event)">
+                    [placeholder]="arg.value.default" [title]="arg.value.name +': '+arg.value.regex"
+                    (change)="argDidChange(arg.value,$event)" (blur)="argDidChange(arg.value,$event)"
+                    (focus)="argDidFocus(arg.value,$event)">
                 </div>
 
                 <!-- CELL: reset -->
@@ -116,8 +106,8 @@
                 <div class="tal-problem-widget-args-subrow-regexpr format-regex-simple"
                   [id]="'args-regex-'+arg.value.key">{{this.clenupRegex(arg.value.regex)}}</div>
               </div>
-            
-          </div>
+
+            </div>
           </p-scrollPanel>
         </div>
       </p-tabPanel>
@@ -125,7 +115,7 @@
       <p-tabPanel header="Files">
         <!-- ROW:title -->
         <ng-template pTemplate="header" class="tal-problem-widget-args-row">
-          <div class="tal-problem-widget-label">Files</div>
+          <div class="tal-problem-widget-label">Files</div><!--  -->
         </ng-template>
 
         <!-- API: ARGS -->
@@ -141,55 +131,51 @@
 
             <!-- ROW: arg -->
             <div class="tal-problem-widget-args-row" *ngFor="let file of selectedFiles | keyvalue; ">
-                <div class="tal-problem-widget-args-subrow">
-                  <!-- CELL: info -->
-                  <div class="tal-problem-widget-args-row-info">
-                      <i #argsIcons class="pi pi-file"></i>
-                  </div>
-                  <!-- CELL: name -->
-                  <div class="tal-problem-widget-args-row-name">{{file.value.name}}</div>
+              <div class="tal-problem-widget-args-subrow">
+                <!-- CELL: info -->
+                <div class="tal-problem-widget-args-row-info">
+                  <i #argsIcons class="pi pi-file"></i>
+                </div>
+                <!-- CELL: name -->
+                <div class="tal-problem-widget-args-row-name">{{file.value.name}}</div>
 
-                  <!-- CELL: field -->
-                  <div class="tal-problem-widget-args-row-field">
-                      <p-dropdown placeholder="Select a file" 
-                                  [id]="'file-dropdown-'+file.value.key"
-                                  (onChange)="fileDidChange(file.value,$event)"
-                                  [overlayOptions]="dropdownOptions"
-                                  styleClass="tal-problem-widget-files-dropdown"
-                                  panelStyleClass="tal-problem-widget-files-dropdown-panel"
-                                  [options]="filePathList"
-                                  [(ngModel)]="file.value.value"
-                                  [showClear]="true">
-        
-                          <ng-template pTemplate="selectedItem" let-option>
-                              <div class="tal-problem-widget-files-selected">
-                                <div>{{option}}</div>
-                              </div>
-                          </ng-template>
-          
-          
-                          <ng-template pTemplate="item" let-option>
-                              <div class="tal-problem-widget-files-item">
-                                <div>{{option}}</div>
-                              </div>
-                          </ng-template>
+                <!-- CELL: field -->
+                <div class="tal-problem-widget-args-row-field">
+                  <p-dropdown placeholder="Select a file" [id]="'file-dropdown-'+file.value.key"
+                    (onChange)="fileDidChange(file.value,$event)" [overlayOptions]="dropdownOptions"
+                    styleClass="tal-problem-widget-files-dropdown"
+                    panelStyleClass="tal-problem-widget-files-dropdown-panel" [options]="filePathList"
+                    [(ngModel)]="file.value.value" [showClear]="true">
+
+                    <ng-template pTemplate="selectedItem" let-option>
+                      <div class="tal-problem-widget-files-selected">
+                        <div>{{option}}</div>
+                      </div>
+                    </ng-template>
 
 
-                      </p-dropdown>
-                  </div>
+                    <ng-template pTemplate="item" let-option>
+                      <div class="tal-problem-widget-files-item">
+                        <div>{{option}}</div>
+                      </div>
+                    </ng-template>
 
-                  <!-- CELL: reset -->
-                  <!--
+
+                  </p-dropdown>
+                </div>
+
+                <!-- CELL: reset -->
+                <!--
                   <div class="tal-problem-widget-args-row-actions">
-                      <button pButton class="tal-square-button" icon="pi pi-trash" 
+                      <button pButton class="tal-square-button" icon="pi pi-trash"
                               (click)="fileDidReset(file.value,$event)"
-                              title="Reset to default" 
+                              title="Reset to default"
                               pTooltip="Reset to default"></button>
                   </div>
                   -->
               </div>
             </div>
-          
+
           </div>
         </p-scrollPanel>
       </p-tabPanel>
