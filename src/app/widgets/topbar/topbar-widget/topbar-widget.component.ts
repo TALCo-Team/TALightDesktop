@@ -1,11 +1,11 @@
-import { Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, NgZone, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { AutoComplete } from 'primeng/autocomplete';
 import { ApiService, ApiState } from 'src/app/services/api-service/api.service';
 import { NotificationManagerService, NotificationMessage, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
-
+import { MenuItem } from 'primeng/api';
 
 @Component({
   selector: 'tal-topbar-widget',
@@ -17,6 +17,9 @@ export class TopbarWidgetComponent implements OnInit {
   @ViewChild("urlInput") public urlInput?: AutoComplete;
   @ViewChild("statusDot") public statusDot?: ElementRef;
   @ViewChild("messageBox") public messageBox?: ElementRef;
+
+  items!: MenuItem[];
+  activeItem: any;
 
   url;
   lastUrl;
@@ -49,6 +52,11 @@ export class TopbarWidgetComponent implements OnInit {
 
   ngOnInit() {
     this.isBlurred = true;
+
+    this.items = [
+      { label: 'Progetto 1', icon: 'pi pi-fw pi-home' },
+    ];
+    this.activeItem = this.items[0]
   }
 
   showTutorial() {
@@ -111,6 +119,22 @@ hideNotification() {
   this.currentNotification = undefined
 }
 
+aggiungiProgetto() {
+  //   let temp = this.items
+  //   temp = ( [
+  //     { label: 'Home', icon: 'pi pi-fw pi-home' },
+  //     { label: 'Calendar', icon: 'pi pi-fw pi-calendar' },
+  //     { label: 'Edit', icon: 'pi pi-fw pi-pencil' },
+  //     { label: 'Documentation', icon: 'pi pi-fw pi-file' },
+  //     { label: 'Settings', icon: 'pi pi-fw pi-cog' },
+  //     { label: 'test', icon: 'pi pi-fw pi-cog' }
+  // ])
+    let temp = { label: 'test', icon: 'pi pi-fw pi-cog' }
+    this.items.push( temp);
+    this.activeItem = temp
+    // this.items. = this.items
+    //this.activeItem = this.items[this.items.length-1];
+  }
 
 filterSuggestions(event: any) {
   let query = event.query.replace(this.escapeRegEx, '\\$&')
@@ -133,7 +157,9 @@ filterSuggestions(event: any) {
     case ApiState.Bad: dot.style.color = "darkred"; break;
   }
 }
-
+public testfunzione() {
+  console.log("faciiamo un testooooooooooooooooooooooooooooone ")
+}
   public stateIdle() { this.updateState(ApiState.Idle); }
   public stateGood() { this.updateState(ApiState.Good); }
   public stateMaybe() { this.updateState(ApiState.Maybe); }

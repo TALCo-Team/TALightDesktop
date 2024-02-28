@@ -7,6 +7,12 @@
       <button pButton class="tutorial" pTooltip="Mostra il tutorial" (click)="showTutorial()" label="Mostra il tutorial" *ngIf=isTutorialButtonVisible></button>
     </div>
 
+    <button type="button" pButton pRipple label="Aggiungi un bel progetto" (click)="aggiungiProgetto()" class="mb-3"></button>
+    <div class="card">
+        <p-tabMenu [model]="items" [activeItem]="activeItem" ></p-tabMenu>
+    </div> 
+
+    
     <div class="tal-message-box">
         <div #messageBox *ngIf="!!currentNotification" class="tal-message-box-main tal-message-box-{{currentNotification.type}}" >
             <div class="tal-message-col">
