@@ -157,7 +157,7 @@ export class CodeEditorComponent implements OnInit {
     if (forceCreate || !this.project) {
       console.log("CodeEditorComponent:constructor:createPythonProject:do!")
       this.project = this.python.createPythonProject()
-      this.prj.setCurrentProject(this.project);
+      this.prj.addProject(this.project);
     }
     this.project?.driver.subscribeNotify(true, (msg: string) => { this.didNotify(msg) })
     this.project?.driver.subscribeState(true, (state: CompilerState, content?: string) => { this.didStateChange(state, content) })

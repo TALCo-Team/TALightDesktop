@@ -6,10 +6,10 @@ import { ProjectDriver, ProjectEnvironment, ProjectLanguage } from './project-ma
   providedIn: 'root'
 })
 export class ProjectManagerService {
-  
+
   private projects = new Array<ProjectEnvironment>();
   private currentProject: ProjectEnvironment | null = null;
-  
+
   public onProjectChanged = new EventEmitter<ProjectEnvironment>();
   public onProjectListChanged = new EventEmitter<void>();
 
@@ -22,7 +22,6 @@ export class ProjectManagerService {
 
   public setCurrentProject(project:ProjectEnvironment){
     console.log("ProjectManagerService:setCurrentProject")
-    this.addProject(project)
     this.currentProject = project
     console.log("ProjectManagerService:setCurrentProject:willEmit", project)
     this.onProjectChanged.emit(project)
@@ -36,21 +35,22 @@ export class ProjectManagerService {
   public listProject(){
     return this.projects.slice();
   }
-  
+
   public addProject(project:ProjectEnvironment){
-    if( this.projects.indexOf(project) == -1 ){
+    //if( this.projects.indexOf(project) == -1 ){
       this.projects.push(project)
       this.onProjectListChanged.emit();
-    }
+      this.setCurrentProject(project)
+    //}
   }
 
   public openProject(project:ProjectEnvironment){
-    //TODO: 
+    //TODO:
     return project
   }
 
   public closeProject(project:ProjectEnvironment){
-    //TODO: 
+    //TODO:
     this.onProjectListChanged.emit();
     return project
   }

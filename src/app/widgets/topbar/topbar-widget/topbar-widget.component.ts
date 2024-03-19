@@ -6,6 +6,7 @@ import { ProblemManagerService } from 'src/app/services/problem-manager-service/
 import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { MenuItem } from 'primeng/api';
+import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 
 @Component({
   selector: 'tal-topbar-widget',
@@ -39,6 +40,7 @@ export class TopbarWidgetComponent implements OnInit {
     public pm: ProblemManagerService,
     public nm: NotificationManagerService,
     private tutorialService: TutorialService,
+    private pj: ProjectManagerService
   ) {
     this.url = api.url;
     this.lastUrl = this.url + "";
@@ -47,15 +49,14 @@ export class TopbarWidgetComponent implements OnInit {
     this.subProblemError = this.pm.onError.subscribe((_) => { this.stateBad() })
     this.subOnNotify = this.nm.onNotification.subscribe((msg: NotificationMessage): void => { this.showNotification(msg) })
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
-      this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
+    this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
+    this.pj.onProjectListChanged.subscribe(() => this.setTabsNumber())
   }
 
   ngOnInit() {
     this.isBlurred = true;
 
-    this.items = [
-      { label: 'Progetto 1', icon: 'pi pi-fw pi-home' },
-    ];
+    this.setTabsNumber()
     this.activeItem = this.items[0]
   }
 
@@ -119,22 +120,30 @@ hideNotification() {
   this.currentNotification = undefined
 }
 
-aggiungiProgetto() {
-  //   let temp = this.items
-  //   temp = ( [
-  //     { label: 'Home', icon: 'pi pi-fw pi-home' },
-  //     { label: 'Calendar', icon: 'pi pi-fw pi-calendar' },
-  //     { label: 'Edit', icon: 'pi pi-fw pi-pencil' },
-  //     { label: 'Documentation', icon: 'pi pi-fw pi-file' },
-  //     { label: 'Settings', icon: 'pi pi-fw pi-cog' },
-  //     { label: 'test', icon: 'pi pi-fw pi-cog' }
-  // ])
-    let temp = { label: 'test', icon: 'pi pi-fw pi-cog' }
-    this.items.push( temp);
-    this.activeItem = temp
-    // this.items. = this.items
-    //this.activeItem = this.items[this.items.length-1];
+setTabsNumber(){
+  let tmp : MenuItem[] = [];
+  for (let i = 0; i < this.pj.listProject().length; i++){
+    tmp.push({ label: 'Tab', icon: 'pi pi-fw pi-home' })
+
+    this.activeItem = tmp
   }
+
+  this.items = tmp
+}
+
+  addProject() {
+    this.pj.addProject(this.pj.listProject()[0])
+
+  }
+
+  deleteProject() {
+    throw new Error('Method not implemented.');
+    }
+
+  setCurrentTab() {
+    this.pj.setCurrentProject(this.pj.listProject()[1])
+    }
+
 
 filterSuggestions(event: any) {
   let query = event.query.replace(this.escapeRegEx, '\\$&')
@@ -157,9 +166,7 @@ filterSuggestions(event: any) {
     case ApiState.Bad: dot.style.color = "darkred"; break;
   }
 }
-public testfunzione() {
-  console.log("faciiamo un testooooooooooooooooooooooooooooone ")
-}
+
   public stateIdle() { this.updateState(ApiState.Idle); }
   public stateGood() { this.updateState(ApiState.Good); }
   public stateMaybe() { this.updateState(ApiState.Maybe); }
