@@ -19,6 +19,7 @@ export class TopbarWidgetComponent implements OnInit {
   @ViewChild("statusDot") public statusDot?: ElementRef;
   @ViewChild("messageBox") public messageBox?: ElementRef;
 
+  disableDelete: boolean = false;
   items!: MenuItem[];
   activeItem: any;
 
@@ -129,6 +130,7 @@ setTabsNumber(){
   }
 
   this.items = tmp
+  this.disableDelete = (this.pj.listProject().length <= 1)
 }
 
 addProject() {

@@ -12,7 +12,7 @@
   <p-tabMenu [model]="items" [activeItem]="activeItem" (activeItemChange)="setCurrentTab(TODO!!!!!)">
     <ng-template pTemplate="item" let-item>
         <span>{{ item.label }}</span>
-        <button type="button" pButton pRipple [class]="item.icon"  (click)="deleteProject(item.id)" class="mb-3"></button>
+        <button type="button" pButton pRipple [class]="item.icon"  (click)="deleteProject(item.id)"  [disabled]="disableDelete" class="mb-3"></button>
     </ng-template>
 </p-tabMenu>
 
