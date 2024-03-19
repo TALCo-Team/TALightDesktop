@@ -21,7 +21,7 @@ export class TopbarWidgetComponent implements OnInit {
 
   disableDelete: boolean = false;
   items!: MenuItem[];
-  activeItem: any;
+  activeItem: any = undefined;
 
   url;
   lastUrl;
@@ -131,6 +131,7 @@ setTabsNumber(){
 
   this.items = tmp
   this.disableDelete = (this.pj.listProject().length <= 1)
+  this.activeItem = this.items[0];
 }
 
 addProject() {
@@ -141,8 +142,12 @@ deleteProject(id : string) {
   this.pj.closeProject(parseInt(id))
 }
 
-setCurrentTab(id : string) {
-   this.pj.setCurrentProject(parseInt(id))
+setCurrentTab(item : any) {
+  this.activeItem = item;
+  console.log("current active : id ", item)
+  console.log("current active : tab ", this.activeItem)
+
+  this.pj.setCurrentProject(parseInt(item.id))
 }
 
 

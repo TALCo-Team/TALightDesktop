@@ -28,6 +28,18 @@ div.tal-topbar {
   //background-color: aqua;
 }
 
+.tal-tab-container {
+  border: 10px solid #e4e6a6;
+  padding: 20px;
+}
+
+.float-child {
+  width: 50%;
+  float: left;
+  padding: 20px;
+  border: 5px solid red;
+}
+
 .tal-message-box {
   display: flex;
   height: 100%;
