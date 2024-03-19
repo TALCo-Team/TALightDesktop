@@ -132,17 +132,16 @@ setTabsNumber(){
 }
 
 addProject() {
-  //TODO 
-  this.pj.addProject()//this.pj.listProject()[0]
+  this.pj.addProject()
 }
 
 deleteProject(id : string) {
   this.pj.closeProject(parseInt(id))
 }
 
-  setCurrentTab(id : string) {
-    this.pj.setCurrentProject(parseInt(id))
-  }
+setCurrentTab(id : string) {
+   this.pj.setCurrentProject(parseInt(id))
+}
 
 
 filterSuggestions(event: any) {

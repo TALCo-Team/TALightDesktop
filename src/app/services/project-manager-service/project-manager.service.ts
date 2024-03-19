@@ -23,7 +23,7 @@ export class ProjectManagerService {
     this.currentProject = this.projects[index];
     console.log("ProjectManagerService:setCurrentProject:willEmit", this.projects[index])
     this.onProjectChanged.emit(this.currentProject)
-    console.log("ProjectManagerService:setCurrentProject:sent")
+    console.log("ProjectManagerService:setCurrentProject:sent", this.projects)
   }
 
   public getCurrentProject(){
@@ -34,17 +34,21 @@ export class ProjectManagerService {
     return this.projects.slice();
   }
 
-  public addProject(project?:ProjectEnvironment){
-    console.log("CodeEditorComponent:constructor:createPythonProject:do!start", project)
-    //if( this.projects.indexOf(project) == -1 ){
-      if(!project){
-        project = this.python.createPythonProject()
-        console.log("CodeEditorComponent:constructor:createPythonProject:do!errorrrrrr", project)
-      }
-      
+  public addProject(){
+    console.log("ProjectManagerService:addProject")
+
+    //TODO: add switch python/cpp
+    let project = this.python.createPythonProject()
+    console.log("ProjectManagerService:addProject:newPythonProject", project)
+    
+    let index = this.projects.indexOf(project)
+    if(index == -1){
       this.projects.push(project)
       this.onProjectListChanged.emit();
-      this.setCurrentProject(this.projects.length - 1)
+      index = this.projects.length - 1
+    }
+
+    this.setCurrentProject(index)
   }
 
   public openProject(project:ProjectEnvironment){

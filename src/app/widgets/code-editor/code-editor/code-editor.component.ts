@@ -83,8 +83,8 @@ export class CodeEditorComponent implements OnInit {
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) })
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     console.log("CodeEditorComponent:constructor", this.prj)
-    //TODO: add switch python/cpp
-    this.prj.onProjectChanged.subscribe((project) => { this.setPythonProject(project) })
+    
+    this.prj.onProjectChanged.subscribe((project) => { this.setProject(project) })
   }
 
   protected isBlurred = false;
@@ -150,7 +150,7 @@ export class CodeEditorComponent implements OnInit {
     }
   }
 
-  public setPythonProject(project:ProjectEnvironment) {
+  public setProject(project:ProjectEnvironment) {
     console.log("CodeEditorComponent:constructor:onProjectChanged")
     
     this.project = project
@@ -160,7 +160,7 @@ export class CodeEditorComponent implements OnInit {
     this.project?.driver.subscribeStdout(true, (msg: string) => { this.didStdout(msg) })
     this.project?.driver.subscribeStderr(true, (msg: string) => { this.didStderr(msg) })
 
-    console.log("CodeEditorComponent:constructor:setPythonProject", this.project)
+    console.log("CodeEditorComponent:constructor:setProject", this.project)
   }
 
 

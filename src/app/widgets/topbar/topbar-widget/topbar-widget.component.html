@@ -9,15 +9,10 @@
 
 
 
-  <p-tabMenu [model]="items" [activeItem]="activeItem">
+  <p-tabMenu [model]="items" [activeItem]="activeItem" (activeItemChange)="setCurrentTab(TODO!!!!!)">
     <ng-template pTemplate="item" let-item>
-        <a class="p-menuitem-link flex align-items-center p-3">
-
-                <span> {{ item.label }}</span>
-
-
-            <button type="button" pButton pRipple [class]="item.icon"  (click)="deleteProject(item.id)" class="mb-3"></button>
-        </a>
+        <span>{{ item.label }}</span>
+        <button type="button" pButton pRipple [class]="item.icon"  (click)="deleteProject(item.id)" class="mb-3"></button>
     </ng-template>
 </p-tabMenu>
 
