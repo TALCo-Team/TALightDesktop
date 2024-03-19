@@ -1,5 +1,6 @@
 import { EventEmitter, Injectable, Input } from '@angular/core';
 import { ProjectDriver, ProjectEnvironment, ProjectLanguage } from './project-manager.types';
+import { PythonCompilerService } from '../python-compiler-service/python-compiler.service';
 
 
 @Injectable({
@@ -13,18 +14,15 @@ export class ProjectManagerService {
   public onProjectChanged = new EventEmitter<ProjectEnvironment>();
   public onProjectListChanged = new EventEmitter<void>();
 
-  constructor(){}
+  constructor(
+    private python: PythonCompilerService,
+  ){}
 
-  public clearCurrentProject(){
-    this.currentProject = null;
-    this.onProjectChanged.emit();
-  }
-
-  public setCurrentProject(project:ProjectEnvironment){
+  public setCurrentProject(index:number){
     console.log("ProjectManagerService:setCurrentProject")
-    this.currentProject = project
-    console.log("ProjectManagerService:setCurrentProject:willEmit", project)
-    this.onProjectChanged.emit(project)
+    this.currentProject = this.projects[index];
+    console.log("ProjectManagerService:setCurrentProject:willEmit", this.projects[index])
+    this.onProjectChanged.emit(this.currentProject)
     console.log("ProjectManagerService:setCurrentProject:sent")
   }
 
@@ -36,12 +34,17 @@ export class ProjectManagerService {
     return this.projects.slice();
   }
 
-  public addProject(project:ProjectEnvironment){
+  public addProject(project?:ProjectEnvironment){
+    console.log("CodeEditorComponent:constructor:createPythonProject:do!start", project)
     //if( this.projects.indexOf(project) == -1 ){
+      if(!project){
+        project = this.python.createPythonProject()
+        console.log("CodeEditorComponent:constructor:createPythonProject:do!errorrrrrr", project)
+      }
+      
       this.projects.push(project)
       this.onProjectListChanged.emit();
-      this.setCurrentProject(project)
-    //}
+      this.setCurrentProject(this.projects.length - 1)
   }
 
   public openProject(project:ProjectEnvironment){
@@ -55,8 +58,4 @@ export class ProjectManagerService {
     this.onProjectListChanged.emit();
 
   }
-
-
-
-
 }

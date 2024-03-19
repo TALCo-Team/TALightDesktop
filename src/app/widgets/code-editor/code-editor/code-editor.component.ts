@@ -73,7 +73,6 @@ export class CodeEditorComponent implements OnInit {
   constructor(
     private fs: FsService,
     private compiler: CompilerService,
-    private python: PythonCompilerService,
     private api: ApiService,
     private prj: ProjectManagerService,
     private cdRef: ChangeDetectorRef,
@@ -85,13 +84,14 @@ export class CodeEditorComponent implements OnInit {
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     console.log("CodeEditorComponent:constructor", this.prj)
     //TODO: add switch python/cpp
-
+    this.prj.onProjectChanged.subscribe((project) => { this.setPythonProject(project) })
   }
 
   protected isBlurred = false;
 
   ngOnInit() {
     this.isBlurred = true;
+    this.prj.addProject();
   }
 
   private isTutorialShown(tutorial?: any) {
@@ -136,7 +136,6 @@ export class CodeEditorComponent implements OnInit {
 
   ngAfterViewInit() {
     this.outputWidget.enableStdin(false);
-    this.setPythonProject()
     const componentElement = this.elementRef.nativeElement;
   }
 
@@ -151,19 +150,17 @@ export class CodeEditorComponent implements OnInit {
     }
   }
 
-  public setPythonProject(forceCreate: boolean = false) {
-    console.log("CodeEditorComponent:constructor:createPythonProject")
-    this.project = this.prj.getCurrentProject()
-    if (forceCreate || !this.project) {
-      console.log("CodeEditorComponent:constructor:createPythonProject:do!")
-      this.project = this.python.createPythonProject()
-      this.prj.addProject(this.project);
-    }
+  public setPythonProject(project:ProjectEnvironment) {
+    console.log("CodeEditorComponent:constructor:onProjectChanged")
+    
+    this.project = project
+
     this.project?.driver.subscribeNotify(true, (msg: string) => { this.didNotify(msg) })
     this.project?.driver.subscribeState(true, (state: CompilerState, content?: string) => { this.didStateChange(state, content) })
     this.project?.driver.subscribeStdout(true, (msg: string) => { this.didStdout(msg) })
     this.project?.driver.subscribeStderr(true, (msg: string) => { this.didStderr(msg) })
-    console.log("CodeEditorComponent:constructor:createPythonProject:", this.project)
+
+    console.log("CodeEditorComponent:constructor:setPythonProject", this.project)
   }
 
 
@@ -175,7 +172,6 @@ export class CodeEditorComponent implements OnInit {
     this.fslistfile.forEach(item => filePathList.push(item.path))
     this.problemWidget.filePathList = filePathList
     this.terminalWidget.fslistfile = this.fslistfile;
-
   }
 
   public didNotify(data: string) {
