@@ -123,7 +123,7 @@ hideNotification() {
 setTabsNumber(){
   let tmp : MenuItem[] = [];
   for (let i = 0; i < this.pj.listProject().length; i++){
-    tmp.push({ label: 'Tab', icon: 'pi pi-fw pi-home' })
+    tmp.push({ label: 'Tab' + i, icon: 'pi pi-fw pi-times' , id : i.toString()})
 
     this.activeItem = tmp
   }
@@ -136,8 +136,8 @@ setTabsNumber(){
 
   }
 
-  deleteProject() {
-    throw new Error('Method not implemented.');
+  deleteProject(id : string) {
+    this.pj.closeProject(parseInt(id))
     }
 
   setCurrentTab() {

@@ -49,10 +49,11 @@ export class ProjectManagerService {
     return project
   }
 
-  public closeProject(project:ProjectEnvironment){
-    //TODO:
+  public closeProject(index: number){
+
+    this.projects.splice(index, 1); // 2nd parameter means remove one item only
     this.onProjectListChanged.emit();
-    return project
+
   }
 
 

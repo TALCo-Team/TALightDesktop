@@ -8,11 +8,21 @@
     </div>
 
 
-    <div class="card">
-      <p-tabMenu [model]="items" [activeItem]="activeItem" (click)="setCurrentTab()"  ></p-tabMenu>
-  </div>
+
+  <p-tabMenu [model]="items" [activeItem]="activeItem">
+    <ng-template pTemplate="item" let-item>
+        <a class="p-menuitem-link flex align-items-center p-3">
+
+                <span> {{ item.label }}</span>
+
+
+            <button type="button" pButton pRipple [class]="item.icon"  (click)="deleteProject(item.id)" class="mb-3"></button>
+        </a>
+    </ng-template>
+</p-tabMenu>
+
     <button type="button" pButton pRipple label="Aggiungi progetto" (click)="addProject()" class="mb-3"></button>
-    <button type="button" pButton pRipple label="Cancella progetto" (click)="deleteProject()" class="mb-3"></button>
+
 
 
 
