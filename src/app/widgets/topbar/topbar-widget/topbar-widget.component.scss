@@ -121,9 +121,16 @@ div.tal-topbar {
     }
   }
 }
-.tutorial{
+
+.tutorial button {
+  /* Stili per il bottone */
   width: auto;
   height: auto;
+  padding: 5px;
+  margin-left: 10px;
+  position: fixed;
+  top : 0;
+  right: 0;
 }
 
 .tal-tab-container {

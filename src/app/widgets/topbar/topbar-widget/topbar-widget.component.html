@@ -3,12 +3,6 @@
         <h1>TALight Desktop</h1>
     </div>
 
-    <div>
-      <button pButton class="tutorial" pTooltip="Mostra il tutorial" (click)="showTutorial()" label="Mostra il tutorial" *ngIf=isTutorialButtonVisible></button>
-    </div>
-
-
-
     <p-tabMenu [model]="items" [activeItem]="activeItem" >
         <ng-template pTemplate="item" let-item class="tabmenu">
             <div class="tal-tab-container" (click)="setCurrentTab(item)">
@@ -21,9 +15,6 @@
 
 
     <button type="button" icon="pi pi-plus" pButton pRipple pTooltip="Aggiungi una scheda" (click)="addProject()" class="tabMenuButton"></button>
-
-
-
 
     <div class="tal-message-box">
         <div #messageBox *ngIf="!!currentNotification" class="tal-message-box-main tal-message-box-{{currentNotification.type}}" >
@@ -56,4 +47,8 @@
 
         <button pButton icon="pi {{changeThemIcon}}" class="tal-square-button" pTooltip="Change theme" (click)="toggleTheme()"></button>
     </div>
+    <div class='tutorial'>
+      <button pButton pTooltip="Mostra il tutorial" (click)="showTutorial()" icon="pi pi-question-circle" *ngIf=isTutorialButtonVisible></button>
+    </div>
 </div>
+
