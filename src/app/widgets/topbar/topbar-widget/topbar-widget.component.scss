@@ -119,16 +119,7 @@
   right: 0;
 }
 
-.tabMenuButton{
-  /* Stili per il bottone */
-  width: 30px;
-  height: 30px;
-  top: 0px;
-  padding: 5px;
-  margin-left: 10px;
-  position: fixed;
-  left:50%;
-}
+
 
 .buttonClose{
   /* Stili per il bottone */
@@ -138,5 +129,25 @@
   height: 18px;
   margin-left: 10px;
   color: lightgrey;
+}
+
+:host ::ng-deep{
+  .tabMenu {
+    position: absolute; /* Posiziona il p-tabMenu in modo assoluto */
+    top: 0; /* Allinea il p-tabMenu all'inizio del contenitore */
+    left: 50px; /* Lascia spazio a sinistra per il bottone */
+    /* Altri stili per il p-tabMenu */
+  }
+
+  .tabMenuButton {
+    /* Stili per il bottone */
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    position: absolute;
+    top: 0; /* Allinea il bottone all'inizio del contenitore */
+    left: 0; /* Allinea il bottone all'inizio del contenitore */
+    transform: translate(-100%, 50%); /* Sposta il bottone indietro di metà della sua altezza e allinea al 100% a sinistra */
+  }
 }
 
