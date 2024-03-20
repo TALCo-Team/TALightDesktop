@@ -8,18 +8,19 @@
     </div>
 
 
-    
+
     <p-tabMenu [model]="items" [activeItem]="activeItem" >
-        <ng-template pTemplate="item" let-item>
+        <ng-template pTemplate="item" let-item class="tabmenu">
             <div class="tal-tab-container" (click)="setCurrentTab(item)">
-                <div class="float-child" >{{ item.label }}</div>
-                <div class="float-child"><button type="button" pButton pRipple [class]="item.icon"  (click)="deleteProject(item.id)" [disabled]="disableDelete" class="mb-3"></button></div>
+                <div class="float-child textTab" >{{ item.label }}</div>
+                <!-- Ho sostituito il [disabled]="disableDelete" con l'hidden-->
+                <div class="float-child button-container"><button type="button" pButton pRipple [class]="item.icon" (click)="deleteProject(item.id)" *ngIf="!disableDelete"> class="mb-3"></button></div>
             </div>
         </ng-template>
     </p-tabMenu>
-    
 
-    <button type="button" pButton pRipple label="Aggiungi progetto" (click)="addProject()" class="mb-3"></button>
+
+    <button type="button" pButton pRipple label="Aggiungi progetto" (click)="addProject()" class="tabMenuButton"></button>
 
 
 
