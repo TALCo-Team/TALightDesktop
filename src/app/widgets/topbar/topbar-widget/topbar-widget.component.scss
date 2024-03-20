@@ -1,6 +1,5 @@
 @import "../blur.scss";
 
-
 .blur {
   @extend .blur;
 }
@@ -73,10 +72,10 @@
       margin: 5px !important;
     }
 
-    button {
-      width: 30px;
-      max-width: 30px;
-    }
+    // button {
+    //   width: 30px;
+    //   max-width: 30px;
+    // }
   }
 }
 
@@ -90,7 +89,7 @@
     align-items: center;
     height: 16px !important;
 
-    button {
+    .tal-square-button {
       width: 16px !important;
       height: 16px !important;
       max-height: 16px !important;
@@ -122,40 +121,22 @@
 
 .tabMenuButton{
   /* Stili per il bottone */
-  width: auto;
-  height: auto;
+  width: 30px;
+  height: 30px;
+  top: 0px;
   padding: 5px;
   margin-left: 10px;
   position: fixed;
-  top : 0;
-  right: 50%;
+  left:50%;
 }
 
-.tal-tab-container {
-  border: 0 !important;
-  padding: 0 !important;
-  max-height: 25px;
-
-
-  .float-child {
-    top: 10px;
-    height: 21px;
-    padding: 0;
-    border: 0;
-    vertical-align: middle;
-  }
-
-  .textTab {
-    vertical-align: middle;
-  }
-
-  .float-child.button-container {
-    margin-left: -5px;
-    margin-top: -5px;
-    max-height: 16px;
-    width: 16px;
-    padding: 0;
-    margin-bottom: 0 !important;
-  }
+.buttonClose{
+  /* Stili per il bottone */
+  left:0;
+  padding: 0;
+  width: 18px !important;
+  height: 18px;
+  margin-left: 10px;
+  color: lightgrey;
 }
 
