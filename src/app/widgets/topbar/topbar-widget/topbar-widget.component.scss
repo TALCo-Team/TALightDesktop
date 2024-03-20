@@ -1,5 +1,6 @@
 @import "../blur.scss";
 
+
 .blur {
   @extend .blur;
 }
@@ -10,34 +11,17 @@
   height: 100%;
 }
 
-div.tal-topbar {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: row;
-  padding: 5px;
-}
-
 .tal-brand {
   height: 30px;
   h1 {
     font-size: 25px;
   }
   display: flex;
+  position: fixed;
+  top : 0;
+  left: 0;
   flex-grow: 1;
   //background-color: aqua;
-}
-
-.tal-tab-container {
-  border: 10px solid #e4e6a6;
-  padding: 20px;
-}
-
-.float-child {
-  width: 50%;
-  float: left;
-  padding: 20px;
-  border: 5px solid red;
 }
 
 .tal-message-box {
@@ -71,6 +55,9 @@ div.tal-topbar {
   align-items: center;
   justify-content: flex-end;
   flex-grow: 1;
+  position: fixed;
+  top : 0;
+  right: 35px;
 }
 
 ::ng-deep {
@@ -133,10 +120,22 @@ div.tal-topbar {
   right: 0;
 }
 
+.tabMenuButton{
+  /* Stili per il bottone */
+  width: auto;
+  height: auto;
+  padding: 5px;
+  margin-left: 10px;
+  position: fixed;
+  top : 0;
+  right: 50%;
+}
+
 .tal-tab-container {
   border: 0 !important;
   padding: 0 !important;
   max-height: 25px;
+  top: 50px;
 
   .float-child {
     height: 21px;
