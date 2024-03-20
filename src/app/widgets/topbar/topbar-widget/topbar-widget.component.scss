@@ -135,9 +135,10 @@
   border: 0 !important;
   padding: 0 !important;
   max-height: 25px;
-  top: 50px;
+
 
   .float-child {
+    top: 10px;
     height: 21px;
     padding: 0;
     border: 0;
@@ -148,7 +149,7 @@
     vertical-align: middle;
   }
 
-  button {
+  .float-child.button-container {
     margin-left: -5px;
     margin-top: -5px;
     max-height: 16px;
