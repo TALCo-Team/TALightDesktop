@@ -137,6 +137,7 @@
     top: 0; /* Allinea il p-tabMenu all'inizio del contenitore */
     left: 50px; /* Lascia spazio a sinistra per il bottone */
     width: calc(100% - 400px); /* Larghezza del p-tabMenu */
+    padding: 5px solid red;
   }
 
   .tabMenuButton {
