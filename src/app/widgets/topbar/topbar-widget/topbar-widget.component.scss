@@ -133,10 +133,10 @@
 
 :host ::ng-deep{
   .tabMenu {
-    position: absolute; /* Posiziona il p-tabMenu in modo assoluto */
+    position: fixed; /* Posiziona il p-tabMenu in modo assoluto */
     top: 0; /* Allinea il p-tabMenu all'inizio del contenitore */
     left: 50px; /* Lascia spazio a sinistra per il bottone */
-    /* Altri stili per il p-tabMenu */
+    width: calc(100% - 400px); /* Larghezza del p-tabMenu */
   }
 
   .tabMenuButton {
