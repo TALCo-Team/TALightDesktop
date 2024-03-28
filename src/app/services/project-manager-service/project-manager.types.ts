@@ -1,5 +1,6 @@
+import { EventEmitter, Injectable, Input } from '@angular/core';
 import { CompilerDriver } from "../compiler-service/compiler-service.types";
-import { FsNodeFile, FsNodeFolder, FsNodeList, FsServiceDriver as FsDriver, FsServiceDriver } from "../fs-service/fs.service.types"
+import { FsNodeFile, FsNodeFolder, FsNodeList, FsServiceDriver } from "../fs-service/fs.service.types"
 
 export enum ProjectLanguage{
   PY='PY',
@@ -15,6 +16,7 @@ export interface ProjectDriver extends FsServiceDriver, CompilerDriver{};
 export abstract class ProjectEnvironment{
   
   public config: ProjectConfig | null  = null;
+  public onProjectConfigChanged = new EventEmitter<void>();
     
   constructor(
     public laguange: ProjectLanguage,
@@ -65,13 +67,14 @@ export class ProjectConfig {
 
   public static readonly defaultConfig = new ProjectConfig()
 
-  static async load(fs:FsDriver, path?:string){
+  /*static async load(fs:FsServiceDriver, path?:string){
     console.log("ProjectConfig:load")
     if(!path){ path = ProjectConfig.defaultConfig.CONFIG_PATH }
     let config: ProjectConfig;
     if (!await fs.exists(path)){ return null }
     
     let configContent = await fs.readFile(path, false) as string;
+    //(configContent);
     console.log("ProjectConfig:load:found:",configContent)
     
     try{
@@ -83,12 +86,52 @@ export class ProjectConfig {
     
     console.log("ProjectConfig:load:config:",config)
     return config
+  }*/
+
+  static async load (fs:FsServiceDriver, path?: string) {
+    console.log("ProjectConfig:load");
+    if (!path) {
+      path = ProjectConfig.defaultConfig.CONFIG_PATH
+    }
+    let config: ProjectConfig;
+    if (await fs.exists(path)) {
+      return null
+    }
+
+    let configContent = await fs.readFile(path, false) as string;
+    console.log("ProjectConfig:load:found.", configContent)
+
+    try {
+      config = JSON.parse(configContent) as ProjectConfig
+      Object.setPrototypeOf(config, ProjectConfig.prototype)
+    } catch {
+      console.log("ProjectConfig:load:config:JSON:parse: failed")
+      return null
+    }
+
+    console.log("ProjectConfig:load:config.", config)
+    return config
   }
 
-  async save(fs:FsDriver){
+  async save(fs:FsServiceDriver){
+    //alert('comincio il salvataggio');
+    console.log('comincio il salvataggio');
     let content = JSON.stringify(this, null, 4)
-    let res = await fs.writeFile(this.CONFIG_PATH, content); 
+    let res = await fs.writeFile(this.CONFIG_PATH, content);
     return true
+  }
+
+  parseFile (obj: any): string {
+    for (var key in obj) {
+      console.log("key: " + key + ", value: " + obj[key])
+      if (key == "TAL_SERVER") {
+        return obj[key];
+      }
+      if (obj[key] instanceof Object) {
+        this.parseFile(obj[key]);
+      }
+    }
+    return "";
   }
 }
 
