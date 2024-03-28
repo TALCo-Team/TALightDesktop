@@ -139,63 +139,63 @@ export class TopbarWidgetComponent implements OnInit {
     else {
       this.isTutorialButtonVisible = true;
     }
-}
+  }
 
   public toggleTheme() {
-  this.themeService.toggleTheme();
-}
+    this.themeService.toggleTheme();
+  }
 
   public iconForNotification() {
-  let icon = "pi-info"
-  switch (this.currentNotification?.type) {
-    default:
-    case NotificationType.System:
-    case NotificationType.Debug:
-    case NotificationType.Info:
-      icon = "pi-info"
-      break;
-    case NotificationType.Warning:
-    case NotificationType.Error:
-      icon = "pi-error"
-  }
-  return icon
-}
-
-showNotification(msg: NotificationMessage, timeout = 3) {
-  let box = this.messageBox?.nativeElement as HTMLElement
-  box.style.display = "flex"
-  this.currentNotification = msg
-  setTimeout(() => { this.hideNotification() }, timeout * 1000)
-}
-
-hideNotification() {
-  let box = this.messageBox?.nativeElement as HTMLElement
-  box.style.display = "none"
-  this.currentNotification = undefined
-}
-
-
-filterSuggestions(event: any) {
-  let query = event.query.replace(this.escapeRegEx, '\\$&')
-  let filter = new RegExp(".*" + query + ".*")
-  let urlCache: string[] = []
-  this.api.urlCache.forEach((url: string) => {
-    if (url.match(filter)) {
-      urlCache.push(url)
+    let icon = "pi-info"
+    switch (this.currentNotification?.type) {
+      default:
+      case NotificationType.System:
+      case NotificationType.Debug:
+      case NotificationType.Info:
+        icon = "pi-info"
+        break;
+      case NotificationType.Warning:
+      case NotificationType.Error:
+        icon = "pi-error"
     }
-  });
-  this.urlCache = urlCache
-}
+    return icon
+  }
+
+  showNotification(msg: NotificationMessage, timeout = 3) {
+    let box = this.messageBox?.nativeElement as HTMLElement
+    box.style.display = "flex"
+    this.currentNotification = msg
+    setTimeout(() => { this.hideNotification() }, timeout * 1000)
+  }
+
+  hideNotification() {
+    let box = this.messageBox?.nativeElement as HTMLElement
+    box.style.display = "none"
+    this.currentNotification = undefined
+  }
+
+
+  filterSuggestions(event: any) {
+    let query = event.query.replace(this.escapeRegEx, '\\$&')
+    let filter = new RegExp(".*" + query + ".*")
+    let urlCache: string[] = []
+    this.api.urlCache.forEach((url: string) => {
+      if (url.match(filter)) {
+        urlCache.push(url)
+      }
+    });
+    this.urlCache = urlCache
+  }
 
   public updateState(state: ApiState) {
-  let dot = this.statusDot!.nativeElement as HTMLElement
-  switch (state) {
-    case ApiState.Idle: dot.style.color = ""; break;
-    case ApiState.Good: dot.style.color = "green"; break;
-    case ApiState.Maybe: dot.style.color = "orange"; break;
-    case ApiState.Bad: dot.style.color = "darkred"; break;
+    let dot = this.statusDot!.nativeElement as HTMLElement
+    switch (state) {
+      case ApiState.Idle: dot.style.color = ""; break;
+      case ApiState.Good: dot.style.color = "green"; break;
+      case ApiState.Maybe: dot.style.color = "orange"; break;
+      case ApiState.Bad: dot.style.color = "darkred"; break;
+    }
   }
-}
 
   public stateIdle() { this.updateState(ApiState.Idle); }
   public stateGood() { this.updateState(ApiState.Good); }
@@ -227,24 +227,25 @@ filterSuggestions(event: any) {
     //alert('hai cambiato url!');
     this.writeTofile(project);
     //alert("il server ora è: " + project?.config?.TAL_SERVER);
-  }
 
-  console.log("changeURL:urlCache:after:", this.urlCache)
-  console.log("changeURL:url:", this.url)
-  this.lastUrl = this.url + ""
-}
+    console.log("changeURL:urlCache:after:", this.urlCache)
+    console.log("changeURL:url:", this.url)
+    this.lastUrl = this.url + ""
+
+
+  }
 
   public removeURL(url: string, event: Event) {
-  if (event) { event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation(); }
+    if (event) { event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation(); }
 
-  console.log("changeURL:urlCache:before:", this.urlCache)
-  if (!this.api.removeFromCache(url)) {
-    console.log("changeURL:removeURL:done")
+    console.log("changeURL:urlCache:before:", this.urlCache)
+    if (!this.api.removeFromCache(url)) {
+      console.log("changeURL:removeURL:done")
+    }
+    this.urlCache = this.api.urlCache
+
+    console.log("changeURL:urlCache:after:", this.urlCache)
+    console.log("changeURL:url:", url)
   }
-  this.urlCache = this.api.urlCache
-
-  console.log("changeURL:urlCache:after:", this.urlCache)
-  console.log("changeURL:url:", url)
-}
 
 }
