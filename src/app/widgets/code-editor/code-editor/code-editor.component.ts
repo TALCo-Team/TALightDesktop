@@ -104,6 +104,10 @@ export class CodeEditorComponent implements OnInit {
   }
 
   private getCorrectHotkey(event:KeyboardEvent) {
+        
+    // rewriting some stuff on config file
+    this.addToConfig(this.project)
+    console.log("New hotkeys added to config file")  
 
     if(event.ctrlKey === true && event.code === 'KeyS'){
       event.preventDefault();
