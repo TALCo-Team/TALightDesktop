@@ -23,6 +23,7 @@ import { MessageService } from 'primeng/api';
 import { TerminalWidgetComponent } from '../terminal-widget/terminal-widget.component';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { HotkeysService } from 'src/app/services/hotkeys-service/hotkeys.service';
+import { CompilerDriver } from 'src/app/services/compiler-service/compiler-service-driver';
 
 
 @Component({
@@ -103,26 +104,44 @@ export class CodeEditorComponent implements OnInit {
   }
 
   private getCorrectHotkey(event:KeyboardEvent) {
+
     if(event.ctrlKey === true && event.code === 'KeyS'){
       event.preventDefault();
       console.log("CTRL+S pressed");
       this.saveFile();
-
     }else if(event.ctrlKey === true && event.code === 'KeyE'){
       event.preventDefault();
       console.log("CTRL+E pressed");
       this.fileExplorer.export('Local');
-
-    }else if(event.code === this.project?.config?.HOTKEY_RUN.toUpperCase()){
+    }else if(event.code === this.project?.config?.HOTKEY_RUN){
       event.preventDefault();
       console.log("F8 pressed");
-      this.runProjectLocal();
-    
-    }else if(event.code === this.project?.config?.HOTKEY_TEST.toUpperCase()){
+      this.runProjectLocal();  
+    }else if(event.code === this.project?.config?.HOTKEY_TEST){
       event.preventDefault(); 
       console.log("F9 pressed");
       this.runConnectAPI();
+    }    
+  }
+
+  public async addToConfig(project: ProjectEnvironment | null) {
+    
+    var json_string = JSON.stringify(project?.config)
+    var json_obj = JSON.parse(json_string);
+
+    json_obj['HOTKEY_RUN'] = 'F8';
+    json_obj['HOTKEY_TEST'] = 'F9';
+    json_obj['HOTKEY_EXPORT'] = 'ctrl+e';
+
+    json_string = JSON.stringify(json_obj, null, 4);
+        
+    if(project != null && project.config != null){
+      if(project.config.CONFIG_PATH != undefined){
+        project.driver.writeFile(project.config.CONFIG_PATH, json_string)
     }
+  }
+
+    console.log("Updated config file: ", project?.config);
   }
 
   private isTutorialShown(tutorial?: any) {
