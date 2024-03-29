@@ -9,7 +9,7 @@ import { FsNodeFile, FsNodeFolder, FsNodeList } from 'src/app/services/fs-servic
 import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
-import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
+import { ProjectConfig, ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 
 import { FileExplorerWidgetComponent } from 'src/app/widgets/code-editor/file-explorer-widget/file-explorer-widget.component';
@@ -44,6 +44,7 @@ export class CodeEditorComponent implements OnInit {
   public pyodideState = CompilerState.Unknown
   public pyodideStateContent? = ""
   public apiRun = false
+  public selectedHotkey = ""
 
   public fsroot = FsService.EmptyFolder;
   public fslist: FsNodeList = [];
@@ -88,42 +89,40 @@ export class CodeEditorComponent implements OnInit {
     console.log("CodeEditorComponent:constructor", this.prj)
     //TODO: add switch python/cpp
 
+    this.project = prj.getCurrentProject();
+
+    // subscribe to keyboard events
+    document.addEventListener('keydown', (event: KeyboardEvent) => {this.hotkeys.emitHotkeysEvent(event)});
+    this.hotkeys.registerHotkeysEvents().subscribe((event: KeyboardEvent) => {this.getCorrectHotkey(event)})
   }
 
   protected isBlurred = false;
 
   ngOnInit() {
     this.isBlurred = true;
+  }
 
-    // subscribe to keyboard events
-    document.addEventListener('keydown', (event: KeyboardEvent) => {
-      this.hotkeys.emitHotkeysEvent(event);
-    });
+  private getCorrectHotkey(event:KeyboardEvent) {
+    if(event.ctrlKey === true && event.code === 'KeyS'){
+      event.preventDefault();
+      console.log("CTRL+S pressed");
+      this.saveFile();
 
-    // subscribe to hotkeys events from service
-    this.hotkeys.registerHotkeysEvents().subscribe(event => {
+    }else if(event.ctrlKey === true && event.code === 'KeyE'){
+      event.preventDefault();
+      console.log("CTRL+E pressed");
+      this.fileExplorer.export('Local');
 
-      if(event.ctrlKey === true && event.code === 'KeyS'){
-        event.preventDefault();
-        console.log("CTRL+S pressed");
-        this.saveFile();
-
-      }else if(event.ctrlKey === true && event.code === 'KeyE'){
-        event.preventDefault();
-        console.log("CTRL+E pressed");
-        this.fileExplorer.export('Local');
-
-      }else if(event.code === 'F8'){
-        event.preventDefault();
-        console.log("F8 pressed");
-        this.runProjectLocal();
-      
-      }else if(event.code === 'F9'){
-        event.preventDefault(); 
-        console.log("F9 pressed");
-        this.runConnectAPI();
-      }
-    });
+    }else if(event.code === this.project?.config?.HOTKEY_RUN.toUpperCase()){
+      event.preventDefault();
+      console.log("F8 pressed");
+      this.runProjectLocal();
+    
+    }else if(event.code === this.project?.config?.HOTKEY_TEST.toUpperCase()){
+      event.preventDefault(); 
+      console.log("F9 pressed");
+      this.runConnectAPI();
+    }
   }
 
   private isTutorialShown(tutorial?: any) {
