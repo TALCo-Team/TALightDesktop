@@ -9,7 +9,7 @@ import { FsNodeFile, FsNodeFolder, FsNodeList } from 'src/app/services/fs-servic
 import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
-import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
+import { ProjectConfig, ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 
 import { FileExplorerWidgetComponent } from 'src/app/widgets/code-editor/file-explorer-widget/file-explorer-widget.component';
@@ -22,6 +22,8 @@ import { LogApiWidgetComponent } from '../log-api-widget/log-api-widget.componen
 import { MessageService } from 'primeng/api';
 import { TerminalWidgetComponent } from '../terminal-widget/terminal-widget.component';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
+import { HotkeysService } from 'src/app/services/hotkeys-service/hotkeys.service';
+import { CompilerDriver } from 'src/app/services/compiler-service/compiler-service-driver';
 
 
 @Component({
@@ -43,6 +45,7 @@ export class CodeEditorComponent implements OnInit {
   public pyodideState = CompilerState.Unknown
   public pyodideStateContent? = ""
   public apiRun = false
+  public selectedHotkey = ""
 
   public fsroot = FsService.EmptyFolder;
   public fslist: FsNodeList = [];
@@ -80,18 +83,69 @@ export class CodeEditorComponent implements OnInit {
     private messageService: MessageService,
     private tutorialService: TutorialService,
     private elementRef: ElementRef,
+    private hotkeys: HotkeysService
   ) {
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) })
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     console.log("CodeEditorComponent:constructor", this.prj)
     //TODO: add switch python/cpp
 
+    this.project = prj.getCurrentProject();
+
+    // subscribe to keyboard events
+    document.addEventListener('keydown', (event: KeyboardEvent) => {this.hotkeys.emitHotkeysEvent(event)});
+    this.hotkeys.registerHotkeysEvents().subscribe((event: KeyboardEvent) => {this.getCorrectHotkey(event)})
   }
 
   protected isBlurred = false;
 
   ngOnInit() {
     this.isBlurred = true;
+  }
+
+  private getCorrectHotkey(event:KeyboardEvent) {
+        
+    // rewriting some stuff on config file
+    this.addToConfig(this.project)
+    console.log("New hotkeys added to config file")  
+
+    if(event.ctrlKey === true && event.code === 'KeyS'){
+      event.preventDefault();
+      console.log("CTRL+S pressed");
+      this.saveFile();
+    }else if(event.ctrlKey === true && event.code === 'KeyE'){
+      event.preventDefault();
+      console.log("CTRL+E pressed");
+      this.fileExplorer.export('Local');
+    }else if(event.code === this.project?.config?.HOTKEY_RUN){
+      event.preventDefault();
+      console.log("F8 pressed");
+      this.runProjectLocal();  
+    }else if(event.code === this.project?.config?.HOTKEY_TEST){
+      event.preventDefault(); 
+      console.log("F9 pressed");
+      this.runConnectAPI();
+    }    
+  }
+
+  public async addToConfig(project: ProjectEnvironment | null) {
+    
+    var json_string = JSON.stringify(project?.config)
+    var json_obj = JSON.parse(json_string);
+
+    json_obj['HOTKEY_RUN'] = 'F8';
+    json_obj['HOTKEY_TEST'] = 'F9';
+    json_obj['HOTKEY_EXPORT'] = 'ctrl+e';
+
+    json_string = JSON.stringify(json_obj, null, 4);
+        
+    if(project != null && project.config != null){
+      if(project.config.CONFIG_PATH != undefined){
+        project.driver.writeFile(project.config.CONFIG_PATH, json_string)
+    }
+  }
+
+    console.log("Updated config file: ", project?.config);
   }
 
   private isTutorialShown(tutorial?: any) {
