@@ -1,11 +1,18 @@
 <div class="tal-topbar" [class.blur]="isBlurred">
-    <div class="tal-brand">
-        <h1>TALight Desktop</h1>
-    </div>
+  <div>
+    <button type="button" class="tal-square-button" icon="pi pi-plus" pButton pRipple pTooltip="Aggiungi una scheda" (click)="addProject()" styleClass="tabMenuButton"></button>
+    <p-tabMenu [scrollable]="true" [model]="items" [activeItem]="activeItem" styleClass="tabMenu" >
+        <ng-template pTemplate="item" let-item >
+          <div (click)="setCurrentTab(item)">
+              {{ item.label }}
+              <!-- Ho sostituito il [disabled]="disableDelete" con l'hidden-->
+              <button class="buttonClose" type="button" pButton pRipple icon="pi pi-times" (click)="deleteProject(item.id)" *ngIf="!disableDelete"> </button>
+            </div>
+          </ng-template>
+    </p-tabMenu>
+  </div>
 
-    <div>
-      <button pButton class="tutorial" pTooltip="Mostra il tutorial" (click)="showTutorial()" label="Mostra il tutorial" *ngIf=isTutorialButtonVisible></button>
-    </div>
+
 
     <div class="tal-message-box">
         <div #messageBox *ngIf="!!currentNotification" class="tal-message-box-main tal-message-box-{{currentNotification.type}}" >
@@ -38,4 +45,8 @@
 
         <button pButton icon="pi {{changeThemIcon}}" class="tal-square-button" pTooltip="Change theme" (click)="toggleTheme()"></button>
     </div>
+    <div class='tutorial'>
+      <button pButton pTooltip="Mostra il tutorial" (click)="showTutorial()" class="tal-square-button" icon="pi pi-question-circle" *ngIf=isTutorialButtonVisible></button>
+    </div>
 </div>
+

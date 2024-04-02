@@ -10,20 +10,15 @@
   height: 100%;
 }
 
-div.tal-topbar {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: row;
-  padding: 5px;
-}
-
 .tal-brand {
   height: 30px;
   h1 {
     font-size: 25px;
   }
   display: flex;
+  position: fixed;
+  top : 0;
+  left: 0;
   flex-grow: 1;
   //background-color: aqua;
 }
@@ -59,6 +54,9 @@ div.tal-topbar {
   align-items: center;
   justify-content: flex-end;
   flex-grow: 1;
+  position: fixed;
+  top : 0;
+  right: 35px;
 }
 
 ::ng-deep {
@@ -74,10 +72,10 @@ div.tal-topbar {
       margin: 5px !important;
     }
 
-    button {
-      width: 30px;
-      max-width: 30px;
-    }
+    // button {
+    //   width: 30px;
+    //   max-width: 30px;
+    // }
   }
 }
 
@@ -91,7 +89,7 @@ div.tal-topbar {
     align-items: center;
     height: 16px !important;
 
-    button {
+    .tal-square-button {
       width: 16px !important;
       height: 16px !important;
       max-height: 16px !important;
@@ -109,7 +107,53 @@ div.tal-topbar {
     }
   }
 }
-.tutorial{
+
+.tutorial button {
+  /* Stili per il bottone */
   width: auto;
   height: auto;
+  padding: 5px;
+  margin-left: 10px;
+  position: fixed;
+  top : 0;
+  right: 0;
 }
+
+.buttonClose{
+  /* Stili per il bottone */
+  left:0;
+  padding: 0;
+  width: 15px !important;
+  height: 15px;
+  margin-right: 8px;
+  color: lightgrey;
+  align-items: center;
+}
+
+:host ::ng-deep{
+  .tabMenu {
+    position: fixed; /* Posiziona il p-tabMenu in modo assoluto */
+    top: 0px; /* Allinea il p-tabMenu all'inizio del contenitore */
+    left: 35px; /* Lascia spazio a sinistra per il bottone */
+    width: calc(100% - 400px); /* Larghezza del p-tabMenu */
+    height: auto;
+  }
+
+  .tabMenuButton {
+    /* Stili per il bottone */
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    position: absolute;
+    top: 0; /* Allinea il bottone all'inizio del contenitore */
+    left: 0; /* Allinea il bottone all'inizio del contenitore */
+    transform: translate(-100%, 50%); /* Sposta il bottone indietro di metà della sua altezza e allinea al 100% a sinistra */
+  }
+  a{
+    font-size: auto;
+    padding: 0 !important;
+    width: auto;
+    height: auto;
+  }
+}
+
