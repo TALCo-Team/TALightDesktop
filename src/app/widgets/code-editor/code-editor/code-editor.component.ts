@@ -130,18 +130,18 @@ export class CodeEditorComponent implements OnInit {
 
   public async addToConfig(project: ProjectEnvironment | null) {
     
-    var json_string = JSON.stringify(project?.config)
-    var json_obj = JSON.parse(json_string);
+    var string_config = JSON.stringify(project?.config)
+    var config_obj = JSON.parse(string_config);
 
-    json_obj['HOTKEY_RUN'] = 'F8';
-    json_obj['HOTKEY_TEST'] = 'F9';
-    json_obj['HOTKEY_EXPORT'] = 'ctrl+e';
+    config_obj['HOTKEY_RUN'] = 'F8';
+    config_obj['HOTKEY_TEST'] = 'F9';
+    config_obj['HOTKEY_EXPORT'] = 'ctrl+e';
 
-    json_string = JSON.stringify(json_obj, null, 4);
+    string_config = JSON.stringify(config_obj, null, 4);
         
     if(project != null && project.config != null){
       if(project.config.CONFIG_PATH != undefined){
-        project.driver.writeFile(project.config.CONFIG_PATH, json_string)
+        project.driver.writeFile(project.config.CONFIG_PATH, string_config)
     }
   }
 
