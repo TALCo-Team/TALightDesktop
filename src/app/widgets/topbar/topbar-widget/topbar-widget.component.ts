@@ -1,4 +1,4 @@
-import { Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, NgZone, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { AutoComplete } from 'primeng/autocomplete';
 import { ApiService, ApiState } from 'src/app/services/api-service/api.service';
 import { NotificationManagerService, NotificationMessage, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
@@ -13,7 +13,8 @@ import { switchMap } from 'rxjs';
 import { take } from 'rxjs';
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
-
+import { MenuItem } from 'primeng/api';
+import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 
 @Component({
   selector: 'tal-topbar-widget',
@@ -26,6 +27,10 @@ export class TopbarWidgetComponent implements OnInit {
   @ViewChild("statusDot") public statusDot?: ElementRef;
   @ViewChild("messageBox") public messageBox?: ElementRef;
 
+  disableDelete: boolean = false;
+  items!: MenuItem[];
+  activeItem: any = undefined;
+
   url;
   lastUrl;
   urlCache: string[] = []
@@ -37,6 +42,7 @@ export class TopbarWidgetComponent implements OnInit {
   currentNotification?: NotificationMessage
   isBlurred: boolean = false;
   isTutorialButtonVisible: boolean = false;
+
   projectConfig = new ProjectConfig;
 
   constructor( public readonly themeService: ThemeService, 
@@ -46,12 +52,13 @@ export class TopbarWidgetComponent implements OnInit {
                public nm: NotificationManagerService,
                private fsService: FsService,
                private configService: ConfigService,
+               private tutorialService: TutorialService,
                // Aggiungere project manager
                // il current project mi da accesso al config e da lì al driver
                public prj: ProjectManagerService,
                private tutorialService: TutorialService,
-             ) {
-    
+             ) 
+{
     this.url = api.url;
     this.lastUrl = this.url + "";
     this.urlCache = [...this.api.urlCache]
@@ -66,11 +73,15 @@ export class TopbarWidgetComponent implements OnInit {
         })
     })
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
-      this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
+    this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
+    this.prj.onProjectListChanged.subscribe(() => this.setTabsNumber())
   }
 
   ngOnInit(): void {
     this.isBlurred = true;
+
+    this.setTabsNumber()
+    this.activeItem = this.items[0]
 
     this.lastUrl = this.api.getLastInsertedUrl();
     this.url = this.lastUrl;
@@ -173,6 +184,35 @@ export class TopbarWidgetComponent implements OnInit {
     box.style.display = "none"
     this.currentNotification = undefined
   }
+
+setTabsNumber(){
+  let tmp : MenuItem[] = [];
+  for (let i = 0; i < this.prj.listProject().length; i++){
+    tmp.push({ label: 'TAB-' + i, icon: 'pi pi-fw pi-times' , id : i.toString()})
+
+    this.activeItem = tmp
+  }
+
+  this.items = tmp
+  this.disableDelete = (this.prj.listProject().length <= 1)
+  this.activeItem = this.items[0];
+}
+
+addProject() {
+  this.prj.addProject()
+}
+
+deleteProject(id : string) {
+  this.prj.closeProject(parseInt(id))
+}
+
+setCurrentTab(item : any) {
+  this.activeItem = item;
+  console.log("current active : id ", item)
+  console.log("current active : tab ", this.activeItem)
+
+  this.prj.setCurrentProject(parseInt(item.id))
+}
 
 
   filterSuggestions(event: any) {
