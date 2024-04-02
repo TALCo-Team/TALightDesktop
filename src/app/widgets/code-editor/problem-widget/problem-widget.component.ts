@@ -64,17 +64,27 @@ export class ProblemWidgetComponent {
   problemSub: Subscription
   isBlurred: boolean = false;
 
-  constructor(public zone: NgZone,
-    public api: ApiService,
-    public pm: ProblemManagerService,
-    public prjmnrg: ProjectManagerService,
-    private messageService: MessageService,
-    private tutorialService: TutorialService,
-  ) {
-    this.project = prjmnrg.getCurrentProject();
-    this.problemSub = this.pm.onProblemsChanged.subscribe((clear: boolean) => { this.problemsDidChange(clear) })
+
+  constructor( public zone: NgZone,
+               public api: ApiService,
+               public pm: ProblemManagerService,
+               public prj: ProjectManagerService,
+               private tutorialService: TutorialService,
+               private messageService: MessageService,)
+  {
+    this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
-      this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
+    this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.problemsDidChange(clear) })
+    this.prj.onProjectChanged.subscribe((_) => {
+      this.project = prj.getCurrentProject();
+      this.saveProblemServiceConfig();
+    })
+
+    this.pm.onProblemsLoaded.subscribe((_) =>{
+      this.loadProblemServiceConfig();
+    })
+
+   
     // https://primefaces.org/primeng/overlay
     //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
     this.dropdownOptions = { appendTo: 'body' }
@@ -108,13 +118,67 @@ export class ProblemWidgetComponent {
     this.filePathList = [...this.filePathList]
   }
 
-  //args
-  clenupRegex(re: RegExp) {
-    let text = re + ""
-    text = text.replace(/\/(.*)\//, '$1')
-    text = text.replace(/\^(.*)\$/, '$1')
-    text = text.replace(/\((.*)\)/, '$1')
-    text = text.replace(/\|/g, ' OR ')
+
+  private loadProblemServiceConfig() {
+    this.selectedProblem = this.pm.getProblem(localStorage.getItem("problema") || "");
+    this.callDidSelectProblem();
+    this.selectedService = this.pm.getService(localStorage.getItem("servizio") || "");
+    this.callDidSelectService();
+  }
+
+  public async callDidSelectProblem () {
+    this.didSelectProblem();
+  }
+
+  public async callDidSelectService () {
+    this.didSelectService();
+  }
+
+  private saveProblemServiceConfig() {
+    this.pm.onProblemSelected.subscribe((problem) => {
+       //alert('ricevuto problem selected: '+ problem.name);
+      this.writeTofile(this.project);
+      this.project?.onProjectConfigChanged.subscribe((_) => {
+        //alert('config pronto in problem');
+        this.writeTofile(this.project);
+      })
+    })
+    //Daniel
+    this.onServiceSelected.subscribe((service) => {
+      //alert('ricevuto service selected: '+ service.name);
+      this.writeTofile(this.project);
+      this.project?.onProjectConfigChanged.subscribe((_) => {
+        //alert('config pronto in service');
+        this.writeTofile(this.project);
+      })
+    })//!Daniel
+  }
+
+  public async writeTofile(project: ProjectEnvironment | null) {
+    //alert('write to file')
+    project?.config?.parseFile(project.config);
+    if (project != null && project.config != null) {
+      if (this.selectedProblem != undefined) {
+        project.config.TAL_PROBLEM = this.selectedProblem.name
+        if (this.selectedService != undefined)
+          project.config.TAL_SERVICE = this.selectedService.name
+        else
+          project.config.TAL_PROBLEM = "";
+      }
+      //project.config.TAL_SERVER = this.url;
+      //alert(project.config.TAL_SERVER);
+      //alert('scrivo sul file il problema');
+      await project.config.save(project.driver);
+    }
+  }
+
+//args
+  clenupRegex(re:RegExp){
+    let text = re+""
+    text = text.replace(/\/(.*)\//,'$1')
+    text = text.replace(/\^(.*)\$/,'$1')
+    text = text.replace(/\((.*)\)/,'$1')
+    text = text.replace(/\|/g,' OR ')
     return text;
   }
 

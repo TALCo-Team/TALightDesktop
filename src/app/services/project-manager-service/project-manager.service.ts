@@ -26,6 +26,7 @@ export class ProjectManagerService {
     console.log("ProjectManagerService:setCurrentProject:sent", this.projects)
   }
 
+  // getProject
   public getCurrentProject(){
     return this.currentProject;
   }

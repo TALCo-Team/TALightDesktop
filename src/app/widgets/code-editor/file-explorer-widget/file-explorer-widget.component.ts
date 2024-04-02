@@ -203,6 +203,7 @@ export class FileExplorerWidgetComponent implements OnInit {
     console.log('selectFile',file)
     this.project?.driver.readFile(file.path).then((content)=>{
       file.content = content ?? "";
+      console.log('ecco il file: \n' + content);
       this.selectedFile = file;
       this.onSelectFile?.emit(file);
     })
@@ -232,7 +233,6 @@ export class FileExplorerWidgetComponent implements OnInit {
     })
     if(!configFile){return}
     console.log("openSettings:configFile:",configFile)
-
     this.selectFile(configFile);
 
   }
