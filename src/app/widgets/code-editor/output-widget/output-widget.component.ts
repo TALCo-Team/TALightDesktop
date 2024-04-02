@@ -107,6 +107,11 @@ export class OutputWidgetComponent {
         this.pyodideStateColor = ""
         this.enableStdin(false)
         break;
+      case CompilerState.Init:
+          this.pyodideStateIcon = "pi-circle"
+          this.pyodideStateColor = "orange"
+          this.enableStdin(false)
+          break;
       case CompilerState.Loading:
         this.pyodideStateIcon = "pi-spin pi-spinner"
         this.pyodideStateColor = "orange"

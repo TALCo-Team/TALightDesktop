@@ -6,20 +6,20 @@ import { PyodideProjectEnvironment } from './python-compiler.types';
 
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class PythonCompilerService {
     
 
-  constructor( private fs:FsService ) { }
+    constructor( private fs:FsService ) { }
 
-  createPythonProject(){
-    console.log("PythonCompilerService:createPythonProject")
-    let pyodideRoot = "/"
-    let pyodideMount = "/TALight"
-    let ppe = new PyodideProjectEnvironment(pyodideRoot, pyodideMount);
-    return ppe;
-  }
+    createPythonProject(){
+        console.log("PythonCompilerService:createPythonProject")
+        let pyodideRoot = "/"
+        let pyodideMount = "/TALight"
+        let ppe = new PyodideProjectEnvironment(pyodideMount, pyodideRoot);
+        return ppe;
+    }
   
 
 }

@@ -23,6 +23,7 @@ export interface CompilerDriver{
 
 export enum CompilerState {
   Unknown = 'Unknown',
+  Init = 'Init',
   Loading = 'Loading',
   Ready = 'Ready',
   Run = 'Run',

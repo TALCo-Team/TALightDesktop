@@ -189,12 +189,14 @@ export class CodeEditorComponent implements OnInit {
   public didStateChange(state: CompilerState, content?: string) {
     console.log("CodeEditorComponent:didStateChange:")
     //this.outputWidget!.print(state,OutputType.SYSTEM);
-    if (state == CompilerState.Ready) {
+    if (state == CompilerState.Init){
+      this.project?.driver.mount(this.project.driver.mountPoint)
+    }else if (state == CompilerState.Ready) {
       this.didStateChangeReady(content)
-    }
-    if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
+    }else if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
       this.apiConnectReset();
     }
+    
     this.pyodideState = state
     this.pyodideStateContent = content
     console.log("CodeEditorComponent:didStateChange:", state)
