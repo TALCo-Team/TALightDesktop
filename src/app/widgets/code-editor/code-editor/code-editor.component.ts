@@ -73,10 +73,11 @@ export class CodeEditorComponent implements OnInit {
   protected OutputDisabled = true;
   protected TerminalDisabled = true;
 
+  protected isBlurred = false;
+
   constructor(
     private fs: FsService,
     private compiler: CompilerService,
-    private python: PythonCompilerService,
     private api: ApiService,
     private prj: ProjectManagerService,
     private cdRef: ChangeDetectorRef,
@@ -88,6 +89,8 @@ export class CodeEditorComponent implements OnInit {
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) })
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     console.log("CodeEditorComponent:constructor", this.prj)
+
+    this.prj.onProjectChanged.subscribe((project) => { this.setProject(project) })
     //TODO: add switch python/cpp
 
     this.project = prj.getCurrentProject();
@@ -96,11 +99,55 @@ export class CodeEditorComponent implements OnInit {
     document.addEventListener('keydown', (event: KeyboardEvent) => {this.hotkeys.emitHotkeysEvent(event)});
     this.hotkeys.registerHotkeysEvents().subscribe((event: KeyboardEvent) => {this.getCorrectHotkey(event)})
   }
-
-  protected isBlurred = false;
-
+  
   ngOnInit() {
     this.isBlurred = true;
+    this.prj.addProject();
+  }
+
+  private getCorrectHotkey(event:KeyboardEvent) {
+        
+    // rewriting some stuff on config file
+    this.addToConfig(this.project)
+    console.log("New hotkeys added to config file")  
+
+    if(event.ctrlKey === true && event.code === 'KeyS'){
+      event.preventDefault();
+      console.log("CTRL+S pressed");
+      this.saveFile();
+    }else if(event.ctrlKey === true && event.code === 'KeyE'){
+      event.preventDefault();
+      console.log("CTRL+E pressed");
+      this.fileExplorer.export('Local');
+    }else if(event.code === this.project?.config?.HOTKEY_RUN){
+      event.preventDefault();
+      console.log("F8 pressed");
+      this.runProjectLocal();  
+    }else if(event.code === this.project?.config?.HOTKEY_TEST){
+      event.preventDefault(); 
+      console.log("F9 pressed");
+      this.runConnectAPI();
+    }    
+  }
+
+  public async addToConfig(project: ProjectEnvironment | null) {
+    
+    var json_string = JSON.stringify(project?.config)
+    var json_obj = JSON.parse(json_string);
+
+    json_obj['HOTKEY_RUN'] = 'F8';
+    json_obj['HOTKEY_TEST'] = 'F9';
+    json_obj['HOTKEY_EXPORT'] = 'ctrl+e';
+
+    json_string = JSON.stringify(json_obj, null, 4);
+        
+    if(project != null && project.config != null){
+      if(project.config.CONFIG_PATH != undefined){
+        project.driver.writeFile(project.config.CONFIG_PATH, json_string)
+    }
+  }
+
+    console.log("Updated config file: ", project?.config);
   }
 
   private getCorrectHotkey(event:KeyboardEvent) {
@@ -190,7 +237,6 @@ export class CodeEditorComponent implements OnInit {
 
   ngAfterViewInit() {
     this.outputWidget.enableStdin(false);
-    this.setPythonProject()
     const componentElement = this.elementRef.nativeElement;
   }
 
@@ -205,19 +251,17 @@ export class CodeEditorComponent implements OnInit {
     }
   }
 
-  public setPythonProject(forceCreate: boolean = false) {
-    console.log("CodeEditorComponent:constructor:createPythonProject")
-    this.project = this.prj.getCurrentProject()
-    if (forceCreate || !this.project) {
-      console.log("CodeEditorComponent:constructor:createPythonProject:do!")
-      this.project = this.python.createPythonProject()
-      this.prj.setCurrentProject(this.project);
-    }
+  public setProject(project:ProjectEnvironment) {
+    console.log("CodeEditorComponent:constructor:onProjectChanged")
+    
+    this.project = project
+
     this.project?.driver.subscribeNotify(true, (msg: string) => { this.didNotify(msg) })
     this.project?.driver.subscribeState(true, (state: CompilerState, content?: string) => { this.didStateChange(state, content) })
     this.project?.driver.subscribeStdout(true, (msg: string) => { this.didStdout(msg) })
     this.project?.driver.subscribeStderr(true, (msg: string) => { this.didStderr(msg) })
-    console.log("CodeEditorComponent:constructor:createPythonProject:", this.project)
+
+    console.log("CodeEditorComponent:constructor:setProject", this.project)
   }
 
 
@@ -229,7 +273,6 @@ export class CodeEditorComponent implements OnInit {
     this.fslistfile.forEach(item => filePathList.push(item.path))
     this.problemWidget.filePathList = filePathList
     this.terminalWidget.fslistfile = this.fslistfile;
-
   }
 
   public didNotify(data: string) {
@@ -243,12 +286,14 @@ export class CodeEditorComponent implements OnInit {
   public didStateChange(state: CompilerState, content?: string) {
     console.log("CodeEditorComponent:didStateChange:")
     //this.outputWidget!.print(state,OutputType.SYSTEM);
-    if (state == CompilerState.Ready) {
+    if (state == CompilerState.Init){
+      this.project?.driver.mount(this.project.driver.mountPoint)
+    }else if (state == CompilerState.Ready) {
       this.didStateChangeReady(content)
-    }
-    if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
+    }else if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
       this.apiConnectReset();
     }
+    
     this.pyodideState = state
     this.pyodideStateContent = content
     console.log("CodeEditorComponent:didStateChange:", state)

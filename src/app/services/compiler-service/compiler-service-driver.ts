@@ -52,13 +52,17 @@ export class CompilerDriver implements ProjectDriver {
         case CompilerMessageType.InstallPackages: this.didReceiveInstallPackages(msgSent, msgRecived, resolvePromise); break;
         case CompilerMessageType.ExecuteCode:     this.didReceiveExecuteCode(msgSent, msgRecived, resolvePromise); break;
         case CompilerMessageType.ExecuteFile:     this.didReceiveExecuteFile(msgSent, msgRecived, resolvePromise); break;
-        case CompilerMessageType.StopExecution:     this.didReceiveStopExecution(msgSent, msgRecived, resolvePromise); break;
+        case CompilerMessageType.StopExecution:   this.didReceiveStopExecution(msgSent, msgRecived, resolvePromise); break;
 
         case CompilerMessageType.SubscribeNotify: this.didReceiveSubscribeNotify(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
         case CompilerMessageType.SubscribeState:  this.didReceiveSubscribeState(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
         case CompilerMessageType.SubscribeStdout: this.didReceiveSubscribeStdout(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
         case CompilerMessageType.SubscribeStderr: this.didReceiveSubscribeStderr(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
         case CompilerMessageType.SendStdin:       this.didReceiveSendStdin(msgSent, msgRecived, resolvePromise); break;
+
+
+        case CompilerMessageType.Mount:           this.didReceiveMount(msgSent, msgRecived, resolvePromise); break;
+        case CompilerMessageType.Unmount:         this.didReceiveUnmount(msgSent, msgRecived, resolvePromise); break;
 
         case CompilerMessageType.CreateDirectory: this.didReceiveCreateDirectory(msgSent, msgRecived, resolvePromise); break;
         case CompilerMessageType.ReadDirectory:   this.didReceiveReadDirectory(msgSent, msgRecived, resolvePromise); break;
@@ -189,6 +193,30 @@ export class CompilerDriver implements ProjectDriver {
 
     resolvePromise(false)
   } 
+
+  private didReceiveMount(msgSent:CompilerMessage, msgRecived:CompilerMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveMount: ")
+    if (msgSent.args.length != 1){ 
+      resolvePromise(false); 
+    }
+    let pathSent = msgSent.args[0];
+    let pathRecived = msgRecived.args[0];
+
+    resolvePromise(pathSent == pathRecived)
+  } 
+
+
+  private didReceiveUnmount(msgSent:CompilerMessage, msgRecived:CompilerMessage, resolvePromise:PromiseResolver<boolean> ){
+    console.log("didReceiveUnmount: ")
+    if (msgSent.args.length != 1){ 
+      resolvePromise(false); 
+    }
+    let pathSent = msgSent.args[0];
+    let pathRecived = msgRecived.args[0];
+
+    resolvePromise(pathSent == pathRecived)
+  } 
+
 
   private didReceiveCreateDirectory(msgSent:CompilerMessage, msgRecived:CompilerMessage, resolvePromise:PromiseResolver<boolean> ){
     console.log("didReceiveCreateDirectory: ")

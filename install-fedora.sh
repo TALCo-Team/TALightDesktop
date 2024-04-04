@@ -31,6 +31,6 @@ yarn global add @angular/cli
 yarn install
 
 # TALight ( for the server ) 
-./install_talight.sh
+./install-talight.sh
 
 

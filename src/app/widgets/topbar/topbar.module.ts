@@ -7,6 +7,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
+import { TabViewModule } from 'primeng/tabview';
+import { TabMenuModule } from 'primeng/tabmenu';
 
 @NgModule({
   declarations: [
@@ -19,6 +21,8 @@ import { FormsModule } from '@angular/forms';
     InputTextModule,
     TooltipModule,
     ButtonModule,
+    TabViewModule,
+    TabMenuModule
   ],exports:[
     TopbarWidgetComponent
   ]

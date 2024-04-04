@@ -17,8 +17,12 @@ export class ProblemManagerService {
   
 
   public onProblemsChanged = new EventEmitter<boolean>();
+  public onProblemSelected = new EventEmitter<ProblemDescriptor>();
   public onError = new EventEmitter<any>();
-    
+  public onProblemsLoaded = new EventEmitter<any>();
+   
+  public onServiceSelected = new EventEmitter<ServiceDescriptor>();
+
   constructor(
     public api:ApiService
   ){}
@@ -43,6 +47,7 @@ export class ProblemManagerService {
         })
       })
       this.onProblemsChanged.emit(false)
+      this.onProblemsLoaded.emit(this.problemList)
     });
     req.onError = (error) => { 
       this.onProblemsChanged.emit(false)
@@ -50,14 +55,19 @@ export class ProblemManagerService {
     };
   }
 
-  
-  
+
   selectProblem(selectedProblem: ProblemDescriptor){
     this.selectedProblem = selectedProblem;
-    this.selectedService = undefined
+    alert('hai selezionato il problema: ' + selectedProblem.name);
+    localStorage.setItem('problema', selectedProblem.name);
+    this.onProblemSelected.emit(selectedProblem);
+    this.selectedService = undefined;
+  }
+
+  getProblem(problemName: string) {
+    return this.problems.get(problemName);
   }
   
-
   selectService(selectedService: ServiceDescriptor){
     let name = selectedService.key;
     if ( this.savedParams.has(name) ){
@@ -67,8 +77,15 @@ export class ProblemManagerService {
       this.savedParams.set(name,selectedService);
       this.selectedService = selectedService;
     }
+
+    alert('hai selezionato il servizio: ' + name);
+    localStorage.setItem('servizio', name);
+    this.onServiceSelected.emit(selectedService);
   }
 
+  getService(serviceName: string) {
+    return this.services.get(serviceName);
+  }
 
   validateArgs(service: ServiceDescriptor){
     let issues = new Map<string,any>();

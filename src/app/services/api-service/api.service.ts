@@ -21,6 +21,8 @@ export class ApiService {
   private _url;
   urlCache;
   lastState = ApiState.Idle
+  private lastInsertedUrl: string = '';
+  private readonly LAST_INSERTED_URL_KEY = 'lastInsertedUrl';
 
   public onApiStateChange = new EventEmitter<ApiState>();
 
@@ -31,6 +33,11 @@ export class ApiService {
       'wss://ta.di.univr.it/sfide',
       'ws://localhost:8008/',
     ]
+  }
+
+  public getLastInsertedUrl(): string {
+    this._url = localStorage.getItem(this.LAST_INSERTED_URL_KEY) || '';
+    return localStorage.getItem(this.LAST_INSERTED_URL_KEY) || '';
   }
 
   public get url(): string {
@@ -46,6 +53,8 @@ export class ApiService {
     let idx = this.urlCache.indexOf(url)
     if(idx != -1){
       this.urlCache.splice(idx,1)
+      // Aggiorna l'ultimo URL salvato in localStorage
+      localStorage.setItem(this.LAST_INSERTED_URL_KEY, this.urlCache[0] || '');
       return true
     }
     return false
@@ -61,6 +70,9 @@ export class ApiService {
     this._url = url.href
     console.log("setUrl:href:",url.href)
     this.addToCache(this._url)
+    this.urlCache.push(value);
+    this.lastInsertedUrl = value
+    localStorage.setItem(this.LAST_INSERTED_URL_KEY, this.lastInsertedUrl);
     return true;
   }
 
@@ -84,6 +96,7 @@ export class ApiService {
     this.stateMaybe()
     console.log("problemList:")
     let cmdList = new Commands.ProblemList(this._url);
+    //alert('sto prendendo i problemi di: ' + this._url);
     cmdList.onRecieveProblemList = (message)=>{
       console.log("problemList:onRecieveProblemList:",message)
       this.stateGood()

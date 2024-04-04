@@ -23,7 +23,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { TopbarModule } from './widgets/topbar/topbar.module';
 import { HttpClientModule } from '@angular/common/http';
 import { TutorialComponent } from './widgets/tutorial/tutorial.component';
-
+import { TabViewModule } from 'primeng/tabview';
+import { TabMenuModule } from 'primeng/tabmenu';
 
 @NgModule({
   declarations: [
@@ -50,9 +51,12 @@ import { TutorialComponent } from './widgets/tutorial/tutorial.component';
     SelectButtonModule,
     SplitterModule,
     RadioButtonModule,
+    RadioButtonModule,
     CodeEditorModule,
     TopbarModule,
+    TabViewModule,
     HttpClientModule,
+    TabMenuModule
   ],
   providers: [],
   bootstrap: [AppComponent]
