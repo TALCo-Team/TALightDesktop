@@ -14,7 +14,6 @@ import { take } from 'rxjs';
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { MenuItem } from 'primeng/api';
-import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 
 @Component({
   selector: 'tal-topbar-widget',
@@ -56,7 +55,6 @@ export class TopbarWidgetComponent implements OnInit {
                // Aggiungere project manager
                // il current project mi da accesso al config e da lì al driver
                public prj: ProjectManagerService,
-               private tutorialService: TutorialService,
              ) 
 {
     this.url = api.url;
@@ -200,10 +198,12 @@ setTabsNumber(){
 
 addProject() {
   this.prj.addProject()
+  this.activeItem = (this.items as MenuItem[])[(this.items as MenuItem[]).length - 1]
 }
 
 deleteProject(id : string) {
   this.prj.closeProject(parseInt(id))
+  this.activeItem = (this.items as MenuItem[])[(this.items as MenuItem[]).length - 1]
 }
 
 setCurrentTab(item : any) {
