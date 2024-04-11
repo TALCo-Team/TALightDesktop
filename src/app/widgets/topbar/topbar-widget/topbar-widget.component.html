@@ -3,7 +3,7 @@
     <button type="button" class="tal-square-button" icon="pi pi-plus" pButton pRipple pTooltip="Aggiungi una scheda" (click)="addProject()" styleClass="tabMenuButton"></button>
     <p-tabMenu [scrollable]="true" [model]="items" [activeItem]="activeItem" styleClass="tabMenu" >
         <ng-template pTemplate="item" let-item >
-          <div (click)="setCurrentTab(item)">
+          <div (click)="setCurrentTab(item)" class="prova">
               {{ item.label }}
               <!-- Ho sostituito il [disabled]="disableDelete" con l'hidden-->
               <button class="buttonClose" type="button" pButton pRipple icon="pi pi-times" (click)="deleteProject(item.id)" *ngIf="!disableDelete"> </button>

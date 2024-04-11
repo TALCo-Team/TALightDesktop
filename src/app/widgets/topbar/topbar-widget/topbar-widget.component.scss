@@ -135,25 +135,41 @@
     position: fixed; /* Posiziona il p-tabMenu in modo assoluto */
     top: 0px; /* Allinea il p-tabMenu all'inizio del contenitore */
     left: 35px; /* Lascia spazio a sinistra per il bottone */
-    width: calc(100% - 400px); /* Larghezza del p-tabMenu */
+    //width: calc(100% - 400px); /* Larghezza del p-tabMenu */
     height: auto;
   }
 
   .tabMenuButton {
     /* Stili per il bottone */
-    width: 20px;
+    width: 15px;
     height: 20px;
     padding: 0;
     position: absolute;
     top: 0; /* Allinea il bottone all'inizio del contenitore */
     left: 0; /* Allinea il bottone all'inizio del contenitore */
-    transform: translate(-100%, 50%); /* Sposta il bottone indietro di metà della sua altezza e allinea al 100% a sinistra */
+    //transform: translate(-100%, 10%); /* Sposta il bottone indietro di metà della sua altezza e allinea al 100% a sinistra */
   }
-  a{
+  .buttonClose
+  {
+    margin-left: 3px;
+    width: 20px;
+    height: 15px;
+    vertical-align: middle;
+  }
+  .prova {
+    border: 3px solid rgba(169, 169, 169, 0.534); /* Aggiunge un bordo grigio */
+    outline: 3px solid rgba(169, 169, 169, 0.534);
+    border-radius: 5px; /* Arrotonda i bordi */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Aggiunge un'ombra leggera */
+    margin-right: 2px;
+    //background-color: #f9f9f9; /* Colore di sfondo */
+
+  }
+  a {
     font-size: auto;
     padding: 0 !important;
     width: auto;
-    height: 30px;
+    height: 35px;
   }
 }
 
