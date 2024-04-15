@@ -158,12 +158,13 @@
     background-color: rgb(0, 63, 199);
   }
   .prova {
-    border: 3px solid rgba(169, 169, 169, 0.534); /* Aggiunge un bordo grigio */
-    outline: 3px solid rgba(169, 169, 169, 0.534);
-    border-radius: 5px; /* Arrotonda i bordi */
+    border: 2px solid rgba(120, 144, 253, 0.534); /* Aggiunge un bordo grigio */
+    outline: 3px solid rgba(120, 144, 253, 0.534);
+    border-radius: 8px; /* Arrotonda i bordi */
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Aggiunge un'ombra leggera */
     margin-right: 2px;
-    //background-color: #f9f9f9; /* Colore di sfondo */
+
+    //background-color: #b1ff2052; /* Colore di sfondo */
   }
   a {
     font-size: auto;

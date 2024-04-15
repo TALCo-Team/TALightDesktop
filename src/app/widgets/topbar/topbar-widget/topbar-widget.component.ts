@@ -44,7 +44,7 @@ export class TopbarWidgetComponent implements OnInit {
 
   projectConfig = new ProjectConfig;
 
-  constructor( public readonly themeService: ThemeService, 
+  constructor( public readonly themeService: ThemeService,
                public api: ApiService,
                public zone: NgZone,
                public pm: ProblemManagerService,
@@ -55,7 +55,7 @@ export class TopbarWidgetComponent implements OnInit {
                // Aggiungere project manager
                // il current project mi da accesso al config e da lì al driver
                public prj: ProjectManagerService,
-             ) 
+             )
 {
     this.url = api.url;
     this.lastUrl = this.url + "";
@@ -84,7 +84,7 @@ export class TopbarWidgetComponent implements OnInit {
     this.lastUrl = this.api.getLastInsertedUrl();
     this.url = this.lastUrl;
     this.projectConfig.TAL_SERVER = this.url;
-    
+
     //this.pm.updateProblems();
 
     // controllare prima che esista
