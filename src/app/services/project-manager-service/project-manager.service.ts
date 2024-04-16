@@ -24,6 +24,7 @@ export class ProjectManagerService {
     console.log("ProjectManagerService:setCurrentProject:willEmit", this.projects[index])
     this.onProjectChanged.emit(this.currentProject)
     console.log("ProjectManagerService:setCurrentProject:sent", this.projects)
+    
   }
 
   // getProject
