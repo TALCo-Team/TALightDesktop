@@ -78,7 +78,7 @@ export class TopbarWidgetComponent implements OnInit {
     this.isBlurred = true;
 
     this.setTabsNumber()
-    this.activeItem = this.items[0]
+
 
     this.lastUrl = this.api.getLastInsertedUrl();
     this.url = this.lastUrl;
@@ -103,6 +103,11 @@ export class TopbarWidgetComponent implements OnInit {
 
   ngAfterViewInit(): void {
     let project = this.prj.getCurrentProject()
+
+    setTimeout(()=>{
+      this.activeItem = this.items[0]
+      this.setCurrentTab(0)
+    },1000)
     //console.log(project);
     /*if (project != null && project.config != null) {
       project.config.TAL_SERVER = 'ciao';

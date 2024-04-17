@@ -117,10 +117,10 @@
   position: fixed;
   top : 0;
   right: 0;
+  margin-right: 5px;
 }
-
+/* Stili per il bottone per chiudere le tabs*/
 .buttonClose{
-  /* Stili per il bottone */
   left:0;
   padding: 0;
   width: 15px !important;
@@ -132,45 +132,53 @@
 
 :host ::ng-deep{
   .tabMenu {
-    position: fixed; /* Posiziona il p-tabMenu in modo assoluto */
+    position: fixed;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    flex-grow: 1;
+
     top: 0px; /* Allinea il p-tabMenu all'inizio del contenitore */
     left: 35px; /* Lascia spazio a sinistra per il bottone */
     //width: calc(100% - 400px); /* Larghezza del p-tabMenu */
-    height: auto;
+    height: 30px;
   }
 
   .tabMenuButton {
     /* Stili per il bottone */
+    position: fixed;
     width: 15px;
     height: 20px;
-    padding: 0;
-    position: absolute;
+    //padding: 0;
+    margin-left: 5px;
     top: 0; /* Allinea il bottone all'inizio del contenitore */
-    left: 0; /* Allinea il bottone all'inizio del contenitore */
+    left: 5px !important; /* Allinea il bottone all'inizio del contenitore */
     //transform: translate(-100%, 10%); /* Sposta il bottone indietro di metà della sua altezza e allinea al 100% a sinistra */
+
   }
-  .buttonClose
-  {
-    margin-left: 3px;
-    width: 20px;
-    height: 15px;
-    vertical-align: middle;
-    background-color: rgb(0, 63, 199);
-  }
+  // .buttonClose
+  // {
+  //   margin-left: 3px;
+  //   width: 20px;
+  //   height: 15px;
+  //   vertical-align: middle;
+  //   background-color: red;
+  // }
   .prova {
-    border: 2px solid rgba(120, 144, 253, 0.534); /* Aggiunge un bordo grigio */
-    outline: 3px solid rgba(120, 144, 253, 0.534);
-    border-radius: 8px; /* Arrotonda i bordi */
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Aggiunge un'ombra leggera */
-    margin-right: 2px;
+    // border: 2px solid rgba(120, 144, 253, 0.534); /* Aggiunge un bordo grigio */
+    // outline: 3px solid rgba(120, 144, 253, 0.534);
+    // border-radius: 8px; /* Arrotonda i bordi */
+    // box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Aggiunge un'ombra leggera */
+    margin-right: 10px;
 
     //background-color: #b1ff2052; /* Colore di sfondo */
   }
   a {
     font-size: auto;
-    padding: 0 !important;
+    //padding: 0 !important;
     width: auto;
-    height: 35px;
+    height: 20px;
   }
 }
 
