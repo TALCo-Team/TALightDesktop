@@ -139,9 +139,10 @@
     justify-content: flex-start;
     flex-grow: 1;
 
+
     top: 0px; /* Allinea il p-tabMenu all'inizio del contenitore */
     left: 35px; /* Lascia spazio a sinistra per il bottone */
-    //width: calc(100% - 400px); /* Larghezza del p-tabMenu */
+    width: calc(100% - 380px); /* Larghezza del p-tabMenu */
     height: 30px;
   }
 
