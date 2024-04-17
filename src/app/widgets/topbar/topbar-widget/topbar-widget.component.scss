@@ -141,7 +141,7 @@
     flex-grow: 1;
 
 
-    top: 0px; /* Allinea il p-tabMenu all'inizio del contenitore */
+    top: 0; /* Allinea il p-tabMenu all'inizio del contenitore */
     left: 35px; /* Lascia spazio a sinistra per il bottone */
     //bisogna mettere a -380px
     width: calc(100% - 380px); /* Larghezza del p-tabMenu */
