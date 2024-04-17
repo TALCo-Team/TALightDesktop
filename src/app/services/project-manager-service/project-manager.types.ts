@@ -56,9 +56,10 @@ export class ProjectConfig {
   CREATE_EXAMPLES = true
 
   //TODO: hotkey manager service
-  HOTKEY_RUN = "f8"
-  HOTKEY_TEST = "f9"
-  HOTKEY_SAVE = "ctrl+s"
+  HOTKEY_RUN = {"Control": false, "Alt" : false, "Shift": false, "Key": 'F8'}
+  HOTKEY_TEST = {"Control": false, "Alt" : false, "Shift": false, "Key": 'F9'}
+  HOTKEY_SAVE = {"Control": true, "Alt" : false, "Shift": false, "Key": 's'}
+  HOTKEY_EXPORT = {"Control": true, "Alt" : false, "Shift": false, "Key": 'e'}
 
   CONFIG_NAME = 'talight.json'
   CONFIG_PATH = this.DIR_PROJECT + this.CONFIG_NAME
@@ -123,6 +124,7 @@ export class ProjectConfig {
 
   parseFile (obj: any): string {
     for (var key in obj) {
+
       console.log("key: " + key + ", value: " + obj[key])
       if (key == "TAL_SERVER") {
         return obj[key];

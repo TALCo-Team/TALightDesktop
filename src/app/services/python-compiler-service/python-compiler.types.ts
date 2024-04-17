@@ -6,9 +6,9 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
     public override driver: PyodideDriver;
 
 
-    constructor(pyodideRoot:string, pyodideMount:string){
+    constructor(pyodideMount:string, pyodideRoot:string,){
         console.log("PyodideProjectEnvironment:constructor:")
-        let driver = new PyodideDriver(pyodideRoot, pyodideMount);
+        let driver = new PyodideDriver(pyodideMount, pyodideRoot);
         super(ProjectLanguage.PY, driver)
         this.driver = driver;
     }
