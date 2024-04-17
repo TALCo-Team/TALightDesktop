@@ -14,17 +14,17 @@ export interface ProjectDriver extends FsServiceDriver, CompilerDriver{};
 
 
 export abstract class ProjectEnvironment{
-  
+
   public config: ProjectConfig | null  = null;
   public onProjectConfigChanged = new EventEmitter<void>();
-    
+
   constructor(
     public laguange: ProjectLanguage,
     public driver: ProjectDriver
   ){
     console.log("ProjectEnvironment:constructor")
   }
-  
+
   abstract loadProject(): Promise<boolean>;
 }
 
@@ -37,7 +37,7 @@ export class ProjectConfig {
   DEBUG = false //TODO
   PROJECT_NAME="My solution" //TODO
   PREFERED_LANG="it"
-  
+
   TAL_SERVERS = [ //TODO
     'wss://ta.di.univr.it/algo',
     "wss://ta.di.univr.it/sfide",
@@ -72,18 +72,18 @@ export class ProjectConfig {
     if(!path){ path = ProjectConfig.defaultConfig.CONFIG_PATH }
     let config: ProjectConfig;
     if (!await fs.exists(path)){ return null }
-    
+
     let configContent = await fs.readFile(path, false) as string;
     //(configContent);
     console.log("ProjectConfig:load:found:",configContent)
-    
+
     try{
       config = JSON.parse(configContent) as ProjectConfig
     }catch{
       console.log("ProjectConfig:load:cofig:JSON:parse: failed")
       return null;
     }
-    
+
     console.log("ProjectConfig:load:config:",config)
     return config
   }*/
@@ -94,7 +94,7 @@ export class ProjectConfig {
       path = ProjectConfig.defaultConfig.CONFIG_PATH
     }
     let config: ProjectConfig;
-    if (await fs.exists(path)) {
+    if (!await fs.exists(path)) {
       return null
     }
 
