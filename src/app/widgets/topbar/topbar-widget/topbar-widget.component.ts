@@ -11,8 +11,8 @@ import { take } from 'rxjs';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { MenuItem } from 'primeng/api';
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
-import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
-import { MenuItem } from 'primeng/api';
+import { FsService } from 'src/app/services/fs-service/fs.service';
+import { ConfigService } from 'src/app/services/config-service/config.service';
 
 @Component({
   selector: 'tal-topbar-widget',
