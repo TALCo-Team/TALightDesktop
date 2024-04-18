@@ -137,14 +137,14 @@
   .tabMenu {
     position: fixed;
     display: flex;
-    flex-direction: row;
+    // flex-direction: row;
     align-items: center;
     justify-content: flex-start;
     flex-grow: 1;
     top: 0; /* Allinea il p-tabMenu all'inizio del contenitore */
     left: 45px; /* Lascia spazio a sinistra per il bottone */
     //bisogna mettere a -380px
-    width: calc(100% - 380px); /* Larghezza del p-tabMenu */
+    width: calc(100% - 400px); /* Larghezza del p-tabMenu */
     height: 30px;
   }
 
@@ -180,7 +180,7 @@
   a {
     font-size: auto;
     //padding: 0 !important;
-    width: auto;
+    //width: auto;
     height: 40px;
   }
 }

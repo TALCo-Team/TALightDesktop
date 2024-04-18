@@ -40,6 +40,7 @@ export class TopbarWidgetComponent implements OnInit {
   currentNotification?: NotificationMessage
   isBlurred: boolean = false;
   isTutorialButtonVisible: boolean = false;
+  scrollable_prop = false;
 
   projectConfig = new ProjectConfig;
 
@@ -199,6 +200,12 @@ setTabsNumber(){
     tmp.push({ label: 'TAB-' + i, icon: 'pi pi-fw pi-times' , id : i.toString()})
 
     this.activeItem = tmp
+
+    //Per sistemare lo scrollable, bisogna peró calcolare quante tab ci stanno, prima -> vedere il scss
+    if(i>=2)
+      {
+        this.scrollable_prop=true;
+      }
   }
 
   this.items = tmp
