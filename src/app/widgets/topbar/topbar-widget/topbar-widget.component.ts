@@ -157,6 +157,7 @@ export class TopbarWidgetComponent implements OnInit {
     else {
       this.isTutorialButtonVisible = true;
     }
+    this.firstItemClick();
   }
 
   public toggleTheme() {
