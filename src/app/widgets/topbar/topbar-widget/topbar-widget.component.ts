@@ -1,4 +1,4 @@
-import { Component, ElementRef, NgZone, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, ElementRef, NgZone, OnInit, ViewChild, ChangeDetectorRef, HostListener } from '@angular/core';
 import { AutoComplete } from 'primeng/autocomplete';
 import { ApiService, ApiState } from 'src/app/services/api-service/api.service';
 import { NotificationManagerService, NotificationMessage, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
@@ -42,6 +42,10 @@ export class TopbarWidgetComponent implements OnInit {
   isTutorialButtonVisible: boolean = false;
   scrollable_prop = false;
 
+
+  //ELIMINA
+  larghezzaFinestra: number | undefined;
+  //ELIMINA
   projectConfig = new ProjectConfig;
 
   constructor( public readonly themeService: ThemeService,
@@ -57,6 +61,7 @@ export class TopbarWidgetComponent implements OnInit {
                public prj: ProjectManagerService,
              )
 {
+    this.getDimensions(); //ELIMINA
     this.url = api.url;
     this.lastUrl = this.url + "";
     this.urlCache = [...this.api.urlCache]
@@ -127,9 +132,29 @@ export class TopbarWidgetComponent implements OnInit {
     }
   }
 
+  //calcola la lunghezza delle tab
+  totalTabsCalc():number{
+    return this.getDimensions()-this.prj.listProject().length*101.87;
+  }
+
+  // Aggiorna le dimensioni della finestra quando viene ridimensionata in modo da gestire lo scrollable per via delle tabs
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.getDimensions();
+    //se le tab sono piú larghe della dimensione della finestra-400-18.58, allora attiva lo scrollable.
+    this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
+  }
+
+  //semplice funzione per il calcolo della larghezza della finestra per vedere quante tab ci stanno
+  getDimensions(): number {
+    this.larghezzaFinestra = window.innerWidth;
+    console.log('Larghezza finestra:', this.larghezzaFinestra-400-18.58);
+    return this.larghezzaFinestra-400-18.58;
+  }
+
+  // imposta come attiva la prima scheda
   firstItemClick()
   {
-
     this.setCurrentTab(this.items[0])
   }
 
@@ -200,27 +225,23 @@ setTabsNumber(){
     tmp.push({ label: 'TAB-' + i, icon: 'pi pi-fw pi-times' , id : i.toString()})
 
     this.activeItem = tmp
-
-    //Per sistemare lo scrollable, bisogna peró calcolare quante tab ci stanno, prima -> vedere il scss
-    if(i>=2)
-      {
-        this.scrollable_prop=true;
-      }
   }
 
   this.items = tmp
   this.disableDelete = (this.prj.listProject().length <= 1)
   this.activeItem = this.items[0];
 }
-
+// aggiungi un progetto controllando ed in caso le schede fossero troppe, attiva lo scrollable
 addProject() {
   this.prj.addProject()
   this.activeItem = (this.items as MenuItem[])[(this.items as MenuItem[]).length - 1]
+  this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
 }
-
+// rimuovi un progetto controllando ed in caso le schede fossero troppo poche, disattiva lo scrollable
 deleteProject(id : string) {
   this.prj.closeProject(parseInt(id))
   this.activeItem = (this.items as MenuItem[])[(this.items as MenuItem[]).length - 1]
+  this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
 }
 
 setCurrentTab(item : any) {
