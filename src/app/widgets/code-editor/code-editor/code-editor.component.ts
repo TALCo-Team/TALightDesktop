@@ -9,9 +9,7 @@ import { FsNodeFile, FsNodeFolder, FsNodeList } from 'src/app/services/fs-servic
 import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
-import { ProjectConfig, ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
-import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
-
+import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 import { FileExplorerWidgetComponent } from 'src/app/widgets/code-editor/file-explorer-widget/file-explorer-widget.component';
 import { ExecbarWidgetComponent } from '../execbar-widget/execbar-widget.component';
 import { FileEditorWidgetComponent } from '../file-editor-widget/file-editor-widget.component';
@@ -184,7 +182,6 @@ export class CodeEditorComponent implements OnInit {
     console.log("CodeEditorComponent:constructor:setProject", this.project)
   }
 
-
   public onUpdateRoot(fsroot: FsNodeFolder) {
     this.fsroot = fsroot;
     this.fslist = this.fs.treeToList(fsroot);
@@ -206,7 +203,8 @@ export class CodeEditorComponent implements OnInit {
   public didStateChange(state: CompilerState, content?: string) {
     console.log("CodeEditorComponent:didStateChange:")
     //this.outputWidget!.print(state,OutputType.SYSTEM);
-    if (state == CompilerState.Init){
+    if (state == CompilerState.Init){//TODO Daniel
+      console.log("CodeEditorComponent:didStateChange:mount: ", this.project?.driver.mountPoint)
       this.project?.driver.mount(this.project.driver.mountPoint)
     }else if (state == CompilerState.Ready) {
       this.didStateChangeReady(content)

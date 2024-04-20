@@ -2,18 +2,15 @@ import { CompilerMessage, CompilerMessageType, CompilerRequest, CompilerRequestH
 import { FsNodeEmptyFolder, FsNodeFileList, FsNodeFolder, FsNodeList } from '../fs-service/fs.service.types';
 import { ProjectDriver } from '../project-manager-service/project-manager.types';
 
-
-// --- CompilerDriver --- 
-
-
 export class CompilerDriver implements ProjectDriver {
   public driverName: string;
   public fsRoot:FsNodeFolder = FsNodeEmptyFolder;
   public fsList:FsNodeList=[];
   public fsListfiles:FsNodeFileList=[];
 
+  //TODO Daniel: check if comment needed (probably not)
   public mountPoint = "/TALight"
-  public mountRoot = "."
+  //public mountRoot = "."
   
   public requestIndex = new Map<UID, CompilerRequestHandler>();
 
@@ -28,7 +25,14 @@ export class CompilerDriver implements ProjectDriver {
   constructor(mountPoint:string, mountRoot:string, public worker: Worker) {
     this.driverName = "CompilerDriver";
     this.mountPoint = mountPoint
-    this.mountRoot = mountRoot
+    //this.mountRoot = mountRoot
+
+    //TODO Daniel
+    console.log("CompilerDriver:constructor:setRoot: ", mountRoot)
+    console.log("CompilerDriver:constructor:setMount: ", mountPoint);
+    //console.log("CompilerDriver:constructor:setRoot", this.mountRoot)
+    //console.log("CompilerDriver:constructor:setMount", this.mountPoint);
+
     this.worker.onmessage = (event: MessageEvent) => { this.didRecieve(event.data) };   
     this.worker.addEventListener('error', (event) => { console.log('CompilerDriver: Worker error!')});
   }
@@ -333,7 +337,7 @@ export class CompilerDriver implements ProjectDriver {
   //SEND: PUBLIC
 
   public mount(path: string): Promise<boolean> {
-    //TODO
+    //TODO Daniel
     let message: CompilerMessage = {
       uid: this.requestUID(),
       type: CompilerMessageType.Mount,
@@ -347,7 +351,7 @@ export class CompilerDriver implements ProjectDriver {
   }
 
   public unmount(path: string): Promise<boolean> {
-    //TODO
+    //TODO Daniel
     let message: CompilerMessage = {
       uid: this.requestUID(),
       type: CompilerMessageType.Unmount,
@@ -631,8 +635,6 @@ export class CompilerDriver implements ProjectDriver {
     return this.binEncoder.encode(data)
   }
   
-
-
   private requestUID(): UID {
     var timestap = new Date().getTime();
     let seed = Math.floor(Math.random() * 100000000);

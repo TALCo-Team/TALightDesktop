@@ -20,6 +20,7 @@ export class CompilerService {
     this.project = project;
   }
 
+  //TODO: look like dead code, check if it is used
   registerDriver(name:string, driver: CompilerDriver):boolean{
     //if (name in this.drivers){return false;}
     //alert('register: '+driver)
@@ -27,7 +28,8 @@ export class CompilerService {
     //alert('register: '+driver.constructor.name+' | all: '+this.getDriverNames())
     return true;
   }
-
+  
+  //TODO: look like dead code, check if it is used
   getDriver(name:string): CompilerDriver | undefined{
     //alert(name + ' '  + this.getDriverNames() )
     if ( this.drivers.has(name) ){return this.drivers.get(name);}
@@ -35,28 +37,23 @@ export class CompilerService {
     return undefined
     
   }
-
+  //TODO: look like dead code, check if it is used (is used just from getDriver(..))
   getDriverNames(){
     return Array.from(this.drivers.keys());
   }
 
-
-
   async readConfig(){
     if (!this.project?.driver) {return null}
 
-    let defaultConfig = new ProjectConfig()
-    if (!await this.project?.driver.exists(defaultConfig.CONFIG_PATH)){
-      console.log("PythonCompilerService:readPythonConfig: config file doesn't exisit!")
+    if (!await this.project?.driver.exists(ProjectConfig.defaultConfig.CONFIG_PATH)){
+      console.log("PythonCompilerService:readPythonConfig: config file doesn't exist!")
       return null;
     }
     
-    let configContent = await this.project?.driver.readFile(defaultConfig.CONFIG_PATH, false ) as string;
-    let config = JSON.parse(configContent) as ProjectConfig
-    return config
+    let configContent = await this.project?.driver.readFile(ProjectConfig.defaultConfig.CONFIG_PATH, false ) as string;
+    return JSON.parse(configContent) as ProjectConfig
   }
 
-  
   async runProject(){
     console.log("PythonCompilerService:runProject")
     let config = await this.readConfig()
@@ -75,5 +72,4 @@ export class CompilerService {
     console.log("PythonCompilerService:executeFile:",fullpath)
     this.project?.driver.executeFile(fullpath)
   }
-
 }

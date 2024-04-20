@@ -5,14 +5,13 @@ import { PyodideExamples } from "./python-compiler.examples";
 export class PyodideProjectEnvironment extends ProjectEnvironment{
     public override driver: PyodideDriver;
 
-
-    constructor(pyodideMount:string, pyodideRoot:string,){
-        console.log("PyodideProjectEnvironment:constructor:")
+    constructor(pyodideMount:string, pyodideRoot:string){
+        console.log("PyodideProjectEnvironment:constructor:setRoot: ", pyodideRoot)
+        console.log("PyodideProjectEnvironment:constructor:setMount: ", pyodideMount);
         let driver = new PyodideDriver(pyodideMount, pyodideRoot);
         super(ProjectLanguage.PY, driver)
         this.driver = driver;
     }
-
 
     async loadProject() {
         console.log("PyodideProjectEnvironment:loadProject")
@@ -25,7 +24,6 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
         this.config = config;
         this.onProjectConfigChanged.emit();
 
-        
         //Starter files
         let folders = [
             config.DIR_PROJECT,
@@ -47,7 +45,6 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
         let mainContent = `print("Hello World!")`;
         files.push([config.RUN, mainContent])
         
-
         if(config.CREATE_EXAMPLES){
             PyodideExamples.forEach((content:string, filename:string)=>{
                 files.push([config!.DIR_EXAMPLES + filename, content])

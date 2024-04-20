@@ -11,8 +11,6 @@ export enum ProjectLanguage{
 export class ProjectList extends Array<ProjectEnvironment>{};
 export interface ProjectDriver extends FsServiceDriver, CompilerDriver{};
 
-
-
 export abstract class ProjectEnvironment{
 
   public config: ProjectConfig | null  = null;
@@ -20,7 +18,7 @@ export abstract class ProjectEnvironment{
 
   constructor(
     public laguange: ProjectLanguage,
-    public driver: ProjectDriver
+    public driver: ProjectDriver,
   ){
     console.log("ProjectEnvironment:constructor")
   }
@@ -29,13 +27,10 @@ export abstract class ProjectEnvironment{
 }
 
 
-
-
-
 export class ProjectConfig {
   RUN = "/main.py"
   DEBUG = false //TODO
-  PROJECT_NAME="My solution" //TODO
+  PROJECT_NAME="Project"
   PREFERED_LANG="it"
 
   TAL_SERVERS = [ //TODO
@@ -94,7 +89,7 @@ export class ProjectConfig {
     if (!path) {
       path = ProjectConfig.defaultConfig.CONFIG_PATH
     }
-    let config: ProjectConfig;
+    
     if (!await fs.exists(path)) {
       return null
     }
@@ -102,6 +97,7 @@ export class ProjectConfig {
     let configContent = await fs.readFile(path, false) as string;
     console.log("ProjectConfig:load:found.", configContent)
 
+    let config: ProjectConfig;
     try {
       config = JSON.parse(configContent) as ProjectConfig
       Object.setPrototypeOf(config, ProjectConfig.prototype)
@@ -115,8 +111,7 @@ export class ProjectConfig {
   }
 
   async save(fs:FsServiceDriver){
-    //alert('comincio il salvataggio');
-    console.log('comincio il salvataggio');
+    console.log('ProjectConfig:save');
     let content = JSON.stringify(this, null, 4)
     let res = await fs.writeFile(this.CONFIG_PATH, content);
     return true
@@ -124,8 +119,7 @@ export class ProjectConfig {
 
   parseFile (obj: any): string {
     for (var key in obj) {
-
-      console.log("key: " + key + ", value: " + obj[key])
+      console.log("ProjectConfig:parseFile:key: " + key + ", value: " + obj[key])
       if (key == "TAL_SERVER") {
         return obj[key];
       }
@@ -134,6 +128,10 @@ export class ProjectConfig {
       }
     }
     return "";
+  }
+
+  public isDefaultProjectName(){
+    return this.PROJECT_NAME == ProjectConfig.defaultConfig.PROJECT_NAME
   }
 }
 
