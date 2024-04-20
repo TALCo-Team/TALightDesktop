@@ -1,7 +1,6 @@
-import { EventEmitter, Injectable, Input } from '@angular/core';
-import { ProjectDriver, ProjectEnvironment, ProjectLanguage } from './project-manager.types';
+import { EventEmitter, Injectable } from '@angular/core';
+import { ProjectEnvironment } from './project-manager.types';
 import { PythonCompilerService } from '../python-compiler-service/python-compiler.service';
-
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +12,7 @@ export class ProjectManagerService {
   private currentProjectId = -1;
   private currentProject: ProjectEnvironment | null = null;
 
-  public onProjectChanged = new EventEmitter<ProjectEnvironment>();
+  public onProjectChanged = new EventEmitter<void>();
   public onProjectListChanged = new EventEmitter<void>();
 
   constructor(
@@ -32,7 +31,7 @@ export class ProjectManagerService {
     this.currentProject = project;
     this.currentProjectId = index;
     console.log("ProjectManagerService:setCurrentProject:willEmit", this.currentProject)
-    this.onProjectChanged.emit(this.currentProject)
+    this.onProjectChanged.emit()
     console.log("ProjectManagerService:setCurrentProject:sent", this.projects)
   }
 

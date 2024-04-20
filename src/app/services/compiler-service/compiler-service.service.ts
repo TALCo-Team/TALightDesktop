@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ProjectManagerService } from '../project-manager-service/project-manager.service';
 import { ProjectConfig, ProjectEnvironment } from '../project-manager-service/project-manager.types';
-import { CompilerDriver } from './compiler-service.types';
 
 @Injectable({
   providedIn: 'root'

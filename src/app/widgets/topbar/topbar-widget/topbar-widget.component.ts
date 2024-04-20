@@ -51,8 +51,6 @@ export class TopbarWidgetComponent implements OnInit {
                private fsService: FsService,
                private configService: ConfigService,
                private tutorialService: TutorialService,
-               // Aggiungere project manager
-               // il current project mi da accesso al config e da lì al driver
                public prj: ProjectManagerService,
              )
   {
@@ -65,7 +63,7 @@ export class TopbarWidgetComponent implements OnInit {
     this.subOnNotify = this.nm.onNotification.subscribe((msg:NotificationMessage): void=>{this.showNotification(msg)})
     
     //TODO Daniel
-    this.prj.onProjectChanged.subscribe((_) => {
+    this.prj.onProjectChanged.subscribe(() => {
       let project = this.prj.getCurrentProject()
       project?.onProjectConfigChanged.subscribe((_) => {
         this.writeTofile(project);

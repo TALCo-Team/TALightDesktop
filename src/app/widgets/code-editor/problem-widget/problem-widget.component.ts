@@ -2,12 +2,9 @@ import { Component, EventEmitter, Output, NgZone, Input, ViewChild, ElementRef }
 import { Subscription } from 'rxjs';
 import { ApiService } from 'src/app/services/api-service/api.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
-
-import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 import { MessageService, OverlayOptions } from 'primeng/api';
 import { ServiceDescriptor, ProblemDescriptor, ArgsMap, FilesMap, FileDescriptor, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 import { Dropdown } from 'primeng/dropdown';
-import { CompilerDriver } from 'src/app/services/compiler-service/compiler-service-driver';
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
@@ -19,7 +16,6 @@ export class ServiceMenuEntry {
     public descriptor: ServiceDescriptor,
   ) { }
 }
-
 
 export class ProblemMenuEntry {
   constructor(
@@ -54,16 +50,12 @@ export class ProblemWidgetComponent {
 
   filePathList = new Array<string>();
 
-  project: ProjectEnvironment | null = null;
-
-
   regexFormat = true;
   showRegex = true;
   loading = false
 
   problemSub: Subscription
   isBlurred: boolean = false;
-
 
   constructor( public zone: NgZone,
                public api: ApiService,
@@ -75,16 +67,9 @@ export class ProblemWidgetComponent {
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
     this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.problemsDidChange(clear) })
-    this.prj.onProjectChanged.subscribe((_) => {
-      this.project = prj.getCurrentProject();
-      this.saveProblemServiceConfig();
-    })
+    this.prj.onProjectChanged.subscribe(() => { this.saveProblemServiceConfig() })
+    this.pm.onProblemsLoaded.subscribe((_) =>{ this.loadProblemServiceConfig() })
 
-    this.pm.onProblemsLoaded.subscribe((_) =>{
-      this.loadProblemServiceConfig();
-    })
-
-   
     // https://primefaces.org/primeng/overlay
     //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
     this.dropdownOptions = { appendTo: 'body' }
@@ -118,7 +103,6 @@ export class ProblemWidgetComponent {
     this.filePathList = [...this.filePathList]
   }
 
-
   private loadProblemServiceConfig() {
     this.selectedProblem = this.pm.getProblem(localStorage.getItem("problema") || "");
     this.callDidSelectProblem();
@@ -135,23 +119,23 @@ export class ProblemWidgetComponent {
   }
 
   private saveProblemServiceConfig() {
-    this.pm.onProblemSelected.subscribe((problem) => {
+    let project = this.prj.getCurrentProject();
+    this.pm.onProblemSelected.subscribe(() => {
        //alert('ricevuto problem selected: '+ problem.name);
-      this.writeTofile(this.project);
-      this.project?.onProjectConfigChanged.subscribe((_) => {
+      this.writeTofile(project);
+      project?.onProjectConfigChanged.subscribe((_) => {
         //alert('config pronto in problem');
-        this.writeTofile(this.project);
+        this.writeTofile(project);
       })
     })
-    //Daniel
     this.onServiceSelected.subscribe((service) => {
       //alert('ricevuto service selected: '+ service.name);
-      this.writeTofile(this.project);
-      this.project?.onProjectConfigChanged.subscribe((_) => {
+      this.writeTofile(project);
+      project?.onProjectConfigChanged.subscribe((_) => {
         //alert('config pronto in service');
-        this.writeTofile(this.project);
+        this.writeTofile(project);
       })
-    })//!Daniel
+    })
   }
 
   public async writeTofile(project: ProjectEnvironment | null) {
@@ -280,8 +264,8 @@ export class ProblemWidgetComponent {
       //file.value = ""
       return
     }
-
-    let pathExist = await this.project?.driver.exists(path)
+    let project = this.prj.getCurrentProject();
+    let pathExist = await project?.driver.exists(path)
     console.log('fileDidChange:pathExist:', pathExist)
     if (!pathExist) {
       dropdown.style.color = "red"

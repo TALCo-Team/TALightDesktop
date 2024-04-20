@@ -77,7 +77,7 @@ export class FileExplorerWidgetComponent implements OnInit {
     private githubService: GithubApiService,
     private tutorialService : TutorialService,
   ) {
-    this.pm.onProjectChanged.subscribe( (project)=>{this.didProjectChanged()} ),
+    this.pm.onProjectChanged.subscribe( ()=>{this.didProjectChanged()} ),
     this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
     this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
   }
