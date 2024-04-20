@@ -9,7 +9,6 @@ import { FsNodeFile, FsNodeFolder, FsNodeList } from 'src/app/services/fs-servic
 import { ProblemDescriptor, ServiceDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
-import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 import { FileExplorerWidgetComponent } from 'src/app/widgets/code-editor/file-explorer-widget/file-explorer-widget.component';
 import { ExecbarWidgetComponent } from '../execbar-widget/execbar-widget.component';
 import { FileEditorWidgetComponent } from '../file-editor-widget/file-editor-widget.component';
@@ -32,8 +31,6 @@ export class CodeEditorComponent implements OnInit {
   public binDecoder = new TextDecoder("utf-8");
 
   public cmdConnect?: Commands.Connect;
-
-  public project: ProjectEnvironment | null = null;
 
   public selectedFile?: FsNodeFile;
   public selectedProblem?: ProblemDescriptor;
@@ -85,14 +82,10 @@ export class CodeEditorComponent implements OnInit {
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) })
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     console.log("CodeEditorComponent:constructor", this.prj)
-
-    this.prj.onProjectChanged.subscribe((project) => { this.setProject(project) })
-    //TODO: add switch python/cpp
-
-    this.project = prj.getCurrentProject();
+    this.prj.onProjectChanged.subscribe(() => { this.onProjectChanged() })
 
     document.addEventListener('keydown', (event: KeyboardEvent) => {this.hotkeysService.emitHotkeysEvent(event)});
-    this.hotkeysService.registerHotkeysEvents().subscribe((event: KeyboardEvent) => {this.hotkeysService.getCorrectHotkey(event, this.project)})
+    this.hotkeysService.registerHotkeysEvents().subscribe((event: KeyboardEvent) => {this.hotkeysService.getCorrectHotkey(event, this.prj.getCurrentProject())})
     this.hotkeysService.hotkeysAction.subscribe((emitter) => {this.chooseHotkeysAction(emitter)})
   }
   
@@ -163,23 +156,24 @@ export class CodeEditorComponent implements OnInit {
   }
 
   public didStateChangeReady(content?: string) {
-    if (this.project) {
+    let project = this.prj.getCurrentProject();
+    if (project) {
       console.log("didStateChange:Ready:loadProject")
-      this.project.loadProject();
+      project.loadProject();
     }
   }
 
-  public setProject(project:ProjectEnvironment) {
-    console.log("CodeEditorComponent:constructor:onProjectChanged")
+  private onProjectChanged() {
+    console.log("CodeEditorComponent:onProjectChanged")
     
-    this.project = project
+    let project = this.prj.getCurrentProject();
 
-    this.project?.driver.subscribeNotify(true, (msg: string) => { this.didNotify(msg) })
-    this.project?.driver.subscribeState(true, (state: CompilerState, content?: string) => { this.didStateChange(state, content) })
-    this.project?.driver.subscribeStdout(true, (msg: string) => { this.didStdout(msg) })
-    this.project?.driver.subscribeStderr(true, (msg: string) => { this.didStderr(msg) })
+    project?.driver.subscribeNotify(true, (msg: string) => { this.didNotify(msg) })
+    project?.driver.subscribeState(true, (state: CompilerState, content?: string) => { this.didStateChange(state, content) })
+    project?.driver.subscribeStdout(true, (msg: string) => { this.didStdout(msg) })
+    project?.driver.subscribeStderr(true, (msg: string) => { this.didStderr(msg) })
 
-    console.log("CodeEditorComponent:constructor:setProject", this.project)
+    console.log("CodeEditorComponent:onProjectChanged", project)
   }
 
   public onUpdateRoot(fsroot: FsNodeFolder) {
@@ -200,12 +194,16 @@ export class CodeEditorComponent implements OnInit {
     this.cmdConnect.sendBinary(data + "\n"); // The \n must be added to the python bot output
   }
 
-  public didStateChange(state: CompilerState, content?: string) {
+  private didStateChange(state: CompilerState, content?: string) {
     console.log("CodeEditorComponent:didStateChange:")
     //this.outputWidget!.print(state,OutputType.SYSTEM);
     if (state == CompilerState.Init){//TODO Daniel
-      console.log("CodeEditorComponent:didStateChange:mount: ", this.project?.driver.mountPoint)
-      this.project?.driver.mount(this.project.driver.mountPoint)
+      let project = this.prj.getCurrentProject();
+      let projectID = this.prj.getCurrentProjectId();
+      //TODO Daniel: use the ID to get the mount point
+
+      console.log("CodeEditorComponent:didStateChange:mount: ", project?.driver.mountPoint)
+      project?.driver.mount(project.driver.mountPoint)
     }else if (state == CompilerState.Ready) {
       this.didStateChangeReady(content)
     }else if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
@@ -243,7 +241,7 @@ export class CodeEditorComponent implements OnInit {
 
     for (let i = 0; i < msgs.length; i++) {
       this.outputWidget.print(msgs[i], fromAPI ? OutputType.STDINAPI : OutputType.STDIN)
-      this.project?.driver.sendStdin(msgs[i])
+      this.prj.getCurrentProject()?.driver.sendStdin(msgs[i])
     }
     if (!fromAPI || this.pyodideState != CompilerState.Stdin) {
       this.outputWidget.enableStdin(false)
@@ -280,7 +278,7 @@ export class CodeEditorComponent implements OnInit {
     console.log("onAttachments:data:", data)
 
     console.log("extractTar:unpack:")
-    await this.project?.driver.createDirectory('/data')
+    await this.prj.getCurrentProject()?.driver.createDirectory('/data')
 
     Tar.unpack(data, async (files, folders) => {
       console.log("extractTar:unpack:folders", folders)
@@ -289,7 +287,7 @@ export class CodeEditorComponent implements OnInit {
         let folder = folders[idx]
         let path = '/data/' + folder.path
         console.log("extractTar:createDirectory:", path)
-        await this.project?.driver.createDirectory(path)
+        await this.prj.getCurrentProject()?.driver.createDirectory(path)
       }
       console.log("extractTar:createDirectory:DONE")
 
@@ -301,7 +299,7 @@ export class CodeEditorComponent implements OnInit {
         let path = '/data/' + file.path
         let content = file.content
         console.log("extractTar:writeFile:", path, content)
-        await this.project?.driver.writeFile(path, content)
+        await this.prj.getCurrentProject()?.driver.writeFile(path, content)
       }
       console.log("extractTar:writeFile:DONE")
 
@@ -401,7 +399,7 @@ export class CodeEditorComponent implements OnInit {
   public saveFile() {
     if (this.selectedFile) {
       console.log("saveFile:", this.selectedFile.path, this.fileEditor)
-      this.project?.driver.writeFile(this.selectedFile.path, this.selectedFile.content)
+      this.prj.getCurrentProject()?.driver.writeFile(this.selectedFile.path, this.selectedFile.content)
     } else {
       console.log("saveFile:failed")
     }
@@ -413,7 +411,7 @@ export class CodeEditorComponent implements OnInit {
 
     if (this.cmdConnect) { this.cmdConnect.tal.closeConnection() }
     console.log("stopAll:cmdConnect:DONE")
-    await this.project?.driver.stopExecution()
+    await this.prj.getCurrentProject()?.driver.stopExecution()
     console.log("stopAll:cmdConnect:DONE")
   }
 
@@ -599,7 +597,7 @@ export class CodeEditorComponent implements OnInit {
     this.cmdConnect = undefined
     this.outputWidget.enableStdin(false)
 
-    this.project?.driver.stopExecution()
+    this.prj.getCurrentProject()?.driver.stopExecution()
   }
 
   async didConnectStart() {
@@ -626,7 +624,7 @@ export class CodeEditorComponent implements OnInit {
     console.log("apiConnect:didConnectData:", data)
     if (this.output_files && this.current_output_file) {
       if (this.current_output_file) {
-        this.project?.driver.writeFile("/" + this.current_output_file, data)
+        this.prj.getCurrentProject()?.driver.writeFile("/" + this.current_output_file, data)
       };
       if (this.current_output_file === this.output_files[this.output_files.length - 1]) {
         this.apiConnectReset();
@@ -642,8 +640,6 @@ export class CodeEditorComponent implements OnInit {
     console.log("apiConnect:didRecieveBinaryHeader:", message)
 
     this.current_output_file = message.name;
-    if (this.current_output_file) { this.project?.driver.writeFile("/" + this.current_output_file, "") };
+    if (this.current_output_file) { this.prj.getCurrentProject()?.driver.writeFile("/" + this.current_output_file, "") };
   }
-
-
 }

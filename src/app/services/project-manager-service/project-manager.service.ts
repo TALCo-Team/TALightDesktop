@@ -10,6 +10,7 @@ export class ProjectManagerService {
   //ID -> ProjectEnvironment
   private projects = new Map<number, ProjectEnvironment>();
 
+  private currentProjectId = -1;
   private currentProject: ProjectEnvironment | null = null;
 
   public onProjectChanged = new EventEmitter<ProjectEnvironment>();
@@ -22,40 +23,45 @@ export class ProjectManagerService {
   public setCurrentProject(index:number){
     console.log("ProjectManagerService:setCurrentProject")
     
-    let prj = this.getProject(index);
-    if(!prj){
+    let project = this.getProject(index);
+    if(!project){
       console.log("ProjectManagerService:setCurrentProject: error, invalid index")
       return;
     }
 
-    this.currentProject = prj;
+    this.currentProject = project;
+    this.currentProjectId = index;
     console.log("ProjectManagerService:setCurrentProject:willEmit", this.currentProject)
     this.onProjectChanged.emit(this.currentProject)
     console.log("ProjectManagerService:setCurrentProject:sent", this.projects)
   }
 
   private getProject(index:number){
-    let prj = this.projects.get(this.getProjectsId()[index]);
-    if(!prj){
+    let project = this.projects.get(this.getProjectsId()[index]);
+    if(!project){
       //console.log("ProjectManagerService:getProject: error, invalid index")
       return null;
     }
 
-    return prj;
+    return project;
   }
 
   public getProjects(){// TODO Daniel: check if there are sorted byt the id (the key of the map)
     return Array.from(this.projects.values());
   }
 
-  public getCurrentProject(){
-    return this.currentProject;
-  }
-
   public getProjectsId(){
     return Array.from(this.projects.keys()).sort();
   }
 
+  public getCurrentProject(){
+    return this.currentProject;
+  }
+
+  public getCurrentProjectId(){
+    return this.currentProjectId;
+  }
+  
   public addProject(){
     console.log("ProjectManagerService:addProject")
 
