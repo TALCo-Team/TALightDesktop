@@ -6,7 +6,6 @@ import { MessageService } from 'primeng/api';
 import { FsService, Tar } from 'src/app/services/fs-service/fs.service';
 import { FsNodeFile, FsNodeFolder, FsServiceDriver } from 'src/app/services/fs-service/fs.service.types';
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
-import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 import { GoogleLoginProvider, MicrosoftLoginProvider } from'@abacritt/angularx-social-login';
 import { SocialAuthService, SocialUser } from "@abacritt/angularx-social-login";
 import { GithubApiService } from 'src/app/services/github-api-service/github-api.service';
@@ -18,7 +17,6 @@ import { TutorialService } from 'src/app/services/tutorial-service/tutorial.serv
   styleUrls: ['./file-explorer-widget.component.scss']
 })
 export class FileExplorerWidgetComponent implements OnInit {
-  public project: ProjectEnvironment | null = null;
   public rootDir = "/"
   public showHidden = false
   public fsroot = FsService.EmptyFolder
@@ -79,7 +77,7 @@ export class FileExplorerWidgetComponent implements OnInit {
     private githubService: GithubApiService,
     private tutorialService : TutorialService,
   ) {
-    this.pm.onProjectChanged.subscribe( (project)=>{this.didProjectChanged(project)} ),
+    this.pm.onProjectChanged.subscribe( (project)=>{this.didProjectChanged()} ),
     this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
     this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
   }
@@ -141,16 +139,15 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   protected isBlurred = false;
 
-  public didProjectChanged(project:ProjectEnvironment){
+  public didProjectChanged(){
     console.log("FileExplorerWidgetComponent:didProjectChanged")
-    this.project = project;
-    this.project?.driver.ready().then((ready)=>{
+    this.pm.getCurrentProject()?.driver.ready().then((ready)=>{
       this.refreshRoot();
     })
   }
 
   refreshRoot(onDone?:()=>void) {
-    this.project?.driver.scanDirectory(this.rootDir).then((folder)=>{
+    this.pm.getCurrentProject()?.driver.scanDirectory(this.rootDir).then((folder)=>{
       this.fsroot = folder ?? FsService.EmptyFolder
 
       this.bindCollapseEvent();
@@ -201,13 +198,12 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   public selectFile(file: FsNodeFile) {
     console.log('selectFile',file)
-    this.project?.driver.readFile(file.path).then((content)=>{
+    this.pm.getCurrentProject()?.driver.readFile(file.path).then((content)=>{
       file.content = content ?? "";
       console.log('ecco il file: \n' + content);
       this.selectedFile = file;
       this.onSelectFile?.emit(file);
     })
-
   }
 
   public selectFolder(folder: FsNodeFolder) {
@@ -223,13 +219,14 @@ export class FileExplorerWidgetComponent implements OnInit {
     }
 
     console.log("openSettings")
+    let project = this.pm.getCurrentProject();
     let projectFolder = this.fsroot.folders.find((item)=>{
-      return item.path + "/" == this.project?.config?.DIR_PROJECT
+      return item.path + "/" == project?.config?.DIR_PROJECT
     })
     if(!projectFolder){return}
     console.log("openSettings:projectFolder:",projectFolder)
     let configFile = projectFolder.files.find((file)=>{
-      return file.path == this.project?.config?.CONFIG_PATH
+      return file.path == project?.config?.CONFIG_PATH
     })
     if(!configFile){return}
     console.log("openSettings:configFile:",configFile)
@@ -289,7 +286,7 @@ export class FileExplorerWidgetComponent implements OnInit {
               .join('/'); // Rebuild the path
 
           // Change path item in the FS
-          this.project?.driver.renameItem(this.editingItem.path, newpath).then(()=>{
+          this.pm.getCurrentProject()?.driver.renameItem(this.editingItem.path, newpath).then(()=>{
             this.refreshRoot();
           })
 
@@ -347,11 +344,10 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   private deleteFile(currentFolder: FsNodeFolder, file: FsNodeFile) {
-    this.project?.driver.delete(file.path).then(()=>{
+    this.pm.getCurrentProject()?.driver.delete(file.path).then(()=>{
       this.refreshRoot();
       this.onFileDeleted.emit(file.path)
     })
-
   }
 
   public importGithubClick(event: Event) {
@@ -391,11 +387,10 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   private deleteFolder(currentFolder: FsNodeFolder, folder: FsNodeFolder) {
-
+    let project = this.pm.getCurrentProject();
     //Delete all files in the folder
     folder.files.forEach(item => {
-
-      this.project?.driver.delete(item.path).then(()=>{
+      project?.driver.delete(item.path).then(()=>{
         this.refreshRoot();
         this.onFileDeleted.emit(item.path)
       })
@@ -407,14 +402,14 @@ export class FileExplorerWidgetComponent implements OnInit {
 
         this.deleteFolder(item, item);
 
-        this.project?.driver.delete(folder.path).then(()=>{
+        project?.driver.delete(folder.path).then(()=>{
           this.refreshRoot();
         })
       });
 
     } else {
 
-      this.project?.driver.delete(folder.path).then(()=>{
+      project?.driver.delete(folder.path).then(()=>{
         this.refreshRoot();
       })
 
@@ -457,9 +452,11 @@ export class FileExplorerWidgetComponent implements OnInit {
       if (this.newItemValue.length > 0) {
 
         if (this.newItemFolder) {
+          let project = this.pm.getCurrentProject();
+
           if (this.newItemType === "file") {
             let path = this.newItemFolder.path + "/" + this.newItemValue
-            this.project?.driver.writeFile(path, "").then(()=>{
+            project?.driver.writeFile(path, "").then(()=>{
               this.refreshRoot()
             })
 
@@ -468,7 +465,7 @@ export class FileExplorerWidgetComponent implements OnInit {
             // Double slash on path when folder is created under root does not create problems
             let path = this.newItemFolder.path + "/" + this.newItemValue
             console.log(path)
-            this.project?.driver.createDirectory(path).then(()=>{
+            project?.driver.createDirectory(path).then(()=>{
               this.refreshRoot()
             })
 
@@ -478,7 +475,6 @@ export class FileExplorerWidgetComponent implements OnInit {
               files: [],
               folders: []
             });
-
           }
         }
       }
@@ -515,7 +511,7 @@ export class FileExplorerWidgetComponent implements OnInit {
         console.log("upload:content:", new Uint8Array(content))
         let path = (!this.selectedFolder?"/":this.selectedFolder.path) + file.name
         console.log('upload:', path, content)
-        await this.project?.driver.writeFile(path, content)
+        await this.pm.getCurrentProject()?.driver.writeFile(path, content)
       }
     }
     this.refreshRoot()
@@ -527,13 +523,15 @@ export class FileExplorerWidgetComponent implements OnInit {
       console.log("extractTar:unpack:files",files)
       console.log("extractTar:unpack:folders",folders)
 
+      let project = this.pm.getCurrentProject();
+
       for(var idx in folders){
         console.log("extractTar:createDirectory:")
         let folder = folders[idx]
         let path = folder.path
         let pathMOD = path.substring(path.indexOf("/"));
         console.log("extractTar:createDirectory:",pathMOD)
-        await this.project?.driver.createDirectory(pathMOD)
+        await project?.driver.createDirectory(pathMOD)
       }
       console.log("extractTar:createDirectory:DONE")
       for(var idx in files){
@@ -543,7 +541,7 @@ export class FileExplorerWidgetComponent implements OnInit {
         let pathMOD = path.substring(path.indexOf("/"));
         let content = file.content
         console.log("extractTar:writeFile:",path,content)
-        await this.project?.driver.writeFile(pathMOD, content)
+        await project?.driver.writeFile(pathMOD, content)
       }
       console.log("extractTar:writeFile:DONE")
       this.refreshRoot()
@@ -810,7 +808,7 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   public replaceProject(data:any) {
     // Before delete files and folders from root, then import project from Github
-    this.project?.driver.scanDirectory('/').then((folder)=>{
+    this.pm.getCurrentProject()?.driver.scanDirectory('/').then((folder)=>{
       this.fsroot = folder ?? FsService.EmptyFolder
       this.deleteFolder(this.fsroot, this.fsroot)
 
