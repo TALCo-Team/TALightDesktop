@@ -21,10 +21,8 @@ export {FsNodeEmptyFolder}
 export interface FsServiceDriver {
   driverName:string;
 
-  //TODO Daniel 1
   mountPoint:string;
-  //mountRoot:string;
-  
+
   fsRoot:FsNodeFolder;
   fsList:FsNodeList;
   fsListfiles:FsNodeFileList;

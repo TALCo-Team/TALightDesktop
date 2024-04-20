@@ -579,7 +579,6 @@ class PyodideWorker{
     
     this.mountPoint = mountPoint;
     console.log("PyodideFsWorker: mount:",mountPoint)
-    //Daniel 1 Check console bug
     
     this.sendState(CompilerState.Loading)
 

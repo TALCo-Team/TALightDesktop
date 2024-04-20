@@ -8,8 +8,10 @@ export enum ProjectLanguage{
   CPP='CPP',
 }
 
-export class ProjectList extends Array<ProjectEnvironment>{};
-export interface ProjectDriver extends FsServiceDriver, CompilerDriver{};
+export interface ProjectDriver extends FsServiceDriver, CompilerDriver{
+  mountByProjectId(projectId: number): Promise<boolean>;
+  onMountChanged : EventEmitter<any>;
+};
 
 export abstract class ProjectEnvironment{
 
@@ -36,7 +38,7 @@ export class ProjectConfig {
   TAL_SERVERS = [ //TODO
     'wss://ta.di.univr.it/algo',
     "wss://ta.di.univr.it/sfide",
-    "ws://localhost:8008/",
+    "wss://localhost:8008/",
   ]
   TAL_SERVER = "wss://ta.di.univr.it/algo" //TODO
   TAL_PROBLEM = "" //TODO

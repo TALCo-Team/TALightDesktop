@@ -197,13 +197,13 @@ export class CodeEditorComponent implements OnInit {
   private didStateChange(state: CompilerState, content?: string) {
     console.log("CodeEditorComponent:didStateChange:")
     //this.outputWidget!.print(state,OutputType.SYSTEM);
-    if (state == CompilerState.Init){//TODO Daniel
-      let project = this.prj.getCurrentProject();
+    if (state == CompilerState.Init){
       let projectID = this.prj.getCurrentProjectId();
-      //TODO Daniel: use the ID to get the mount point
 
-      console.log("CodeEditorComponent:didStateChange:mount: ", project?.driver.mountPoint)
-      project?.driver.mount(project.driver.mountPoint)
+      console.log("CodeEditorComponent:didStateChange:mount: ", projectID)
+      this.prj.getCurrentProject()?.driver.mountByProjectId(projectID)
+
+      //TODO Daniel close all open tabs
     }else if (state == CompilerState.Ready) {
       this.didStateChangeReady(content)
     }else if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
@@ -432,7 +432,7 @@ export class CodeEditorComponent implements OnInit {
 
     let config = await this.compiler.readConfig()
     if (!config) { return false }
-    console.log("runProject:config:ok")
+    console.log("runProject:config:ok: ")
 
 
     console.log("runProject:main:", config!.RUN)

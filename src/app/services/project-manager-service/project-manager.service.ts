@@ -12,12 +12,12 @@ export class ProjectManagerService {
   private currentProjectId = -1;
   private currentProject: ProjectEnvironment | null = null;
 
-  public onProjectChanged = new EventEmitter<void>();
+  public onProjectChanged = new EventEmitter<ProjectEnvironment>();
   public onProjectListChanged = new EventEmitter<void>();
 
-  constructor(
-    private python: PythonCompilerService,
-  ){}
+  static readonly projectsFolder = "Projects";
+
+  constructor(private python: PythonCompilerService){}
 
   public setCurrentProject(index:number){
     console.log("ProjectManagerService:setCurrentProject")
@@ -31,7 +31,7 @@ export class ProjectManagerService {
     this.currentProject = project;
     this.currentProjectId = index;
     console.log("ProjectManagerService:setCurrentProject:willEmit", this.currentProject)
-    this.onProjectChanged.emit()
+    this.onProjectChanged.emit(this.currentProject)
     console.log("ProjectManagerService:setCurrentProject:sent", this.projects)
   }
 

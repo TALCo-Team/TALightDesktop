@@ -77,7 +77,7 @@ export class FileExplorerWidgetComponent implements OnInit {
     private githubService: GithubApiService,
     private tutorialService : TutorialService,
   ) {
-    this.pm.onProjectChanged.subscribe( ()=>{this.didProjectChanged()} ),
+    this.pm.onProjectChanged.subscribe( (project)=>{this.didProjectChanged()} ),
     this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
     this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
   }
@@ -141,7 +141,13 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   public didProjectChanged(){
     console.log("FileExplorerWidgetComponent:didProjectChanged")
-    this.pm.getCurrentProject()?.driver.ready().then((ready)=>{
+
+    let project = this.pm.getCurrentProject();
+    //TODO Daniel
+    project?.driver.onMountChanged.subscribe(()=>{
+      this.refreshRoot();
+    });
+    project?.driver.ready().then((ready)=>{
       this.refreshRoot();
     })
   }

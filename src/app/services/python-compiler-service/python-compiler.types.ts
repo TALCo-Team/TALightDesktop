@@ -5,10 +5,8 @@ import { PyodideExamples } from "./python-compiler.examples";
 export class PyodideProjectEnvironment extends ProjectEnvironment{
     public override driver: PyodideDriver;
 
-    constructor(pyodideMount:string, pyodideRoot:string){
-        console.log("PyodideProjectEnvironment:constructor:setRoot: ", pyodideRoot)
-        console.log("PyodideProjectEnvironment:constructor:setMount: ", pyodideMount);
-        let driver = new PyodideDriver(pyodideMount, pyodideRoot);
+    constructor(){
+        let driver = new PyodideDriver();
         super(ProjectLanguage.PY, driver)
         this.driver = driver;
     }
