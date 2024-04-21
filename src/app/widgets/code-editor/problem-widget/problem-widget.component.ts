@@ -5,7 +5,7 @@ import { ProblemManagerService } from 'src/app/services/problem-manager-service/
 import { MessageService, OverlayOptions } from 'primeng/api';
 import { ServiceDescriptor, ProblemDescriptor, ArgsMap, FilesMap, FileDescriptor, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 import { Dropdown } from 'primeng/dropdown';
-import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
+import { ProjectsManagerService } from 'src/app/services/project-manager-service/projects-manager.service';
 import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
@@ -60,14 +60,26 @@ export class ProblemWidgetComponent {
   constructor( public zone: NgZone,
                public api: ApiService,
                public pm: ProblemManagerService,
-               public prj: ProjectManagerService,
+               public projectsManagerService: ProjectsManagerService,
                private tutorialService: TutorialService,
                private messageService: MessageService,)
   {
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
     this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.problemsDidChange(clear) })
-    this.prj.onProjectChanged.subscribe(() => { this.saveProblemServiceConfig() })
+    
+    
+    // Daniel: original
+    // this.prj.onProjectChanged.subscribe(() => { this.saveProblemServiceConfig() })
+    this.projectsManagerService.currentProjectChanged.subscribe(() => {
+      let prj = this.projectsManagerService.getCurrentProject();
+      if (prj != null) {
+        prj.onProjectConfigChanged.subscribe(() => {
+          this.saveProblemServiceConfig();
+        })
+      }
+    })
+    
     this.pm.onProblemsLoaded.subscribe((_) =>{ this.loadProblemServiceConfig() })
 
     // https://primefaces.org/primeng/overlay
@@ -81,14 +93,11 @@ export class ProblemWidgetComponent {
   }
 
   private isTutorialShown(tutorial?: any) {
-
     console.log("ProblemWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "ProblemWidgetComponent") {
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "ProblemWidgetComponent")
       this.isBlurred = false
-    }
-    else {
+    else
       this.isBlurred = true
-    }
   }
 
   ngOnDestroy() {
@@ -119,41 +128,43 @@ export class ProblemWidgetComponent {
   }
 
   private saveProblemServiceConfig() {
-    let project = this.prj.getCurrentProject();
+    let project = this.projectsManagerService.getCurrentProject();
+    if (project == null) return;
+
     this.pm.onProblemSelected.subscribe(() => {
        //alert('ricevuto problem selected: '+ problem.name);
-      this.writeTofile(project);
+      this.writeTofile();
       project?.onProjectConfigChanged.subscribe((_) => {
         //alert('config pronto in problem');
-        this.writeTofile(project);
+        this.writeTofile();
       })
     })
     this.onServiceSelected.subscribe((service) => {
       //alert('ricevuto service selected: '+ service.name);
-      this.writeTofile(project);
+      this.writeTofile();
       project?.onProjectConfigChanged.subscribe((_) => {
         //alert('config pronto in service');
-        this.writeTofile(project);
+        this.writeTofile();
       })
     })
   }
 
-  public async writeTofile(project: ProjectEnvironment | null) {
-    //alert('write to file')
-    project?.config?.parseFile(project.config);
-    if (project != null && project.config != null) {
-      if (this.selectedProblem != undefined) {
-        project.config.TAL_PROBLEM = this.selectedProblem.name
-        if (this.selectedService != undefined)
-          project.config.TAL_SERVICE = this.selectedService.name
-        else
-          project.config.TAL_PROBLEM = "";
-      }
-      //project.config.TAL_SERVER = this.url;
-      //alert(project.config.TAL_SERVER);
-      //alert('scrivo sul file il problema');
-      await project.config.save(project.driver);
+  public async writeTofile() {
+    let project = this.projectsManagerService.getCurrentProject();
+    if (project == null) return;
+    project.config.parseFile(project.config);
+
+    if (this.selectedProblem != undefined) {
+      project.config.TAL_PROBLEM = this.selectedProblem.name
+      if (this.selectedService != undefined)
+        project.config.TAL_SERVICE = this.selectedService.name
+      else
+        project.config.TAL_PROBLEM = "";
     }
+    //project.config.TAL_SERVER = this.url;
+    //alert(project.config.TAL_SERVER);
+    //alert('scrivo sul file il problema');
+    await project.saveConfig();
   }
 
 //args
@@ -264,7 +275,7 @@ export class ProblemWidgetComponent {
       //file.value = ""
       return
     }
-    let project = this.prj.getCurrentProject();
+    let project = this.projectsManagerService.getCurrentProject();
     let pathExist = await project?.driver.exists(path)
     console.log('fileDidChange:pathExist:', pathExist)
     if (!pathExist) {

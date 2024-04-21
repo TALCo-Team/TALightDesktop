@@ -14,8 +14,8 @@ export interface ProjectDriver extends FsServiceDriver, CompilerDriver{
 };
 
 export abstract class ProjectEnvironment{
-
-  public config: ProjectConfig | null  = null;
+  
+  public config: ProjectConfig = ProjectConfig.defaultConfig;
   public onProjectConfigChanged = new EventEmitter<void>();
 
   constructor(
@@ -26,6 +26,46 @@ export abstract class ProjectEnvironment{
   }
 
   abstract loadProject(): Promise<boolean>;
+
+  async saveConfig(){
+    console.log("ProjectEnvironment:saveConfig:")
+    if(!this.config){
+      console.log("ProjectEnvironment:saveConfig: empty config")
+      return false
+    }
+
+    await this.config.save(this.driver)
+    console.log("ProjectEnvironment:saveConfig: done")
+    return true
+  }
+
+  async loadConfig(path?: string): Promise<boolean>{
+    console.log("ProjectConfig:load");
+    if (!path)
+      path = ProjectConfig.defaultConfig.CONFIG_PATH
+    
+    if (!await this.driver.exists(path))
+      return false
+    
+    let configContent = await this.driver.readFile(path, false) as string;
+    console.log("ProjectConfig:load:found.", configContent)
+
+    let config = null
+    try {
+      config = JSON.parse(configContent) as ProjectConfig
+      Object.setPrototypeOf(config, ProjectConfig.prototype)
+    } catch {
+      console.log("ProjectConfig:load:config:JSON:parse: failed")
+      return false
+    }
+
+    this.config = config
+    console.log("ProjectConfig:load:config.", this.config)
+
+    this.onProjectConfigChanged.emit();
+
+    return true
+  }
 }
 
 
@@ -85,32 +125,6 @@ export class ProjectConfig {
     console.log("ProjectConfig:load:config:",config)
     return config
   }*/
-
-  static async load (fs:FsServiceDriver, path?: string) {
-    console.log("ProjectConfig:load");
-    if (!path) {
-      path = ProjectConfig.defaultConfig.CONFIG_PATH
-    }
-    
-    if (!await fs.exists(path)) {
-      return null
-    }
-
-    let configContent = await fs.readFile(path, false) as string;
-    console.log("ProjectConfig:load:found.", configContent)
-
-    let config: ProjectConfig;
-    try {
-      config = JSON.parse(configContent) as ProjectConfig
-      Object.setPrototypeOf(config, ProjectConfig.prototype)
-    } catch {
-      console.log("ProjectConfig:load:config:JSON:parse: failed")
-      return null
-    }
-
-    console.log("ProjectConfig:load:config.", config)
-    return config
-  }
 
   async save(fs:FsServiceDriver){
     console.log('ProjectConfig:save');

@@ -4,12 +4,12 @@ import { ApiService, ApiState } from 'src/app/services/api-service/api.service';
 import { NotificationManagerService, NotificationMessage, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
-import { ProjectConfig, ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
+import { ProjectConfig } from 'src/app/services/project-manager-service/project-manager.types';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { MenuItem } from 'primeng/api';
-import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 import { FsService } from 'src/app/services/fs-service/fs.service';
 import { ConfigService } from 'src/app/services/config-service/config.service';
+import { ProjectsManagerService } from 'src/app/services/project-manager-service/projects-manager.service';
 
 @Component({
   selector: 'tal-topbar-widget',
@@ -51,7 +51,7 @@ export class TopbarWidgetComponent implements OnInit {
                private fsService: FsService,
                private configService: ConfigService,
                private tutorialService: TutorialService,
-               public prj: ProjectManagerService,
+               public pms: ProjectsManagerService,
              )
   {
     this.getDimensions(); //ELIMINA
@@ -62,34 +62,7 @@ export class TopbarWidgetComponent implements OnInit {
     this.subProblemError = this.pm.onError.subscribe((_)=>{this.stateBad()})
     this.subOnNotify = this.nm.onNotification.subscribe((msg:NotificationMessage): void=>{this.showNotification(msg)})
     
-    //TODO Daniel
-    this.prj.onProjectChanged.subscribe(() => {
-      let project = this.prj.getCurrentProject()
-      project?.onProjectConfigChanged.subscribe((_) => {
-        this.writeTofile(project);
-      })
-    })
-    /*
-    this.prj.onProjectChanged.subscribe((_) => {
-        let project = this.prj.getCurrentProject()
-
-        project?.onProjectConfigChanged.subscribe((_) => {
-          if(project?.config){
-            this.lastUrl = this.api.getLastInsertedUrl();
-            this.url = this.lastUrl;
-            project.config.TAL_SERVER = this.url;
-
-            if (this.urlInput) {
-              this.urlInput.writeValue(this.url);
-              project.config.TAL_SERVER = this.url;
-            }
-          }
-
-          this.writeTofile(project);
-        })
-    })
-    */
-    this.prj.onProjectListChanged.subscribe(() => this.setTabsNumber())
+    this.pms.projectManagerServiceListChanged.subscribe(() => this.setTabsNumber())
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
   }
@@ -98,24 +71,13 @@ export class TopbarWidgetComponent implements OnInit {
   ngOnInit(): void {
     this.isBlurred = true;
 
-    //this.setTabsNumber()
-    //this.activeItem = this.items[0]
-
     this.lastUrl = this.api.getLastInsertedUrl();
     this.url = this.lastUrl;
     //TODO Daniel this.projectConfig.TAL_SERVER = this.url;
+    //Write the url to the file
 
     //this.pm.updateProblems();
 
-    // controllare prima che esista
-    /*let project = this.prj.getCurrentProject()
-    if (project != null) {
-      alert('non è null');
-      if (project != null && project.config != null) {
-        project.config.TAL_SERVER = 'ciao';
-        project.config.save(project.driver);
-      }
-    }*/
     if (this.urlInput) {
       this.urlInput.writeValue(this.url);
       //TODO Daniel this.projectConfig.TAL_SERVER = this.url;
@@ -128,16 +90,9 @@ export class TopbarWidgetComponent implements OnInit {
   }
   */
 
-  public async writeTofile(project: ProjectEnvironment | null) {
-    if (project != null && project.config != null) {
-      project.config.TAL_SERVER = this.url;
-      await project.config.save(project.driver);
-    }
-  }
-
   //calcola la lunghezza delle tab
   totalTabsCalc():number{
-    return this.getDimensions()-this.prj.getProjectsId().length*101.87;
+    return this.getDimensions()-this.pms.getProjectsId().length*101.87;
   }
 
   // Aggiorna le dimensioni della finestra quando viene ridimensionata in modo da gestire lo scrollable per via delle tabs
@@ -219,12 +174,11 @@ export class TopbarWidgetComponent implements OnInit {
   setTabsNumber(){
     let tmp : MenuItem[] = [];
     
-    let projectConfig, projectName, projects = this.prj.getProjects();
-
+    let projectConfig, projectName, projects = this.pms.getProjects();
     for (let i = 0; i < projects.length; i++){
       projectConfig = projects[i].config;
 
-      if(projectConfig && !projectConfig.isDefaultProjectName())
+      if(!projectConfig.isDefaultProjectName())
         projectName = projectConfig.PROJECT_NAME;// If there is a custom name
       else
         projectName = ProjectConfig.defaultConfig.PROJECT_NAME + ' ' + i; //default name
@@ -240,14 +194,14 @@ export class TopbarWidgetComponent implements OnInit {
 }
   // aggiungi un progetto controllando ed in caso le schede fossero troppe, attiva lo scrollable
   addProject() {
-    this.prj.addProject()
+    this.pms.addProject()
     this.activeItem = (this.items as MenuItem[])[(this.items as MenuItem[]).length - 1]
     this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
   }
 
   setCurrentTab(item : any) {
     this.activeItem = item;
-    this.prj.setCurrentProject(parseInt(item.id))
+    this.pms.setCurrentProjectManagerService(parseInt(item.id))
   }
 
   filterSuggestions(event: any) {
@@ -298,8 +252,14 @@ export class TopbarWidgetComponent implements OnInit {
     console.log("changeURL:urlCache:after:", this.urlCache )
     console.log("changeURL:url:", this.url )
     this.lastUrl = this.url + ""
-    this.writeTofile(this.prj.getCurrentProject());
-    //alert("il server ora è: " + project?.config?.TAL_SERVER);
+
+    // Daniel
+    let project = this.pms.getCurrentProject();
+    if (project != null) {
+      project.config.TAL_SERVER = this.url;
+      project.saveConfig();
+    }
+    //! Daniel
 
     console.log("changeURL:urlCache:after:", this.urlCache)
     console.log("changeURL:url:", this.url)

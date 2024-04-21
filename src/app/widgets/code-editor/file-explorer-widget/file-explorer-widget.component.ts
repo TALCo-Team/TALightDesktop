@@ -4,8 +4,8 @@ import { ConfirmationService } from 'primeng/api';
 import { OverlayPanel } from 'primeng/overlaypanel';
 import { MessageService } from 'primeng/api';
 import { FsService, Tar } from 'src/app/services/fs-service/fs.service';
-import { FsNodeFile, FsNodeFolder, FsServiceDriver } from 'src/app/services/fs-service/fs.service.types';
-import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
+import { FsNodeFile, FsNodeFolder } from 'src/app/services/fs-service/fs.service.types';
+import { ProjectsManagerService } from 'src/app/services/project-manager-service/projects-manager.service';
 import { GoogleLoginProvider, MicrosoftLoginProvider } from'@abacritt/angularx-social-login';
 import { SocialAuthService, SocialUser } from "@abacritt/angularx-social-login";
 import { GithubApiService } from 'src/app/services/github-api-service/github-api.service';
@@ -71,13 +71,14 @@ export class FileExplorerWidgetComponent implements OnInit {
   constructor(
     private confirmationService: ConfirmationService,
     private fs:FsService,
-    private pm: ProjectManagerService,
+    private projectsManagerService: ProjectsManagerService,
     private authService: SocialAuthService,
     private messageService: MessageService,
     private githubService: GithubApiService,
     private tutorialService : TutorialService,
   ) {
-    this.pm.onProjectChanged.subscribe( (project)=>{this.didProjectChanged()} ),
+    this.projectsManagerService.currentProjectChanged.subscribe( ()=>{this.didProjectChanged()} )
+
     this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
     this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
   }
@@ -101,7 +102,6 @@ export class FileExplorerWidgetComponent implements OnInit {
     this.ImportItems = [
       { label: 'Import from Github', icon: 'pi pi-cloud-download', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.downloadGithub(); }},
       { label: 'Import from local ', icon: 'pi pi-database', command: (event: any) => {  this.closeAllContextMenus(event.originalEvent); const fileUpload = document.getElementById('fileUpload'); fileUpload?.click(); }}
-
     ]
 
     // Setting export menù options
@@ -117,22 +117,16 @@ export class FileExplorerWidgetComponent implements OnInit {
       { label: 'Export on Google Drive', icon: 'pi pi-google', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.signIn() }},
       { label: 'Export on One Drive', icon: 'pi pi-microsoft', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.export('Microsoft') }},
       { label: 'Save locally ', icon: 'pi pi-download', command: (event: any) => { this.closeAllContextMenus(event.originalEvent); this.export('Local') }}
-
     ]
 
-
     this.authService.authState.subscribe((user) => {
-
       this.user = user;
       this.loggedIn = (user != null);
 
       // User is logged. Now it's possible to proceed with token request
       // to access Drive API and then export/upload files on Google Drive
-
-      if (this.googleLogin) {
+      if (this.googleLogin)
         this.authService.getAccessToken(GoogleLoginProvider.PROVIDER_ID).then(accessToken => this.accessToken = accessToken).then(() => this.export('Google'))
-      }
-
     });
 
   }
@@ -142,7 +136,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   public didProjectChanged(){
     console.log("FileExplorerWidgetComponent:didProjectChanged")
 
-    let project = this.pm.getCurrentProject();
+    let project = this.projectsManagerService.getCurrentProject();
     //TODO Daniel
     project?.driver.onMountChanged.subscribe(()=>{
       this.refreshRoot();
@@ -153,7 +147,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   refreshRoot(onDone?:()=>void) {
-    this.pm.getCurrentProject()?.driver.scanDirectory(this.rootDir).then((folder)=>{
+    this.projectsManagerService.getCurrentProject()?.driver.scanDirectory(this.rootDir).then((folder)=>{
       this.fsroot = folder ?? FsService.EmptyFolder
 
       this.bindCollapseEvent();
@@ -161,7 +155,6 @@ export class FileExplorerWidgetComponent implements OnInit {
       this.onUpdateRoot?.emit(this.fsroot);
       if(onDone){onDone()}
     });
-
   }
 
   private bindCollapseEvent() {
@@ -204,7 +197,7 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   public selectFile(file: FsNodeFile) {
     console.log('selectFile',file)
-    this.pm.getCurrentProject()?.driver.readFile(file.path).then((content)=>{
+    this.projectsManagerService.getCurrentProject()?.driver.readFile(file.path).then((content)=>{
       file.content = content ?? "";
       console.log('ecco il file: \n' + content);
       this.selectedFile = file;
@@ -225,9 +218,9 @@ export class FileExplorerWidgetComponent implements OnInit {
     }
 
     console.log("openSettings")
-    let project = this.pm.getCurrentProject();
+    let project = this.projectsManagerService.getCurrentProject();
     let projectFolder = this.fsroot.folders.find((item)=>{
-      return item.path + "/" == project?.config?.DIR_PROJECT
+      return item.path + "/" == project?.config.DIR_PROJECT
     })
     if(!projectFolder){return}
     console.log("openSettings:projectFolder:",projectFolder)
@@ -237,7 +230,6 @@ export class FileExplorerWidgetComponent implements OnInit {
     if(!configFile){return}
     console.log("openSettings:configFile:",configFile)
     this.selectFile(configFile);
-
   }
 
 
@@ -292,7 +284,7 @@ export class FileExplorerWidgetComponent implements OnInit {
               .join('/'); // Rebuild the path
 
           // Change path item in the FS
-          this.pm.getCurrentProject()?.driver.renameItem(this.editingItem.path, newpath).then(()=>{
+          this.projectsManagerService.getCurrentProject()?.driver.renameItem(this.editingItem.path, newpath).then(()=>{
             this.refreshRoot();
           })
 
@@ -302,7 +294,6 @@ export class FileExplorerWidgetComponent implements OnInit {
           this.editingItem.path = newpath;
 
           this.onUpdateRoot?.emit(this.fsroot);
-
         }
       }
     }
@@ -316,7 +307,6 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   public editItemChange() {
-
     this.editingItemError = false;
 
     if (this.editingItemFolder) {
@@ -350,7 +340,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   private deleteFile(currentFolder: FsNodeFolder, file: FsNodeFile) {
-    this.pm.getCurrentProject()?.driver.delete(file.path).then(()=>{
+    this.projectsManagerService.getCurrentProject()?.driver.delete(file.path).then(()=>{
       this.refreshRoot();
       this.onFileDeleted.emit(file.path)
     })
@@ -393,7 +383,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   private deleteFolder(currentFolder: FsNodeFolder, folder: FsNodeFolder) {
-    let project = this.pm.getCurrentProject();
+    let project = this.projectsManagerService.getCurrentProject();
     //Delete all files in the folder
     folder.files.forEach(item => {
       project?.driver.delete(item.path).then(()=>{
@@ -414,13 +404,10 @@ export class FileExplorerWidgetComponent implements OnInit {
       });
 
     } else {
-
       project?.driver.delete(folder.path).then(()=>{
         this.refreshRoot();
       })
-
     }
-
   }
   /***************/
 
@@ -433,7 +420,6 @@ export class FileExplorerWidgetComponent implements OnInit {
 
 
   public addNewItem(folder: FsNodeFolder, type: "file" | "folder") {
-
     this.newItemValue = "";
     this.newItemFolder = folder;
     this.newItemType = type;
@@ -452,22 +438,19 @@ export class FileExplorerWidgetComponent implements OnInit {
   }
 
   public saveNewItem() {
-
     if (!this.newItemError) {
       this.newItemValue = this.newItemValue.trim();
       if (this.newItemValue.length > 0) {
 
         if (this.newItemFolder) {
-          let project = this.pm.getCurrentProject();
+          let project = this.projectsManagerService.getCurrentProject();
 
           if (this.newItemType === "file") {
             let path = this.newItemFolder.path + "/" + this.newItemValue
             project?.driver.writeFile(path, "").then(()=>{
               this.refreshRoot()
             })
-
           } else {
-
             // Double slash on path when folder is created under root does not create problems
             let path = this.newItemFolder.path + "/" + this.newItemValue
             console.log(path)
@@ -517,7 +500,7 @@ export class FileExplorerWidgetComponent implements OnInit {
         console.log("upload:content:", new Uint8Array(content))
         let path = (!this.selectedFolder?"/":this.selectedFolder.path) + file.name
         console.log('upload:', path, content)
-        await this.pm.getCurrentProject()?.driver.writeFile(path, content)
+        await this.projectsManagerService.getCurrentProject()?.driver.writeFile(path, content)
       }
     }
     this.refreshRoot()
@@ -529,7 +512,7 @@ export class FileExplorerWidgetComponent implements OnInit {
       console.log("extractTar:unpack:files",files)
       console.log("extractTar:unpack:folders",folders)
 
-      let project = this.pm.getCurrentProject();
+      let project = this.projectsManagerService.getCurrentProject();
 
       for(var idx in folders){
         console.log("extractTar:createDirectory:")
@@ -585,16 +568,10 @@ export class FileExplorerWidgetComponent implements OnInit {
             break;
           default:
             break;
-
         }
       })
-
-    } else {
+    } else 
       this.uploadGitHub('Github-code');
-    }
-
-
-
   }
 
   //----------------------------------------------//
@@ -610,7 +587,6 @@ export class FileExplorerWidgetComponent implements OnInit {
 
 
   public uploadGitHub(mode:string, filename?:string, content?:ArrayBuffer, mime="application/octet-stream") {
-
     console.log("GitHub");
 
     var url = `https://github.com/login/oauth/authorize?client_id=8fd3343f822c2429ad95&scope=user%20repo`;
@@ -814,7 +790,7 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   public replaceProject(data:any) {
     // Before delete files and folders from root, then import project from Github
-    this.pm.getCurrentProject()?.driver.scanDirectory('/').then((folder)=>{
+    this.projectsManagerService.getCurrentProject()?.driver.scanDirectory('/').then((folder)=>{
       this.fsroot = folder ?? FsService.EmptyFolder
       this.deleteFolder(this.fsroot, this.fsroot)
 

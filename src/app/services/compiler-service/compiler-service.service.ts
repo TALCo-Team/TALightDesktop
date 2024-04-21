@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
-import { ProjectManagerService } from '../project-manager-service/project-manager.service';
-import { ProjectConfig, ProjectEnvironment } from '../project-manager-service/project-manager.types';
+import { ProjectsManagerService } from '../project-manager-service/projects-manager.service';
+import { ProjectConfig } from '../project-manager-service/project-manager.types';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CompilerService {
-  constructor( private prj:ProjectManagerService ) {}
+  constructor( private projectsManagerService:ProjectsManagerService ) {}
 
   async readConfig(){
-    let project = this.prj.getCurrentProject();
+    let project = this.projectsManagerService.getCurrentProject();
 
     if (!project?.driver) {return null}
 
@@ -18,7 +18,7 @@ export class CompilerService {
       return null;
     }
     
-    let configContent = await project?.driver.readFile(ProjectConfig.defaultConfig.CONFIG_PATH, false ) as string;
+    let configContent = await project?.driver.readFile(ProjectConfig.defaultConfig.CONFIG_PATH, false) as string;
     return JSON.parse(configContent) as ProjectConfig
   }
 
@@ -27,7 +27,7 @@ export class CompilerService {
     let config = await this.readConfig()
     if (!config){return null;}
 
-    let project = this.prj.getCurrentProject();
+    let project = this.projectsManagerService.getCurrentProject();
     await project?.driver.installPackages(config.EXTRA_PACKAGES)
     let result = await project?.driver.executeFile(config!.RUN)
     console.log(result)
@@ -35,11 +35,11 @@ export class CompilerService {
   }
 
   async installPackages(packages:string[]){
-    this.prj.getCurrentProject()?.driver.installPackages(packages)
+    this.projectsManagerService.getCurrentProject()?.driver.installPackages(packages)
   }
 
   async executeFile(fullpath:string){
     console.log("PythonCompilerService:executeFile:",fullpath)
-    this.prj.getCurrentProject()?.driver.executeFile(fullpath)
+    this.projectsManagerService.getCurrentProject()?.driver.executeFile(fullpath)
   }
 }

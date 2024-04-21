@@ -13,22 +13,19 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
 
     async loadProject() {
         console.log("PyodideProjectEnvironment:loadProject")
-        let config = await ProjectConfig.load(this.driver);
-        if(!config){
-            console.log("PyodideProjectEnvironment:loadProject:not found")
-            config = new ProjectConfig();
-            config.save(this.driver);
-        }
-        this.config = config;
-        this.onProjectConfigChanged.emit();
+        if(!this.loadConfig())
+            return false;
+        // TODO Daniel: check the loding of the config
+        this.saveConfig();
 
         //Starter files
         let folders = [
-            config.DIR_PROJECT,
-            config.DIR_ATTACHMENTS,
+            this.config.DIR_PROJECT,
+            this.config.DIR_ATTACHMENTS,
         ]
-        if(config.CREATE_EXAMPLES){ folders.push(config.DIR_EXAMPLES)}
-        
+        if(this.config.CREATE_EXAMPLES)
+            folders.push(this.config.DIR_EXAMPLES)
+
         for(let i = 0; i < folders.length; i++){
             console.log("PyodideProjectEnvironment:loadProject:createDirectory:",folders[i])
             await this.driver?.createDirectory(folders[i]);
@@ -36,16 +33,16 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
         
         let files: string[][] = []
         
-        let configContent = JSON.stringify(config, null, 4)
+        let configContent = JSON.stringify(this.config, null, 4)
         //(configContent);
-        files.unshift([config.CONFIG_PATH, configContent])
+        files.unshift([this.config.CONFIG_PATH, configContent])
         
         let mainContent = `print("Hello World!")`;
-        files.push([config.RUN, mainContent])
+        files.push([this.config.RUN, mainContent])
         
-        if(config.CREATE_EXAMPLES){
+        if(this.config.CREATE_EXAMPLES){
             PyodideExamples.forEach((content:string, filename:string)=>{
-                files.push([config!.DIR_EXAMPLES + filename, content])
+                files.push([this.config!.DIR_EXAMPLES + filename, content])
             })
         }    
         

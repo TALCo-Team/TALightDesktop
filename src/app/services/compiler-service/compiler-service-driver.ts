@@ -1,7 +1,7 @@
 import { CompilerMessage, CompilerMessageType, CompilerRequest, CompilerRequestHandler, CompilerResponse, CompilerState, notifyCallback, PromiseResolver, stateCallback, stdCallback, UID } from './compiler-service.types';
 import { FsNodeEmptyFolder, FsNodeFileList, FsNodeFolder, FsNodeList } from '../fs-service/fs.service.types';
 import { ProjectDriver } from '../project-manager-service/project-manager.types';
-import { ProjectManagerService } from '../project-manager-service/project-manager.service';
+import { ProjectsManagerService } from '../project-manager-service/projects-manager.service';
 import { EventEmitter } from '@angular/core';
 
 export class CompilerDriver implements ProjectDriver {
@@ -12,7 +12,7 @@ export class CompilerDriver implements ProjectDriver {
 
   //Prefix for the mount point
   // Example with Project ID 0: /TALight_Projects_0
-  public mountPoint = "/TALight_" + ProjectManagerService.projectsFolder + "_";
+  public mountPoint = "/TALight_" + ProjectsManagerService.projectsFolder + "_";
   public onMountChanged = new EventEmitter<any>();
 
   public requestIndex = new Map<UID, CompilerRequestHandler>();
