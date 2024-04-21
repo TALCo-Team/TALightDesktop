@@ -12,6 +12,7 @@ export class ProjectsManagerService {
 
   private currentPmsId = -1;
   private currentPms: ProjectManagerService | null = null;
+  private lastPms: ProjectManagerService | null = null;
 
   public currentProjectChanged = new EventEmitter<ProjectManagerService>();
   public projectManagerServiceListChanged = new EventEmitter<void>();
@@ -30,7 +31,7 @@ export class ProjectsManagerService {
       console.log("ProjectManagerService:setCurrentProject: error, invalid index")
       return;
     }
-
+    this.lastPms = this.currentPms 
     this.currentPms = projectManagerService;
     this.currentPmsId = index;
     console.log("ProjectManagerService:setCurrentProject:willEmit", this.currentPms)
@@ -71,6 +72,10 @@ export class ProjectsManagerService {
     return this.currentPms;
   }
 
+  public getLastProjectManagerService(){
+    return this.lastPms;
+  }
+
   public getCurrentProject(){
     return this.currentPms?.getProject();
   }
@@ -93,6 +98,8 @@ export class ProjectsManagerService {
     this.setCurrentProjectManagerService(id)
 
     this.projectManagerServiceListChanged.emit();
+
+    return this.getCurrentProjectManagerService();
   }
 
   public openProject(project:ProjectEnvironment){

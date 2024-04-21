@@ -828,6 +828,7 @@ export class FileExplorerWidgetComponent implements OnInit {
       "content": binary
     });
 
+    //TODO work just on local 
     await fetch("http://localhost:4000/uploadFile?username=" + localStorage.getItem("username")  + "&filename=" + filename + "&repository=" + repository, {
     method: "POST",
     headers: {

@@ -72,12 +72,9 @@ export class ProblemWidgetComponent {
     // Daniel: original
     // this.prj.onProjectChanged.subscribe(() => { this.saveProblemServiceConfig() })
     this.projectsManagerService.currentProjectChanged.subscribe(() => {
-      let prj = this.projectsManagerService.getCurrentProject();
-      if (prj != null) {
-        prj.onProjectConfigChanged.subscribe(() => {
-          this.saveProblemServiceConfig();
-        })
-      }
+      this.projectsManagerService.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
+        this.saveProblemServiceConfig();
+      })
     })
     
     this.pm.onProblemsLoaded.subscribe((_) =>{ this.loadProblemServiceConfig() })
@@ -128,28 +125,28 @@ export class ProblemWidgetComponent {
   }
 
   private saveProblemServiceConfig() {
-    let project = this.projectsManagerService.getCurrentProject();
-    if (project == null) return;
-
     this.pm.onProblemSelected.subscribe(() => {
-       //alert('ricevuto problem selected: '+ problem.name);
-      this.writeTofile();
-      project?.onProjectConfigChanged.subscribe((_) => {
-        //alert('config pronto in problem');
-        this.writeTofile();
+       //console.log('Problem selected: ', problem.name);
+      this.updateProjectConfigProblemServiceProblem();
+
+      this.projectsManagerService.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
+        //console.log('config pronto in problem');
+        this.updateProjectConfigProblemServiceProblem();
       })
     })
+
     this.onServiceSelected.subscribe((service) => {
-      //alert('ricevuto service selected: '+ service.name);
-      this.writeTofile();
-      project?.onProjectConfigChanged.subscribe((_) => {
-        //alert('config pronto in service');
-        this.writeTofile();
+      //console.log('Service selected: ', service.name);
+      this.updateProjectConfigProblemServiceProblem();
+
+      this.projectsManagerService.getCurrentProject()?.onProjectConfigChanged.subscribe((_) => {
+        //console.log('config pronto in service');
+        this.updateProjectConfigProblemServiceProblem();
       })
     })
   }
 
-  public async writeTofile() {
+  private async updateProjectConfigProblemServiceProblem() {
     let project = this.projectsManagerService.getCurrentProject();
     if (project == null) return;
     project.config.parseFile(project.config);
@@ -162,8 +159,6 @@ export class ProblemWidgetComponent {
         project.config.TAL_PROBLEM = "";
     }
     //project.config.TAL_SERVER = this.url;
-    //alert(project.config.TAL_SERVER);
-    //alert('scrivo sul file il problema');
     await project.saveConfig();
   }
 
@@ -327,22 +322,18 @@ export class ProblemWidgetComponent {
     this.selectedArgs = undefined;
     this.selectedFiles = undefined;
 
-
     this.problemsMenu = []
     this.servicesMenu = []
     this.loading = true
-
 
     console.log
     this.pm.updateProblems()
   }
 
   async problemsDidChange(clear: boolean) {
-
     this.problemsMenu = []
     this.servicesMenu = []
     this.loading = true
-
 
     if (clear) return
 
@@ -424,9 +415,7 @@ export class ProblemWidgetComponent {
 
     let req = this.api.GetAttachment(this.selectedProblem.name, onAttachment, onAttachmentInfo, onData);
     req.onError = (error) => { this.onApiError(error) };
-
   }
-
 }
 
 

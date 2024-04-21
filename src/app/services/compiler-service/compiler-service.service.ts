@@ -11,9 +11,10 @@ export class CompilerService {
   async readConfig(){
     let project = this.projectsManagerService.getCurrentProject();
 
-    if (!project?.driver) {return null}
+    if (!project?.driver)
+      return null
 
-    if (!await project?.driver.exists(ProjectConfig.defaultConfig.CONFIG_PATH)){
+    if (!await project.driver.exists(ProjectConfig.defaultConfig.CONFIG_PATH)){
       console.log("PythonCompilerService:readPythonConfig: config file doesn't exist!")
       return null;
     }

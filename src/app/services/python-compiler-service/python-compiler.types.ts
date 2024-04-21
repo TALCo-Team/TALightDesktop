@@ -1,14 +1,10 @@
-import { ProjectConfig, ProjectEnvironment, ProjectLanguage } from "../project-manager-service/project-manager.types";
+import { ProjectEnvironment, ProjectLanguage } from "../project-manager-service/project-manager.types";
 import { PyodideDriver } from "./python-compiler.driver";
 import { PyodideExamples } from "./python-compiler.examples";
 
 export class PyodideProjectEnvironment extends ProjectEnvironment{
-    public override driver: PyodideDriver;
-
     constructor(){
-        let driver = new PyodideDriver();
-        super(ProjectLanguage.PY, driver)
-        this.driver = driver;
+        super(ProjectLanguage.PY, new PyodideDriver())
     }
 
     async loadProject() {

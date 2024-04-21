@@ -43,7 +43,6 @@ export class CodeEditorComponent implements OnInit {
 
   public isPresent: string[] = [];
   public isPresentName: string[] = [];
-  public files: FsNodeFile[] = [];
 
   public activeIndex = 0;
   public activeWidget = 0;
@@ -80,8 +79,8 @@ export class CodeEditorComponent implements OnInit {
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) })
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     console.log("CodeEditorComponent:constructor", this.pms)
-
-    this.pms.currentProjectChanged.subscribe((project) => { this.onProjectChanged() })
+    
+    this.pms.currentProjectChanged.subscribe(() => { this.onProjectChanged() })
 
     document.addEventListener('keydown', (event: KeyboardEvent) => {this.hotkeysService.emitHotkeysEvent(event)});
     //this.hotkeysService.registerHotkeysEvents().subscribe((event: KeyboardEvent) => {this.hotkeysService.getCorrectHotkey(event, this.prj.getCurrentProject())})
@@ -90,6 +89,7 @@ export class CodeEditorComponent implements OnInit {
   
   ngOnInit() {
     this.isBlurred = true;
+    
     this.pms.addProject();
   }
 
@@ -183,6 +183,8 @@ export class CodeEditorComponent implements OnInit {
     this.fslistfile.forEach(item => filePathList.push(item.path))
     this.problemWidget.filePathList = filePathList
     this.terminalWidget.fslistfile = this.fslistfile;
+
+    console.log("CodeEditorComponent:onUpdateRoot", this.fslist)
   }
 
   public didNotify(data: string) {
@@ -335,32 +337,40 @@ export class CodeEditorComponent implements OnInit {
     var Removeindex = event.index;
     this.isPresentName.splice(Removeindex, 1);
     this.isPresent.splice(Removeindex, 1);
-    this.files.splice(Removeindex, 1);
+    
+    let files = this.pms.getCurrentProjectManagerService()?.files;
+    if (!files) { return; }
+    
+    files.splice(Removeindex, 1);
 
     console.log("Tab is closed: ", this.isPresentName);
 
     if (Removeindex == this.activeIndex) {
-
       setTimeout(() => {
         this.activeIndex = 0;
-        this.execBar.selectedFile = this.files[this.activeIndex];
-        this.fileEditor.selectedFile = this.files[this.activeIndex];
-        this.fileExplorer.selectedFile = this.files[this.activeIndex];
+        if(!files) { return; }
+
+        this.execBar.selectedFile = files[this.activeIndex];
+        this.fileEditor.selectedFile = files[this.activeIndex];
+        this.fileExplorer.selectedFile = files[this.activeIndex];
       }, 0);
     }
 
     if (Removeindex < this.activeIndex) {
       setTimeout(() => this.activeIndex = this.activeIndex - 1, 0);
     }
-
   }
 
   public changeFile(event: any) {
     setTimeout(() => {
       this.activeIndex = event.index;
-      this.execBar.selectedFile = this.files[this.activeIndex];
-      this.fileEditor.selectedFile = this.files[this.activeIndex];
-      this.fileExplorer.selectedFile = this.files[this.activeIndex];
+
+      let files = this.pms.getCurrentProjectManagerService()?.files;
+      if(!files) { return; }
+
+      this.execBar.selectedFile = files[this.activeIndex];
+      this.fileEditor.selectedFile = files[this.activeIndex];
+      this.fileExplorer.selectedFile = files[this.activeIndex];
     }, 0);
   }
 
@@ -372,9 +382,11 @@ export class CodeEditorComponent implements OnInit {
 
     if (!this.isPresent.includes(this.selectedFile.path)) {
       this.isPresentName.push(this.selectedFile.name);
-      this.files.push(this.selectedFile);
+      
+      this.pms.getCurrentProjectManagerService()?.files.push(this.selectedFile);
+      
       setTimeout(() => this.activeIndex = (this.isPresentName.length) - 1, 0);
-
+      
       this.isPresent.push(this.selectedFile.path);
     } else {
       this.setActiveIndex(this.selectedFile.path);
