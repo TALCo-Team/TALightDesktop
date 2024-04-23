@@ -39,9 +39,7 @@ export class TopbarWidgetComponent implements OnInit {
   isTutorialButtonVisible: boolean = false;
   scrollable_prop = false;
 
-  //ELIMINA
   larghezzaFinestra: number | undefined;
-  //ELIMINA
 
   constructor( public readonly themeService: ThemeService,
                public api: ApiService,
@@ -54,14 +52,14 @@ export class TopbarWidgetComponent implements OnInit {
                public pms: ProjectsManagerService,
              )
   {
-    this.getDimensions(); //ELIMINA
+    this.getDimensions();
     this.url = api.url;
     this.lastUrl = this.url + "";
     this.urlCache = [...this.api.urlCache]
     this.subApiState = this.api.onApiStateChange.subscribe((state:ApiState)=>{this.updateState(state)})
     this.subProblemError = this.pm.onError.subscribe((_)=>{this.stateBad()})
     this.subOnNotify = this.nm.onNotification.subscribe((msg:NotificationMessage): void=>{this.showNotification(msg)})
-    
+
     this.pms.projectManagerServiceListChanged.subscribe(() => this.setTabsNumber())
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
@@ -70,7 +68,7 @@ export class TopbarWidgetComponent implements OnInit {
   //Old ngOnInit
   ngOnInit(): void {
     this.isBlurred = true;
-
+    this.setCurrentTab(this.items[0]);
     this.lastUrl = this.api.getLastInsertedUrl();
     this.url = this.lastUrl;
     //TODO Daniel this.projectConfig.TAL_SERVER = this.url;
@@ -86,7 +84,7 @@ export class TopbarWidgetComponent implements OnInit {
 
   /*
   ngOnInit(): void {
-    this.isBlurred = true;  
+    this.isBlurred = true;
   }
   */
 
@@ -173,7 +171,7 @@ export class TopbarWidgetComponent implements OnInit {
 
   setTabsNumber(){
     let tmp : MenuItem[] = [];
-    
+
     let projectConfig, projectName, projects = this.pms.getProjects();
     for (let i = 0; i < projects.length; i++){
       projectConfig = projects[i].config;
@@ -185,17 +183,18 @@ export class TopbarWidgetComponent implements OnInit {
 
       tmp.push({ label: projectName , icon: 'pi pi-fw pi-times' , id : i.toString()})
 
-    this.activeItem = tmp
-  }
+      this.activeItem = tmp
+    }
 
-  this.items = tmp
-  this.disableDelete = (projects.length <= 1)
-  this.activeItem = this.items[0];
-}
+    this.items = tmp
+    this.disableDelete = (projects.length <= 1)
+    this.activeItem = this.items[0];
+  }
   // aggiungi un progetto controllando ed in caso le schede fossero troppe, attiva lo scrollable
   addProject() {
     this.pms.addProject()
-    this.activeItem = (this.items as MenuItem[])[(this.items as MenuItem[]).length - 1]
+    //this.activeItem = (this.items as MenuItem[])[(this.items as MenuItem[]).length - 1]
+    this.setCurrentTab((this.items as MenuItem[])[(this.items as MenuItem[]).length - 1])
     this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
   }
 
