@@ -68,7 +68,6 @@ export class TopbarWidgetComponent implements OnInit {
   //Old ngOnInit
   ngOnInit(): void {
     this.isBlurred = true;
-    this.setCurrentTab(this.items[0]);
     this.lastUrl = this.api.getLastInsertedUrl();
     this.url = this.lastUrl;
     //TODO Daniel this.projectConfig.TAL_SERVER = this.url;
@@ -80,6 +79,12 @@ export class TopbarWidgetComponent implements OnInit {
       this.urlInput.writeValue(this.url);
       //TODO Daniel this.projectConfig.TAL_SERVER = this.url;
     }
+
+    // devo dargli un timeout dal momento che ci mette del tempo a caricare i files per via di pydiode
+    setTimeout(() => {
+      this.setCurrentTab(this.items[0]);
+    }, 3000);
+
   }
 
   /*
@@ -133,7 +138,6 @@ export class TopbarWidgetComponent implements OnInit {
     else {
       this.isTutorialButtonVisible = true;
     }
-    this.setCurrentTab(this.items[0])
   }
 
   public toggleTheme() {
@@ -188,13 +192,15 @@ export class TopbarWidgetComponent implements OnInit {
 
     this.items = tmp
     this.disableDelete = (projects.length <= 1)
-    this.activeItem = this.items[0];
+    //this.activeItem = this.items[0];
   }
   // aggiungi un progetto controllando ed in caso le schede fossero troppe, attiva lo scrollable
   addProject() {
     this.pms.addProject()
-    //this.activeItem = (this.items as MenuItem[])[(this.items as MenuItem[]).length - 1]
-    this.setCurrentTab((this.items as MenuItem[])[(this.items as MenuItem[]).length - 1])
+    //é un timer perché ci mette tanto a caricare pydiode
+    setTimeout(() => {
+      this.setCurrentTab((this.items as MenuItem[])[(this.items as MenuItem[]).length - 1])
+    }, 3000);
     this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
   }
 
