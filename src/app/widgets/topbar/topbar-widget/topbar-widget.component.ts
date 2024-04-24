@@ -38,6 +38,7 @@ export class TopbarWidgetComponent implements OnInit {
   isBlurred: boolean = false;
   isTutorialButtonVisible: boolean = false;
   scrollable_prop = false;
+  disabilita_bottone = false;
 
   larghezzaFinestra: number | undefined;
 
@@ -197,10 +198,13 @@ export class TopbarWidgetComponent implements OnInit {
   // aggiungi un progetto controllando ed in caso le schede fossero troppe, attiva lo scrollable
   addProject() {
     this.pms.addProject()
+    this.disabilita_bottone = true;
     //é un timer perché ci mette tanto a caricare pydiode
     setTimeout(() => {
+      this.disabilita_bottone = false;
       this.setCurrentTab((this.items as MenuItem[])[(this.items as MenuItem[]).length - 1])
     }, 3000);
+
     this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
   }
 
