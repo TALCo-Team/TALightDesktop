@@ -83,7 +83,7 @@ export class CodeEditorComponent implements OnInit {
     this.pms.currentProjectChanged.subscribe(() => { this.onProjectChanged() })
 
     document.addEventListener('keydown', (event: KeyboardEvent) => {this.hotkeysService.emitHotkeysEvent(event)});
-    //this.hotkeysService.registerHotkeysEvents().subscribe((event: KeyboardEvent) => {this.hotkeysService.getCorrectHotkey(event, this.prj.getCurrentProject())})
+    this.hotkeysService.registerHotkeysEvents().subscribe((event: KeyboardEvent) => {this.hotkeysService.getCorrectHotkey(event)})
     this.hotkeysService.hotkeysAction.subscribe((emitter) => {this.chooseHotkeysAction(emitter)})
   }
   
@@ -166,11 +166,12 @@ export class CodeEditorComponent implements OnInit {
     console.log("CodeEditorComponent:onProjectChanged")
     
     let project = this.pms.getCurrentProject();
+    if (!project) { return; }
 
-    project?.driver.subscribeNotify(true, (msg: string) => { this.didNotify(msg) })
-    project?.driver.subscribeState(true, (state: CompilerState, content?: string) => { this.didStateChange(state, content) })
-    project?.driver.subscribeStdout(true, (msg: string) => { this.didStdout(msg) })
-    project?.driver.subscribeStderr(true, (msg: string) => { this.didStderr(msg) })
+    project.driver.subscribeNotify(true, (msg: string) => { this.didNotify(msg) })
+    project.driver.subscribeState(true, (state: CompilerState, content?: string) => { this.didStateChange(state, content) })
+    project.driver.subscribeStdout(true, (msg: string) => { this.didStdout(msg) })
+    project.driver.subscribeStderr(true, (msg: string) => { this.didStderr(msg) })
 
     console.log("CodeEditorComponent:onProjectChanged", project)
   }
