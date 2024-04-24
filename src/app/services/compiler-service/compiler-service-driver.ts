@@ -11,9 +11,13 @@ export class CompilerDriver implements ProjectDriver {
   public fsListfiles:FsNodeFileList=[];
 
   //Prefix for the mount point
+  public root = "/TALight_" + ProjectsManagerService.projectsFolder;
+
   // Example with Project ID 0: /TALight_Projects_0
-  public mountPoint = "/TALight_" + ProjectsManagerService.projectsFolder + "_";
-  public onMountChanged = new EventEmitter<any>();
+  public mountPoint = this.root + "_";
+
+
+  public onMountChanged = new EventEmitter<void>();
 
   public requestIndex = new Map<UID, CompilerRequestHandler>();
 
@@ -58,7 +62,6 @@ export class CompilerDriver implements ProjectDriver {
         case CompilerMessageType.SubscribeStdout: this.didReceiveSubscribeStdout(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
         case CompilerMessageType.SubscribeStderr: this.didReceiveSubscribeStderr(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
         case CompilerMessageType.SendStdin:       this.didReceiveSendStdin(msgSent, msgRecived, resolvePromise); break;
-
 
         case CompilerMessageType.Mount:           this.didReceiveMount(msgSent, msgRecived, resolvePromise); break;
         case CompilerMessageType.Unmount:         this.didReceiveUnmount(msgSent, msgRecived, resolvePromise); break;
@@ -333,6 +336,7 @@ export class CompilerDriver implements ProjectDriver {
 
   //SEND: PUBLIC
 
+  //Don't use this function directly, use mountByProjectId or mountRoot
   public mount(path: string): Promise<boolean> {
     console.log("compiler-serive-driver:mount: "+path)
     let message: CompilerMessage = {
@@ -341,16 +345,20 @@ export class CompilerDriver implements ProjectDriver {
       args: [path],
       contents: [],
     }
-    
-    let resultPromise = this.sendMessage<boolean>(message);
-
-    this.onMountChanged.emit();
-
-    return resultPromise;
+    return this.sendMessage<boolean>(message);;
   }
 
   public mountByProjectId(projectId: number): Promise<boolean> {
-    return this.mount(this.mountPoint + projectId);
+    let result = this.mount(this.mountPoint + projectId);
+
+    this.onMountChanged.emit();
+
+    return result;
+  }
+
+  // Unused
+  public mountRoot(): Promise<boolean> {
+    return this.mount(this.root);
   }
 
   public unmount(path: string): Promise<boolean> {
@@ -646,4 +654,3 @@ export class CompilerDriver implements ProjectDriver {
     return 'uid-' + timestap + '-' + seed;
   }
 }
-  

@@ -6,8 +6,6 @@ import { FsNodeFile, FsNodeFolder } from '../fs-service/fs.service.types';
   providedIn: 'root'
 })
 export class ProjectManagerService {
-  public onProjectChanged = new EventEmitter<ProjectEnvironment>();
-
   // list of all the files
   public files: FsNodeFile[] = [];
 

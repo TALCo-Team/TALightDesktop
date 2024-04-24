@@ -1,6 +1,6 @@
-import { EventEmitter, Injectable, Input } from '@angular/core';
+import { EventEmitter } from '@angular/core';
 import { CompilerDriver } from "../compiler-service/compiler-service.types";
-import { FsNodeFile, FsNodeFolder, FsNodeList, FsServiceDriver } from "../fs-service/fs.service.types"
+import { FsServiceDriver } from "../fs-service/fs.service.types"
 
 export enum ProjectLanguage{
   PY='PY',
@@ -9,14 +9,22 @@ export enum ProjectLanguage{
 }
 
 export interface ProjectDriver extends FsServiceDriver, CompilerDriver{
+  
+  root : string;
+  mountPoint : string;
+
+  onMountChanged : EventEmitter<void>;
+
+  mountRoot(): Promise<boolean>;
+
   mountByProjectId(projectId: number): Promise<boolean>;
-  onMountChanged : EventEmitter<any>;
 };
 
 export abstract class ProjectEnvironment{
   
   public config: ProjectConfig = ProjectConfig.defaultConfig;
   public onProjectConfigChanged = new EventEmitter<void>();
+  public onProjectChanged = new EventEmitter<void>();
 
   constructor(
     public laguange: ProjectLanguage,

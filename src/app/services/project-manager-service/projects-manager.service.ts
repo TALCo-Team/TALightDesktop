@@ -1,5 +1,5 @@
 import { EventEmitter, Injectable } from '@angular/core';
-import { ProjectEnvironment } from './project-manager.types';
+import { ProjectDriver, ProjectEnvironment } from './project-manager.types';
 import { PythonCompilerService } from '../python-compiler-service/python-compiler.service';
 import { ProjectManagerService } from './project-manager.service';
 
@@ -14,7 +14,7 @@ export class ProjectsManagerService {
   private currentPms: ProjectManagerService | null = null;
   private lastPms: ProjectManagerService | null = null;
 
-  public currentProjectChanged = new EventEmitter<ProjectManagerService>();
+  public currentProjectChanged = new EventEmitter<void>();
   public projectManagerServiceListChanged = new EventEmitter<void>();
 
   static readonly projectsFolder = "Projects";
@@ -35,7 +35,7 @@ export class ProjectsManagerService {
     this.currentPms = projectManagerService;
     this.currentPmsId = index;
     console.log("ProjectManagerService:setCurrentProject:willEmit", this.currentPms)
-    this.currentProjectChanged.emit(this.currentPms)
+    this.currentProjectChanged.emit()
     console.log("ProjectManagerService:setCurrentProject:sent")
   }
 
@@ -93,13 +93,41 @@ export class ProjectsManagerService {
       id = Math.max(...this.getProjectsId()) + 1 
     
     //TODO: add switch python/cpp  
-    this.pms.set(id, new ProjectManagerService(this.python.createPythonProject()))
-    console.log("ProjectManagerService:addProject:projects", this.getProjectsId())
+    let pms = new ProjectManagerService(this.python.createPythonProject())
+    
+    this.pms.set(id, pms)
+
+    console.log("ProjectManagerService:addProject:project:id: ", id)
     this.setCurrentProjectManagerService(id)
+
+    this.syncProjects(id)// Write the new id to the file in the first Storage
 
     this.projectManagerServiceListChanged.emit();
 
     return this.getCurrentProjectManagerService();
+  }
+
+
+  private syncProjects(id:number){
+    let minId = Math.min(...this.getProjectsId());
+
+    let firstProject = this.getProject(minId);
+    let path = firstProject?.config.DIR_PROJECT + "Projects.json";
+    
+    firstProject?.driver.mountByProjectId(minId);
+
+    if(id == 0){
+      // Read the storage to get the projects
+      let content = firstProject?.driver.readFile(path, false)
+      console.log("ProjectManagerService:syncProjects:read: ", content)
+      //TODO Daniel: convertire content in un array di id
+    }else{
+      let content = JSON.stringify(this.getProjectsId());
+      console.log("ProjectManagerService:syncProjects:write: ", content)
+
+      
+      firstProject?.driver.writeFile(path, content);
+    }
   }
 
   public openProject(project:ProjectEnvironment){

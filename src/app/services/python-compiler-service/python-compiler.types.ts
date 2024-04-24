@@ -30,7 +30,7 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
         let files: string[][] = []
         
         let configContent = JSON.stringify(this.config, null, 4)
-        //(configContent);
+
         files.unshift([this.config.CONFIG_PATH, configContent])
         
         let mainContent = `print("Hello World!")`;
@@ -50,8 +50,10 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
                 console.log("PyodideProjectEnvironment:loadProject:files:SKIP:", path)
                 continue;
             }
-            await this.driver?.writeFile(path, content);  
+            await this.driver.writeFile(path, content);  
         }
         return true;
+
+        this.onProjectChanged.emit()
     }
 }

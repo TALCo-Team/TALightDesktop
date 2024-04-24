@@ -154,7 +154,7 @@ export class CodeEditorComponent implements OnInit {
     this.cdRef.detectChanges();
   }
 
-  public didStateChangeReady(content?: string) {
+  public didStateChangeReady() {
     let project = this.pms.getCurrentProject();
     if (project) {
       console.log("didStateChange:Ready:loadProject")
@@ -199,15 +199,15 @@ export class CodeEditorComponent implements OnInit {
   private didStateChange(state: CompilerState, content?: string) {
     console.log("CodeEditorComponent:didStateChange:")
     //this.outputWidget!.print(state,OutputType.SYSTEM);
+
     if (state == CompilerState.Init){
       let projectID = this.pms.getCurrentProjectId();
-
       console.log("CodeEditorComponent:didStateChange:mount: ", projectID)
       this.pms.getCurrentProject()?.driver.mountByProjectId(projectID)
-
       //TODO Daniel close all open tabs
+
     }else if (state == CompilerState.Ready) {
-      this.didStateChangeReady(content)
+      this.didStateChangeReady();
     }else if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
       this.apiConnectReset();
     }
@@ -215,9 +215,8 @@ export class CodeEditorComponent implements OnInit {
     this.pyodideState = state
     this.pyodideStateContent = content
     console.log("CodeEditorComponent:didStateChange:", state)
-    if (!this.apiRun || state != CompilerState.Stdin) {
+    if (!this.apiRun || state != CompilerState.Stdin)
       this.outputWidget.didStateChange(state, content)
-    }
   }
 
   public didStdout(data: string) {

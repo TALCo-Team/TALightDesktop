@@ -1,6 +1,5 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
-import { ProjectEnvironment } from '../project-manager-service/project-manager.types';
 import { ProjectsManagerService } from '../project-manager-service/projects-manager.service';
 
 @Injectable({
