@@ -203,7 +203,7 @@ export class TopbarWidgetComponent implements OnInit {
     setTimeout(() => {
       this.disabilita_bottone = false;
       this.setCurrentTab((this.items as MenuItem[])[(this.items as MenuItem[]).length - 1])
-    }, 3);
+    }, 3000);
 
     this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
   }
