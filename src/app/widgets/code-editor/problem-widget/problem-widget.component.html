@@ -7,6 +7,29 @@
   -->
 
   <!-- API: PROBLEMS and SERVICES -->
+
+  <div class="tal-bar-url">
+
+    <i #statusDot class="pi pi-circle-fill" pTooltip="Status" tooltipPosition="left"></i>
+
+    <p-autoComplete #urlInput class="top-bar-url-input p-inputtext-sm"
+        (placeholder)="urlCache"  [(ngModel)]="url" pTooltip="Change URL" tooltipPosition="bottom"
+        (change)="changeURL($event)" (onSelect)="changeURL($event)" (onBlur)="changeURL($event)" [suggestions]="urlCache"
+        (completeMethod)="filterSuggestions($event)" [dropdown]="true">
+
+        <ng-template let-url pTemplate="item">
+            <div class="url-item">
+                <div class="url-item-label">{{url}}</div>
+                <button pButton icon="pi pi-trash" class="tal-square-button" pTooltip="Remove URL" (click)="removeURL(url, $event)"></button>
+            </div>
+        </ng-template>
+    </p-autoComplete>
+
+ 
+</div>
+
+
+
   <div class="tal-problem-widget-row tal-problem-widget-row-problem">
     <p-dropdown #problemDropdown placeholder="Select a problem" class="tal-problem-widget-problem-selector"
       scrollHeight="50rem" [overlayOptions]="dropdownOptions"

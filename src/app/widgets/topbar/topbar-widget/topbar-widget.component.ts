@@ -1,6 +1,6 @@
 import { Component, ElementRef, NgZone, OnInit, ViewChild, ChangeDetectorRef, HostListener } from '@angular/core';
 import { AutoComplete } from 'primeng/autocomplete';
-import { ApiService, ApiState } from 'src/app/services/api-service/api.service';
+
 import { NotificationManagerService, NotificationMessage, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
@@ -18,7 +18,7 @@ import { ProjectsManagerService } from 'src/app/services/project-manager-service
 })
 export class TopbarWidgetComponent implements OnInit {
 
-  @ViewChild("urlInput") public urlInput?: AutoComplete;
+  
   @ViewChild("statusDot") public statusDot?: ElementRef;
   @ViewChild("messageBox") public messageBox?: ElementRef;
 
@@ -26,13 +26,8 @@ export class TopbarWidgetComponent implements OnInit {
   items!: MenuItem[];
   activeItem: any = undefined;
 
-  url;
-  lastUrl;
-  urlCache: string[] = []
-  escapeRegEx = /[.*+?^${}()|[\]\\]/g
   urlInputClass = ""
-  subApiState
-  subProblemError
+
   subOnNotify
   currentNotification?: NotificationMessage
   isBlurred: boolean = false;
@@ -43,7 +38,7 @@ export class TopbarWidgetComponent implements OnInit {
   larghezzaFinestra: number | undefined;
 
   constructor( public readonly themeService: ThemeService,
-               public api: ApiService,
+
                public zone: NgZone,
                public pm: ProblemManagerService,
                public nm: NotificationManagerService,
@@ -54,11 +49,8 @@ export class TopbarWidgetComponent implements OnInit {
              )
   {
     this.getDimensions();
-    this.url = api.url;
-    this.lastUrl = this.url + "";
-    this.urlCache = [...this.api.urlCache]
-    this.subApiState = this.api.onApiStateChange.subscribe((state:ApiState)=>{this.updateState(state)})
-    this.subProblemError = this.pm.onError.subscribe((_)=>{this.stateBad()})
+
+
     this.subOnNotify = this.nm.onNotification.subscribe((msg:NotificationMessage): void=>{this.showNotification(msg)})
 
     this.pms.projectManagerServiceListChanged.subscribe(() => this.setTabsNumber())
@@ -69,17 +61,13 @@ export class TopbarWidgetComponent implements OnInit {
   //Old ngOnInit
   ngOnInit(): void {
     this.isBlurred = true;
-    this.lastUrl = this.api.getLastInsertedUrl();
-    this.url = this.lastUrl;
+
     //TODO Daniel this.projectConfig.TAL_SERVER = this.url;
     //Write the url to the file
 
     //this.pm.updateProblems();
 
-    if (this.urlInput) {
-      this.urlInput.writeValue(this.url);
-      //TODO Daniel this.projectConfig.TAL_SERVER = this.url;
-    }
+    
 
     // devo dargli un timeout dal momento che ci mette del tempo a caricare i files per via di pydiode
     setTimeout(() => {
@@ -213,79 +201,6 @@ export class TopbarWidgetComponent implements OnInit {
     this.pms.setCurrentProjectManagerService(parseInt(item.id))
   }
 
-  filterSuggestions(event: any) {
-    let query = event.query.replace(this.escapeRegEx, '\\$&')
-    let filter = new RegExp(".*" + query + ".*")
-    let urlCache: string[] = []
-    this.api.urlCache.forEach((url: string) => {
-      if (url.match(filter)) {
-        urlCache.push(url)
-      }
-    });
-    this.urlCache = urlCache
-  }
-
-  public updateState(state: ApiState) {
-    let dot = this.statusDot!.nativeElement as HTMLElement
-    switch (state) {
-      case ApiState.Idle: dot.style.color = ""; break;
-      case ApiState.Good: dot.style.color = "green"; break;
-      case ApiState.Maybe: dot.style.color = "orange"; break;
-      case ApiState.Bad: dot.style.color = "darkred"; break;
-    }
-  }
-
-  public stateIdle() { this.updateState(ApiState.Idle); }
-  public stateGood() { this.updateState(ApiState.Good); }
-  public stateMaybe() { this.updateState(ApiState.Maybe); }
-  public stateBad() { this.updateState(ApiState.Bad); }
-
-  public changeURL(event:Event) {
-    if(this.lastUrl == this.url){return}
-    this.stateIdle()
-    let dot = this.statusDot!.nativeElement as HTMLElement
-    console.log("changeURL:dot:", dot)
-    console.log("changeURL:event:", event)
-    let url = this.url;
-    console.log("changeURL:urlCache:before:",this.urlCache)
-    if( !this.api.setUrl(url) ){
-      this.stateBad()
-      console.log("changeURL:setURL:failed")
-    }else{
-      this.url = this.api.url;
-      console.log("changeURL:setURL:success")
-      this.urlCache = this.api.urlCache
-      this.stateMaybe()
-      this.pm.updateProblems()
-    }
-    console.log("changeURL:urlCache:after:", this.urlCache )
-    console.log("changeURL:url:", this.url )
-    this.lastUrl = this.url + ""
-
-    // Daniel
-    let project = this.pms.getCurrentProject();
-    if (project != null) {
-      project.config.TAL_SERVER = this.url;
-      project.saveConfig();
-    }
-    //! Daniel
-
-    console.log("changeURL:urlCache:after:", this.urlCache)
-    console.log("changeURL:url:", this.url)
-    this.lastUrl = this.url + ""
-  }
-
-  public removeURL(url: string, event: Event) {
-    if (event) { event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation(); }
-
-    console.log("changeURL:urlCache:before:", this.urlCache)
-    if (!this.api.removeFromCache(url)) {
-      console.log("changeURL:removeURL:done")
-    }
-    this.urlCache = this.api.urlCache
-
-    console.log("changeURL:urlCache:after:", this.urlCache)
-    console.log("changeURL:url:", url)
-  }
+  
 
 }

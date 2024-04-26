@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Output, NgZone, Input, ViewChild, ElementRef } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { ApiService } from 'src/app/services/api-service/api.service';
+import { ApiService, ApiState } from 'src/app/services/api-service/api.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { MessageService, OverlayOptions } from 'primeng/api';
 import { ServiceDescriptor, ProblemDescriptor, ArgsMap, FilesMap, FileDescriptor, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
@@ -8,6 +8,7 @@ import { Dropdown } from 'primeng/dropdown';
 import { ProjectsManagerService } from 'src/app/services/project-manager-service/projects-manager.service';
 import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
+import { AutoComplete } from 'primeng/autocomplete';
 
 
 export class ServiceMenuEntry {
@@ -37,6 +38,10 @@ export class ProblemWidgetComponent {
 
   @ViewChild("problemDropdown") public problemDropdown!: ElementRef
   @ViewChild("serviceDropdown") public serviceDropdown!: ElementRef
+  @ViewChild("urlInput") public urlInput?: AutoComplete;
+  @ViewChild("statusDot") public statusDot?: ElementRef;
+  @ViewChild("messageBox") public messageBox?: ElementRef;
+  
   public dropdownOptions: OverlayOptions;
 
   problemsMenu = new Array<ProblemDescriptor>();
@@ -49,6 +54,17 @@ export class ProblemWidgetComponent {
   selectedFile?: FileDescriptor;
 
   filePathList = new Array<string>();
+  urlCache: string[] = []
+
+  urlInputClass = ""
+
+  escapeRegEx = /[.*+?^${}()|[\]\\]/g
+
+  url
+  lastUrl: string| undefined;
+  
+  subApiState
+  subProblemError
 
   regexFormat = true;
   showRegex = true;
@@ -62,12 +78,19 @@ export class ProblemWidgetComponent {
                public pm: ProblemManagerService,
                public projectsManagerService: ProjectsManagerService,
                private tutorialService: TutorialService,
-               private messageService: MessageService,)
+               private messageService: MessageService,
+               public pms: ProjectsManagerService,
+              )
   {
+    this.urlCache = [...this.api.urlCache]
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
     this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.problemsDidChange(clear) })
+    this.subApiState = this.api.onApiStateChange.subscribe((state:ApiState)=>{this.updateState(state)})
+    this.subProblemError = this.pm.onError.subscribe((_)=>{this.stateBad()})
     
+    this.url = api.url;
+    this.lastUrl = this.url + "";
     
     // Daniel: original
     // this.prj.onProjectChanged.subscribe(() => { this.saveProblemServiceConfig() })
@@ -86,7 +109,14 @@ export class ProblemWidgetComponent {
 
   ngOnInit() {
     this.reloadProblemList();
+    this.lastUrl = this.api.getLastInsertedUrl();
+    this.url = this.lastUrl;
     this.isBlurred = true;
+
+    if (this.urlInput) {
+      this.urlInput.writeValue(this.url);
+      //TODO Daniel this.projectConfig.TAL_SERVER = this.url;
+    }
   }
 
   private isTutorialShown(tutorial?: any) {
@@ -108,6 +138,68 @@ export class ProblemWidgetComponent {
   refreshFilePathList() {
     this.filePathList = [...this.filePathList]
   }
+
+  filterSuggestions(event: any) {
+    let query = event.query.replace(this.escapeRegEx, '\\$&')
+    let filter = new RegExp(".*" + query + ".*")
+    let urlCache: string[] = []
+    this.api.urlCache.forEach((url: string) => {
+      if (url.match(filter)) {
+        urlCache.push(url)
+      }
+    });
+    this.urlCache = urlCache
+  }
+
+  public changeURL(event:Event) {
+    if(this.lastUrl == this.url){return}
+    this.stateIdle()
+    let dot = this.statusDot!.nativeElement as HTMLElement
+    console.log("changeURL:dot:", dot)
+    console.log("changeURL:event:", event)
+    let url = this.url;
+    console.log("changeURL:urlCache:before:",this.urlCache)
+    if( !this.api.setUrl(url) ){
+      this.stateBad()
+      console.log("changeURL:setURL:failed")
+    }else{
+      this.url = this.api.url;
+      console.log("changeURL:setURL:success")
+      this.urlCache = this.api.urlCache
+      this.stateMaybe()
+      this.pm.updateProblems()
+    }
+    console.log("changeURL:urlCache:after:", this.urlCache )
+    console.log("changeURL:url:", this.url )
+    this.lastUrl = this.url + ""
+
+    // Daniel
+    let project = this.pms.getCurrentProject();
+    if (project != null) {
+      project.config.TAL_SERVER = this.url;
+      project.saveConfig();
+    }
+    //! Daniel
+
+    console.log("changeURL:urlCache:after:", this.urlCache)
+    console.log("changeURL:url:", this.url)
+    this.lastUrl = this.url + ""
+  }
+
+
+  public removeURL(url: string, event: Event) {
+    if (event) { event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation(); }
+
+    console.log("changeURL:urlCache:before:", this.urlCache)
+    if (!this.api.removeFromCache(url)) {
+      console.log("changeURL:removeURL:done")
+    }
+    this.urlCache = this.api.urlCache
+
+    console.log("changeURL:urlCache:after:", this.urlCache)
+    console.log("changeURL:url:", url)
+  }
+
 
   private loadProblemServiceConfig() {
     this.selectedProblem = this.pm.getProblem(localStorage.getItem("problema") || "");
@@ -160,6 +252,21 @@ export class ProblemWidgetComponent {
     }
     //project.config.TAL_SERVER = this.url;
     await project.saveConfig();
+  }
+
+  public stateIdle() { this.updateState(ApiState.Idle); }
+  public stateGood() { this.updateState(ApiState.Good); }
+  public stateMaybe() { this.updateState(ApiState.Maybe); }
+  public stateBad() { this.updateState(ApiState.Bad); }
+
+  public updateState(state: ApiState) {
+    let dot = this.statusDot!.nativeElement as HTMLElement
+    switch (state) {
+      case ApiState.Idle: dot.style.color = ""; break;
+      case ApiState.Good: dot.style.color = "green"; break;
+      case ApiState.Maybe: dot.style.color = "orange"; break;
+      case ApiState.Bad: dot.style.color = "darkred"; break;
+    }
   }
 
 //args
