@@ -27,6 +27,7 @@ import {ScrollPanelModule} from 'primeng/scrollpanel';
 import { TerminalModule, TerminalService } from 'primeng/terminal';
 
 import { GoogleLoginProvider, MicrosoftLoginProvider, SocialLoginModule, SocialAuthServiceConfig } from '@abacritt/angularx-social-login';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 
 @NgModule({
   declarations: [
@@ -57,7 +58,8 @@ import { GoogleLoginProvider, MicrosoftLoginProvider, SocialLoginModule, SocialA
     TabViewModule,
     ScrollPanelModule,
     SocialLoginModule,
-    TerminalModule
+    TerminalModule,
+    AutoCompleteModule,
   ],
   exports: [
     FileExplorerWidgetComponent,

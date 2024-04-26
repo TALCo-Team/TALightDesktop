@@ -24,7 +24,12 @@
         </div>
     </div>
 
-    <button pButton icon="pi {{changeThemIcon}}" class="tal-square-button" pTooltip="Change theme" (click)="toggleTheme()"></button>
+    <div class="tal-bar-url">
+
+        
+
+        <button pButton icon="pi {{changeThemIcon}}" class="tal-square-button" pTooltip="Change theme" (click)="toggleTheme()"></button>
+    </div>
     <div class='tutorial'>
       <button pButton pTooltip="Mostra il tutorial" (click)="showTutorial()" class="tal-square-button" icon="pi pi-question-circle" *ngIf=isTutorialButtonVisible></button>
     </div>
