@@ -178,11 +178,11 @@
     margin-top: 12px;
   }
   a {
-    font-size: auto;
+    font-size: 12px;
     //padding: 0 !important;
     //width: auto;
     height: 40px;
-    word-wrap: unset;
+    white-space: nowrap; /* Impedisce il testo di andare a capo */
   }
 }
 

@@ -96,7 +96,7 @@ export class TopbarWidgetComponent implements OnInit {
 
   //calcola la lunghezza delle tab
   totalTabsCalc():number{
-    return this.getDimensions()-this.pms.getProjectsId().length*101.87;
+    return this.getDimensions()-this.pms.getProjectsId().length*101;
   }
 
   // Aggiorna le dimensioni della finestra quando viene ridimensionata in modo da gestire lo scrollable per via delle tabs
@@ -203,7 +203,7 @@ export class TopbarWidgetComponent implements OnInit {
     setTimeout(() => {
       this.disabilita_bottone = false;
       this.setCurrentTab((this.items as MenuItem[])[(this.items as MenuItem[]).length - 1])
-    }, 3000);
+    }, 3);
 
     this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
   }
