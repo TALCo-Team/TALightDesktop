@@ -19,6 +19,8 @@ import { TutorialService } from 'src/app/services/tutorial-service/tutorial.serv
 import { HotkeysService } from 'src/app/services/hotkeys-service/hotkeys.service';
 import { ProjectsManagerService } from 'src/app/services/project-manager-service/projects-manager.service';
 
+
+
 @Component({
   selector: 'tal-code-editor',
   templateUrl: './code-editor.component.html',
@@ -79,18 +81,19 @@ export class CodeEditorComponent implements OnInit {
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) })
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     console.log("CodeEditorComponent:constructor", this.pms)
-    
+
     this.pms.currentProjectChanged.subscribe(() => { this.onProjectChanged() })
 
     document.addEventListener('keydown', (event: KeyboardEvent) => {this.hotkeysService.emitHotkeysEvent(event)});
     this.hotkeysService.registerHotkeysEvents().subscribe((event: KeyboardEvent) => {this.hotkeysService.getCorrectHotkey(event)})
     this.hotkeysService.hotkeysAction.subscribe((emitter) => {this.chooseHotkeysAction(emitter)})
   }
-  
+
   ngOnInit() {
     this.isBlurred = true;
-    
+
     this.pms.addProject();
+
   }
 
   private chooseHotkeysAction(emitter: string){
@@ -145,6 +148,13 @@ export class CodeEditorComponent implements OnInit {
     }
   }
 
+  private setEditorHeight(): void {
+    const editorContainer = this.elementRef.nativeElement.querySelector('.tal-code-editor');
+    const windowHeight = window.innerHeight;
+    const newHeight = windowHeight - 85; // Sottrai 85px dall'altezza della finestra
+    editorContainer.style.height = newHeight + 'px';
+  }
+
   ngAfterViewInit() {
     this.outputWidget.enableStdin(false);
     const componentElement = this.elementRef.nativeElement;
@@ -164,7 +174,7 @@ export class CodeEditorComponent implements OnInit {
 
   private onProjectChanged() {
     console.log("CodeEditorComponent:onProjectChanged")
-    
+
     let project = this.pms.getCurrentProject();
     if (!project) { return; }
 
@@ -211,7 +221,7 @@ export class CodeEditorComponent implements OnInit {
     }else if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
       this.apiConnectReset();
     }
-    
+
     this.pyodideState = state
     this.pyodideStateContent = content
     console.log("CodeEditorComponent:didStateChange:", state)
@@ -337,10 +347,10 @@ export class CodeEditorComponent implements OnInit {
     var Removeindex = event.index;
     this.isPresentName.splice(Removeindex, 1);
     this.isPresent.splice(Removeindex, 1);
-    
+
     let files = this.pms.getCurrentProjectManagerService()?.files;
     if (!files) { return; }
-    
+
     files.splice(Removeindex, 1);
 
     console.log("Tab is closed: ", this.isPresentName);
@@ -382,11 +392,11 @@ export class CodeEditorComponent implements OnInit {
 
     if (!this.isPresent.includes(this.selectedFile.path)) {
       this.isPresentName.push(this.selectedFile.name);
-      
+
       this.pms.getCurrentProjectManagerService()?.files.push(this.selectedFile);
-      
+
       setTimeout(() => this.activeIndex = (this.isPresentName.length) - 1, 0);
-      
+
       this.isPresent.push(this.selectedFile.path);
     } else {
       this.setActiveIndex(this.selectedFile.path);
@@ -652,7 +662,7 @@ export class CodeEditorComponent implements OnInit {
 
     this.current_output_file = message.name;
     if (this.current_output_file) {
-      this.pms.getCurrentProject()?.driver.writeFile("/" + this.current_output_file, "") 
+      this.pms.getCurrentProject()?.driver.writeFile("/" + this.current_output_file, "")
     };
   }
 }
