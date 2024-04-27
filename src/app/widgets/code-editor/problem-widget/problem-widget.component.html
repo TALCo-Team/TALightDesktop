@@ -18,25 +18,13 @@
       <ng-template let-url pTemplate="item">
         <div class="url-item">
             <div class="url-item-label">{{url}}</div>
-            <button pButton icon="pi pi-trash" class="tal-square-button" pTooltip="Remove URL" (click)="removeURL(url, $event)"></button>
+            <!-- <button pButton icon="pi pi-trash" class="tal-square-button" pTooltip="Remove URL" (click)="removeURL(url, $event)"></button> -->
         </div>
-    </ng-template>
+      </ng-template>
 
     </p-dropdown>
 
-    <!-- <p-autoComplete #urlInput class="tal-problem-widget-problem-selector"
-        (placeholder)="urlCache"  [(ngModel)]="url" pTooltip="Change URL" tooltipPosition="bottom"
-        (change)="changeURL($event)" (onSelect)="changeURL($event)" (onBlur)="changeURL($event)" [suggestions]="urlCache"
-        (completeMethod)="filterSuggestions($event)" [dropdown]="true">
-
-        <ng-template let-url pTemplate="item">
-            <div class="url-item">
-                <div class="url-item-label">{{url}}</div>
-                <button pButton icon="pi pi-trash" class="tal-square-button" pTooltip="Remove URL" (click)="removeURL(url, $event)"></button>
-            </div>
-        </ng-template>
-    </p-autoComplete> -->
-    <i #statusDot class="pi pi-circle-fill tal-square-button" pTooltip="Status" tooltipPosition="left"></i>
+    <i #statusDot class="pi pi-circle-fill tal-square-button" pTooltip="Status"></i>
 
  
 </div>

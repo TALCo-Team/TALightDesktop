@@ -9,20 +9,6 @@
   height: 100%;
 }
 
-.tal-bar-url {
-  //background-color: green;
-  height: 30px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-  flex-grow: 1;
-  position: fixed;
-  top : 0;
-  right: 35px;
-  padding-top: 5px;
-}
-
 :host ::ng-deep .tal-problem-widget-args-row {
   .p-inputtext {
     //border: 1px solid red;
