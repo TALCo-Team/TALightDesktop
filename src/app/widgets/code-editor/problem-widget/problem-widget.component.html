@@ -8,11 +8,23 @@
 
   <!-- API: PROBLEMS and SERVICES -->
 
-  <div class="tal-bar-url">
+  <div class="tal-problem-widget-row tal-problem-widget-row-problem">
 
-    <i #statusDot class="pi pi-circle-fill" pTooltip="Status" tooltipPosition="left"></i>
+    <p-dropdown #problemDropdown [placeholder]="url" class="tal-problem-widget-problem-selector"
+      scrollHeight="50rem" 
+      panelStyleClass="tal-problem-widget-problem-selector-panel" [options]="urlCache" [(ngModel)]="url"
+      optionLabel="name" (onChange)="changeURL($event)">
 
-    <p-autoComplete #urlInput class="top-bar-url-input p-inputtext-sm"
+      <ng-template let-url pTemplate="item">
+        <div class="url-item">
+            <div class="url-item-label">{{url}}</div>
+            <button pButton icon="pi pi-trash" class="tal-square-button" pTooltip="Remove URL" (click)="removeURL(url, $event)"></button>
+        </div>
+    </ng-template>
+
+    </p-dropdown>
+
+    <!-- <p-autoComplete #urlInput class="tal-problem-widget-problem-selector"
         (placeholder)="urlCache"  [(ngModel)]="url" pTooltip="Change URL" tooltipPosition="bottom"
         (change)="changeURL($event)" (onSelect)="changeURL($event)" (onBlur)="changeURL($event)" [suggestions]="urlCache"
         (completeMethod)="filterSuggestions($event)" [dropdown]="true">
@@ -23,7 +35,8 @@
                 <button pButton icon="pi pi-trash" class="tal-square-button" pTooltip="Remove URL" (click)="removeURL(url, $event)"></button>
             </div>
         </ng-template>
-    </p-autoComplete>
+    </p-autoComplete> -->
+    <i #statusDot class="pi pi-circle-fill tal-square-button" pTooltip="Status" tooltipPosition="left"></i>
 
  
 </div>
