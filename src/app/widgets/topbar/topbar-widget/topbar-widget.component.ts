@@ -53,6 +53,7 @@ export class TopbarWidgetComponent implements OnInit {
                public pms: ProjectsManagerService,
              )
   {
+    // prendi le dimensioni della finestra
     this.getDimensions();
     this.url = api.url;
     this.lastUrl = this.url + "";
@@ -62,15 +63,20 @@ export class TopbarWidgetComponent implements OnInit {
     this.subOnNotify = this.nm.onNotification.subscribe((msg:NotificationMessage): void=>{this.showNotification(msg)})
 
     this.pms.projectManagerServiceListChanged.subscribe(() => this.setTabsNumber())
+
+    // roba per il tutorial
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
   }
 
   //Old ngOnInit
   ngOnInit(): void {
+    // all'inizio deve essere blurrato per via del tutorial
     this.isBlurred = true;
+    // prende dalla cache l'url del server ?
     this.lastUrl = this.api.getLastInsertedUrl();
     this.url = this.lastUrl;
+
     //TODO Daniel this.projectConfig.TAL_SERVER = this.url;
     //Write the url to the file
 
@@ -88,18 +94,12 @@ export class TopbarWidgetComponent implements OnInit {
 
   }
 
-  /*
-  ngOnInit(): void {
-    this.isBlurred = true;
-  }
-  */
-
-  //calcola la lunghezza delle tab
+  // calcola la lunghezza delle tab
   totalTabsCalc():number{
     return this.getDimensions()-this.pms.getProjectsId().length*101;
   }
 
-  // Aggiorna le dimensioni della finestra quando viene ridimensionata in modo da gestire lo scrollable per via delle tabs
+  // aggiorna le dimensioni della finestra quando viene ridimensionata in modo da gestire lo scrollable per via delle tabs
   @HostListener('window:resize', ['$event'])
   onResize() {
     this.getDimensions();
@@ -107,7 +107,7 @@ export class TopbarWidgetComponent implements OnInit {
     this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
   }
 
-  //semplice funzione per il calcolo della larghezza della finestra per vedere quante tab ci stanno
+  // semplice funzione per il calcolo della larghezza della finestra per vedere quante tab ci stanno
   getDimensions(): number {
     this.larghezzaFinestra = window.innerWidth;
     console.log('Larghezza finestra:', this.larghezzaFinestra-400-18.58);
@@ -119,10 +119,17 @@ export class TopbarWidgetComponent implements OnInit {
     this.tutorialService.nextTutorial(-1)
   }
 
+  // cambia l'icona del bottone per cambiare il tema
   public get changeThemIcon(): string {
     return this.themeService.currentTheme == AppTheme.dark ? 'pi-sun' : 'pi-moon';
   }
 
+  // switcha il tema
+  public toggleTheme() {
+    this.themeService.toggleTheme();
+  }
+
+  // controlla se mostrare questa parte oppure tenerla blurrata
   private isTutorialShown(tutorial?: any) {
     console.log("TopbarWidgetComponent:isTutorialShown")
     if (typeof tutorial === 'undefined' || tutorial.componentName === "TopbarWidgetComponent") {
@@ -139,10 +146,6 @@ export class TopbarWidgetComponent implements OnInit {
     else {
       this.isTutorialButtonVisible = true;
     }
-  }
-
-  public toggleTheme() {
-    this.themeService.toggleTheme();
   }
 
   public iconForNotification() {
@@ -174,6 +177,8 @@ export class TopbarWidgetComponent implements OnInit {
     this.currentNotification = undefined
   }
 
+
+  // imposta il numero della tab appena creata e crea una nuova tab
   setTabsNumber(){
     let tmp : MenuItem[] = [];
 
@@ -208,11 +213,13 @@ export class TopbarWidgetComponent implements OnInit {
     this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
   }
 
+  // imposta la tab corrente
   setCurrentTab(item : any) {
     this.activeItem = item;
     this.pms.setCurrentProjectManagerService(parseInt(item.id))
   }
 
+  // filtra i suggerimenti
   filterSuggestions(event: any) {
     let query = event.query.replace(this.escapeRegEx, '\\$&')
     let filter = new RegExp(".*" + query + ".*")
@@ -225,6 +232,7 @@ export class TopbarWidgetComponent implements OnInit {
     this.urlCache = urlCache
   }
 
+  // cambia il colore del pallino dello stato del server
   public updateState(state: ApiState) {
     let dot = this.statusDot!.nativeElement as HTMLElement
     switch (state) {
@@ -235,6 +243,7 @@ export class TopbarWidgetComponent implements OnInit {
     }
   }
 
+  // cose relative allo stato del server
   public stateIdle() { this.updateState(ApiState.Idle); }
   public stateGood() { this.updateState(ApiState.Good); }
   public stateMaybe() { this.updateState(ApiState.Maybe); }
