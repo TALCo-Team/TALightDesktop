@@ -47,6 +47,7 @@
     }
   }
 }
+
 // comprende l'url ed il tasto per il cambio tema
 .tal-bar-url {
   //background-color: green;
@@ -74,11 +75,6 @@
       padding: 5px !important;
       margin: 5px !important;
     }
-
-    // button {
-    //   width: 30px;
-    //   max-width: 30px;
-    // }
   }
 }
 
@@ -121,16 +117,7 @@
   right: 0;
   margin-right: 5px;
 }
-/* Stili per il bottone per chiudere le tabs*/
-.buttonClose{
-  left:0;
-  padding: 0;
-  width: 15px !important;
-  height: 15px;
-  margin-right: 8px;
-  color: lightgrey;
-  align-items: center;
-}
+
 
 :host ::ng-deep{
   //il contenitore delle tabMenu
@@ -155,10 +142,8 @@
     position: fixed;
     width: 15px;
     height: 20px;
-    //padding: 0;
-    //transform: translate(-100%, 10%); /* Sposta il bottone indietro di metà della sua altezza e allinea al 100% a sinistra */
   }
-
+  /* Stili per il bottone per chiudere le tabs*/
   // .buttonClose
   // {
   //   margin-left: 3px;
@@ -170,17 +155,11 @@
 
   //singola tab
   .tab {
-    // border: 2px solid rgba(120, 144, 253, 0.534); /* Aggiunge un bordo grigio */
-    // outline: 3px solid rgba(120, 144, 253, 0.534);
-    // border-radius: 8px; /* Arrotonda i bordi */
-    // box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Aggiunge un'ombra leggera */
     margin: 5px;
     margin-top: 12px;
   }
   a {
     font-size: 14px;
-    //padding: 0 !important;
-    //width: auto;
     height: 40px;
     white-space: nowrap; /* Impedisce il testo di andare a capo */
   }
