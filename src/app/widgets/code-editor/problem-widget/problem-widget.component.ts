@@ -6,7 +6,6 @@ import { MessageService, OverlayOptions } from 'primeng/api';
 import { ServiceDescriptor, ProblemDescriptor, ArgsMap, FilesMap, FileDescriptor, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 import { Dropdown } from 'primeng/dropdown';
 import { ProjectsManagerService } from 'src/app/services/project-manager-service/projects-manager.service';
-import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { AutoComplete } from 'primeng/autocomplete';
 
@@ -102,6 +101,7 @@ export class ProblemWidgetComponent {
     })
     
     this.pm.onProblemsLoaded.subscribe((_) =>{ this.loadProblemServiceConfig() })
+    this.projectsManagerService.currentProjectChanged.subscribe(() =>{ this.updateCurrentTabInfo() })
 
     // https://primefaces.org/primeng/overlay
     //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
@@ -152,12 +152,11 @@ export class ProblemWidgetComponent {
     this.urlCache = urlCache
   }
 
-  public changeURL(event:Event) {
+  public changeURL() {
     if(this.lastUrl == this.url){return}
     this.stateIdle()
     let dot = this.statusDot!.nativeElement as HTMLElement
     console.log("changeURL:dot:", dot)
-    console.log("changeURL:event:", event)
     let url = this.url;
     console.log("changeURL:urlCache:before:",this.urlCache)
     if( !this.api.setUrl(url) ){
@@ -166,8 +165,6 @@ export class ProblemWidgetComponent {
     }else{
       this.url = this.api.url;
       console.log("changeURL:setURL:success")
-      // this.urlCache = this.api.urlCache <-- this fixes multiple urlcache...
-      console.log("changeURL:url api.urlCache     ", this.api.urlCache)
       this.stateMaybe()
       this.pm.updateProblems()
     }
@@ -186,6 +183,14 @@ export class ProblemWidgetComponent {
     console.log("changeURL:urlCache:after:", this.urlCache)
     console.log("changeURL:url:", this.url)
     this.lastUrl = this.url + ""
+  }
+
+  private updateCurrentTabInfo(){
+    let currentProject = this.pms.getCurrentProject();
+    console.log("updateCurrentTabInfo:url: url", this.url)
+    console.log("updateCurrentTabInfo:url  TAL_SERVER", currentProject!.config.TAL_SERVER)
+    this.url = currentProject!.config.TAL_SERVER
+    this.changeURL()
   }
 
 
