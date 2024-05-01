@@ -38,6 +38,7 @@ export class ProblemWidgetComponent {
 
   @ViewChild("problemDropdown") public problemDropdown!: ElementRef
   @ViewChild("serviceDropdown") public serviceDropdown!: ElementRef
+  @ViewChild("statusDropdown") public statusDropdown!: ElementRef
   @ViewChild("urlInput") public urlInput?: AutoComplete;
   @ViewChild("statusDot") public statusDot?: ElementRef;
   @ViewChild("messageBox") public messageBox?: ElementRef;
@@ -165,7 +166,8 @@ export class ProblemWidgetComponent {
     }else{
       this.url = this.api.url;
       console.log("changeURL:setURL:success")
-      this.urlCache = this.api.urlCache
+      // this.urlCache = this.api.urlCache <-- this fixes multiple urlcache...
+      console.log("changeURL:url api.urlCache     ", this.api.urlCache)
       this.stateMaybe()
       this.pm.updateProblems()
     }
