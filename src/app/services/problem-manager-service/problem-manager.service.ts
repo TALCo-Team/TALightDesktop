@@ -58,7 +58,7 @@ export class ProblemManagerService {
 
   selectProblem(selectedProblem: ProblemDescriptor){
     this.selectedProblem = selectedProblem;
-    alert('hai selezionato il problema: ' + selectedProblem.name);
+    //alert('hai selezionato il problema: ' + selectedProblem.name);
     localStorage.setItem('problema', selectedProblem.name);
     this.onProblemSelected.emit(selectedProblem);
     this.selectedService = undefined;
@@ -78,7 +78,7 @@ export class ProblemManagerService {
       this.selectedService = selectedService;
     }
 
-    alert('hai selezionato il servizio: ' + name);
+    //alert('hai selezionato il servizio: ' + name);
     localStorage.setItem('servizio', name);
     this.onServiceSelected.emit(selectedService);
   }

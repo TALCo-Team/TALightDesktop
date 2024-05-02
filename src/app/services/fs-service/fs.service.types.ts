@@ -22,8 +22,7 @@ export interface FsServiceDriver {
   driverName:string;
 
   mountPoint:string;
-  mountRoot:string;
-  
+
   fsRoot:FsNodeFolder;
   fsList:FsNodeList;
   fsListfiles:FsNodeFileList;

@@ -11,7 +11,7 @@
     </ng-template>
 
     <ng-template pTemplate>
-      <div class="tal-code-editor-container" style="height: 700px; overflow-y: hidden;"> <!--wrapper-->
+      <div class="tal-code-editor-container"> <!--wrapper-->
         <div class="tal-code-editor-header"> <!--inner-wrap-->
           <tal-execbar-widget #execBar (onStop)="stopAll()" (onRun)="runProjectLocal()" (onConnect)="runConnectAPI()"
             [selectedFile]="selectedFile">
@@ -20,7 +20,7 @@
 
         <div class="tal-code-editor-header">
           <div class="mywrapper2"> <!--inner-wrap-->
-            <p-tabView [scrollable]="true" (onClose)="removeItem($event)" (onChange)="changeFile($event)"
+            <!-- <p-tabView [scrollable]="true" (onClose)="removeItem($event)" (onChange)="changeFile($event)"
               [activeIndex]="activeIndex">
 
               <ng-container *ngFor="let name of isPresentName">
@@ -30,9 +30,9 @@
                   </ng-template>
                 </p-tabPanel>
               </ng-container>
-            </p-tabView>
+            </p-tabView> -->
 
-            <div class="tal-code-editor-container" style="height: 700px; overflow-y: hidden;">
+            <div>
               <div class="tal-code-editor">
                 <tal-file-editor-widget #fileEditor (onChange)="editorDidChange($event)">
                 </tal-file-editor-widget>

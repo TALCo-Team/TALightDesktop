@@ -1,18 +1,16 @@
 <div class="tal-topbar" [class.blur]="isBlurred">
   <div>
-    <button type="button" class="tal-square-button" icon="pi pi-plus" pButton pRipple pTooltip="Aggiungi una scheda" (click)="addProject()" styleClass="tabMenuButton"></button>
-    <p-tabMenu [scrollable]="true" [model]="items" [activeItem]="activeItem" styleClass="tabMenu" >
+    <button [disabled]="disabilita_bottone" type="button" class="tal-square-button" icon="pi pi-plus" pButton pRipple pTooltip="Aggiungi una scheda" (click)="addProject()" styleClass="addTabButton"></button>
+    <p-tabMenu [scrollable]="scrollable_prop" [model]="items" [activeItem]="activeItem" styleClass="tabMenu" >
         <ng-template pTemplate="item" let-item >
-          <div (click)="setCurrentTab(item)">
+          <div (click)="setCurrentTab(item)" class="tab">
               {{ item.label }}
               <!-- Ho sostituito il [disabled]="disableDelete" con l'hidden-->
-              <button class="buttonClose" type="button" pButton pRipple icon="pi pi-times" (click)="deleteProject(item.id)" *ngIf="!disableDelete"> </button>
+              <!-- <button class="buttonClose" type="button" pButton pRipple icon="pi pi-times" (click)="deleteProject(item.id)" *ngIf="!disableDelete"> </button> -->
             </div>
           </ng-template>
     </p-tabMenu>
   </div>
-
-
 
     <div class="tal-message-box">
         <div #messageBox *ngIf="!!currentNotification" class="tal-message-box-main tal-message-box-{{currentNotification.type}}" >

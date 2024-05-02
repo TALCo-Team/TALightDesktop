@@ -23,8 +23,9 @@ div.tal-page-container {
     align-items: center;
     justify-content: space-between;
     border-bottom: solid 1px var(--surface-border);
-    padding: 0;
-    margin: 0;
+    //padding: 0;
+    padding-top: 3px; /* Aggiunge spazio sopra */
+    margin-right: 5px;
     z-index: 0;
   }
 

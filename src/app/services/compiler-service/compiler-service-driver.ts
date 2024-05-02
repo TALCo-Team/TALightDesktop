@@ -1,10 +1,8 @@
 import { CompilerMessage, CompilerMessageType, CompilerRequest, CompilerRequestHandler, CompilerResponse, CompilerState, notifyCallback, PromiseResolver, stateCallback, stdCallback, UID } from './compiler-service.types';
 import { FsNodeEmptyFolder, FsNodeFileList, FsNodeFolder, FsNodeList } from '../fs-service/fs.service.types';
 import { ProjectDriver } from '../project-manager-service/project-manager.types';
-
-
-// --- CompilerDriver --- 
-
+import { ProjectsManagerService } from '../project-manager-service/projects-manager.service';
+import { EventEmitter } from '@angular/core';
 
 export class CompilerDriver implements ProjectDriver {
   public driverName: string;
@@ -12,9 +10,15 @@ export class CompilerDriver implements ProjectDriver {
   public fsList:FsNodeList=[];
   public fsListfiles:FsNodeFileList=[];
 
-  public mountPoint = "/TALight"
-  public mountRoot = "."
-  
+  //Prefix for the mount point
+  public root = "/TALight_" + ProjectsManagerService.projectsFolder;
+
+  // Example with Project ID 0: /TALight_Projects_0
+  public mountPoint = this.root + "_";
+
+
+  public onMountChanged = new EventEmitter<void>();
+
   public requestIndex = new Map<UID, CompilerRequestHandler>();
 
   public binEncoder = new TextEncoder(); // always utf-8
@@ -25,15 +29,14 @@ export class CompilerDriver implements ProjectDriver {
   onState?: stateCallback
   onNotify?: notifyCallback
 
-  constructor(mountPoint:string, mountRoot:string, public worker: Worker) {
+  constructor(public worker: Worker) {
+    console.log("CompilerDriver:constructor:setMount: ", this.mountPoint);
+
     this.driverName = "CompilerDriver";
-    this.mountPoint = mountPoint
-    this.mountRoot = mountRoot
+    
     this.worker.onmessage = (event: MessageEvent) => { this.didRecieve(event.data) };   
     this.worker.addEventListener('error', (event) => { console.log('CompilerDriver: Worker error!')});
   }
-
-
 
   private didRecieve(response: CompilerResponse) {
     if (!response) {return;}
@@ -59,7 +62,6 @@ export class CompilerDriver implements ProjectDriver {
         case CompilerMessageType.SubscribeStdout: this.didReceiveSubscribeStdout(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
         case CompilerMessageType.SubscribeStderr: this.didReceiveSubscribeStderr(msgSent, msgRecived, resolvePromise); removeRequest = false; break;
         case CompilerMessageType.SendStdin:       this.didReceiveSendStdin(msgSent, msgRecived, resolvePromise); break;
-
 
         case CompilerMessageType.Mount:           this.didReceiveMount(msgSent, msgRecived, resolvePromise); break;
         case CompilerMessageType.Unmount:         this.didReceiveUnmount(msgSent, msgRecived, resolvePromise); break;
@@ -195,12 +197,14 @@ export class CompilerDriver implements ProjectDriver {
   } 
 
   private didReceiveMount(msgSent:CompilerMessage, msgRecived:CompilerMessage, resolvePromise:PromiseResolver<boolean> ){
-    console.log("didReceiveMount: ")
+    console.log("compiler-serivce-driver:didReceiveMount: ")
     if (msgSent.args.length != 1){ 
       resolvePromise(false); 
     }
     let pathSent = msgSent.args[0];
     let pathRecived = msgRecived.args[0];
+
+    console.log("compiler-serivce-driver:didReceiveMount: ", pathSent, pathRecived)
 
     resolvePromise(pathSent == pathRecived)
   } 
@@ -332,22 +336,33 @@ export class CompilerDriver implements ProjectDriver {
 
   //SEND: PUBLIC
 
+  //Don't use this function directly, use mountByProjectId or mountRoot
   public mount(path: string): Promise<boolean> {
-    //TODO
+    console.log("compiler-serive-driver:mount: "+path)
     let message: CompilerMessage = {
       uid: this.requestUID(),
       type: CompilerMessageType.Mount,
       args: [path],
       contents: [],
     }
-    
-    let resultPromise = this.sendMessage<boolean>(message);
+    return this.sendMessage<boolean>(message);;
+  }
 
-    return resultPromise;
+  public mountByProjectId(projectId: number): Promise<boolean> {
+    let result = this.mount(this.mountPoint + projectId);
+
+    this.onMountChanged.emit();
+
+    return result;
+  }
+
+  // Unused
+  public mountRoot(): Promise<boolean> {
+    return this.mount(this.root);
   }
 
   public unmount(path: string): Promise<boolean> {
-    //TODO
+    console.log("compiler-serive-driver:unmount: "+path)
     let message: CompilerMessage = {
       uid: this.requestUID(),
       type: CompilerMessageType.Unmount,
@@ -514,6 +529,8 @@ export class CompilerDriver implements ProjectDriver {
 
 
   public async createDirectory(fullpath: string): Promise<boolean> {
+    console.log("compiler-serive-driver:createDirectory: "+fullpath)
+
     let message: CompilerMessage = {
       uid: this.requestUID(),
       type: CompilerMessageType.CreateDirectory,
@@ -539,7 +556,7 @@ export class CompilerDriver implements ProjectDriver {
   }
 
   public async writeFile(fullpath: string, content: string|ArrayBuffer): Promise<number> {
-    console.log("writeFile: "+fullpath)
+    console.log("compiler-serive-driver:writeFile: "+fullpath)
     let message: CompilerMessage = {
       uid: this.requestUID(),
       type: CompilerMessageType.WriteFile,
@@ -631,12 +648,9 @@ export class CompilerDriver implements ProjectDriver {
     return this.binEncoder.encode(data)
   }
   
-
-
   private requestUID(): UID {
     var timestap = new Date().getTime();
     let seed = Math.floor(Math.random() * 100000000);
     return 'uid-' + timestap + '-' + seed;
   }
 }
-  

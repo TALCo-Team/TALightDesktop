@@ -2,13 +2,10 @@ import { Component, EventEmitter, Output, NgZone, Input, ViewChild, ElementRef }
 import { Subscription } from 'rxjs';
 import { ApiService } from 'src/app/services/api-service/api.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
-
-import { PythonCompilerService } from 'src/app/services/python-compiler-service/python-compiler.service';
 import { MessageService, OverlayOptions } from 'primeng/api';
 import { ServiceDescriptor, ProblemDescriptor, ArgsMap, FilesMap, FileDescriptor, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 import { Dropdown } from 'primeng/dropdown';
-import { CompilerDriver } from 'src/app/services/compiler-service/compiler-service-driver';
-import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
+import { ProjectsManagerService } from 'src/app/services/project-manager-service/projects-manager.service';
 import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 
@@ -19,7 +16,6 @@ export class ServiceMenuEntry {
     public descriptor: ServiceDescriptor,
   ) { }
 }
-
 
 export class ProblemMenuEntry {
   constructor(
@@ -54,9 +50,6 @@ export class ProblemWidgetComponent {
 
   filePathList = new Array<string>();
 
-  project: ProjectEnvironment | null = null;
-
-
   regexFormat = true;
   showRegex = true;
   loading = false
@@ -64,27 +57,28 @@ export class ProblemWidgetComponent {
   problemSub: Subscription
   isBlurred: boolean = false;
 
-
   constructor( public zone: NgZone,
                public api: ApiService,
                public pm: ProblemManagerService,
-               public prj: ProjectManagerService,
+               public projectsManagerService: ProjectsManagerService,
                private tutorialService: TutorialService,
                private messageService: MessageService,)
   {
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
     this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.problemsDidChange(clear) })
-    this.prj.onProjectChanged.subscribe((_) => {
-      this.project = prj.getCurrentProject();
-      this.saveProblemServiceConfig();
+    
+    
+    // Daniel: original
+    // this.prj.onProjectChanged.subscribe(() => { this.saveProblemServiceConfig() })
+    this.projectsManagerService.currentProjectChanged.subscribe(() => {
+      this.projectsManagerService.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
+        this.saveProblemServiceConfig();
+      })
     })
+    
+    this.pm.onProblemsLoaded.subscribe((_) =>{ this.loadProblemServiceConfig() })
 
-    this.pm.onProblemsLoaded.subscribe((_) =>{
-      this.loadProblemServiceConfig();
-    })
-
-   
     // https://primefaces.org/primeng/overlay
     //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
     this.dropdownOptions = { appendTo: 'body' }
@@ -96,14 +90,11 @@ export class ProblemWidgetComponent {
   }
 
   private isTutorialShown(tutorial?: any) {
-
     console.log("ProblemWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "ProblemWidgetComponent") {
+    if (typeof tutorial === 'undefined' || tutorial.componentName === "ProblemWidgetComponent")
       this.isBlurred = false
-    }
-    else {
+    else
       this.isBlurred = true
-    }
   }
 
   ngOnDestroy() {
@@ -117,7 +108,6 @@ export class ProblemWidgetComponent {
   refreshFilePathList() {
     this.filePathList = [...this.filePathList]
   }
-
 
   private loadProblemServiceConfig() {
     this.selectedProblem = this.pm.getProblem(localStorage.getItem("problema") || "");
@@ -135,41 +125,41 @@ export class ProblemWidgetComponent {
   }
 
   private saveProblemServiceConfig() {
-    this.pm.onProblemSelected.subscribe((problem) => {
-       //alert('ricevuto problem selected: '+ problem.name);
-      this.writeTofile(this.project);
-      this.project?.onProjectConfigChanged.subscribe((_) => {
-        //alert('config pronto in problem');
-        this.writeTofile(this.project);
+    this.pm.onProblemSelected.subscribe(() => {
+       //console.log('Problem selected: ', problem.name);
+      this.updateProjectConfigProblemServiceProblem();
+
+      this.projectsManagerService.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
+        //console.log('config pronto in problem');
+        this.updateProjectConfigProblemServiceProblem();
       })
     })
-    //Daniel
+
     this.onServiceSelected.subscribe((service) => {
-      //alert('ricevuto service selected: '+ service.name);
-      this.writeTofile(this.project);
-      this.project?.onProjectConfigChanged.subscribe((_) => {
-        //alert('config pronto in service');
-        this.writeTofile(this.project);
+      //console.log('Service selected: ', service.name);
+      this.updateProjectConfigProblemServiceProblem();
+
+      this.projectsManagerService.getCurrentProject()?.onProjectConfigChanged.subscribe((_) => {
+        //console.log('config pronto in service');
+        this.updateProjectConfigProblemServiceProblem();
       })
-    })//!Daniel
+    })
   }
 
-  public async writeTofile(project: ProjectEnvironment | null) {
-    //alert('write to file')
-    project?.config?.parseFile(project.config);
-    if (project != null && project.config != null) {
-      if (this.selectedProblem != undefined) {
-        project.config.TAL_PROBLEM = this.selectedProblem.name
-        if (this.selectedService != undefined)
-          project.config.TAL_SERVICE = this.selectedService.name
-        else
-          project.config.TAL_PROBLEM = "";
-      }
-      //project.config.TAL_SERVER = this.url;
-      //alert(project.config.TAL_SERVER);
-      //alert('scrivo sul file il problema');
-      await project.config.save(project.driver);
+  private async updateProjectConfigProblemServiceProblem() {
+    let project = this.projectsManagerService.getCurrentProject();
+    if (project == null) return;
+    project.config.parseFile(project.config);
+
+    if (this.selectedProblem != undefined) {
+      project.config.TAL_PROBLEM = this.selectedProblem.name
+      if (this.selectedService != undefined)
+        project.config.TAL_SERVICE = this.selectedService.name
+      else
+        project.config.TAL_PROBLEM = "";
     }
+    //project.config.TAL_SERVER = this.url;
+    await project.saveConfig();
   }
 
 //args
@@ -280,8 +270,8 @@ export class ProblemWidgetComponent {
       //file.value = ""
       return
     }
-
-    let pathExist = await this.project?.driver.exists(path)
+    let project = this.projectsManagerService.getCurrentProject();
+    let pathExist = await project?.driver.exists(path)
     console.log('fileDidChange:pathExist:', pathExist)
     if (!pathExist) {
       dropdown.style.color = "red"
@@ -332,22 +322,18 @@ export class ProblemWidgetComponent {
     this.selectedArgs = undefined;
     this.selectedFiles = undefined;
 
-
     this.problemsMenu = []
     this.servicesMenu = []
     this.loading = true
-
 
     console.log
     this.pm.updateProblems()
   }
 
   async problemsDidChange(clear: boolean) {
-
     this.problemsMenu = []
     this.servicesMenu = []
     this.loading = true
-
 
     if (clear) return
 
@@ -429,9 +415,7 @@ export class ProblemWidgetComponent {
 
     let req = this.api.GetAttachment(this.selectedProblem.name, onAttachment, onAttachmentInfo, onData);
     req.onError = (error) => { this.onApiError(error) };
-
   }
-
 }
 
 

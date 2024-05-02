@@ -37,7 +37,7 @@ export class ApiService {
 
   public getLastInsertedUrl(): string {
     this._url = localStorage.getItem(this.LAST_INSERTED_URL_KEY) || '';
-    return localStorage.getItem(this.LAST_INSERTED_URL_KEY) || '';
+    return this._url;
   }
 
   public get url(): string {
