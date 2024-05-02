@@ -7,6 +7,29 @@
   -->
 
   <!-- API: PROBLEMS and SERVICES -->
+
+  <div class="tal-problem-widget-row tal-problem-widget-row-problem">
+
+    <p-dropdown #statusDropdown [placeholder]="url" class="tal-problem-widget-problem-selector"
+      scrollHeight="50rem" 
+      panelStyleClass="tal-problem-widget-problem-selector-panel" [options]="urlCache" [(ngModel)]="url"
+      optionLabel="name" (onChange)="changeURL()">
+
+      <ng-template let-url pTemplate="item">
+        <div class="url-item">
+            <div class="url-item-label">{{url}}</div>
+        </div>
+      </ng-template>
+
+    </p-dropdown>
+
+    <i #statusDot class="pi pi-circle-fill tal-square-button" pTooltip="Status"></i>
+
+ 
+</div>
+
+
+
   <div class="tal-problem-widget-row tal-problem-widget-row-problem">
     <p-dropdown #problemDropdown placeholder="Select a problem" class="tal-problem-widget-problem-selector"
       scrollHeight="50rem" [overlayOptions]="dropdownOptions"
