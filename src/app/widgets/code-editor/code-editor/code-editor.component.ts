@@ -84,9 +84,7 @@ export class CodeEditorComponent implements OnInit {
 
     this.pms.currentProjectChanged.subscribe(() => { this.onProjectChanged() })
 
-    document.addEventListener('keydown', (event: KeyboardEvent) => {this.hotkeysService.emitHotkeysEvent(event)});
-    this.hotkeysService.registerHotkeysEvents().subscribe((event: KeyboardEvent) => {this.hotkeysService.getCorrectHotkey(event)})
-    this.hotkeysService.hotkeysAction.subscribe((emitter) => {this.chooseHotkeysAction(emitter)})
+    this.hotkeysService.hotkeysAction.subscribe((key) => {this.chooseHotkeysAction(key)})
   }
 
   ngOnInit() {
@@ -96,14 +94,14 @@ export class CodeEditorComponent implements OnInit {
 
   }
 
-  private chooseHotkeysAction(emitter: string){
-    if(emitter === 'save'){
+  private chooseHotkeysAction(key: string){
+    if(key === 'save'){
       this.saveFile();
-    } else if(emitter === 'run'){
+    } else if(key === 'run'){
       this.runProjectLocal();
-    } else if(emitter === 'test'){
+    } else if(key === 'test'){
       this.runConnectAPI();
-    } else if(emitter === 'export'){
+    } else if(key === 'export'){
       this.fileExplorer.export('Local');
     }
   }

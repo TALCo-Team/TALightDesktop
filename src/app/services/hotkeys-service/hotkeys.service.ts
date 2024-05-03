@@ -11,11 +11,11 @@ export class HotkeysService {
 
   public hotkeysAction = new EventEmitter<any>();
   public onHotkeysReceived = new EventEmitter<any>();
-  public configModified = false;
 
   constructor(private pms: ProjectsManagerService ) {
     // register keyboard event listener when the service is initialized
-    this.registerHotkeysEvents();
+    document.addEventListener('keydown', (event: KeyboardEvent) => {this.emitHotkeysEvent(event)});
+    this.registerHotkeysEvents().subscribe((event: KeyboardEvent) => {this.getCorrectHotkey(event)})
   }
 
   // emit keyboard events
@@ -71,17 +71,4 @@ export class HotkeysService {
     }
   }
 
-  /* public async addToConfig(project: ProjectEnvironment | null) {
-    
-    project?.config?.parseFile(project.config)
-  
-    if(project != null && project.config != null){
-      if(project.config.CONFIG_PATH != undefined){
-        await project.config.save(project.driver);
-        //project.driver.writeFile(project.config.CONFIG_PATH, string_config)
-      }
-    }
-
-    console.log("Updated config file: ", project?.config);
-  } */
 }
