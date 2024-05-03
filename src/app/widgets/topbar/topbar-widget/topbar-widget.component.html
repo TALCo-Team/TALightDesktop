@@ -1,6 +1,6 @@
 <div class="tal-topbar" [class.blur]="isBlurred">
   <div>
-    <button [disabled]="disabilita_bottone" type="button" class="tal-square-button" icon="pi pi-plus" pButton pRipple pTooltip="Aggiungi una scheda" (click)="addProject()" styleClass="addTabButton"></button>
+    <button [disabled]="disabilita_bottone" type="button" class="tal-square-button" icon="pi pi-plus" pButton pRipple pTooltip="Add a project" (click)="addProject()" styleClass="addTabButton"></button>
     <p-tabMenu [scrollable]="scrollable_prop" [model]="items" [activeItem]="activeItem" styleClass="tabMenu" >
         <ng-template pTemplate="item" let-item >
           <div (click)="setCurrentTab(item)" class="tab">
@@ -31,7 +31,7 @@
         <button pButton icon="pi {{changeThemIcon}}" class="tal-square-button" pTooltip="Change theme" (click)="toggleTheme()"></button>
     </div>
     <div class='tutorial'>
-      <button pButton pTooltip="Mostra il tutorial" (click)="showTutorial()" class="tal-square-button" icon="pi pi-question-circle" *ngIf=isTutorialButtonVisible></button>
+      <button pButton pTooltip="Show tutorial" (click)="showTutorial()" class="tal-square-button" icon="pi pi-question-circle" *ngIf=isTutorialButtonVisible></button>
     </div>
 </div>
 
