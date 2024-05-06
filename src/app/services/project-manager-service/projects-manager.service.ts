@@ -2,6 +2,7 @@ import { EventEmitter, Injectable } from '@angular/core';
 import { ProjectDriver, ProjectEnvironment } from './project-manager.types';
 import { PythonCompilerService } from '../python-compiler-service/python-compiler.service';
 import { ProjectManagerService } from './project-manager.service';
+import { first } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -25,13 +26,13 @@ export class ProjectsManagerService {
 
   public setCurrentProjectManagerService(index:number){
     console.log("ProjectManagerService:setCurrentProject")
-    
+
     let projectManagerService = this.getProjectManagerService(index);
     if(!projectManagerService){
       console.log("ProjectManagerService:setCurrentProject: error, invalid index")
       return;
     }
-    this.lastPms = this.currentPms 
+    this.lastPms = this.currentPms
     this.currentPms = projectManagerService;
     this.currentPmsId = index;
     console.log("ProjectManagerService:setCurrentProject:willEmit", this.currentPms)
@@ -83,18 +84,18 @@ export class ProjectsManagerService {
   public getCurrentProjectId(){
     return this.currentPmsId;
   }
-  
+
   public addProject(){
     console.log("ProjectManagerService:addProject")
 
     // Get the last project id if exist
     let id = 0
     if(this.getProject(this.pms.size - 1))
-      id = Math.max(...this.getProjectsId()) + 1 
-    
-    //TODO: add switch python/cpp  
+      id = Math.max(...this.getProjectsId()) + 1
+
+    //TODO: add switch python/cpp
     let pms = new ProjectManagerService(this.python.createPythonProject())
-    
+
     this.pms.set(id, pms)
 
     console.log("ProjectManagerService:addProject:project:id: ", id)
@@ -113,20 +114,28 @@ export class ProjectsManagerService {
 
     let firstProject = this.getProject(minId);
     let path = firstProject?.config.DIR_PROJECT + "Projects.json";
-    
+
     firstProject?.driver.mountByProjectId(minId);
 
     if(id == 0){
-      // Read the storage to get the projects
-      let content = firstProject?.driver.readFile(path, false)
+      let content = localStorage.getItem('projectsCached');
+
+      if(content != null)
+      {
+        const projectList: number[] = JSON.parse(content) as number[];
+        for(let x of projectList){
+          //TODO: DANIEL
+          //this.pms.set(x, null);
+        }
+      }
       console.log("ProjectManagerService:syncProjects:read: ", content)
       //TODO Daniel: convertire content in un array di id
     }else{
       let content = JSON.stringify(this.getProjectsId());
       console.log("ProjectManagerService:syncProjects:write: ", content)
+      localStorage.setItem('projectsCached', content);
 
-      
-      firstProject?.driver.writeFile(path, content);
+      //firstProject?.driver.writeFile(path, content);
     }
   }
 
