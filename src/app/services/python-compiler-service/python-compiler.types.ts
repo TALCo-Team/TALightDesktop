@@ -1,19 +1,25 @@
-import { ProjectEnvironment, ProjectLanguage } from "../project-manager-service/project-manager.types";
+import { ProjectDriver, ProjectEnvironment, ProjectLanguage } from "../project-manager-service/project-manager.types";
 import { PyodideDriver } from "./python-compiler.driver";
 import { PyodideExamples } from "./python-compiler.examples";
 
 export class PyodideProjectEnvironment extends ProjectEnvironment{
-    constructor(){
-        super(ProjectLanguage.PY, new PyodideDriver())
+
+    public laguange: ProjectLanguage = ProjectLanguage.PY
+    public driver: ProjectDriver = new PyodideDriver()
+    
+    protected async loadProject(): Promise<boolean> {
+        console.log("PyodideProjectEnvironment:loadProject")
+
+        /*
+        TODO: check if there are some operation to do like scan
+              the filesystem or other init operations
+        */
+
+        return true;
     }
 
-    async loadProject() {
-        console.log("PyodideProjectEnvironment:loadProject")
-        if(!this.loadConfig())
-            return false;
-        // TODO Daniel: check the loding of the config
-        this.saveConfig();
-
+    protected async createExample(): Promise<boolean> {
+        console.log("PyodideProjectEnvironment:createExample")
         //Starter files
         let folders = [
             this.config.DIR_PROJECT,
@@ -52,8 +58,7 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
             }
             await this.driver.writeFile(path, content);  
         }
-        return true;
-
-        this.onProjectChanged.emit()
+        
+        return true;        
     }
 }

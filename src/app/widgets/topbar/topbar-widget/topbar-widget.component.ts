@@ -1,6 +1,4 @@
-import { Component, ElementRef, NgZone, OnInit, ViewChild, ChangeDetectorRef, HostListener } from '@angular/core';
-import { AutoComplete } from 'primeng/autocomplete';
-
+import { Component, ElementRef, NgZone, OnInit, ViewChild, HostListener } from '@angular/core';
 import { NotificationManagerService, NotificationMessage, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
@@ -70,8 +68,6 @@ export class TopbarWidgetComponent implements OnInit {
     //Write the url to the file
 
     //this.pm.updateProblems();
-
-    
 
     // devo dargli un timeout dal momento che ci mette del tempo a caricare i files per via di pydiode
     setTimeout(() => {
@@ -168,14 +164,9 @@ export class TopbarWidgetComponent implements OnInit {
   setTabsNumber(){
     let tmp : MenuItem[] = [];
 
-    let projectConfig, projectName, projects = this.pms.getProjects();
-    for (let i = 0; i < projects.length; i++){
-      projectConfig = projects[i].config;
-
-      if(!projectConfig.isDefaultProjectName())
-        projectName = projectConfig.PROJECT_NAME;// If there is a custom name
-      else
-        projectName = ProjectConfig.defaultConfig.PROJECT_NAME + ' ' + i; //default name
+    let projectName, projectsId = this.pms.getProjectsId()
+    for (let i = 0; i < projectsId.length; i++){
+      projectName = ProjectConfig.defaultConfig.PROJECT_NAME + ' ' + i; //default name
 
       tmp.push({ label: projectName , icon: 'pi pi-fw pi-times' , id : i.toString()})
 
@@ -183,7 +174,7 @@ export class TopbarWidgetComponent implements OnInit {
     }
 
     this.items = tmp
-    this.disableDelete = (projects.length <= 1)
+    this.disableDelete = (projectsId.length <= 1)
     //this.activeItem = this.items[0];
   }
   // aggiungi un progetto controllando ed in caso le schede fossero troppe, attiva lo scrollable
@@ -204,7 +195,5 @@ export class TopbarWidgetComponent implements OnInit {
     this.activeItem = item;
     this.pms.setCurrentProjectManagerService(parseInt(item.id))
   }
-
-  
 
 }

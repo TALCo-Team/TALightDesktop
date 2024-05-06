@@ -27,13 +27,35 @@ export abstract class ProjectEnvironment{
   public onProjectChanged = new EventEmitter<void>();
 
   constructor(
-    public laguange: ProjectLanguage,
-    public driver: ProjectDriver,
+    private isExample: boolean
   ){
     console.log("ProjectEnvironment:constructor")
   }
 
-  abstract loadProject(): Promise<boolean>;
+  public abstract laguange: ProjectLanguage
+  public abstract driver: ProjectDriver
+ 
+  public load(): Promise<boolean> {
+    console.log("ProjectEnvironment:load")
+    if(!this.loadConfig())
+      return Promise.resolve(false);
+      // TODO Daniel: check the loding of the config
+    this.saveConfig();
+
+    let res;
+    if(this.isExample)
+      res = this.createExample()
+    else
+      res = this.loadProject()
+
+    this.onProjectChanged.emit()
+
+    return res
+  }
+
+  protected abstract loadProject(): Promise<boolean>;
+
+  protected abstract createExample(): Promise<boolean>;
 
   async saveConfig(){
     console.log("ProjectEnvironment:saveConfig:")

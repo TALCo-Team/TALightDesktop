@@ -92,8 +92,7 @@ export class CodeEditorComponent implements OnInit {
   ngOnInit() {
     this.isBlurred = true;
 
-    this.pms.addProject();
-
+    this.pms.load(); // Load All the projects
   }
 
   private chooseHotkeysAction(emitter: string){
@@ -168,7 +167,7 @@ export class CodeEditorComponent implements OnInit {
     let project = this.pms.getCurrentProject();
     if (project) {
       console.log("didStateChange:Ready:loadProject")
-      project.loadProject();
+      project.load();
     }
   }
 
@@ -214,8 +213,6 @@ export class CodeEditorComponent implements OnInit {
       let projectID = this.pms.getCurrentProjectId();
       console.log("CodeEditorComponent:didStateChange:mount: ", projectID)
       this.pms.getCurrentProject()?.driver.mountByProjectId(projectID)
-      //TODO Daniel close all open tabs
-
     }else if (state == CompilerState.Ready) {
       this.didStateChangeReady();
     }else if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {

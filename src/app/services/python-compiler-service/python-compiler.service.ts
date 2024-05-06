@@ -6,10 +6,15 @@ import { PyodideProjectEnvironment } from './python-compiler.types';
     providedIn: 'root'
 })
 export class PythonCompilerService {
-    
-    constructor( private fs:FsService ) { }
 
-    createPythonProject(){
-        return new PyodideProjectEnvironment();
+    constructor(private fs: FsService) { }
+
+    loadPythonProject() {
+        return new PyodideProjectEnvironment(false);
     }
+
+    createPythonExample() {
+        return new PyodideProjectEnvironment(true);
+    }
+
 }
