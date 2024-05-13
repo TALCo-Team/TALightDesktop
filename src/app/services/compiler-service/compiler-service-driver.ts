@@ -1,21 +1,22 @@
 import { CompilerMessage, CompilerMessageType, CompilerRequest, CompilerRequestHandler, CompilerResponse, CompilerState, notifyCallback, PromiseResolver, stateCallback, stdCallback, UID } from './compiler-service.types';
 import { FsNodeEmptyFolder, FsNodeFileList, FsNodeFolder, FsNodeList } from '../fs-service/fs.service.types';
 import { ProjectDriver } from '../project-manager-service/project-manager.types';
-import { ProjectsManagerService } from '../project-manager-service/projects-manager.service';
 import { EventEmitter } from '@angular/core';
+import { ProjectManagerService } from '../project-manager-service/project-manager.service';
 
 export class CompilerDriver implements ProjectDriver {
+  public onReady : EventEmitter<void> = new EventEmitter<void>;
+
   public driverName: string;
   public fsRoot:FsNodeFolder = FsNodeEmptyFolder;
   public fsList:FsNodeList=[];
   public fsListfiles:FsNodeFileList=[];
 
   //Prefix for the mount point
-  public root = "/TALight_" + ProjectsManagerService.projectsFolder;
+  public root = "/TALight_" + ProjectManagerService.projectsFolder;
 
   // Example with Project ID 0: /TALight_Projects_0
   public mountPoint = this.root + "_";
-
 
   public onMountChanged = new EventEmitter<void>();
 
@@ -30,8 +31,6 @@ export class CompilerDriver implements ProjectDriver {
   onNotify?: notifyCallback
 
   constructor(public worker: Worker) {
-    console.log("CompilerDriver:constructor:setMount: ", this.mountPoint);
-
     this.driverName = "CompilerDriver";
     
     this.worker.onmessage = (event: MessageEvent) => { this.didRecieve(event.data) };   
@@ -207,6 +206,8 @@ export class CompilerDriver implements ProjectDriver {
     console.log("compiler-serivce-driver:didReceiveMount: ", pathSent, pathRecived)
 
     resolvePromise(pathSent == pathRecived)
+
+    this.onMountChanged.emit();
   } 
 
 
@@ -337,7 +338,7 @@ export class CompilerDriver implements ProjectDriver {
   //SEND: PUBLIC
 
   //Don't use this function directly, use mountByProjectId or mountRoot
-  public mount(path: string): Promise<boolean> {
+  public async mount(path: string): Promise<boolean> {
     console.log("compiler-serive-driver:mount: "+path)
     let message: CompilerMessage = {
       uid: this.requestUID(),
@@ -345,20 +346,16 @@ export class CompilerDriver implements ProjectDriver {
       args: [path],
       contents: [],
     }
-    return this.sendMessage<boolean>(message);;
+    return await this.sendMessage<boolean>(message);
   }
 
-  public mountByProjectId(projectId: number): Promise<boolean> {
-    let result = this.mount(this.mountPoint + projectId);
-
-    this.onMountChanged.emit();
-
-    return result;
+  public async mountByProjectId(projectId: number): Promise<boolean> {
+    return await this.mount(this.mountPoint + projectId);
   }
 
   // Unused
-  public mountRoot(): Promise<boolean> {
-    return this.mount(this.root);
+  public async mountRoot(): Promise<boolean> {
+    return await this.mount(this.root);
   }
 
   public unmount(path: string): Promise<boolean> {

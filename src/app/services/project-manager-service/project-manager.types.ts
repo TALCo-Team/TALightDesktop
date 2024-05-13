@@ -1,6 +1,6 @@
 import { EventEmitter } from '@angular/core';
 import { CompilerDriver } from "../compiler-service/compiler-service.types";
-import { FsServiceDriver } from "../fs-service/fs.service.types"
+import { FsNodeFile, FsServiceDriver } from "../fs-service/fs.service.types"
 
 export enum ProjectLanguage{
   PY='PY',
@@ -9,7 +9,6 @@ export enum ProjectLanguage{
 }
 
 export interface ProjectDriver extends FsServiceDriver, CompilerDriver{
-  
   root : string;
   mountPoint : string;
 
@@ -18,46 +17,67 @@ export interface ProjectDriver extends FsServiceDriver, CompilerDriver{
   mountRoot(): Promise<boolean>;
 
   mountByProjectId(projectId: number): Promise<boolean>;
+
 };
 
 export abstract class ProjectEnvironment{
   
   public config: ProjectConfig = ProjectConfig.defaultConfig;
+
+  public onWorkerReady = new EventEmitter<void>();
   public onProjectConfigChanged = new EventEmitter<void>();
   public onProjectChanged = new EventEmitter<void>();
 
-  constructor(
-    private isExample: boolean
-  ){
-    console.log("ProjectEnvironment:constructor")
+  public files: FsNodeFile[] = [];
+
+  constructor(id: number){
+    console.log("ProjectEnvironment:constructor:id")
+
+    this.onWorkerReady.subscribe(() => {
+      console.log("ProjectEnvironment:init:id", id)
+      this.driver.mountByProjectId(id);
+      this.driver.onMountChanged.subscribe(() => { this.load() });
+    });
   }
 
   public abstract laguange: ProjectLanguage
   public abstract driver: ProjectDriver
  
-  public load(): Promise<boolean> {
+  private async load(): Promise<boolean> {
+    console.log("ProjectEnvironment:mounted")
     console.log("ProjectEnvironment:load")
-    if(!this.loadConfig())
-      return Promise.resolve(false);
-      // TODO Daniel: check the loding of the config
-    this.saveConfig();
+    
+    let newProject = false;// TODO: Daniel read the value from Config file
 
-    let res;
-    if(this.isExample)
-      res = this.createExample()
+    //wait until the config is loaded
+    if(!await this.loadConfig()){
+      console.log("ProjectEnvironment:load:config:not:found")
+      this.saveConfig();
+      newProject = true
+    }
+
+    let res = true;
+    if(newProject){
+      console.log("ProjectEnvironment:createExample")
+      res = await this.createExample()
+    }
     else
-      res = this.loadProject()
-
+      console.log("ProjectEnvironment:loadProject")
+      
+    console.log("ProjectEnvironment:load:done")
     this.onProjectChanged.emit()
 
-    return res
-  }
+    // So each time the project is mounted, the project is reloaded
+    this.driver.onMountChanged.subscribe(() => {
+      this.onProjectChanged.emit();
+    });
 
-  protected abstract loadProject(): Promise<boolean>;
+    return res;
+  }
 
   protected abstract createExample(): Promise<boolean>;
 
-  async saveConfig(){
+  async saveConfig(): Promise<boolean>{
     console.log("ProjectEnvironment:saveConfig:")
     if(!this.config){
       console.log("ProjectEnvironment:saveConfig: empty config")
@@ -74,8 +94,10 @@ export abstract class ProjectEnvironment{
     if (!path)
       path = ProjectConfig.defaultConfig.CONFIG_PATH
     
+    console.log("ProjectConfig:load:path:", path)
     if (!await this.driver.exists(path))
       return false
+    console.log("ProjectConfig:load:found:", path)
     
     let configContent = await this.driver.readFile(path, false) as string;
     console.log("ProjectConfig:load:found.", configContent)

@@ -7,17 +7,7 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
     public laguange: ProjectLanguage = ProjectLanguage.PY
     public driver: ProjectDriver = new PyodideDriver()
     
-    protected async loadProject(): Promise<boolean> {
-        console.log("PyodideProjectEnvironment:loadProject")
-
-        /*
-        TODO: check if there are some operation to do like scan
-              the filesystem or other init operations
-        */
-
-        return true;
-    }
-
+    
     protected async createExample(): Promise<boolean> {
         console.log("PyodideProjectEnvironment:createExample")
         //Starter files
@@ -29,8 +19,9 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
             folders.push(this.config.DIR_EXAMPLES)
 
         for(let i = 0; i < folders.length; i++){
-            console.log("PyodideProjectEnvironment:loadProject:createDirectory:",folders[i])
-            await this.driver?.createDirectory(folders[i]);
+            console.log("PyodideProjectEnvironment:createExample:createDirectory:",folders[i])
+            await this.driver.createDirectory(folders[i]);
+            console.log("PyodideProjectEnvironment:createExample:createDirectory:OK:",folders[i])
         }
         
         let files: string[][] = []
@@ -57,8 +48,7 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
                 continue;
             }
             await this.driver.writeFile(path, content);  
-        }
-        
+        }     
         return true;        
     }
 }

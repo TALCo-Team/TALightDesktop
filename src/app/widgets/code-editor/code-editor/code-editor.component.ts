@@ -17,7 +17,7 @@ import { MessageService } from 'primeng/api';
 import { TerminalWidgetComponent } from '../terminal-widget/terminal-widget.component';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { HotkeysService } from 'src/app/services/hotkeys-service/hotkeys.service';
-import { ProjectsManagerService } from 'src/app/services/project-manager-service/projects-manager.service';
+import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 
 
 
@@ -71,7 +71,7 @@ export class CodeEditorComponent implements OnInit {
     private fs: FsService,
     private compiler: CompilerService,
     private api: ApiService,
-    private pms: ProjectsManagerService,
+    private pms: ProjectManagerService,
     private cdRef: ChangeDetectorRef,
     private messageService: MessageService,
     private tutorialService: TutorialService,
@@ -82,27 +82,28 @@ export class CodeEditorComponent implements OnInit {
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     console.log("CodeEditorComponent:constructor", this.pms)
 
+    //This event is triggered after executing this.pms.load()
+    this.pms.onInit.subscribe(() => { this.onProjectChanged() })
     this.pms.currentProjectChanged.subscribe(() => { this.onProjectChanged() })
 
-    document.addEventListener('keydown', (event: KeyboardEvent) => {this.hotkeysService.emitHotkeysEvent(event)});
-    this.hotkeysService.registerHotkeysEvents().subscribe((event: KeyboardEvent) => {this.hotkeysService.getCorrectHotkey(event)})
-    this.hotkeysService.hotkeysAction.subscribe((emitter) => {this.chooseHotkeysAction(emitter)})
+    document.addEventListener('keydown', (event: KeyboardEvent) => { this.hotkeysService.emitHotkeysEvent(event) });
+    this.hotkeysService.registerHotkeysEvents().subscribe((event: KeyboardEvent) => { this.hotkeysService.getCorrectHotkey(event) })
+    this.hotkeysService.hotkeysAction.subscribe((emitter) => { this.chooseHotkeysAction(emitter) })
   }
 
   ngOnInit() {
     this.isBlurred = true;
-
     this.pms.load(); // Load All the projects
   }
 
-  private chooseHotkeysAction(emitter: string){
-    if(emitter === 'save'){
+  private chooseHotkeysAction(emitter: string) {
+    if (emitter === 'save') {
       this.saveFile();
-    } else if(emitter === 'run'){
+    } else if (emitter === 'run') {
       this.runProjectLocal();
-    } else if(emitter === 'test'){
+    } else if (emitter === 'test') {
       this.runConnectAPI();
-    } else if(emitter === 'export'){
+    } else if (emitter === 'export') {
       this.fileExplorer.export('Local');
     }
   }
@@ -110,8 +111,7 @@ export class CodeEditorComponent implements OnInit {
   private isTutorialShown(tutorial?: any) {
 
     console.log("CodeEditorComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined')
-    {
+    if (typeof tutorial === 'undefined') {
       this.LogApiDisabled = false;
       this.OutputDisabled = false;
       this.TerminalDisabled = false;
@@ -141,8 +141,7 @@ export class CodeEditorComponent implements OnInit {
         this.TerminalDisabled = false;
       }
     }
-    else
-    {
+    else {
       this.isBlurred = true
     }
   }
@@ -167,7 +166,8 @@ export class CodeEditorComponent implements OnInit {
     let project = this.pms.getCurrentProject();
     if (project) {
       console.log("didStateChange:Ready:loadProject")
-      project.load();
+      // TODO Daniel: check if needed
+      //project.mount() // Load the project from the storage, false because is not a new project
     }
   }
 
@@ -175,8 +175,8 @@ export class CodeEditorComponent implements OnInit {
     console.log("CodeEditorComponent:onProjectChanged")
 
     let project = this.pms.getCurrentProject();
-    if (!project) { return; }
-
+    
+    //TODO Daniel init: subscribe to the project events, so can recive Compiler.Init and start the mounting
     project.driver.subscribeNotify(true, (msg: string) => { this.didNotify(msg) })
     project.driver.subscribeState(true, (state: CompilerState, content?: string) => { this.didStateChange(state, content) })
     project.driver.subscribeStdout(true, (msg: string) => { this.didStdout(msg) })
@@ -209,13 +209,12 @@ export class CodeEditorComponent implements OnInit {
     console.log("CodeEditorComponent:didStateChange:")
     //this.outputWidget!.print(state,OutputType.SYSTEM);
 
-    if (state == CompilerState.Init){
-      let projectID = this.pms.getCurrentProjectId();
-      console.log("CodeEditorComponent:didStateChange:mount: ", projectID)
-      this.pms.getCurrentProject()?.driver.mountByProjectId(projectID)
-    }else if (state == CompilerState.Ready) {
+    if (state == CompilerState.Init) {
+      console.log("CodeEditorComponent:didStateChange:CompilerState.Init:")
+      this.pms.getCurrentProject().onWorkerReady.emit()
+    } else if (state == CompilerState.Ready) {
       this.didStateChangeReady();
-    }else if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
+    } else if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
       this.apiConnectReset();
     }
 
@@ -345,7 +344,7 @@ export class CodeEditorComponent implements OnInit {
     this.isPresentName.splice(Removeindex, 1);
     this.isPresent.splice(Removeindex, 1);
 
-    let files = this.pms.getCurrentProjectManagerService()?.files;
+    let files = this.pms.getCurrentProject()?.files;
     if (!files) { return; }
 
     files.splice(Removeindex, 1);
@@ -355,7 +354,7 @@ export class CodeEditorComponent implements OnInit {
     if (Removeindex == this.activeIndex) {
       setTimeout(() => {
         this.activeIndex = 0;
-        if(!files) { return; }
+        if (!files) { return; }
 
         this.execBar.selectedFile = files[this.activeIndex];
         this.fileEditor.selectedFile = files[this.activeIndex];
@@ -372,8 +371,8 @@ export class CodeEditorComponent implements OnInit {
     setTimeout(() => {
       this.activeIndex = event.index;
 
-      let files = this.pms.getCurrentProjectManagerService()?.files;
-      if(!files) { return; }
+      let files = this.pms.getCurrentProject()?.files;
+      if (!files) { return; }
 
       this.execBar.selectedFile = files[this.activeIndex];
       this.fileEditor.selectedFile = files[this.activeIndex];
@@ -390,7 +389,7 @@ export class CodeEditorComponent implements OnInit {
     if (!this.isPresent.includes(this.selectedFile.path)) {
       this.isPresentName.push(this.selectedFile.name);
 
-      this.pms.getCurrentProjectManagerService()?.files.push(this.selectedFile);
+      this.pms.getCurrentProject()?.files.push(this.selectedFile);
 
       setTimeout(() => this.activeIndex = (this.isPresentName.length) - 1, 0);
 

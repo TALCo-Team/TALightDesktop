@@ -7,7 +7,7 @@ import { TutorialService } from 'src/app/services/tutorial-service/tutorial.serv
 import { MenuItem } from 'primeng/api';
 import { FsService } from 'src/app/services/fs-service/fs.service';
 import { ConfigService } from 'src/app/services/config-service/config.service';
-import { ProjectsManagerService } from 'src/app/services/project-manager-service/projects-manager.service';
+import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 
 @Component({
   selector: 'tal-topbar-widget',
@@ -15,8 +15,6 @@ import { ProjectsManagerService } from 'src/app/services/project-manager-service
   styleUrls: ['./topbar-widget.component.scss']
 })
 export class TopbarWidgetComponent implements OnInit {
-
-  
   @ViewChild("statusDot") public statusDot?: ElementRef;
   @ViewChild("messageBox") public messageBox?: ElementRef;
 
@@ -36,19 +34,17 @@ export class TopbarWidgetComponent implements OnInit {
   larghezzaFinestra: number | undefined;
 
   constructor( public readonly themeService: ThemeService,
-
                public zone: NgZone,
                public pm: ProblemManagerService,
                public nm: NotificationManagerService,
                private fsService: FsService,
                private configService: ConfigService,
                private tutorialService: TutorialService,
-               public pms: ProjectsManagerService,
+               public pms: ProjectManagerService,
              )
   {
     // prendi le dimensioni della finestra
     this.getDimensions();
-
 
     this.subOnNotify = this.nm.onNotification.subscribe((msg:NotificationMessage): void=>{this.showNotification(msg)})
 
@@ -64,16 +60,10 @@ export class TopbarWidgetComponent implements OnInit {
     // all'inizio deve essere blurrato per via del tutorial
     this.isBlurred = true;
 
-    //TODO Daniel this.projectConfig.TAL_SERVER = this.url;
-    //Write the url to the file
-
-    //this.pm.updateProblems();
-
     // devo dargli un timeout dal momento che ci mette del tempo a caricare i files per via di pydiode
     setTimeout(() => {
       this.setCurrentTab(this.items[0]);
     }, 3000);
-
   }
 
   // calcola la lunghezza delle tab
@@ -184,16 +174,22 @@ export class TopbarWidgetComponent implements OnInit {
     //é un timer perché ci mette tanto a caricare pydiode
     setTimeout(() => {
       this.disabilita_bottone = false;
+      //TODO Daniel: check replace
       this.setCurrentTab((this.items as MenuItem[])[(this.items as MenuItem[]).length - 1])
-    }, 3000);
+      // this.setCurrentTab(this.items[this.items.length - 1])
+    }, 10000);
 
     this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
   }
 
+  changeTab(item : any){
+    this.pms.setCurrentProjectEnvironment(parseInt(item.id))
+    this.activeItem = item;
+  }
+
   // imposta la tab corrente
   setCurrentTab(item : any) {
-    this.activeItem = item;
-    this.pms.setCurrentProjectManagerService(parseInt(item.id))
+    this.changeTab(item);
   }
 
 }

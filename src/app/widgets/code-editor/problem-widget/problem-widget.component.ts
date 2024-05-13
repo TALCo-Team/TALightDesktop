@@ -5,7 +5,7 @@ import { ProblemManagerService } from 'src/app/services/problem-manager-service/
 import { MessageService, OverlayOptions } from 'primeng/api';
 import { ServiceDescriptor, ProblemDescriptor, ArgsMap, FilesMap, FileDescriptor, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 import { Dropdown } from 'primeng/dropdown';
-import { ProjectsManagerService } from 'src/app/services/project-manager-service/projects-manager.service';
+import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { AutoComplete } from 'primeng/autocomplete';
 
@@ -76,10 +76,9 @@ export class ProblemWidgetComponent {
   constructor( public zone: NgZone,
                public api: ApiService,
                public pm: ProblemManagerService,
-               public projectsManagerService: ProjectsManagerService,
                private tutorialService: TutorialService,
                private messageService: MessageService,
-               public pms: ProjectsManagerService,
+               public pms: ProjectManagerService,
               )
   {
     this.urlCache = [...this.api.urlCache]
@@ -94,14 +93,14 @@ export class ProblemWidgetComponent {
     
     // Daniel: original
     // this.prj.onProjectChanged.subscribe(() => { this.saveProblemServiceConfig() })
-    this.projectsManagerService.currentProjectChanged.subscribe(() => {
-      this.projectsManagerService.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
+    this.pms.currentProjectChanged.subscribe(() => {
+      this.pms.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
         this.saveProblemServiceConfig();
       })
     })
     
     this.pm.onProblemsLoaded.subscribe((_) =>{ this.loadProblemServiceConfig() })
-    this.projectsManagerService.currentProjectChanged.subscribe(() =>{ this.updateCurrentTabInfo() })
+    this.pms.currentProjectChanged.subscribe(() =>{ this.updateCurrentTabInfo() })
 
     // https://primefaces.org/primeng/overlay
     //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
@@ -228,7 +227,7 @@ export class ProblemWidgetComponent {
        //console.log('Problem selected: ', problem.name);
       this.updateProjectConfigProblemServiceProblem();
 
-      this.projectsManagerService.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
+      this.pms.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
         //console.log('config pronto in problem');
         this.updateProjectConfigProblemServiceProblem();
       })
@@ -238,7 +237,7 @@ export class ProblemWidgetComponent {
       //console.log('Service selected: ', service.name);
       this.updateProjectConfigProblemServiceProblem();
 
-      this.projectsManagerService.getCurrentProject()?.onProjectConfigChanged.subscribe((_) => {
+      this.pms.getCurrentProject()?.onProjectConfigChanged.subscribe((_) => {
         //console.log('config pronto in service');
         this.updateProjectConfigProblemServiceProblem();
       })
@@ -246,7 +245,7 @@ export class ProblemWidgetComponent {
   }
 
   private async updateProjectConfigProblemServiceProblem() {
-    let project = this.projectsManagerService.getCurrentProject();
+    let project = this.pms.getCurrentProject();
     if (project == null) return;
     project.config.parseFile(project.config);
 
@@ -384,7 +383,7 @@ export class ProblemWidgetComponent {
       //file.value = ""
       return
     }
-    let project = this.projectsManagerService.getCurrentProject();
+    let project = this.pms.getCurrentProject();
     let pathExist = await project?.driver.exists(path)
     console.log('fileDidChange:pathExist:', pathExist)
     if (!pathExist) {

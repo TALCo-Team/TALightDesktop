@@ -49,8 +49,6 @@ class PyodideWorker{
     this.requestQueueStdout = new Map();
     this.requestQueueStderr = new Map();
 
-    
-    
     //onReady
     let readyResolver: PromiseResolver<boolean>;
     this.readyPromise =  new Promise<boolean>((resolve, reject) => {
@@ -58,23 +56,20 @@ class PyodideWorker{
     })
     this.readyResolver = (value)=>{ readyResolver(value) }
 
-    
-    
-    
     //Send Init event, but outside the constructor
     setTimeout(()=>{this.sendState(CompilerState.Loading)})
 
-  
     this.initPydiode().then(()=>{
       //this.load(this.mountPoint);
       this.interruptBuffer[0]=0
       this.pyodide.setInterruptBuffer(this.interruptBuffer)
       this.sendState(CompilerState.Init)
+      // Send Init state to the driver
+      
+      console.log("PyodideWorker: ready")
     }).catch( (error:any)=>{
       this.sendState(CompilerState.Error, error)
     });
-    
-
   }
 
   async initPydiode(){
