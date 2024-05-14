@@ -19,7 +19,6 @@ import { ProjectManagerService } from 'src/app/services/project-manager-service/
 export class FileExplorerWidgetComponent implements OnInit {
   public rootDir = "/"
   public showHidden = false
-  public fsroot = FsService.EmptyFolder
 
   public editingValue: string = "";
   public editingItem: FsNodeFile | FsNodeFolder | null = null;
@@ -71,7 +70,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   constructor(
     private confirmationService: ConfirmationService,
     private fs: FsService,
-    private projectManagerService: ProjectManagerService,
+    public projectManagerService: ProjectManagerService,
     private authService: SocialAuthService,
     private messageService: MessageService,
     private githubService: GithubApiService,
@@ -137,7 +136,6 @@ export class FileExplorerWidgetComponent implements OnInit {
     let project = this.projectManagerService.getCurrentProject();
     let id = this.projectManagerService.getCurrentProjectId();
     console.log("FileExplorerWidgetComponent:didProjectChanged:id:", id, project)
-    this.fsroot = project.driver.fsRoot
 
     project.driver.ready().then((ready) => {
       console.log("FileExplorerWidgetComponent:didProjectChanged:id:ready", id, project)
@@ -147,14 +145,14 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   refreshRoot(onDone?: () => void) {
     let project = this.projectManagerService.getCurrentProject();
-    console.log("FileExplorerWidgetComponent:refreshRoot", project)
+    let id = this.projectManagerService.getCurrentProjectId();
+    console.log("FileExplorerWidgetComponent:refreshRoot:id", id, project)
     project.driver.scanDirectory(this.rootDir).then((folder) => {
       project.driver.fsRoot = folder ?? FsService.EmptyFolder
-      this.fsroot = project.driver.fsRoot
 
       this.bindCollapseEvent();
 
-      this.onUpdateRoot?.emit(this.fsroot);
+      this.onUpdateRoot?.emit(project.driver.fsRoot);
       if (onDone) { onDone() }
     });
   }
@@ -220,16 +218,17 @@ export class FileExplorerWidgetComponent implements OnInit {
 
     console.log("openSettings")
     let project = this.projectManagerService.getCurrentProject();
-    
-    let projectFolder = this.fsroot.folders.find((item) => {
+   
+    let projectFolder = project.driver.fsRoot.folders.find((item) => {
       return item.path + "/" == project.config.DIR_PROJECT
-    })
-    if (projectFolder == null) { return }
+    });
+
+    if (projectFolder == null) return 
     console.log("openSettings:projectFolder:", projectFolder)
     let configFile = projectFolder.files.find((file) => {
       return file.path == project!.config.CONFIG_PATH
     })
-    if (configFile == null) { return }
+    if (configFile == null) return
     console.log("openSettings:configFile:", configFile)
     this.selectFile(configFile);
   }
@@ -296,7 +295,7 @@ export class FileExplorerWidgetComponent implements OnInit {
           // Change path item
           this.editingItem.path = newpath;
 
-          this.onUpdateRoot?.emit(this.fsroot);
+          this.onUpdateRoot?.emit(project.driver.fsRoot);
         }
       }
     }
@@ -331,7 +330,7 @@ export class FileExplorerWidgetComponent implements OnInit {
         icon: 'pi pi-exclamation-triangle',
         accept: () => {
           //confirm action
-          this.deleteFile(this.fsroot, file);
+          this.deleteFile(this.projectManagerService.getCurrentProject().driver.fsRoot, file);
         },
         reject: () => {
           //reject action
@@ -374,7 +373,7 @@ export class FileExplorerWidgetComponent implements OnInit {
         icon: 'pi pi-exclamation-triangle',
         accept: () => {
           //confirm action
-          this.deleteFolder(this.fsroot, folder);
+          this.deleteFolder(this.projectManagerService.getCurrentProject().driver.fsRoot, folder);
         },
         reject: () => {
           //reject action
@@ -423,8 +422,8 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   public addNewItem(folder: FsNodeFolder | null, type: "file" | "folder") {
     if(folder == null)
-      folder = this.fsroot;
-    
+      folder = this.projectManagerService.getCurrentProject().driver.fsRoot;
+
     this.newItemValue = "";
     this.newItemFolder = folder;
     this.newItemType = type;
@@ -547,7 +546,10 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   public export(mode: string) {
     if (mode != 'Github-code') {
-      let items = this.fs.treeToList(this.fsroot)
+      let items = this.fs.treeToList(
+        this.projectManagerService.getCurrentProject().driver.fsRoot
+      )
+      
       if (items.length == 0) {
         console.log("export: No files found to be exported")
       }
@@ -718,7 +720,9 @@ export class FileExplorerWidgetComponent implements OnInit {
 
   public uploadFiles() {
     this.exportVisible = false;
-    let items = this.fs.treeToList(this.fsroot);
+    let items = this.fs.treeToList(
+      this.projectManagerService.getCurrentProject().driver.fsRoot
+    )
 
     let tree: any = [];
 
@@ -796,11 +800,9 @@ export class FileExplorerWidgetComponent implements OnInit {
     let project = this.projectManagerService.getCurrentProject();
 
     project.driver.scanDirectory('/').then((folder) => {
-      this.fsroot = folder ?? FsService.EmptyFolder;
+      project.driver.fsRoot = folder ?? FsService.EmptyFolder;
 
-      project.driver.fsRoot = this.fsroot;
-
-      this.deleteFolder(this.fsroot, this.fsroot)
+      this.deleteFolder(project.driver.fsRoot, project.driver.fsRoot)
 
       this.refreshRoot();
 
@@ -809,7 +811,6 @@ export class FileExplorerWidgetComponent implements OnInit {
 
 
   public downloadFiles() {
-
     this.importVisible = false;
 
     this.githubService.getRepositoryAsTar(this.selectedRepo.name)
@@ -817,7 +818,8 @@ export class FileExplorerWidgetComponent implements OnInit {
       .then(async (response) => {
         let data = await response.arrayBuffer();
         this.replaceProject(data);
-      })
+      }
+    )
   }
 
 
@@ -862,13 +864,10 @@ export class FileExplorerWidgetComponent implements OnInit {
 
 
   public enableButton(mode: any) {
-
-    if (mode === 'export') {
+    if (mode === 'export') 
       this.exportButtonRepoDisabled = false;
-    } else {
+    else 
       this.importButtonRepoDisabled = false;
-    }
-
   }
 
   public detectInput() {

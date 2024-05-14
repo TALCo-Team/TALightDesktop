@@ -24,8 +24,6 @@ export interface FsServiceDriver {
   mountPoint:string;
 
   fsRoot:FsNodeFolder;
-  fsList:FsNodeList;
-  fsListfiles:FsNodeFileList;
   
   mount(path: string): Promise<boolean>;
   

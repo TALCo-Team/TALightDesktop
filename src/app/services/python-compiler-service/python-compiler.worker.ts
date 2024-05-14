@@ -580,8 +580,10 @@ class PyodideWorker{
     this.fs.mkdir(this.mountPoint);
     this.fs.mount(this.fs.filesystems.IDBFS, { root: '/' }, this.mountPoint);
     this.fs.syncfs(true,()=>{
+      if(!this.isReady)
+        this.sendState(CompilerState.Ready)
+        ////Send it just after the execution of this.initPydiode(), not the first mount
       this.isReady = true;
-      this.sendState(CompilerState.Ready)
       this.readyResolver(this.isReady);
     });
     

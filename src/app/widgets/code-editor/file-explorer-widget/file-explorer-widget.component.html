@@ -2,9 +2,9 @@
   <div class="tal-editor-files-header">
     <div class="tal-editor-files-left-bar">
       <button pButton icon="pi pi-folder" class="tal-square-button"
-        (click)="closeAllContextMenus($event); addNewItem(fsroot, 'folder')" pTooltip="New folder"></button>
+        (click)="closeAllContextMenus($event); addNewItem(null, 'folder')" pTooltip="New folder"></button>
       <button pButton icon="pi pi-file" class="tal-square-button"
-        (click)="closeAllContextMenus($event); addNewItem(fsroot, 'file')" pTooltip="New file"></button>
+        (click)="closeAllContextMenus($event); addNewItem(null, 'file')" pTooltip="New file"></button>
     </div>
     <div class="tal-editor-files-right-bar">
       <button pButton icon="pi pi-sync" class="tal-square-button" (click)="closeAllContextMenus($event); syncFilesystem()"
@@ -14,7 +14,7 @@
 
 
   <div class="tal-editor-files-body">
-    <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: fsroot }"></ng-container>
+    <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: this.projectManagerService.getCurrentProject().driver.fsRoot }"></ng-container>
   </div>
 
   <p-dialog header="Choose or create a repository.." [(visible)]="exportVisible" [style]="{ width: '50vw' }">

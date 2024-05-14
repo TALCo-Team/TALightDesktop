@@ -2,17 +2,17 @@ import { EventEmitter } from '@angular/core';
 import { CompilerDriver } from "../compiler-service/compiler-service.types";
 import { FsNodeFile, FsServiceDriver } from "../fs-service/fs.service.types"
 
-export enum ProjectLanguage{
-  PY='PY',
-  C='C',
-  CPP='CPP',
+export enum ProjectLanguage {
+  PY = 'PY',
+  C = 'C',
+  CPP = 'CPP',
 }
 
-export interface ProjectDriver extends FsServiceDriver, CompilerDriver{
-  root : string;
-  mountPoint : string;
+export interface ProjectDriver extends FsServiceDriver, CompilerDriver {
+  root: string;
+  mountPoint: string;
 
-  onMountChanged : EventEmitter<void>;
+  onMountChanged: EventEmitter<void>;
 
   mountRoot(): Promise<boolean>;
 
@@ -20,8 +20,8 @@ export interface ProjectDriver extends FsServiceDriver, CompilerDriver{
 
 };
 
-export abstract class ProjectEnvironment{
-  
+export abstract class ProjectEnvironment {
+
   public config: ProjectConfig = ProjectConfig.defaultConfig;
 
   public onWorkerReady = new EventEmitter<void>();
@@ -30,7 +30,7 @@ export abstract class ProjectEnvironment{
 
   public files: FsNodeFile[] = [];
 
-  constructor(id: number){
+  constructor(id: number) {
     console.log("ProjectEnvironment:constructor:id")
 
     this.onWorkerReady.subscribe(() => {
@@ -42,28 +42,28 @@ export abstract class ProjectEnvironment{
 
   public abstract laguange: ProjectLanguage
   public abstract driver: ProjectDriver
- 
+
   private async load(): Promise<boolean> {
     console.log("ProjectEnvironment:mounted")
     console.log("ProjectEnvironment:load")
-    
-    let newProject = false;// TODO: Daniel read the value from Config file
 
     //wait until the config is loaded
-    if(!await this.loadConfig()){
-      console.log("ProjectEnvironment:load:config:not:found")
-      this.saveConfig();
-      newProject = true
-    }
+    if (!await this.loadConfig())
+      console.log("ProjectEnvironment:load:config:not_found")
+    
+    await console.log("ProjectEnvironment:load:config:done:", this.config)
 
     let res = true;
-    if(newProject){
+    if (this.config.CREATE_EXAMPLES) {
       console.log("ProjectEnvironment:createExample")
       res = await this.createExample()
     }
     else
       console.log("ProjectEnvironment:loadProject")
-      
+
+    this.config.CREATE_EXAMPLES = false
+    this.saveConfig()
+
     console.log("ProjectEnvironment:load:done")
     this.onProjectChanged.emit()
 
@@ -77,28 +77,28 @@ export abstract class ProjectEnvironment{
 
   protected abstract createExample(): Promise<boolean>;
 
-  async saveConfig(): Promise<boolean>{
+  async saveConfig(): Promise<boolean> {
     console.log("ProjectEnvironment:saveConfig:")
-    if(!this.config){
-      console.log("ProjectEnvironment:saveConfig: empty config")
-      return false
-    }
+    let res = await this.config.save(this.driver)
+    if(res == true)
+      console.log("ProjectEnvironment:saveConfig: done")
+    else
+      console.log("ProjectEnvironment:saveConfig: failed")
 
-    await this.config.save(this.driver)
-    console.log("ProjectEnvironment:saveConfig: done")
-    return true
+    this.onProjectConfigChanged.emit();
+
+    return res
   }
-
-  async loadConfig(path?: string): Promise<boolean>{
+  
+  async loadConfig(): Promise<boolean> {
     console.log("ProjectConfig:load");
-    if (!path)
-      path = ProjectConfig.defaultConfig.CONFIG_PATH
-    
+    let path = ProjectConfig.defaultConfig.CONFIG_PATH
+
     console.log("ProjectConfig:load:path:", path)
     if (!await this.driver.exists(path))
       return false
     console.log("ProjectConfig:load:found:", path)
-    
+
     let configContent = await this.driver.readFile(path, false) as string;
     console.log("ProjectConfig:load:found.", configContent)
 
@@ -114,8 +114,6 @@ export abstract class ProjectEnvironment{
     this.config = config
     console.log("ProjectConfig:load:config.", this.config)
 
-    this.onProjectConfigChanged.emit();
-
     return true
   }
 }
@@ -124,8 +122,8 @@ export abstract class ProjectEnvironment{
 export class ProjectConfig {
   RUN = "/main.py"
   DEBUG = false //TODO
-  PROJECT_NAME="Project"
-  PREFERED_LANG="it"
+  PROJECT_NAME = "Project"
+  PREFERED_LANG = "it"
 
   TAL_SERVERS = [ //TODO
     'wss://ta.di.univr.it/algo',
@@ -145,10 +143,10 @@ export class ProjectConfig {
   CREATE_EXAMPLES = true
 
   //TODO: hotkey manager service
-  HOTKEY_RUN = {"Control": false, "Alt" : false, "Shift": false, "Key": 'F8'}
-  HOTKEY_TEST = {"Control": false, "Alt" : false, "Shift": false, "Key": 'F9'}
-  HOTKEY_SAVE = {"Control": true, "Alt" : false, "Shift": false, "Key": 's'}
-  HOTKEY_EXPORT = {"Control": true, "Alt" : false, "Shift": false, "Key": 'e'}
+  HOTKEY_RUN = { "Control": false, "Alt": false, "Shift": false, "Key": 'F8' }
+  HOTKEY_TEST = { "Control": false, "Alt": false, "Shift": false, "Key": 'F9' }
+  HOTKEY_SAVE = { "Control": true, "Alt": false, "Shift": false, "Key": 's' }
+  HOTKEY_EXPORT = { "Control": true, "Alt": false, "Shift": false, "Key": 'e' }
 
   CONFIG_NAME = 'talight.json'
   CONFIG_PATH = this.DIR_PROJECT + this.CONFIG_NAME
@@ -157,48 +155,14 @@ export class ProjectConfig {
 
   public static readonly defaultConfig = new ProjectConfig()
 
-  /*static async load(fs:FsServiceDriver, path?:string){
-    console.log("ProjectConfig:load")
-    if(!path){ path = ProjectConfig.defaultConfig.CONFIG_PATH }
-    let config: ProjectConfig;
-    if (!await fs.exists(path)){ return null }
-
-    let configContent = await fs.readFile(path, false) as string;
-    //(configContent);
-    console.log("ProjectConfig:load:found:",configContent)
-
-    try{
-      config = JSON.parse(configContent) as ProjectConfig
-    }catch{
-      console.log("ProjectConfig:load:cofig:JSON:parse: failed")
-      return null;
-    }
-
-    console.log("ProjectConfig:load:config:",config)
-    return config
-  }*/
-
-  async save(fs:FsServiceDriver){
+  async save(fs: FsServiceDriver) {
     console.log('ProjectConfig:save');
     let content = JSON.stringify(this, null, 4)
     let res = await fs.writeFile(this.CONFIG_PATH, content);
     return true
   }
 
-  parseFile (obj: any): string {
-    for (var key in obj) {
-      console.log("ProjectConfig:parseFile:key: " + key + ", value: " + obj[key])
-      if (key == "TAL_SERVER") {
-        return obj[key];
-      }
-      if (obj[key] instanceof Object) {
-        this.parseFile(obj[key]);
-      }
-    }
-    return "";
-  }
-
-  public isDefaultProjectName(){
+  public isDefaultProjectName() {
     return this.PROJECT_NAME == ProjectConfig.defaultConfig.PROJECT_NAME
   }
 }

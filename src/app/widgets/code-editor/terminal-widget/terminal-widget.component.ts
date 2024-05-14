@@ -3,12 +3,12 @@ import { TerminalService } from 'primeng/terminal';
 import { ArgDescriptor, ParamsMap, ProblemDescriptor, ProblemList, ProblemMap, ServiceDescriptor, ServiceMap } from '../../../services/problem-manager-service/problem-manager.types';
 import { Commands } from 'src/app/services/api-service/api.commands';
 import { ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
-import { FsNodeFile, FsNodeList } from 'src/app/services/fs-service/fs.service.types';
-import { CompilerService } from 'src/app/services/compiler-service/compiler-service.service';
+import { FsNodeFile } from 'src/app/services/fs-service/fs.service.types';
 import { TerminalApiService } from 'src/app/services/terminal-api-service/terminal-api.service';
 import { Meta } from 'src/app/services/api-service/api.service';
 import { Packets } from 'src/app/services/api-service/api.packets';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
+import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 
 @Component({
   selector: 'tal-terminal-widget',
@@ -70,8 +70,8 @@ export class TerminalWidgetComponent implements OnInit {
     public zone: NgZone,
     private terminalService: TerminalService,
     public api: TerminalApiService,
-    private compiler: CompilerService,
     private tutorialService: TutorialService,
+    private pms: ProjectManagerService
   ) {
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
       this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
@@ -679,16 +679,14 @@ export class TerminalWidgetComponent implements OnInit {
 
     console.log("apiConnect:service:ok")
 
-    let config = await this.compiler.readConfig()
-    if (!config) { return false }
-    console.log("apiConnect:config:ok")
+    let projectConfig = this.pms.getCurrentProject().config;
 
     //Open Connection
     let problem = this.selectedService.parent.name;
     let service = this.selectedService.name;
     let args = this.connectParams;
     let tty = false //true: bash code coloring, backspaces, etc
-    let token = (config.TAL_TOKEN && config.TAL_TOKEN != "" ? config.TAL_TOKEN : undefined)
+    let token = (projectConfig.TAL_TOKEN && projectConfig.TAL_TOKEN != "" ? projectConfig.TAL_TOKEN : undefined)
     let files = new Map<string, string>();
 
     console.log("apiConnect:params:problem", problem)

@@ -8,27 +8,15 @@ import { ProjectManagerService } from '../project-manager-service/project-manage
 export class CompilerService {
   constructor(private pms: ProjectManagerService) { }
 
-  async readConfig() {
-    let project = this.pms.getCurrentProject();
-
-    if (!await project.driver.exists(ProjectConfig.defaultConfig.CONFIG_PATH)) {
-      console.log("PythonCompilerService:readPythonConfig: config file doesn't exist!")
-      return null;
-    }
-
-    let configContent = await project.driver.readFile(ProjectConfig.defaultConfig.CONFIG_PATH, false) as string;
-    return JSON.parse(configContent) as ProjectConfig
-  }
-
   async runProject() {
-    console.log("PythonCompilerService:runProject")
-    let config = await this.readConfig()
-    if (!config) { return null; }
-
     let project = this.pms.getCurrentProject();
-    await project.driver.installPackages(config.EXTRA_PACKAGES)
-    let result = await project?.driver.executeFile(config!.RUN)
-    console.log(result)
+    let id = this.pms.getCurrentProjectId();
+
+    console.log("PythonCompilerService:runProject:id:", id, project)
+    
+    await project.driver.installPackages(project.config.EXTRA_PACKAGES)
+    let result = await project?.driver.executeFile(project.config!.RUN)
+    console.log("PythonCompilerService:runProject:id:", id, "result:", result)
     return result
   }
 

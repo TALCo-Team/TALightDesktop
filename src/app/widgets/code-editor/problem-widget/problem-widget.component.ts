@@ -94,7 +94,7 @@ export class ProblemWidgetComponent {
     // Daniel: original
     // this.prj.onProjectChanged.subscribe(() => { this.saveProblemServiceConfig() })
     this.pms.currentProjectChanged.subscribe(() => {
-      this.pms.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
+      this.pms.getCurrentProject().onProjectConfigChanged.subscribe(() => {
         this.saveProblemServiceConfig();
       })
     })
@@ -227,7 +227,7 @@ export class ProblemWidgetComponent {
        //console.log('Problem selected: ', problem.name);
       this.updateProjectConfigProblemServiceProblem();
 
-      this.pms.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
+      this.pms.getCurrentProject().onProjectConfigChanged.subscribe(() => {
         //console.log('config pronto in problem');
         this.updateProjectConfigProblemServiceProblem();
       })
@@ -237,7 +237,7 @@ export class ProblemWidgetComponent {
       //console.log('Service selected: ', service.name);
       this.updateProjectConfigProblemServiceProblem();
 
-      this.pms.getCurrentProject()?.onProjectConfigChanged.subscribe((_) => {
+      this.pms.getCurrentProject().onProjectConfigChanged.subscribe((_) => {
         //console.log('config pronto in service');
         this.updateProjectConfigProblemServiceProblem();
       })
@@ -246,9 +246,6 @@ export class ProblemWidgetComponent {
 
   private async updateProjectConfigProblemServiceProblem() {
     let project = this.pms.getCurrentProject();
-    if (project == null) return;
-    project.config.parseFile(project.config);
-
     if (this.selectedProblem != undefined) {
       project.config.TAL_PROBLEM = this.selectedProblem.name
       if (this.selectedService != undefined)

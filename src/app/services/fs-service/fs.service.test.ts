@@ -8,9 +8,7 @@ export class IndexeddbFsDriver implements FsServiceDriver {
   public driverName: string;
   public mountPoint: string = "";
   public fsRoot: FsNodeFolder = FsNodeEmptyFolder;
-  public fsList: FsNodeList = [];
-  public fsListfiles: FsNodeFileList = [];
-
+  
   public fs;
   public mountRoot = "root"
 

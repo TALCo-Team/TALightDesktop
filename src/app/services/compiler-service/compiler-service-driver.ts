@@ -9,8 +9,6 @@ export class CompilerDriver implements ProjectDriver {
 
   public driverName: string;
   public fsRoot:FsNodeFolder = FsNodeEmptyFolder;
-  public fsList:FsNodeList=[];
-  public fsListfiles:FsNodeFileList=[];
 
   //Prefix for the mount point
   public root = "/TALight_" + ProjectManagerService.projectsFolder;
