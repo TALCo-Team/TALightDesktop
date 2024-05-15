@@ -1,12 +1,13 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { ApiService, } from '../api-service/api.service';
 import { ArgDescriptor, ParamsMap, ProblemDescriptor, ProblemList, ProblemMap, ServiceDescriptor, ServiceMap } from './problem-manager.types';
+import { ProjectsManagerService } from '../project-manager-service/projects-manager.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProblemManagerService {
-  
+
   selectedProblem?: ProblemDescriptor
   selectedService?: ServiceDescriptor
 
@@ -14,17 +15,18 @@ export class ProblemManagerService {
   problems=new ProblemMap();
   services=new ServiceMap();
   savedParams=new ParamsMap();
-  
+
 
   public onProblemsChanged = new EventEmitter<boolean>();
   public onProblemSelected = new EventEmitter<ProblemDescriptor>();
   public onError = new EventEmitter<any>();
   public onProblemsLoaded = new EventEmitter<any>();
-   
+
   public onServiceSelected = new EventEmitter<ServiceDescriptor>();
 
   constructor(
-    public api:ApiService
+    public api:ApiService,
+    public pms: ProjectsManagerService,
   ){}
 
 
@@ -49,9 +51,9 @@ export class ProblemManagerService {
       this.onProblemsChanged.emit(false)
       this.onProblemsLoaded.emit(this.problemList)
     });
-    req.onError = (error) => { 
+    req.onError = (error) => {
       this.onProblemsChanged.emit(false)
-      this.onError.emit(error) 
+      this.onError.emit(error)
     };
   }
 
@@ -59,7 +61,7 @@ export class ProblemManagerService {
   selectProblem(selectedProblem: ProblemDescriptor){
     this.selectedProblem = selectedProblem;
     //alert('hai selezionato il problema: ' + selectedProblem.name);
-    localStorage.setItem('problema', selectedProblem.name);
+    // localStorage.setItem('problema', selectedProblem.name);
     this.onProblemSelected.emit(selectedProblem);
     this.selectedService = undefined;
   }
@@ -67,7 +69,12 @@ export class ProblemManagerService {
   getProblem(problemName: string) {
     return this.problems.get(problemName);
   }
-  
+
+  getCurrentProblem() {
+    let project = this.pms.getCurrentProject();
+    return this.getProblem(project?.config.TAL_PROBLEM || "");
+  }
+
   selectService(selectedService: ServiceDescriptor){
     let name = selectedService.key;
     if ( this.savedParams.has(name) ){
@@ -78,13 +85,24 @@ export class ProblemManagerService {
       this.selectedService = selectedService;
     }
 
+    let project = this.pms.getCurrentProject();
+    if (project != null) {
+      project.config.TAL_SERVICE = selectedService.getKey();
+      project.saveConfig();
+    }
+
     //alert('hai selezionato il servizio: ' + name);
-    localStorage.setItem('servizio', name);
+    // localStorage.setItem('servizio', name);
     this.onServiceSelected.emit(selectedService);
   }
 
   getService(serviceName: string) {
     return this.services.get(serviceName);
+  }
+
+  getCurrentService() {
+    let project = this.pms.getCurrentProject();
+    return this.getService(project?.config.TAL_SERVICE || "");
   }
 
   validateArgs(service: ServiceDescriptor){
@@ -107,7 +125,7 @@ export class ProblemManagerService {
       let pattern;
       try{
         pattern = new RegExp(arg.regex)
-      }catch(error:any) { 
+      }catch(error:any) {
         console.log("validateArg:regex:invalid")
         return null;
       }
