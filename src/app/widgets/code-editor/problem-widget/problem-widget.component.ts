@@ -149,6 +149,25 @@ export class ProblemWidgetComponent {
     this.urlCache = urlCache
   }
 
+  getServerList(){
+    let project = this.pms.getCurrentProject();
+    if (project != null) {
+      return project.config.TAL_SERVERS
+    }
+    return []
+  }
+
+  public selectServerURL(){
+    this.changeURL()
+
+    let project = this.pms.getCurrentProject();
+    if (project != null) {
+      project.config.TAL_SERVER = this.url;
+      project.saveConfig();
+    }
+
+  }
+
   public changeURL() {
     if(this.lastUrl == this.url){return}
     this.stateIdle()
@@ -169,14 +188,6 @@ export class ProblemWidgetComponent {
     console.log("changeURL:url:", this.url )
     this.lastUrl = this.url + ""
 
-    // Daniel
-    let project = this.pms.getCurrentProject();
-    if (project != null) {
-      project.config.TAL_SERVER = this.url;
-      project.saveConfig();
-    }
-    //! Daniel
-
     console.log("changeURL:urlCache:after:", this.urlCache)
     console.log("changeURL:url:", this.url)
     this.lastUrl = this.url + ""
@@ -184,10 +195,20 @@ export class ProblemWidgetComponent {
 
   private updateProblemInfo(){
     let currentProject = this.pms.getCurrentProject();
+    if (currentProject == null) return;
     console.log("updateProblemInfo:url: url", this.url)
     console.log("updateProblemInfo:url  TAL_SERVER", currentProject!.config.TAL_SERVER)
+
     this.url = currentProject!.config.TAL_SERVER
+    this.selectedProblem = this.pm.getCurrentProblem()
+    this.selectedService = this.pm.getCurrentService()
+
+    console.log("updateProblemInfo TAL_SERVER ", currentProject!.config.TAL_SERVER)
+    console.log("updateProblemInfo TAL_PROBLEM ", currentProject!.config.TAL_PROBLEM)
+    console.log("updateProblemInfo TAL_SERVICE ", currentProject!.config.TAL_SERVICE)
+
     this.changeURL()
+
   }
 
 
@@ -442,7 +463,6 @@ export class ProblemWidgetComponent {
     this.servicesMenu = []
     this.loading = true
 
-    console.log
     this.pm.updateProblems()
   }
 

@@ -11,9 +11,9 @@
   <div class="tal-problem-widget-row tal-problem-widget-row-problem">
 
     <p-dropdown #statusDropdown [placeholder]="url" class="tal-problem-widget-problem-selector"
-      scrollHeight="50rem" 
-      panelStyleClass="tal-problem-widget-problem-selector-panel" [options]="urlCache" [(ngModel)]="url"
-      optionLabel="name" (onChange)="changeURL()">
+      scrollHeight="50rem"
+      panelStyleClass="tal-problem-widget-problem-selector-panel" [options]="getServerList()" [(ngModel)]="url"
+      optionLabel="name" (onChange)="selectServerURL()">
 
       <ng-template let-url pTemplate="item">
         <div class="url-item">
@@ -25,7 +25,7 @@
 
     <i #statusDot class="pi pi-circle-fill tal-square-button" pTooltip="Status"></i>
 
- 
+
 </div>
 
 
