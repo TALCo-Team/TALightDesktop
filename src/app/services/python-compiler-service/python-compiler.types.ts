@@ -6,8 +6,7 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
 
     public laguange: ProjectLanguage = ProjectLanguage.PY
     public driver: ProjectDriver = new PyodideDriver()
-    
-    
+
     protected async createExample(): Promise<boolean> {
         console.log("PyodideProjectEnvironment:createExample")
         //Starter files

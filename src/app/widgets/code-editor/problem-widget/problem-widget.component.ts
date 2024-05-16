@@ -91,8 +91,6 @@ export class ProblemWidgetComponent {
     this.url = api.url;
     this.lastUrl = this.url + "";
     
-    // Daniel: original
-    // this.prj.onProjectChanged.subscribe(() => { this.saveProblemServiceConfig() })
     this.pms.currentProjectChanged.subscribe(() => {
       this.pms.getCurrentProject().onProjectConfigChanged.subscribe(() => {
         this.saveProblemServiceConfig();

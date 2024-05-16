@@ -172,12 +172,27 @@ export class CodeEditorComponent implements OnInit {
     let id = this.pms.getCurrentProjectId();
     console.log("CodeEditorComponent:onProjectChanged:id:", id, project)
 
+    if(project.eventsSubscribed) { return; }
+
+    project.eventsSubscribed = true;
+
+    let projects = this.pms.getProjectsEnvironment();
+    for (let [key, value] of projects) {
+      value?.driver.subscribeNotify(false)
+      value?.driver.subscribeState(false)
+      value?.driver.subscribeStdout(false)
+      value?.driver.subscribeStderr(false)
+
+      value?.eventsSubscribed
+    }
+      
     //Subscribe to the project events, so can recive Compiler.Init and start the mounting
     project.driver.subscribeNotify(true, (msg: string) => { this.didNotify(msg) })
     project.driver.subscribeState(true, (state: CompilerState, content?: string) => { this.didStateChange(state, content) })
     project.driver.subscribeStdout(true, (msg: string) => { this.didStdout(msg) })
     project.driver.subscribeStderr(true, (msg: string) => { this.didStderr(msg) })
 
+    
     console.log("CodeEditorComponent:onProjectChanged:done:id:", id, project)
   }
 

@@ -21,27 +21,31 @@ export interface ProjectDriver extends FsServiceDriver, CompilerDriver {
 };
 
 export abstract class ProjectEnvironment {
-
   public config: ProjectConfig = ProjectConfig.defaultConfig;
+
+  public eventsSubscribed: boolean = false;
+  public isReady: boolean = false;
 
   public onWorkerReady = new EventEmitter<void>();
   public onProjectConfigChanged = new EventEmitter<void>();
-  public onProjectChanged = new EventEmitter<void>();
+  public onProjectReady = new EventEmitter<void>();
 
   public files: FsNodeFile[] = [];
 
-  constructor(id: number) {
-    console.log("ProjectEnvironment:constructor:id")
-
-    this.onWorkerReady.subscribe(() => {
-      console.log("ProjectEnvironment:init:id", id)
-      this.driver.mountByProjectId(id);
-      this.driver.onMountChanged.subscribe(() => { this.load() });
-    });
-  }
-
   public abstract laguange: ProjectLanguage
   public abstract driver: ProjectDriver
+
+  public init(id: number){
+    console.log("ProjectEnvironment:init:id",id)
+    this.onWorkerReady.subscribe(() => {
+      console.log("ProjectEnvironment:init:onWorkerReady:id", id)
+      this.driver.mountByProjectId(id);
+      this.driver.onMountChanged.subscribe(() => {
+        console.log("ProjectEnvironment:init:onWorkerReady:onMountChanged:id", id)
+        this.load();      
+      });
+    });
+  }
 
   private async load(): Promise<boolean> {
     console.log("ProjectEnvironment:mounted")
@@ -65,13 +69,10 @@ export abstract class ProjectEnvironment {
     this.saveConfig()
 
     console.log("ProjectEnvironment:load:done")
-    this.onProjectChanged.emit()
 
-    // So each time the project is mounted, the project is reloaded
-    this.driver.onMountChanged.subscribe(() => {
-      this.onProjectChanged.emit();
-    });
-
+    this.isReady = true;
+    this.onProjectReady.emit()  
+    
     return res;
   }
 
@@ -97,7 +98,6 @@ export abstract class ProjectEnvironment {
     console.log("ProjectConfig:load:path:", path)
     if (!await this.driver.exists(path))
       return false
-    console.log("ProjectConfig:load:found:", path)
 
     let configContent = await this.driver.readFile(path, false) as string;
     console.log("ProjectConfig:load:found.", configContent)

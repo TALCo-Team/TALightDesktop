@@ -48,7 +48,15 @@ export class TopbarWidgetComponent implements OnInit {
 
     this.subOnNotify = this.nm.onNotification.subscribe((msg:NotificationMessage): void=>{this.showNotification(msg)})
 
-    this.pms.projectManagerServiceListChanged.subscribe(() => this.setTabsNumber())
+    this.pms.projectManagerServiceListChanged.subscribe(() => {
+      this.setTabsNumber();
+    })
+
+    this.pms.currentProjectChanged.subscribe(() => {
+      let id = this.pms.getCurrentProjectId()
+      console.log("TopbarWidgetComponent:setCurrentTab:id:", id)
+      this.activeItem = this.items[id]
+    });
 
     // roba per il tutorial
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
@@ -59,11 +67,6 @@ export class TopbarWidgetComponent implements OnInit {
   ngOnInit(): void {
     // all'inizio deve essere blurrato per via del tutorial
     this.isBlurred = true;
-
-    // devo dargli un timeout dal momento che ci mette del tempo a caricare i files per via di pydiode
-    setTimeout(() => {
-      this.setCurrentTab(this.items[0]);
-    }, 3000);
   }
 
   // calcola la lunghezza delle tab
@@ -149,47 +152,34 @@ export class TopbarWidgetComponent implements OnInit {
     this.currentNotification = undefined
   }
 
-
   // imposta il numero della tab appena creata e crea una nuova tab
   setTabsNumber(){
     let tmp : MenuItem[] = [];
+    let projectName, ids = this.pms.getProjectsId()
 
-    let projectName, projectsId = this.pms.getProjectsId()
-    for (let i = 0; i < projectsId.length; i++){
+    console.log("TopbarWidgetComponent:setTabs:ids:", ids)
+
+    for (let i = 0; i < ids.length; i++){
       projectName = ProjectConfig.defaultConfig.PROJECT_NAME + ' ' + i; //default name
 
       tmp.push({ label: projectName , icon: 'pi pi-fw pi-times' , id : i.toString()})
-
-      this.activeItem = tmp
     }
 
     this.items = tmp
-    this.disableDelete = (projectsId.length <= 1)
-    //this.activeItem = this.items[0];
+    this.disableDelete = (ids.length <= 1)
   }
+
   // aggiungi un progetto controllando ed in caso le schede fossero troppe, attiva lo scrollable
   addProject() {
     this.pms.addProject()
     this.disabilita_bottone = true;
-    //é un timer perché ci mette tanto a caricare pydiode
-    setTimeout(() => {
-      this.disabilita_bottone = false;
-      //TODO Daniel: check replace
-      this.setCurrentTab((this.items as MenuItem[])[(this.items as MenuItem[]).length - 1])
-      // this.setCurrentTab(this.items[this.items.length - 1])
-    }, 10000);
 
     this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
   }
 
-  changeTab(item : any){
-    this.pms.setCurrentProjectEnvironment(parseInt(item.id))
+  // Set current tab of an exsisting project
+  setCurrentTab(item : any) {
+    this.pms.setCurrent(parseInt(item.id))
     this.activeItem = item;
   }
-
-  // imposta la tab corrente
-  setCurrentTab(item : any) {
-    this.changeTab(item);
-  }
-
 }

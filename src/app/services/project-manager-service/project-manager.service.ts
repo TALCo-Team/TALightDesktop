@@ -1,5 +1,5 @@
 import { EventEmitter, Injectable } from '@angular/core';
-import { ProjectEnvironment } from './project-manager.types';
+import { ProjectEnvironment, ProjectLanguage } from './project-manager.types';
 import { PyodideProjectEnvironment } from '../python-compiler-service/python-compiler.types';
 
 @Injectable({
@@ -10,7 +10,7 @@ export class ProjectManagerService {
   private projectsEnvironment = new Map<number, ProjectEnvironment | null>();
 
   private currentProjectEnvId = -1;
-  private currentProjectEnv: ProjectEnvironment = new PyodideProjectEnvironment(0);
+  private currentProjectEnv: ProjectEnvironment | null = null;
 
   public onInit = new EventEmitter<void>();
   public currentProjectChanged = new EventEmitter<void>();
@@ -18,41 +18,64 @@ export class ProjectManagerService {
 
   static readonly projectsFolder = "Projects";
 
-  public setCurrentProjectEnvironment(id: number) {
-    let projectEnv = this.getProject(id);
-    console.log("ProjectManagerService:setCurrentProject:id:", id, projectEnv)
-    if (!projectEnv) {
-      console.log("ProjectManagerService:setCurrentProject: error, invalid index")
-      return;
-    }
-
-    this.currentProjectEnv = projectEnv;
-    this.currentProjectEnvId = id;
-    /*
-    projectEnv.onProjectChanged.subscribe(() => {
-      console.log("ProjectManagerService:setCurrentProject:willEmit:onProjectChanged", this.currentProjectEnv)
-      this.currentProjectChanged.emit()
-      console.log("ProjectManagerService:setCurrentProject:onProjectChanged:sent")
-    });
-    */
-    console.log("ProjectManagerService:setCurrentProject:send")
-    this.currentProjectChanged.emit()
+  public getProjectsEnvironment() {
+    return this.projectsEnvironment;
   }
 
-  private getProject(indexIds: number) {
-    let ids = this.getProjectsId();
+  private createProject(projectLanguage: ProjectLanguage, id: number) : ProjectEnvironment {
+    let projectEnvironment: ProjectEnvironment;
 
-    if (indexIds < 0 || indexIds >= ids.length)
-      return null; // Invalid index, prj not found
+    // TODO: add switch python/cpp
+    /*
+    if(projectLanguage == ProjectLanguage.C)
+      projectEnvironment = new ___ProjectEnvironment();
+
+    if(projectLanguage == ProjectLanguage.CPP)
+      projectEnvironment = new ___ProjectEnvironment();
     
-    let projectEnvironment = this.projectsEnvironment.get(ids[indexIds])
+    else // Default to Python
+    */
+      projectEnvironment = new PyodideProjectEnvironment();
+
+    console.log("ProjectManagerService:createProject:id:", id)
+
+    projectEnvironment.onProjectReady.subscribe(() => {
+      console.log("ProjectManagerService:createProject:onProjectReady:id:", id)
+      this.currentProjectChanged.emit()
+    });
+
+    projectEnvironment.init(id)
+
+    return projectEnvironment;
+  }
+
+  public async setCurrent(id: number) {
+    console.log("ProjectManagerService:setCurrent:id:", id)
+    // If not present, return null
+    if (this.getProjectsId().indexOf(id) < 0){
+      console.log("ProjectManagerService:setCurrent:id:not_found")
+      return
+    }
+
+    let projectEnvironment = this.projectsEnvironment.get(id)
     if (!projectEnvironment) {
       // The project is not loaded from the storage
-      console.log("ProjectManagerService:getProject:loadFromStorage:id: ", ids[indexIds])
-      projectEnvironment = new PyodideProjectEnvironment(ids[indexIds])
-      this.projectsEnvironment.set(indexIds, projectEnvironment)// Replace the null value
+      console.log("ProjectManagerService:setCurrent:loadFromStorage:id: ", id)
+      projectEnvironment = await this.createProject(ProjectLanguage.PY, id)
+      
+      this.projectsEnvironment.set(id, projectEnvironment)// Replace the null value
     }
-    return projectEnvironment;
+    console.log("ProjectManagerService:setCurrent:id:", id, projectEnvironment)
+
+    this.currentProjectEnv = projectEnvironment;
+    this.currentProjectEnvId = id;
+
+    if (projectEnvironment.isReady){
+      console.log("ProjectManagerService:setCurrent:send")
+      this.currentProjectChanged.emit()
+    }
+    // othetrwise, the event will be emitted by the projectEnvironment when it will be ready
+    // read the createProject() funtion
   }
 
   public getProjectsId() {
@@ -60,6 +83,10 @@ export class ProjectManagerService {
   }
 
   public getCurrentProject() : ProjectEnvironment {
+    if (!this.currentProjectEnv){
+      console.log("ProjectManagerService:getCurrentProject:throw: No project selected")
+      throw new Error("No project selected")
+    }  
     return this.currentProjectEnv;
   }
 
@@ -77,62 +104,43 @@ export class ProjectManagerService {
     if(ids.length > 0)
       id = Math.max(...ids) + 1
 
-    //TODO: add switch python/cpp
-    let projectEnvironment = new PyodideProjectEnvironment(id)
-    this.projectsEnvironment.set(id, projectEnvironment)
-    console.log("ProjectManagerService:addProject:projectEnvironment", projectEnvironment)
     console.log("ProjectManagerService:addProject:id: ", id)
-    this.setCurrentProjectEnvironment(id)
+    this.currentProjectEnv = this.createProject(ProjectLanguage.PY, id)
+    console.log("ProjectManagerService:addProject:id:EmptyProject", id)
+    this.currentProjectEnvId = id;
+    this.projectsEnvironment.set(id, this.currentProjectEnv);
+
+    this.onInit.emit();
 
     this.store();
   }
 
-  // TODO read/write on file instead of the cache
-  // Needed for driver to mount the storage with the projects ids json file
-  private async getFirstProject() {
-    let firstId = Math.min(...this.getProjectsId());
-    return this.getProject(firstId);
-  }
-
-  private getPathProjectsJson(firstProject: ProjectEnvironment) {
-    /*
-    Use the first project driver to mount the storage with the projects
-    ids json file
-    */
-    return firstProject.config.DIR_PROJECT + "Projects.json";
-  }
-
   public async load() {
-    // Read to get the projects ids
-    
-    // Actually the idea is to use always the first driver avaible,
-    // the one of the first project
-    /*
-    let firstProject = this.getFirstProject()
-    if(firstProject != null){
-      let path = this.getPathProjectsJson(firstProject)
-      let content = firstProject.driver.readFile(path, false)
-      console.log("ProjectManagerService:load:", content)
-    }
-    */
-
     // Read from cache, to replace with the previous comment
     let content = localStorage.getItem('projectsCached');
     console.log("ProjectManagerService:load:", content)
 
+    let id = 0;
     if (content != null) { // Load the projects from the storage
-      for (let id of JSON.parse(content) as number[])
-        this.projectsEnvironment.set(id, null);
+      for (let storedId of JSON.parse(content) as number[])
+        this.projectsEnvironment.set(storedId, null);
       /* IMPORTANT:
       The id is added to the map with null value but will be replaced
       with the rigth ProjectManagerService saved into the storage just
       if needed by getProjectManagerService(...)
       */
 
-      let id = Math.min(...this.getProjectsId());
-      this.setCurrentProjectEnvironment(id);    
-    } else
-      this.projectsEnvironment.set(0, this.currentProjectEnv);
+      id = Math.min(...this.getProjectsId());
+    }
+    console.log("ProjectManagerService:load:createEmptyProjectEnv:", id)
+    this.currentProjectEnv = this.createProject(ProjectLanguage.PY, id)
+    this.currentProjectEnvId = id;
+    this.projectsEnvironment.set(id, this.currentProjectEnv);
+
+    /*
+    Don't use setCurrent(id) because it will emit an event
+    that is not to emit on load
+    */
 
     this.onInit.emit();
     this.projectManagerServiceListChanged.emit();
@@ -142,16 +150,6 @@ export class ProjectManagerService {
     // Write the ids to add the new one
     let content = JSON.stringify(this.getProjectsId());
     console.log("ProjectManagerService:store:", content)
-    
-    // Actually the idea is to use always the first driver avaible,
-    // the one of the first project
-    /*
-    let firstProject = this.getFirstProject()
-    if(firstProject != null){
-      let path = this.getPathProjectsJson(firstProject)
-      firstProject?.driver.writeFile(path, content);
-    }
-    */
     
     // Write to cache, to replace with the previous comment
     localStorage.setItem('projectsCached', content);
