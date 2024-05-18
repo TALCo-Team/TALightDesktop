@@ -173,7 +173,7 @@ export class ProblemWidgetComponent {
     let project = this.pms.getCurrentProject();
     if (project != null) {
       project.config.TAL_SERVER = this.url;
-      project.saveConfig();
+      project.saveConfig(this.pms.getCurrentDriver());
     }
     //! Daniel
 
@@ -252,7 +252,7 @@ export class ProblemWidgetComponent {
         project.config.TAL_PROBLEM = "";
     }
     //project.config.TAL_SERVER = this.url;
-    await project.saveConfig();
+    await project.saveConfig(this.pms.getCurrentDriver());
   }
 
   public stateIdle() { this.updateState(ApiState.Idle); }
@@ -378,8 +378,7 @@ export class ProblemWidgetComponent {
       //file.value = ""
       return
     }
-    let project = this.pms.getCurrentProject();
-    let pathExist = await project?.driver.exists(path)
+    let pathExist = await this.pms.getCurrentDriver().exists(path)
     console.log('fileDidChange:pathExist:', pathExist)
     if (!pathExist) {
       dropdown.style.color = "red"

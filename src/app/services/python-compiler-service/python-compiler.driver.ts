@@ -1,3 +1,4 @@
+import { EventEmitter } from '@angular/core';
 import { CompilerDriver } from '../compiler-service/compiler-service-driver';
 
 export class PyodideDriver extends CompilerDriver {

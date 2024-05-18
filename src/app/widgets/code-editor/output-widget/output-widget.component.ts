@@ -96,7 +96,7 @@ export class OutputWidgetComponent {
   }
 
   public didStateChange(state: CompilerState, content?: string) {
-    console.log("didStateChange:", state)
+    console.log("OutputWidgetComponent:didStateChange:", state)
     this.pyodideState = state
     this.pyodideStateTooltip = 'State: ' + this.pyodideState
 
@@ -202,8 +202,8 @@ export class OutputWidgetComponent {
   public sendStdin() {
     let msg = this.sdtinInput.nativeElement.value ?? ""
     msg = msg.trim()
-    console.log("sendStdin:", this.sdtinInput)
-    console.log("sendStdin:msg", msg)
+    console.log("OutputWidgetComponent:sendStdin:", this.sdtinInput)
+    console.log("OutputWidgetComponent:sendStdin:msg", msg)
     if (msg == "") { return }
 
     this.sdtinInput.nativeElement.value = ""

@@ -1,31 +1,26 @@
-import { Injectable } from '@angular/core';
-import { ProjectConfig } from '../project-manager-service/project-manager.types';
+import { EventEmitter, Injectable } from '@angular/core';
+import { ProjectDriver, ProjectEnvironment, ProjectLanguage } from '../project-manager-service/project-manager.types';
 import { ProjectManagerService } from '../project-manager-service/project-manager.service';
+import { PyodideDriver } from '../python-compiler-service/python-compiler.driver';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CompilerService {
-  constructor(private pms: ProjectManagerService) { }
+  // Map of Language -> CompilerDriver
+  private drivers = new Map<ProjectLanguage, ProjectDriver>();
 
-  async runProject() {
-    let project = this.pms.getCurrentProject();
-    let id = this.pms.getCurrentProjectId();
-
-    console.log("PythonCompilerService:runProject:id:", id, project)
-    
-    await project.driver.installPackages(project.config.EXTRA_PACKAGES)
-    let result = await project?.driver.executeFile(project.config!.RUN)
-    console.log("PythonCompilerService:runProject:id:", id, "result:", result)
-    return result
+  constructor() {
+    this.drivers.set(ProjectLanguage.PY, new PyodideDriver()); 
+    //TODO add other drivers
   }
 
-  async installPackages(packages: string[]) {
-    this.pms.getCurrentProject().driver.installPackages(packages)
-  }
-
-  async executeFile(fullpath: string) {
-    console.log("PythonCompilerService:executeFile:", fullpath)
-    this.pms.getCurrentProject().driver.executeFile(fullpath)
+  public get(language: ProjectLanguage): ProjectDriver {
+    let driver = this.drivers.get(language);
+    if (!driver) {
+      console.error("CompilerService:getDriver:driver_not_found:", language)
+      throw new Error("Driver not found")
+    }
+    return driver;
   }
 }

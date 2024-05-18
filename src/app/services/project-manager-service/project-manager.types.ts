@@ -9,79 +9,75 @@ export enum ProjectLanguage {
 }
 
 export interface ProjectDriver extends FsServiceDriver, CompilerDriver {
+  onWorkerReady: EventEmitter<void>;//First Event
+  isWorkerReady: boolean;
+
+  eventsSubscribed: boolean
+
   root: string;
   mountPoint: string;
 
   onMountChanged: EventEmitter<void>;
+  onUnmountChanged: EventEmitter<void>;
 
   mountRoot(): Promise<boolean>;
 
   mountByProjectId(projectId: number): Promise<boolean>;
 
+  unmountByProjectId(projectId: number): Promise<boolean>;
+
 };
 
 export abstract class ProjectEnvironment {
+  public language: ProjectLanguage
   public config: ProjectConfig = ProjectConfig.defaultConfig;
 
-  public eventsSubscribed: boolean = false;
-  public isReady: boolean = false;
-
-  public onWorkerReady = new EventEmitter<void>();
   public onProjectConfigChanged = new EventEmitter<void>();
-  public onProjectReady = new EventEmitter<void>();
+  public onLoaded = new EventEmitter<void>();
+  public isLoaded = false;
 
   public files: FsNodeFile[] = [];
 
-  public abstract laguange: ProjectLanguage
-  public abstract driver: ProjectDriver
+  constructor(language : ProjectLanguage){
+    this.language = language;
+  }  
 
-  public init(id: number){
-    console.log("ProjectEnvironment:init:id",id)
-    this.onWorkerReady.subscribe(() => {
-      console.log("ProjectEnvironment:init:onWorkerReady:id", id)
-      this.driver.mountByProjectId(id);
-      this.driver.onMountChanged.subscribe(() => {
-        console.log("ProjectEnvironment:init:onWorkerReady:onMountChanged:id", id)
-        this.load();      
-      });
-    });
-  }
-
-  private async load(): Promise<boolean> {
+  public async load(driver : ProjectDriver): Promise<boolean> {
     console.log("ProjectEnvironment:mounted")
     console.log("ProjectEnvironment:load")
 
     //wait until the config is loaded
-    if (!await this.loadConfig())
+    if (!await this.loadConfig(driver))
       console.log("ProjectEnvironment:load:config:not_found")
-    
+
     await console.log("ProjectEnvironment:load:config:done:", this.config)
 
     let res = true;
     if (this.config.CREATE_EXAMPLES) {
       console.log("ProjectEnvironment:createExample")
-      res = await this.createExample()
+      res = await this.createExample(driver)
     }
     else
       console.log("ProjectEnvironment:loadProject")
 
     this.config.CREATE_EXAMPLES = false
-    this.saveConfig()
+    this.saveConfig(driver)
 
     console.log("ProjectEnvironment:load:done")
+    this.onLoaded.emit()
 
-    this.isReady = true;
-    this.onProjectReady.emit()  
-    
     return res;
   }
 
-  protected abstract createExample(): Promise<boolean>;
+  protected abstract createExample(driver : ProjectDriver): Promise<boolean>;
 
-  async saveConfig(): Promise<boolean> {
+  async saveConfig(driver : ProjectDriver): Promise<boolean> {
     console.log("ProjectEnvironment:saveConfig:")
-    let res = await this.config.save(this.driver)
-    if(res == true)
+
+    //TODO search were was: compilerService.getDriver(this.laguange).installPackages(this.config.EXTRA_PACKAGES)
+
+    let res = await this.config.save(driver)
+    if (res == true)
       console.log("ProjectEnvironment:saveConfig: done")
     else
       console.log("ProjectEnvironment:saveConfig: failed")
@@ -90,16 +86,16 @@ export abstract class ProjectEnvironment {
 
     return res
   }
-  
-  async loadConfig(): Promise<boolean> {
+
+  async loadConfig(driver : ProjectDriver): Promise<boolean> {
     console.log("ProjectConfig:load");
     let path = ProjectConfig.defaultConfig.CONFIG_PATH
 
     console.log("ProjectConfig:load:path:", path)
-    if (!await this.driver.exists(path))
+    if (!await driver.exists(path))
       return false
 
-    let configContent = await this.driver.readFile(path, false) as string;
+    let configContent = await driver.readFile(path, false) as string;
     console.log("ProjectConfig:load:found.", configContent)
 
     let config = null

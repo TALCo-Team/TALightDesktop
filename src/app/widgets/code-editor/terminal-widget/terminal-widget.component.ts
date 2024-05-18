@@ -46,8 +46,6 @@ export class TerminalWidgetComponent implements OnInit {
 
   public cmdConnect?: Commands.Connect;
 
-  public project: ProjectEnvironment | null = null;
-
   public selectedFile?: FsNodeFile;
   public apiRun = false
 
@@ -725,7 +723,7 @@ export class TerminalWidgetComponent implements OnInit {
   async didError(msg: string) {
     this.cmdConnect = undefined
 
-    this.project?.driver.stopExecution()
+    this.pms.getCurrentDriver().stopExecution()
 
     this.prompt = "TALight> ";
     this.commandConnectState = false;
@@ -763,7 +761,7 @@ export class TerminalWidgetComponent implements OnInit {
     if (this.output_files && this.current_output_file) {
 
       if (this.current_output_file) {
-        this.project?.driver.writeFile("/" + this.current_output_file, data)
+        this.pms.getCurrentDriver().writeFile("/" + this.current_output_file, data)
       };
       if (this.current_output_file === this.output_files[this.output_files.length - 1]) {
         this.apiConnectReset();
@@ -782,7 +780,9 @@ export class TerminalWidgetComponent implements OnInit {
     console.log("apiConnect:didRecieveBinaryHeader:", message)
 
     this.current_output_file = message.name;
-    if (this.current_output_file) { this.project?.driver.writeFile("/" + this.current_output_file, "") };
+    if (this.current_output_file) {
+      this.pms.getCurrentDriver().writeFile("/" + this.current_output_file, "") 
+    };
   }
 
   public sendStdin(msg: string, fromAPI = false) {

@@ -14,7 +14,7 @@
 
 
   <div class="tal-editor-files-body">
-    <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: this.projectManagerService.getCurrentProject().driver.fsRoot }"></ng-container>
+    <ng-container *ngTemplateOutlet="TalFolder; context: { $implicit: this.driver?.fsRoot }"></ng-container>
   </div>
 
   <p-dialog header="Choose or create a repository.." [(visible)]="exportVisible" [style]="{ width: '50vw' }">

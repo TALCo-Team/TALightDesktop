@@ -67,7 +67,7 @@ export class IndexeddbFsDriver implements FsServiceDriver {
     //TODO
     return new Promise<boolean>(resolve=>true);
   }
-  
+
   async scanDirectory(path?:string):Promise<FsNodeFolder>{
     if (!path){path = this.mountRoot;}
     return this.scanDirectory_recursive(path, true)
