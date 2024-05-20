@@ -47,8 +47,10 @@ export abstract class ProjectEnvironment {
     console.log("ProjectEnvironment:load")
 
     //wait until the config is loaded
-    if (!await this.loadConfig(driver))
+    if (!await this.loadConfig(driver)){
       console.log("ProjectEnvironment:load:config:not_found")
+      this.config.CREATE_EXAMPLES = true
+    }
 
     await console.log("ProjectEnvironment:load:config:done:", this.config)
 

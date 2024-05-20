@@ -95,7 +95,7 @@ export class ProjectManagerService {
 
     this.currentProjectEnv = projectEnvironment;
     this.currentProjectEnvId = id;
-    console.log("ProjectManagerService:setCurrent:mounting:id:", id)
+    console.log("ProjectManagerService:setCurrent:done:id:", id)
 
     // TODO: multidriver
     let driver = this.getCurrentDriver()  

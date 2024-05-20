@@ -567,8 +567,12 @@ class PyodideWorker{
     console.log("PyodideFsWorker:mount:",mountPoint)
     
     this.sendState(CompilerState.Loading)
+    console.log("PyodideFsWorker:mount:loading")
 
-    this.fs.mkdir(this.mountPoint);
+    if(!this.internal_exists(this.mountPoint))
+      this.fs.mkdir(this.mountPoint)
+    
+    
     this.fs.mount(this.fs.filesystems.IDBFS, { root: '/' }, this.mountPoint);
     this.fs.syncfs(true,()=>{
       if(!this.isReady){
@@ -824,7 +828,7 @@ class PyodideWorker{
     console.log("exists: ", this.mountPoint + fullpath)
     // https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.analyzePath
     let exists = this.internal_exists(this.mountPoint + fullpath)
-    console.log("exists:", exists)
+    console.log("PyodideFsWorker:exists:", exists)
     response.message.args = [exists?'true':'false']
     return response;
   }
