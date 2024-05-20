@@ -576,16 +576,16 @@ class PyodideWorker{
     this.fs.mount(this.fs.filesystems.IDBFS, { root: '/' }, this.mountPoint);
     this.fs.syncfs(true,()=>{
       if(!this.isReady){
-        console.log("PyodideFsWorker: mount: ready")
+        console.log("PyodideFsWorker:mount:ready")
         this.sendState(CompilerState.Ready)
-        console.log("PyodideFsWorker: mount: ready: done")
+        console.log("PyodideFsWorker:mount:ready:done")
       }
         ////Send it just after the execution of this.initPydiode(), not the first mount
       this.isReady = true;
       this.readyResolver(this.isReady);
     });
     
-    console.log("PyodideFsWorker: mount: done")
+    console.log("PyodideFsWorker:mount:done")
     
     response.message.args = [mountPoint];
     return response;
@@ -658,14 +658,13 @@ class PyodideWorker{
     return response;
   }
 
-
   scanDirectory(request:CompilerRequest):CompilerResponse{
     let response = this.responseFromRequest(request); 
     if ( request.message.args.length < 1 ){
       return this.responseError(response,"readDirectory: Requires at least 1 path as argument and 1 content");
     }
     let fullpath = request.message.args[0];
-    console.log("PyodideFsWorker:scanDirectory: ", fullpath)
+    console.log("PyodideFsWorker:scanDirectory:", fullpath)
     let curDir = this.scanDirectory_recursive(fullpath, true)
     response.message.args = [fullpath];
     response.message.contents = [JSON.stringify(curDir,this.jsonReplacer)]
@@ -807,7 +806,7 @@ class PyodideWorker{
 
     
     let fullpath = request.message.args[0];
-    console.log("delete: ", fullpath)
+    console.log("PyodideFsWorker:delete: ", fullpath)
     //TODO: use lookupPath and isDir/isFile
     // https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.lookupPath
     //TODO: do it recursive
@@ -825,7 +824,7 @@ class PyodideWorker{
       return response;  
     }
     let fullpath = request.message.args[0];
-    console.log("exists: ", this.mountPoint + fullpath)
+    console.log("PyodideFsWorker:exists:", this.mountPoint + fullpath)
     // https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.analyzePath
     let exists = this.internal_exists(this.mountPoint + fullpath)
     console.log("PyodideFsWorker:exists:", exists)
@@ -840,8 +839,5 @@ class PyodideWorker{
     return res["exists"]
   }
 }
-  
-
-
 
 main()

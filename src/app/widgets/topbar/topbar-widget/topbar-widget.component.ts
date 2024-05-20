@@ -174,6 +174,8 @@ export class TopbarWidgetComponent implements OnInit {
     this.pms.addProject()
     this.disabilita_bottone = true;
 
+    this.pms.currentProjectChanged.subscribe(() => this.disabilita_bottone = false )
+
     this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
   }
 
