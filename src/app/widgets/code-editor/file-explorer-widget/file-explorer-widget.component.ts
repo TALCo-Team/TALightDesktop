@@ -149,12 +149,7 @@ export class FileExplorerWidgetComponent implements OnInit {
     this.compiler.get(project.language).ready().then(() => {
       console.log("FileExplorerWidgetComponent:didProjectChanged:id:ready", id, project)
       this.refreshRoot()
-    })/*
-    TODO Daniel: check
-    this.projectManagerService.getCurrentDriver().ready().then((ready) => {
-      console.log("FileExplorerWidgetComponent:didProjectChanged:id:ready", id, project)
-      this.refreshRoot();
-    })*/
+    })
   }
 
   refreshRoot(onDone?: () => void) {

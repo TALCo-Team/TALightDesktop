@@ -228,7 +228,8 @@ export class CodeEditorComponent implements OnInit {
       console.log("CodeEditorComponent:didStateChange:CompilerState.Init:done")
     } else if (state == CompilerState.Ready) {
       console.log("CodeEditorComponent:didStateChange:CompilerState.Ready:")
-      //TODO Daniel: maybe mount/event event could be emitted here instead of MountReceive and UnmountReceive
+      //maybe mount/event event could be emitted here instead of MountReceive and UnmountReceive
+      
     } else if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
       this.apiConnectReset();
     }
