@@ -91,7 +91,6 @@
   margin-right: 5px;
 }
 
-
 :host ::ng-deep{
   //il contenitore delle tabMenu
   .tabMenu {
@@ -108,7 +107,6 @@
     width: calc(100% - 400px); /* Larghezza del p-tabMenu */
     height: 30px;
   }
-
 
   //bottone per aggiungere una tab
   .addTabButton {
@@ -129,16 +127,16 @@
 
   //singola tab
   .tab {
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-top: 7px;
-    padding-bottom: 7px;
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-top: 10px;
+    padding-bottom: 10px;
   }
   a {
     font-size: 14px;
     height: 40px;
     white-space: nowrap; /* Impedisce il testo di andare a capo */
-    padding: 0px,
+    padding: 0px!important;
   }
 }
 
