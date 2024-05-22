@@ -76,7 +76,7 @@ export class TerminalWidgetComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.isBlurred = true;
+    //this.isBlurred = true;
     this.terminalService.commandHandler.subscribe(command => {
 
       this.onResponseComplete.subscribe({
@@ -781,7 +781,7 @@ export class TerminalWidgetComponent implements OnInit {
 
     this.current_output_file = message.name;
     if (this.current_output_file) {
-      this.pms.getCurrentDriver().writeFile("/" + this.current_output_file, "") 
+      this.pms.getCurrentDriver().writeFile("/" + this.current_output_file, "")
     };
   }
 
