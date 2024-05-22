@@ -1,7 +1,7 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { Packets } from './api.packets';
 import { Commands } from './api.commands';
-import { ProjectsManagerService } from '../project-manager-service/projects-manager.service';
+import { ProjectManagerService } from '../project-manager-service/project-manager.service';
 
 export class Meta extends Packets.Meta{}
 export interface AttachmentInfo extends Packets.Reply.BinaryDataHeader{}
@@ -28,7 +28,7 @@ export class ApiService {
   public onApiStateChange = new EventEmitter<ApiState>();
 
   constructor(
-    public pms: ProjectsManagerService
+    public pms: ProjectManagerService
   ){
     this._url = 'wss://ta.di.univr.it/algo'
     this.urlCache = [

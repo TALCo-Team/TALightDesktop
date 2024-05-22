@@ -90,7 +90,7 @@ export class ProblemWidgetComponent {
 
     this.url = api.url;
     this.lastUrl = this.url + "";
-    
+
     this.pms.currentProjectChanged.subscribe(() => {
       this.pms.getCurrentProject().onProjectConfigChanged.subscribe(() => {
         this.saveProblemServiceConfig();
@@ -98,7 +98,7 @@ export class ProblemWidgetComponent {
     })
 
     this.pm.onProblemsLoaded.subscribe((_) =>{ this.loadProblemServiceConfig() })
-    this.pms.currentProjectChanged.subscribe(() =>{ this.updateCurrentTabInfo() })
+    this.pms.currentProjectChanged.subscribe(() =>{ this.updateProblemInfo() })
 
     // https://primefaces.org/primeng/overlay
     //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
@@ -163,7 +163,7 @@ export class ProblemWidgetComponent {
     let project = this.pms.getCurrentProject();
     if (project != null) {
       project.config.TAL_SERVER = this.url;
-      project.saveConfig();
+      project.saveConfig(this.pms.getCurrentDriver());
     }
 
   }
@@ -273,8 +273,8 @@ export class ProblemWidgetComponent {
 
   private async updateProjectConfigProblemServiceProblem() {
     let project = this.pms.getCurrentProject();
-    if (project == null) return;
-    project.config.parseFile(project.config);
+    // if (project == null) return;
+    // project.config.parseFile(project.config);
 
     if (this.selectedProblem != undefined) {
       project.config.TAL_PROBLEM = this.selectedProblem.name
@@ -512,7 +512,7 @@ export class ProblemWidgetComponent {
     let project = this.pms.getCurrentProject();
     if (project != null) {
       project.config.TAL_PROBLEM = this.selectedProblem.getKey();
-      project.saveConfig();
+      project.saveConfig(this.pms.getCurrentDriver());
     }
 
     let servicesMenu = new Array<ServiceDescriptor>();

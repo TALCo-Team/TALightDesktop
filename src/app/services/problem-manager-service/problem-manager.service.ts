@@ -1,7 +1,7 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { ApiService, } from '../api-service/api.service';
 import { ArgDescriptor, ParamsMap, ProblemDescriptor, ProblemList, ProblemMap, ServiceDescriptor, ServiceMap } from './problem-manager.types';
-import { ProjectsManagerService } from '../project-manager-service/projects-manager.service';
+import { ProjectManagerService } from '../project-manager-service/project-manager.service';
 
 @Injectable({
   providedIn: 'root'
@@ -26,7 +26,7 @@ export class ProblemManagerService {
 
   constructor(
     public api:ApiService,
-    public pms: ProjectsManagerService,
+    public pms: ProjectManagerService,
   ){}
 
 
@@ -88,7 +88,7 @@ export class ProblemManagerService {
     let project = this.pms.getCurrentProject();
     if (project != null) {
       project.config.TAL_SERVICE = selectedService.getKey();
-      project.saveConfig();
+      project.saveConfig(this.pms.getCurrentDriver());
     }
 
     //alert('hai selezionato il servizio: ' + name);
