@@ -78,34 +78,7 @@
   }
 }
 
-.top-bar-url-input {
-  margin: 5px;
-  height: 30px;
 
-  .url-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 16px !important;
-
-    .tal-square-button {
-      width: 16px !important;
-      height: 16px !important;
-      max-height: 16px !important;
-      min-height: 16px !important;
-      margin: 0;
-      display: none;
-      background-color: darkred;
-      color: white;
-    }
-  }
-
-  .url-item:hover {
-    .p-button {
-      display: flex;
-    }
-  }
-}
 
 // tasto del tutorial
 .tutorial button {
@@ -127,6 +100,7 @@
     // flex-direction: row;
     align-items: center;
     justify-content: flex-start;
+    padding: 0px;
     flex-grow: 1;
     top: 0; /* Allinea il p-tabMenu all'inizio del contenitore */
     left: 45px; /* Lascia spazio a sinistra per il bottone */
@@ -155,13 +129,16 @@
 
   //singola tab
   .tab {
-    margin: 5px;
-    margin-top: 12px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 7px;
+    padding-bottom: 7px;
   }
   a {
     font-size: 14px;
     height: 40px;
     white-space: nowrap; /* Impedisce il testo di andare a capo */
+    padding: 0px,
   }
 }
 
