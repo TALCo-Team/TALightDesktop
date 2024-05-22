@@ -54,7 +54,7 @@ export class OutputWidgetComponent {
 
 
   ngOnInit() {
-    this.isBlurred = true;
+    //this.isBlurred = true;
   }
 
   private isTutorialShown(tutorial?: any) {
