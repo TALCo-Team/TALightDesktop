@@ -1,46 +1,26 @@
-import { Injectable } from '@angular/core';
-import { ProjectsManagerService } from '../project-manager-service/projects-manager.service';
-import { ProjectConfig } from '../project-manager-service/project-manager.types';
+import { EventEmitter, Injectable } from '@angular/core';
+import { ProjectDriver, ProjectEnvironment, ProjectLanguage } from '../project-manager-service/project-manager.types';
+import { ProjectManagerService } from '../project-manager-service/project-manager.service';
+import { PyodideDriver } from '../python-compiler-service/python-compiler.driver';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CompilerService {
-  constructor( private projectsManagerService:ProjectsManagerService ) {}
+  // Map of Language -> CompilerDriver
+  private drivers = new Map<ProjectLanguage, ProjectDriver>();
 
-  async readConfig(){
-    let project = this.projectsManagerService.getCurrentProject();
+  constructor() {
+    this.drivers.set(ProjectLanguage.PY, new PyodideDriver()); 
+    //TODO add other drivers
+  }
 
-    if (!project?.driver)
-      return null
-
-    if (!await project.driver.exists(ProjectConfig.defaultConfig.CONFIG_PATH)){
-      console.log("PythonCompilerService:readPythonConfig: config file doesn't exist!")
-      return null;
+  public get(language: ProjectLanguage): ProjectDriver {
+    let driver = this.drivers.get(language);
+    if (!driver) {
+      console.error("CompilerService:getDriver:driver_not_found:", language)
+      throw new Error("Driver not found")
     }
-    
-    let configContent = await project?.driver.readFile(ProjectConfig.defaultConfig.CONFIG_PATH, false) as string;
-    return JSON.parse(configContent) as ProjectConfig
-  }
-
-  async runProject(){
-    console.log("PythonCompilerService:runProject")
-    let config = await this.readConfig()
-    if (!config){return null;}
-
-    let project = this.projectsManagerService.getCurrentProject();
-    await project?.driver.installPackages(config.EXTRA_PACKAGES)
-    let result = await project?.driver.executeFile(config!.RUN)
-    console.log(result)
-    return result    
-  }
-
-  async installPackages(packages:string[]){
-    this.projectsManagerService.getCurrentProject()?.driver.installPackages(packages)
-  }
-
-  async executeFile(fullpath:string){
-    console.log("PythonCompilerService:executeFile:",fullpath)
-    this.projectsManagerService.getCurrentProject()?.driver.executeFile(fullpath)
+    return driver;
   }
 }

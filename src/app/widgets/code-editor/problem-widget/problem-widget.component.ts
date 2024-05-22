@@ -5,7 +5,7 @@ import { ProblemManagerService } from 'src/app/services/problem-manager-service/
 import { MessageService, OverlayOptions } from 'primeng/api';
 import { ServiceDescriptor, ProblemDescriptor, ArgsMap, FilesMap, FileDescriptor, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 import { Dropdown } from 'primeng/dropdown';
-import { ProjectsManagerService } from 'src/app/services/project-manager-service/projects-manager.service';
+import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { AutoComplete } from 'primeng/autocomplete';
 
@@ -78,7 +78,7 @@ export class ProblemWidgetComponent {
                public pm: ProblemManagerService,
                private tutorialService: TutorialService,
                private messageService: MessageService,
-               public pms: ProjectsManagerService,
+               public pms: ProjectManagerService,
               )
   {
     this.urlCache = [...this.api.urlCache]
@@ -90,15 +90,15 @@ export class ProblemWidgetComponent {
 
     this.url = api.url;
     this.lastUrl = this.url + "";
-
-    // Daniel: original
-    //this.prj.onProjectChanged.subscribe(() => { this.saveProblemServiceConfig() })
-    this.pms.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
-      this.saveProblemServiceConfig();
+    
+    this.pms.currentProjectChanged.subscribe(() => {
+      this.pms.getCurrentProject().onProjectConfigChanged.subscribe(() => {
+        this.saveProblemServiceConfig();
+      })
     })
 
     this.pm.onProblemsLoaded.subscribe((_) =>{ this.loadProblemServiceConfig() })
-    this.pms.currentProjectChanged.subscribe(() =>{ this.updateProblemInfo() })
+    this.pms.currentProjectChanged.subscribe(() =>{ this.updateCurrentTabInfo() })
 
     // https://primefaces.org/primeng/overlay
     //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
@@ -188,6 +188,14 @@ export class ProblemWidgetComponent {
     console.log("changeURL:url:", this.url )
     this.lastUrl = this.url + ""
 
+    // Daniel
+    let project = this.pms.getCurrentProject();
+    if (project != null) {
+      project.config.TAL_SERVER = this.url;
+      project.saveConfig(this.pms.getCurrentDriver());
+    }
+    //! Daniel
+
     console.log("changeURL:urlCache:after:", this.urlCache)
     console.log("changeURL:url:", this.url)
     this.lastUrl = this.url + ""
@@ -246,7 +254,7 @@ export class ProblemWidgetComponent {
        //console.log('Problem selected: ', problem.name);
       this.updateProjectConfigProblemServiceProblem();
 
-      this.pms.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
+      this.pms.getCurrentProject().onProjectConfigChanged.subscribe(() => {
         //console.log('config pronto in problem');
         this.updateProjectConfigProblemServiceProblem();
       })
@@ -256,7 +264,7 @@ export class ProblemWidgetComponent {
       //console.log('Service selected: ', service.name);
       this.updateProjectConfigProblemServiceProblem();
 
-      this.pms.getCurrentProject()?.onProjectConfigChanged.subscribe((_) => {
+      this.pms.getCurrentProject().onProjectConfigChanged.subscribe((_) => {
         //console.log('config pronto in service');
         this.updateProjectConfigProblemServiceProblem();
       })
@@ -280,8 +288,7 @@ export class ProblemWidgetComponent {
         project.config.TAL_PROBLEM = "";
     }
     //project.config.TAL_SERVER = this.url;
-    await project.saveConfig();
-    console.log("vediamo che viene fuori qua SALVATO")
+    await project.saveConfig(this.pms.getCurrentDriver());
   }
 
   public stateIdle() { this.updateState(ApiState.Idle); }
@@ -407,8 +414,7 @@ export class ProblemWidgetComponent {
       //file.value = ""
       return
     }
-    let project = this.pms.getCurrentProject();
-    let pathExist = await project?.driver.exists(path)
+    let pathExist = await this.pms.getCurrentDriver().exists(path)
     console.log('fileDidChange:pathExist:', pathExist)
     if (!pathExist) {
       dropdown.style.color = "red"

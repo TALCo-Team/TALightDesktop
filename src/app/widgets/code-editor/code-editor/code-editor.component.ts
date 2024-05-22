@@ -17,8 +17,8 @@ import { MessageService } from 'primeng/api';
 import { TerminalWidgetComponent } from '../terminal-widget/terminal-widget.component';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { HotkeysService } from 'src/app/services/hotkeys-service/hotkeys.service';
-import { ProjectsManagerService } from 'src/app/services/project-manager-service/projects-manager.service';
-
+import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
+import { ProjectDriver, ProjectLanguage } from 'src/app/services/project-manager-service/project-manager.types';
 
 
 @Component({
@@ -65,13 +65,12 @@ export class CodeEditorComponent implements OnInit {
   protected TerminalDisabled = true;
 
   protected isBlurred = false;
-  protected configModified = false;
 
   constructor(
     private fs: FsService,
     private compiler: CompilerService,
     private api: ApiService,
-    private pms: ProjectsManagerService,
+    private pms: ProjectManagerService,
     private cdRef: ChangeDetectorRef,
     private messageService: MessageService,
     private tutorialService: TutorialService,
@@ -82,28 +81,31 @@ export class CodeEditorComponent implements OnInit {
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     console.log("CodeEditorComponent:constructor", this.pms)
 
-    this.pms.currentProjectChanged.subscribe(() => { this.onProjectChanged() })
+    // TODO: Multi Compiler
+    this.subscribeWorker(this.compiler.get(ProjectLanguage.PY));
 
-    document.addEventListener('keydown', (event: KeyboardEvent) => {this.hotkeysService.emitHotkeysEvent(event)});
-    this.hotkeysService.registerHotkeysEvents().subscribe((event: KeyboardEvent) => {this.hotkeysService.getCorrectHotkey(event)})
-    this.hotkeysService.hotkeysAction.subscribe((emitter) => {this.chooseHotkeysAction(emitter)})
+    document.addEventListener('keydown', (event: KeyboardEvent) => { this.hotkeysService.emitHotkeysEvent(event) });
+    this.hotkeysService.registerHotkeysEvents().subscribe((event: KeyboardEvent) => { this.hotkeysService.getCorrectHotkey(event) })
+    this.hotkeysService.hotkeysAction.subscribe((emitter) => { this.chooseHotkeysAction(emitter) })
+
+    this.pms.currentProjectChanged.subscribe(() => {
+      console.log("CodeEditorComponent:currentProjectChanged:")
+      this.outputWidget.clearOutput()
+    })
   }
 
   ngOnInit() {
     this.isBlurred = true;
-
-    this.pms.addProject();
-
   }
 
-  private chooseHotkeysAction(emitter: string){
-    if(emitter === 'save'){
+  private chooseHotkeysAction(emitter: string) {
+    if (emitter === 'save') {
       this.saveFile();
-    } else if(emitter === 'run'){
+    } else if (emitter === 'run') {
       this.runProjectLocal();
-    } else if(emitter === 'test'){
+    } else if (emitter === 'test') {
       this.runConnectAPI();
-    } else if(emitter === 'export'){
+    } else if (emitter === 'export') {
       this.fileExplorer.export('Local');
     }
   }
@@ -111,8 +113,7 @@ export class CodeEditorComponent implements OnInit {
   private isTutorialShown(tutorial?: any) {
 
     console.log("CodeEditorComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined')
-    {
+    if (typeof tutorial === 'undefined') {
       this.LogApiDisabled = false;
       this.OutputDisabled = false;
       this.TerminalDisabled = false;
@@ -142,8 +143,7 @@ export class CodeEditorComponent implements OnInit {
         this.TerminalDisabled = false;
       }
     }
-    else
-    {
+    else {
       this.isBlurred = true
     }
   }
@@ -164,29 +164,29 @@ export class CodeEditorComponent implements OnInit {
     this.cdRef.detectChanges();
   }
 
-  public didStateChangeReady() {
-    let project = this.pms.getCurrentProject();
-    if (project) {
-      console.log("didStateChange:Ready:loadProject")
-      project.loadProject();
+  private subscribeWorker(driver: ProjectDriver) {
+    console.log("CodeEditorComponent:subscribeWorker:driver:", driver)
+
+    if (driver.eventsSubscribed) {
+      console.log("CodeEditorComponent:subscribeWorker:driver:error")
+      return;
     }
+    driver.eventsSubscribed = true;
+
+    driver.subscribeNotify(true, (msg: string) => { this.didNotify(msg) })
+    driver.subscribeState(true, (state: CompilerState, content?: string) => { this.didStateChange(state, content) })
+    driver.subscribeStdout(true, (msg: string) => { this.didStdout(msg) })
+    driver.subscribeStderr(true, (msg: string) => { this.didStderr(msg) })
+
+    console.log("CodeEditorComponent:subscribeWorker:driver:done")
   }
 
-  private onProjectChanged() {
-    console.log("CodeEditorComponent:onProjectChanged")
-
-    let project = this.pms.getCurrentProject();
-    if (!project) { return; }
-
-    project.driver.subscribeNotify(true, (msg: string) => { this.didNotify(msg) })
-    project.driver.subscribeState(true, (state: CompilerState, content?: string) => { this.didStateChange(state, content) })
-    project.driver.subscribeStdout(true, (msg: string) => { this.didStdout(msg) })
-    project.driver.subscribeStderr(true, (msg: string) => { this.didStderr(msg) })
-
-    console.log("CodeEditorComponent:onProjectChanged", project)
-  }
 
   public onUpdateRoot(fsroot: FsNodeFolder) {
+    let id = this.pms.getCurrentProjectId();
+    let project = this.pms.getCurrentProject();
+    console.log("CodeEditorComponent:onUpdateRoot:id:", id)
+
     this.fsroot = fsroot;
     this.fslist = this.fs.treeToList(fsroot);
     this.fslistfile = this.fslist.filter(item => "content" in item) as FsNodeFile[]
@@ -195,7 +195,15 @@ export class CodeEditorComponent implements OnInit {
     this.problemWidget.filePathList = filePathList
     this.terminalWidget.fslistfile = this.fslistfile;
 
-    console.log("CodeEditorComponent:onUpdateRoot", this.fslist)
+    let mainFile = this.fslistfile.find(item => item.path == project.config.RUN)
+    console.log("CodeEditorComponent:onUpdateRoot:id:", id, ":main:", mainFile, project.config.RUN)
+    if (!mainFile) {
+      console.log("CodeEditorComponent:onUpdateRoot:id:", id, ":main:failed", mainFile)
+      return
+    }
+    console.log("CodeEditorComponent:onUpdateRoot:id:", id, ":main:ok")
+
+    this.selectFile(mainFile)
   }
 
   public didNotify(data: string) {
@@ -207,18 +215,22 @@ export class CodeEditorComponent implements OnInit {
   }
 
   private didStateChange(state: CompilerState, content?: string) {
-    console.log("CodeEditorComponent:didStateChange:")
     //this.outputWidget!.print(state,OutputType.SYSTEM);
 
-    if (state == CompilerState.Init){
-      let projectID = this.pms.getCurrentProjectId();
-      console.log("CodeEditorComponent:didStateChange:mount: ", projectID)
-      this.pms.getCurrentProject()?.driver.mountByProjectId(projectID)
-      //TODO Daniel close all open tabs
-
-    }else if (state == CompilerState.Ready) {
-      this.didStateChangeReady();
-    }else if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
+    if (state == CompilerState.Init) {
+      //TODO Multi Compiler
+      console.log("CodeEditorComponent:didStateChange:CompilerState.Init:")
+      let driver = this.compiler.get(ProjectLanguage.PY)
+      if (!driver.isWorkerReady) {
+        driver.isWorkerReady = true
+        this.compiler.get(ProjectLanguage.PY).onWorkerReady.emit()
+      }
+      console.log("CodeEditorComponent:didStateChange:CompilerState.Init:done")
+    } else if (state == CompilerState.Ready) {
+      console.log("CodeEditorComponent:didStateChange:CompilerState.Ready:")
+      //maybe mount/event event could be emitted here instead of MountReceive and UnmountReceive
+      
+    } else if (state == CompilerState.Success || state == CompilerState.Error || state == CompilerState.Killed) {
       this.apiConnectReset();
     }
 
@@ -252,7 +264,7 @@ export class CodeEditorComponent implements OnInit {
 
     for (let i = 0; i < msgs.length; i++) {
       this.outputWidget.print(msgs[i], fromAPI ? OutputType.STDINAPI : OutputType.STDIN)
-      this.pms.getCurrentProject()?.driver.sendStdin(msgs[i])
+      this.pms.getCurrentDriver().sendStdin(msgs[i])
     }
     if (!fromAPI || this.pyodideState != CompilerState.Stdin) {
       this.outputWidget.enableStdin(false)
@@ -289,7 +301,7 @@ export class CodeEditorComponent implements OnInit {
     console.log("onAttachments:data:", data)
 
     console.log("extractTar:unpack:")
-    await this.pms.getCurrentProject()?.driver.createDirectory('/data')
+    await this.pms.getCurrentDriver().createDirectory('/data')
 
     Tar.unpack(data, async (files, folders) => {
       console.log("extractTar:unpack:folders", folders)
@@ -298,7 +310,7 @@ export class CodeEditorComponent implements OnInit {
         let folder = folders[idx]
         let path = '/data/' + folder.path
         console.log("extractTar:createDirectory:", path)
-        await this.pms.getCurrentProject()?.driver.createDirectory(path)
+        await this.pms.getCurrentDriver().createDirectory(path)
       }
       console.log("extractTar:createDirectory:DONE")
 
@@ -310,7 +322,7 @@ export class CodeEditorComponent implements OnInit {
         let path = '/data/' + file.path
         let content = file.content
         console.log("extractTar:writeFile:", path, content)
-        await this.pms.getCurrentProject()?.driver.writeFile(path, content)
+        await this.pms.getCurrentDriver().writeFile(path, content)
       }
       console.log("extractTar:writeFile:DONE")
 
@@ -348,9 +360,7 @@ export class CodeEditorComponent implements OnInit {
     this.isPresentName.splice(Removeindex, 1);
     this.isPresent.splice(Removeindex, 1);
 
-    let files = this.pms.getCurrentProjectManagerService()?.files;
-    if (!files) { return; }
-
+    let files = this.pms.getCurrentProject().files;
     files.splice(Removeindex, 1);
 
     console.log("Tab is closed: ", this.isPresentName);
@@ -358,7 +368,7 @@ export class CodeEditorComponent implements OnInit {
     if (Removeindex == this.activeIndex) {
       setTimeout(() => {
         this.activeIndex = 0;
-        if(!files) { return; }
+        if (!files) { return; }
 
         this.execBar.selectedFile = files[this.activeIndex];
         this.fileEditor.selectedFile = files[this.activeIndex];
@@ -375,8 +385,9 @@ export class CodeEditorComponent implements OnInit {
     setTimeout(() => {
       this.activeIndex = event.index;
 
-      let files = this.pms.getCurrentProjectManagerService()?.files;
-      if(!files) { return; }
+      let files = this.pms.getCurrentProject().files;
+
+      console.log("changeFile:id:", this.pms.getCurrentProjectId(), files, this.activeIndex)
 
       this.execBar.selectedFile = files[this.activeIndex];
       this.fileEditor.selectedFile = files[this.activeIndex];
@@ -393,7 +404,7 @@ export class CodeEditorComponent implements OnInit {
     if (!this.isPresent.includes(this.selectedFile.path)) {
       this.isPresentName.push(this.selectedFile.name);
 
-      this.pms.getCurrentProjectManagerService()?.files.push(this.selectedFile);
+      this.pms.getCurrentProject().files.push(this.selectedFile);
 
       setTimeout(() => this.activeIndex = (this.isPresentName.length) - 1, 0);
 
@@ -420,7 +431,7 @@ export class CodeEditorComponent implements OnInit {
   public saveFile() {
     if (this.selectedFile) {
       console.log("saveFile:", this.selectedFile.path, this.fileEditor)
-      this.pms.getCurrentProject()?.driver.writeFile(this.selectedFile.path, this.selectedFile.content)
+      this.pms.getCurrentDriver().writeFile(this.selectedFile.path, this.selectedFile.content)
     } else {
       console.log("saveFile:failed")
     }
@@ -432,7 +443,7 @@ export class CodeEditorComponent implements OnInit {
 
     if (this.cmdConnect) { this.cmdConnect.tal.closeConnection() }
     console.log("stopAll:cmdConnect:DONE")
-    await this.pms.getCurrentProject()?.driver.stopExecution()
+    await this.pms.getCurrentDriver().stopExecution()
     console.log("stopAll:cmdConnect:DONE")
   }
 
@@ -448,24 +459,21 @@ export class CodeEditorComponent implements OnInit {
   }
 
   public async runProject() {
-    console.log("runProject:")
+    let id = this.pms.getCurrentProjectId();
+    let project = this.pms.getCurrentProject();
+    console.log("CodeEditoreComponent:runProject:id", id, project)
     this.outputWidget.clearOutput()
 
-    let config = await this.compiler.readConfig()
-    if (!config) { return false }
-    console.log("runProject:config:ok: ")
-
-
-    console.log("runProject:main:", config!.RUN)
-    let mainFile = this.fslistfile.find(item => item.path == config!.RUN)
+    console.log("CodeEditoreComponent:runProject:id:", id, ":main:", project.config.RUN)
+    let mainFile = this.fslistfile.find(item => item.path == project.config.RUN)
     if (!mainFile) { return false }
-    console.log("runProject:main:ok")
+    console.log("CodeEditoreComponent:runProject:id:", id, ":main:ok")
     this.fileExplorer.selectFile(mainFile)
 
-    this.outputWidget.print("RUN: " + config.RUN, OutputType.SYSTEM)
+    this.outputWidget.print("RUN: " + project.config.RUN, OutputType.SYSTEM)
     this.saveFile();
 
-    await this.compiler.runProject()
+    await this.pms.runProject();
     return true
   }
 
@@ -473,7 +481,6 @@ export class CodeEditorComponent implements OnInit {
     this.apiRun = true
     this.outputWidget.clearOutput()
     this.saveFile();
-
 
     await this.apiConnect()
 
@@ -518,12 +525,6 @@ export class CodeEditorComponent implements OnInit {
     }
     console.log("apiConnect:service:ok")
 
-
-
-    let config = await this.compiler.readConfig()
-    if (!config) { return false }
-    console.log("apiConnect:config:ok")
-
     let ArgsInvalid = await this.problemWidget.validateArgs();
     //console.log("CODE EDITOR:CONNECT:VALIDATE ARGS: ", result)
 
@@ -541,8 +542,13 @@ export class CodeEditorComponent implements OnInit {
     //Run MAIN
     console.log("apiConnect:runProject")
     this.saveFile();
-    await this.compiler.runProject()
-    this.outputWidget.print("API: " + config.RUN, OutputType.SYSTEM)
+    let project = this.pms.getCurrentProject();
+    let projectConfig = project.config;
+    let id = this.pms.getCurrentProjectId();
+
+    await this.pms.runProject()
+
+    this.outputWidget.print("API: " + projectConfig.RUN, OutputType.SYSTEM)
     console.log("apiConnect:runProject:running")
 
     //Open Connection
@@ -551,7 +557,7 @@ export class CodeEditorComponent implements OnInit {
     let service = this.selectedService.name;
     let args = this.selectedService.exportArgs();
     let tty = false //true: bash code coloring, backspaces, etc
-    let token = (config.TAL_TOKEN && config.TAL_TOKEN != "" ? config.TAL_TOKEN : undefined)
+    let token = (projectConfig.TAL_TOKEN && projectConfig.TAL_TOKEN != "" ? projectConfig.TAL_TOKEN : undefined)
     let filePaths = this.selectedService.exportFilesPaths();
     let files = new Map<string, string>();
 
@@ -618,7 +624,7 @@ export class CodeEditorComponent implements OnInit {
     this.cmdConnect = undefined
     this.outputWidget.enableStdin(false)
 
-    this.pms.getCurrentProject()?.driver.stopExecution()
+    this.pms.stopExecution()
   }
 
   async didConnectStart() {
@@ -644,12 +650,12 @@ export class CodeEditorComponent implements OnInit {
   async didConnectData(data: string) {
     console.log("apiConnect:didConnectData:", data)
     if (this.output_files && this.current_output_file) {
-      if (this.current_output_file) {
-        this.pms.getCurrentProject()?.driver.writeFile("/" + this.current_output_file, data)
-      };
-      if (this.current_output_file === this.output_files[this.output_files.length - 1]) {
+      if (this.current_output_file)
+        this.pms.getCurrentDriver().writeFile("/" + this.current_output_file, data)
+
+      if (this.current_output_file === this.output_files[this.output_files.length - 1])
         this.apiConnectReset();
-      }
+
       console.log("apiConnect:didConnectData:cmdConnect:", this.cmdConnect);
     }
     else {
@@ -659,10 +665,8 @@ export class CodeEditorComponent implements OnInit {
 
   async didRecieveBinaryHeader(message: any) {
     console.log("apiConnect:didRecieveBinaryHeader:", message)
-
     this.current_output_file = message.name;
-    if (this.current_output_file) {
-      this.pms.getCurrentProject()?.driver.writeFile("/" + this.current_output_file, "")
-    };
+    if (this.current_output_file)
+      this.pms.getCurrentDriver().writeFile("/" + this.current_output_file, "")
   }
 }
