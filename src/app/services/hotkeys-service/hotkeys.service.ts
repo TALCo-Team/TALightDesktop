@@ -1,6 +1,6 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
-import { ProjectsManagerService } from '../project-manager-service/projects-manager.service';
+import { ProjectManagerService } from '../project-manager-service/project-manager.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +13,7 @@ export class HotkeysService {
   public onHotkeysReceived = new EventEmitter<any>();
   public configModified = false;
 
-  constructor(private pms: ProjectsManagerService ) {
+  constructor(private pms: ProjectManagerService ) {
     // register keyboard event listener when the service is initialized
     this.registerHotkeysEvents();
   }

@@ -1,24 +1,12 @@
 import { ProjectDriver, ProjectEnvironment, ProjectLanguage } from "../project-manager-service/project-manager.types";
-import { PyodideDriver } from "./python-compiler.driver";
 import { PyodideExamples } from "./python-compiler.examples";
 
 export class PyodideProjectEnvironment extends ProjectEnvironment{
-
-    public laguange: ProjectLanguage = ProjectLanguage.PY
-    public driver: ProjectDriver = new PyodideDriver()
-    
-    protected async loadProject(): Promise<boolean> {
-        console.log("PyodideProjectEnvironment:loadProject")
-
-        /*
-        TODO: check if there are some operation to do like scan
-              the filesystem or other init operations
-        */
-
-        return true;
+    constructor(){
+        super(ProjectLanguage.PY)
     }
 
-    protected async createExample(): Promise<boolean> {
+    protected async createExample(driver : ProjectDriver): Promise<boolean> {
         console.log("PyodideProjectEnvironment:createExample")
         //Starter files
         let folders = [
@@ -29,8 +17,9 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
             folders.push(this.config.DIR_EXAMPLES)
 
         for(let i = 0; i < folders.length; i++){
-            console.log("PyodideProjectEnvironment:loadProject:createDirectory:",folders[i])
-            await this.driver?.createDirectory(folders[i]);
+            //console.log("PyodideProjectEnvironment:createExample:createDirectory:",folders[i])
+            await driver.createDirectory(folders[i]);
+            //console.log("PyodideProjectEnvironment:createExample:createDirectory:OK:",folders[i])
         }
         
         let files: string[][] = []
@@ -51,14 +40,13 @@ export class PyodideProjectEnvironment extends ProjectEnvironment{
         for(let i=0; i < files.length; i++){
             let path = files[i][0]
             let content = files[i][1]
-            console.log("PyodideProjectEnvironment:loadProject:files:", path, content)
-            if(await this.driver.exists(path)){
-                console.log("PyodideProjectEnvironment:loadProject:files:SKIP:", path)
+            //console.log("PyodideProjectEnvironment:loadProject:files:", path, content)
+            if(await driver.exists(path)){
+                //console.log("PyodideProjectEnvironment:loadProject:files:SKIP:", path)
                 continue;
             }
-            await this.driver.writeFile(path, content);  
-        }
-        
+            await driver.writeFile(path, content);  
+        }     
         return true;        
     }
 }

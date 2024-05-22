@@ -5,7 +5,7 @@ import { ProblemManagerService } from 'src/app/services/problem-manager-service/
 import { MessageService, OverlayOptions } from 'primeng/api';
 import { ServiceDescriptor, ProblemDescriptor, ArgsMap, FilesMap, FileDescriptor, ArgDescriptor } from 'src/app/services/problem-manager-service/problem-manager.types';
 import { Dropdown } from 'primeng/dropdown';
-import { ProjectsManagerService } from 'src/app/services/project-manager-service/projects-manager.service';
+import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { AutoComplete } from 'primeng/autocomplete';
 
@@ -41,7 +41,7 @@ export class ProblemWidgetComponent {
   @ViewChild("urlInput") public urlInput?: AutoComplete;
   @ViewChild("statusDot") public statusDot?: ElementRef;
   @ViewChild("messageBox") public messageBox?: ElementRef;
-  
+
   public dropdownOptions: OverlayOptions;
 
   problemsMenu = new Array<ProblemDescriptor>();
@@ -62,7 +62,7 @@ export class ProblemWidgetComponent {
 
   url
   lastUrl: string| undefined;
-  
+
   subApiState
   subProblemError
 
@@ -76,10 +76,9 @@ export class ProblemWidgetComponent {
   constructor( public zone: NgZone,
                public api: ApiService,
                public pm: ProblemManagerService,
-               public projectsManagerService: ProjectsManagerService,
                private tutorialService: TutorialService,
                private messageService: MessageService,
-               public pms: ProjectsManagerService,
+               public pms: ProjectManagerService,
               )
   {
     this.urlCache = [...this.api.urlCache]
@@ -88,20 +87,18 @@ export class ProblemWidgetComponent {
     this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.problemsDidChange(clear) })
     this.subApiState = this.api.onApiStateChange.subscribe((state:ApiState)=>{this.updateState(state)})
     this.subProblemError = this.pm.onError.subscribe((_)=>{this.stateBad()})
-    
+
     this.url = api.url;
     this.lastUrl = this.url + "";
-    
-    // Daniel: original
-    // this.prj.onProjectChanged.subscribe(() => { this.saveProblemServiceConfig() })
-    this.projectsManagerService.currentProjectChanged.subscribe(() => {
-      this.projectsManagerService.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
+
+    this.pms.currentProjectChanged.subscribe(() => {
+      this.pms.getCurrentProject().onProjectConfigChanged.subscribe(() => {
         this.saveProblemServiceConfig();
       })
     })
-    
+
     this.pm.onProblemsLoaded.subscribe((_) =>{ this.loadProblemServiceConfig() })
-    this.projectsManagerService.currentProjectChanged.subscribe(() =>{ this.updateCurrentTabInfo() })
+    this.pms.currentProjectChanged.subscribe(() =>{ this.updateProblemInfo() })
 
     // https://primefaces.org/primeng/overlay
     //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
@@ -110,7 +107,7 @@ export class ProblemWidgetComponent {
 
   ngOnInit() {
     this.reloadProblemList();
-    this.lastUrl = this.api.getLastInsertedUrl();
+    this.lastUrl = this.api.getCurrentServerUrl();
     this.url = this.lastUrl;
     this.isBlurred = true;
 
@@ -152,6 +149,25 @@ export class ProblemWidgetComponent {
     this.urlCache = urlCache
   }
 
+  getServerList(){
+    let project = this.pms.getCurrentProject();
+    if (project != null) {
+      return project.config.TAL_SERVERS
+    }
+    return []
+  }
+
+  public selectServerURL(){
+    this.changeURL()
+
+    let project = this.pms.getCurrentProject();
+    if (project != null) {
+      project.config.TAL_SERVER = this.url;
+      project.saveConfig(this.pms.getCurrentDriver());
+    }
+
+  }
+
   public changeURL() {
     if(this.lastUrl == this.url){return}
     this.stateIdle()
@@ -176,7 +192,7 @@ export class ProblemWidgetComponent {
     let project = this.pms.getCurrentProject();
     if (project != null) {
       project.config.TAL_SERVER = this.url;
-      project.saveConfig();
+      project.saveConfig(this.pms.getCurrentDriver());
     }
     //! Daniel
 
@@ -185,12 +201,22 @@ export class ProblemWidgetComponent {
     this.lastUrl = this.url + ""
   }
 
-  private updateCurrentTabInfo(){
+  private updateProblemInfo(){
     let currentProject = this.pms.getCurrentProject();
-    console.log("updateCurrentTabInfo:url: url", this.url)
-    console.log("updateCurrentTabInfo:url  TAL_SERVER", currentProject!.config.TAL_SERVER)
+    if (currentProject == null) return;
+    console.log("updateProblemInfo:url: url", this.url)
+    console.log("updateProblemInfo:url  TAL_SERVER", currentProject!.config.TAL_SERVER)
+
     this.url = currentProject!.config.TAL_SERVER
+    this.selectedProblem = this.pm.getCurrentProblem()
+    this.selectedService = this.pm.getCurrentService()
+
+    console.log("updateProblemInfo TAL_SERVER ", currentProject!.config.TAL_SERVER)
+    console.log("updateProblemInfo TAL_PROBLEM ", currentProject!.config.TAL_PROBLEM)
+    console.log("updateProblemInfo TAL_SERVICE ", currentProject!.config.TAL_SERVICE)
+
     this.changeURL()
+
   }
 
 
@@ -209,9 +235,9 @@ export class ProblemWidgetComponent {
 
 
   private loadProblemServiceConfig() {
-    this.selectedProblem = this.pm.getProblem(localStorage.getItem("problema") || "");
+    this.selectedProblem = this.pm.getCurrentProblem()
     this.callDidSelectProblem();
-    this.selectedService = this.pm.getService(localStorage.getItem("servizio") || "");
+    this.selectedService = this.pm.getCurrentService()
     this.callDidSelectService();
   }
 
@@ -228,7 +254,7 @@ export class ProblemWidgetComponent {
        //console.log('Problem selected: ', problem.name);
       this.updateProjectConfigProblemServiceProblem();
 
-      this.projectsManagerService.getCurrentProject()?.onProjectConfigChanged.subscribe(() => {
+      this.pms.getCurrentProject().onProjectConfigChanged.subscribe(() => {
         //console.log('config pronto in problem');
         this.updateProjectConfigProblemServiceProblem();
       })
@@ -238,7 +264,7 @@ export class ProblemWidgetComponent {
       //console.log('Service selected: ', service.name);
       this.updateProjectConfigProblemServiceProblem();
 
-      this.projectsManagerService.getCurrentProject()?.onProjectConfigChanged.subscribe((_) => {
+      this.pms.getCurrentProject().onProjectConfigChanged.subscribe((_) => {
         //console.log('config pronto in service');
         this.updateProjectConfigProblemServiceProblem();
       })
@@ -246,19 +272,23 @@ export class ProblemWidgetComponent {
   }
 
   private async updateProjectConfigProblemServiceProblem() {
-    let project = this.projectsManagerService.getCurrentProject();
-    if (project == null) return;
-    project.config.parseFile(project.config);
+    let project = this.pms.getCurrentProject();
+    // if (project == null) return;
+    // project.config.parseFile(project.config);
 
     if (this.selectedProblem != undefined) {
       project.config.TAL_PROBLEM = this.selectedProblem.name
-      if (this.selectedService != undefined)
+
+      console.log("vediamo che viene fuori qua" , this.selectedProblem.name)
+      if (this.selectedService != undefined){
         project.config.TAL_SERVICE = this.selectedService.name
+        console.log("vediamo che viene fuori qua" , this.selectedService.name)
+      }
       else
         project.config.TAL_PROBLEM = "";
     }
     //project.config.TAL_SERVER = this.url;
-    await project.saveConfig();
+    await project.saveConfig(this.pms.getCurrentDriver());
   }
 
   public stateIdle() { this.updateState(ApiState.Idle); }
@@ -384,8 +414,7 @@ export class ProblemWidgetComponent {
       //file.value = ""
       return
     }
-    let project = this.projectsManagerService.getCurrentProject();
-    let pathExist = await project?.driver.exists(path)
+    let pathExist = await this.pms.getCurrentDriver().exists(path)
     console.log('fileDidChange:pathExist:', pathExist)
     if (!pathExist) {
       dropdown.style.color = "red"
@@ -440,7 +469,6 @@ export class ProblemWidgetComponent {
     this.servicesMenu = []
     this.loading = true
 
-    console.log
     this.pm.updateProblems()
   }
 
@@ -481,6 +509,11 @@ export class ProblemWidgetComponent {
     if (!this.selectedProblem) { return }
     this.pm.selectProblem(this.selectedProblem)
 
+    let project = this.pms.getCurrentProject();
+    if (project != null) {
+      project.config.TAL_PROBLEM = this.selectedProblem.getKey();
+      project.saveConfig(this.pms.getCurrentDriver());
+    }
 
     let servicesMenu = new Array<ServiceDescriptor>();
     this.selectedProblem.services.forEach((serviceDesc) => {
@@ -489,7 +522,6 @@ export class ProblemWidgetComponent {
     servicesMenu = servicesMenu.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 0)
     this.servicesMenu = servicesMenu
     console.log('didSelectProblem:servicesMenu:', servicesMenu)
-    this.servicesMenu = servicesMenu
 
     this.onProblemSelected.emit(this.selectedProblem)
   }

@@ -1,6 +1,7 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { Packets } from './api.packets';
 import { Commands } from './api.commands';
+import { ProjectManagerService } from '../project-manager-service/project-manager.service';
 
 export class Meta extends Packets.Meta{}
 export interface AttachmentInfo extends Packets.Reply.BinaryDataHeader{}
@@ -22,11 +23,13 @@ export class ApiService {
   urlCache;
   lastState = ApiState.Idle
   private lastInsertedUrl: string = '';
-  private readonly LAST_INSERTED_URL_KEY = 'lastInsertedUrl';
+  // private readonly LAST_INSERTED_URL_KEY = 'lastInsertedUrl';
 
   public onApiStateChange = new EventEmitter<ApiState>();
 
-  constructor(){
+  constructor(
+    public pms: ProjectManagerService
+  ){
     this._url = 'wss://ta.di.univr.it/algo'
     this.urlCache = [
       'wss://ta.di.univr.it/algo',
@@ -35,9 +38,12 @@ export class ApiService {
     ]
   }
 
-  public getLastInsertedUrl(): string {
-    this._url = localStorage.getItem(this.LAST_INSERTED_URL_KEY) || '';
-    return this._url;
+  public getCurrentServerUrl(): string {
+    let project = this.pms.getCurrentProject();
+    if (project != null) {
+      return project.config.TAL_SERVER;
+    }
+    return ""
   }
 
   public get url(): string {
@@ -54,7 +60,7 @@ export class ApiService {
     if(idx != -1){
       this.urlCache.splice(idx,1)
       // Aggiorna l'ultimo URL salvato in localStorage
-      localStorage.setItem(this.LAST_INSERTED_URL_KEY, this.urlCache[0] || '');
+      // localStorage.setItem(this.LAST_INSERTED_URL_KEY, this.urlCache[0] || '');
       return true
     }
     return false
@@ -72,7 +78,7 @@ export class ApiService {
     this.addToCache(this._url)
     this.urlCache.push(value);
     this.lastInsertedUrl = value
-    localStorage.setItem(this.LAST_INSERTED_URL_KEY, this.lastInsertedUrl);
+    // localStorage.setItem(this.LAST_INSERTED_URL_KEY, this.lastInsertedUrl);
     return true;
   }
 
