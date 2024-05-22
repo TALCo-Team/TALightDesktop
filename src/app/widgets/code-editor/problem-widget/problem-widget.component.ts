@@ -188,14 +188,6 @@ export class ProblemWidgetComponent {
     console.log("changeURL:url:", this.url )
     this.lastUrl = this.url + ""
 
-    // Daniel
-    let project = this.pms.getCurrentProject();
-    if (project != null) {
-      project.config.TAL_SERVER = this.url;
-      project.saveConfig(this.pms.getCurrentDriver());
-    }
-    //! Daniel
-
     console.log("changeURL:urlCache:after:", this.urlCache)
     console.log("changeURL:url:", this.url)
     this.lastUrl = this.url + ""
