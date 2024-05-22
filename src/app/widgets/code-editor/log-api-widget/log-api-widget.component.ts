@@ -26,7 +26,7 @@ export class LogApiWidgetComponent implements OnInit {
     }
 
   ngOnInit() {
-    this.isBlurred = true;
+    //this.isBlurred = true;
   }
 
 
