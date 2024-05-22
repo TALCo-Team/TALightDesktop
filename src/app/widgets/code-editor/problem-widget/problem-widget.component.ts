@@ -81,24 +81,23 @@ export class ProblemWidgetComponent {
                public pms: ProjectManagerService,
               )
   {
-    this.urlCache = [...this.api.urlCache]
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
     this.problemSub = this.pm.onProblemsChanged.subscribe((clear:boolean)=>{ this.problemsDidChange(clear) })
     this.subApiState = this.api.onApiStateChange.subscribe((state:ApiState)=>{this.updateState(state)})
     this.subProblemError = this.pm.onError.subscribe((_)=>{this.stateBad()})
 
-    this.url = api.url;
-    this.lastUrl = this.url + "";
+    this.url = ""
+    this.lastUrl = ""
 
     this.pms.currentProjectChanged.subscribe(() => {
+      this.updateProblemInfo() 
       this.pms.getCurrentProject().onProjectConfigChanged.subscribe(() => {
         this.saveProblemServiceConfig();
       })
     })
 
-    this.pm.onProblemsLoaded.subscribe((_) =>{ this.loadProblemServiceConfig() })
-    this.pms.currentProjectChanged.subscribe(() =>{ this.updateProblemInfo() })
+    this.pm.onProblemsLoaded.subscribe(() =>{ this.loadProblemServiceConfig() })
 
     // https://primefaces.org/primeng/overlay
     //this.dropdownOptions = {appendTo:'body', mode: 'modal'}
@@ -137,18 +136,6 @@ export class ProblemWidgetComponent {
     this.filePathList = [...this.filePathList]
   }
 
-  filterSuggestions(event: any) {
-    let query = event.query.replace(this.escapeRegEx, '\\$&')
-    let filter = new RegExp(".*" + query + ".*")
-    let urlCache: string[] = []
-    this.api.urlCache.forEach((url: string) => {
-      if (url.match(filter)) {
-        urlCache.push(url)
-      }
-    });
-    this.urlCache = urlCache
-  }
-
   getServerList(){
     let project = this.pms.getCurrentProject();
     if (project != null) {
@@ -179,7 +166,7 @@ export class ProblemWidgetComponent {
       this.stateBad()
       console.log("changeURL:setURL:failed")
     }else{
-      this.url = this.api.url;
+      this.url = this.pms.getCurrentProject().config.TAL_SERVER
       console.log("changeURL:setURL:success")
       this.stateMaybe()
       this.pm.updateProblems()
@@ -211,22 +198,12 @@ export class ProblemWidgetComponent {
 
   }
 
-
-  public removeURL(url: string, event: Event) {
-    if (event) { event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation(); }
-
-    console.log("changeURL:urlCache:before:", this.urlCache)
-    if (!this.api.removeFromCache(url)) {
-      console.log("changeURL:removeURL:done")
-    }
-    this.urlCache = this.api.urlCache
-
-    console.log("changeURL:urlCache:after:", this.urlCache)
-    console.log("changeURL:url:", url)
-  }
-
-
   private loadProblemServiceConfig() {
+    let problems = this.pm.getProblems()
+    let config = this.pms.getCurrentProject().config
+    config.TAL_PROBLEM = problems[0].getKey()
+    this.selectedProblem = problems[0]
+
     this.selectedProblem = this.pm.getCurrentProblem()
     this.callDidSelectProblem();
     this.selectedService = this.pm.getCurrentService()
@@ -502,18 +479,15 @@ export class ProblemWidgetComponent {
     this.pm.selectProblem(this.selectedProblem)
 
     let project = this.pms.getCurrentProject();
-    if (project != null) {
-      project.config.TAL_PROBLEM = this.selectedProblem.getKey();
-      project.saveConfig(this.pms.getCurrentDriver());
-    }
-
+    project.config.TAL_PROBLEM = this.selectedProblem.getKey();
+    project.saveConfig(this.pms.getCurrentDriver());
+    
     let servicesMenu = new Array<ServiceDescriptor>();
     this.selectedProblem.services.forEach((serviceDesc) => {
       servicesMenu.push(serviceDesc)
     })
-    servicesMenu = servicesMenu.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 0)
-    this.servicesMenu = servicesMenu
-    console.log('didSelectProblem:servicesMenu:', servicesMenu)
+    this.servicesMenu = servicesMenu.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 0)
+    console.log('didSelectProblem:servicesMenu:', this.servicesMenu)
 
     this.onProblemSelected.emit(this.selectedProblem)
   }

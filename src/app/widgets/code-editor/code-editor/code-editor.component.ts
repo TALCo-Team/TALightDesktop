@@ -287,7 +287,8 @@ export class CodeEditorComponent implements OnInit {
     this.selectedService = undefined
 
     if (this.logApiWidget.isActive) {
-      this.logApiWidget.addLine("rtal -s " + this.api.url + " list");
+      let config = this.pms.getCurrentProject().config
+      this.logApiWidget.addLine("rtal -s " + config.TAL_SERVER + " list");
       this.activeWidget = 1;
     }
   }
@@ -327,7 +328,8 @@ export class CodeEditorComponent implements OnInit {
       console.log("extractTar:writeFile:DONE")
 
       if (this.logApiWidget.isActive && widget === "problemWidget") {
-        this.logApiWidget.addLine("rtal -s " + this.api.url + " get " + this.selectedProblem?.name);
+        let config = this.pms.getCurrentProject().config
+        this.logApiWidget.addLine("rtal -s " + config.TAL_SERVER + " get " + this.selectedProblem?.name);
         this.activeWidget = 1;
       }
 
@@ -544,9 +546,9 @@ export class CodeEditorComponent implements OnInit {
     this.saveFile();
     let project = this.pms.getCurrentProject();
     let projectConfig = project.config;
-    let id = this.pms.getCurrentProjectId();
 
     await this.pms.runProject()
+    
 
     this.outputWidget.print("API: " + projectConfig.RUN, OutputType.SYSTEM)
     console.log("apiConnect:runProject:running")
@@ -588,7 +590,7 @@ export class CodeEditorComponent implements OnInit {
     let onData = (data: string) => { this.didConnectData(data) };
     let onBinaryHeader = (msg: any) => { this.didRecieveBinaryHeader(msg) };
 
-    let newLogLine = "rtal -s " + this.api.url + " connect " + problem + " " + service
+    let newLogLine = "rtal -s " + projectConfig.TAL_SERVER + " connect " + problem + " " + service
     let keys = Object.keys(args);
     let values = Object.values(args);
 
