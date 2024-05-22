@@ -40,7 +40,7 @@ export abstract class ProjectEnvironment {
 
   constructor(language : ProjectLanguage){
     this.language = language;
-  }  
+  }
 
   public async load(driver : ProjectDriver): Promise<boolean> {
     console.log("ProjectEnvironment:mounted")
@@ -128,7 +128,7 @@ export class ProjectConfig {
     "wss://ta.di.univr.it/sfide",
     "wss://localhost:8008/",
   ]
-  TAL_SERVER = "wss://ta.di.univr.it/algo" //TODO
+  TAL_SERVER = "" //TODO
   TAL_PROBLEM = "" //TODO
   TAL_SERVICE = "" //TODO
   TAL_TOKEN = "" //TODO
