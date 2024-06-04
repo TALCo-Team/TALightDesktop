@@ -32,7 +32,7 @@ export abstract class ProjectEnvironment {
   public language: ProjectLanguage
   public config: ProjectConfig = ProjectConfig.defaultConfig;
 
-  public onProjectConfigChanged = new EventEmitter<void>();
+  //public onProjectConfigChanged = new EventEmitter<void>();
   public onLoaded = new EventEmitter<void>();
   public isLoaded = false;
 
@@ -84,7 +84,7 @@ export abstract class ProjectEnvironment {
     else
       console.log("ProjectEnvironment:saveConfig: failed")
 
-    this.onProjectConfigChanged.emit();
+    //this.onProjectConfigChanged.emit();//TODO: infity loop
 
     return res
   }

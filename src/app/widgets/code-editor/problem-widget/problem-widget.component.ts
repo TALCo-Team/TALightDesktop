@@ -92,11 +92,37 @@ export class ProblemWidgetComponent {
 
     this.pms.currentProjectChanged.subscribe(() => {
       this.updateProblemInfo() 
+      //this.updateServiceInfo()
+      /*
       this.pms.getCurrentProject().onProjectConfigChanged.subscribe(() => {
         this.saveProblemServiceConfig();
-      })
+      })*/
     })
 
+    
+    this.pm.onProblemSelected.subscribe(() => {
+      //console.log('Problem selected: ', problem.name);
+      this.updateProjectConfigProblemServiceProblem();
+      /*
+      this.pms.getCurrentProject().onProjectConfigChanged.subscribe(() => {
+      //console.log('config pronto in problem');
+      this.updateProjectConfigProblemServiceProblem();
+      })
+      */
+    })
+  
+    this.onServiceSelected.subscribe((service) => {
+      //console.log('Service selected: ', service.name);
+      this.updateProjectConfigProblemServiceProblem();
+  
+      /*
+      this.pms.getCurrentProject().onProjectConfigChanged.subscribe((_) => {
+        //console.log('config pronto in service');
+        this.updateProjectConfigProblemServiceProblem();
+      })
+      */
+    })
+    
     this.pm.onProblemsLoaded.subscribe(() =>{ this.loadProblemServiceConfig() })
 
     // https://primefaces.org/primeng/overlay
@@ -112,7 +138,7 @@ export class ProblemWidgetComponent {
 
     if (this.urlInput) {
       this.urlInput.writeValue(this.url);
-      //TODO Daniel this.projectConfig.TAL_SERVER = this.url;
+      //TODO: this.projectConfig.TAL_SERVER = this.url;
     }
   }
 
@@ -180,6 +206,8 @@ export class ProblemWidgetComponent {
     this.lastUrl = this.url + ""
   }
 
+  
+
   private updateProblemInfo(){
     let currentProject = this.pms.getCurrentProject();
     if (currentProject == null) return;
@@ -188,11 +216,17 @@ export class ProblemWidgetComponent {
 
     this.url = currentProject!.config.TAL_SERVER
     this.selectedProblem = this.pm.getCurrentProblem()
-    this.selectedService = this.pm.getCurrentService()
+    if(this.selectedProblem != undefined){
+      console.log("updateProblemInfo:selectedProblem", this.selectedProblem)
+      this.updateServiceInfo(this.selectedProblem)
+    }
 
-    console.log("updateProblemInfo TAL_SERVER ", currentProject!.config.TAL_SERVER)
-    console.log("updateProblemInfo TAL_PROBLEM ", currentProject!.config.TAL_PROBLEM)
-    console.log("updateProblemInfo TAL_SERVICE ", currentProject!.config.TAL_SERVICE)
+    //this.selectedService = this.pm.getCurrentService()
+
+    console.log("updateProblemInfo:TAL_SERVER ", currentProject!.config.TAL_SERVER)
+    console.log("updateProblemInfo:TAL_PROBLEM ", currentProject!.config.TAL_PROBLEM)
+    console.log("updateProblemInfo:TAL_SERVICE ", currentProject!.config.TAL_SERVICE)
+    console.log("updateProblemInfo:Service ", this.selectedService)
 
     this.changeURL()
 
@@ -218,45 +252,26 @@ export class ProblemWidgetComponent {
     this.didSelectService();
   }
 
-  private saveProblemServiceConfig() {
-    this.pm.onProblemSelected.subscribe(() => {
-       //console.log('Problem selected: ', problem.name);
-      this.updateProjectConfigProblemServiceProblem();
-
-      this.pms.getCurrentProject().onProjectConfigChanged.subscribe(() => {
-        //console.log('config pronto in problem');
-        this.updateProjectConfigProblemServiceProblem();
-      })
-    })
-
-    this.onServiceSelected.subscribe((service) => {
-      //console.log('Service selected: ', service.name);
-      this.updateProjectConfigProblemServiceProblem();
-
-      this.pms.getCurrentProject().onProjectConfigChanged.subscribe((_) => {
-        //console.log('config pronto in service');
-        this.updateProjectConfigProblemServiceProblem();
-      })
-    })
-  }
+  
 
   private async updateProjectConfigProblemServiceProblem() {
     let project = this.pms.getCurrentProject();
     // if (project == null) return;
     // project.config.parseFile(project.config);
 
-    if (this.selectedProblem != undefined) {
+    if (this.selectedProblem == undefined) {
+      project.config.TAL_PROBLEM = "";
+      project.config.TAL_SERVICE = "";
+    } else {
       project.config.TAL_PROBLEM = this.selectedProblem.name
 
-      console.log("vediamo che viene fuori qua" , this.selectedProblem.name)
-      if (this.selectedService != undefined){
-        project.config.TAL_SERVICE = this.selectedService.name
-        console.log("vediamo che viene fuori qua" , this.selectedService.name)
-      }
+      if (this.selectedService == undefined)
+        project.config.TAL_SERVICE = ""
       else
-        project.config.TAL_PROBLEM = "";
+        project.config.TAL_SERVICE = this.selectedService.name
     }
-    //project.config.TAL_SERVER = this.url;
+
+    project.config.TAL_SERVER = this.url;
     await project.saveConfig(this.pms.getCurrentDriver());
   }
 
@@ -459,7 +474,6 @@ export class ProblemWidgetComponent {
     this.loading = false
 
     this.onProblemListChanged.emit();
-
   }
 
 
@@ -478,19 +492,30 @@ export class ProblemWidgetComponent {
     if (!this.selectedProblem) { return }
     this.pm.selectProblem(this.selectedProblem)
 
-    let project = this.pms.getCurrentProject();
+    /*let project = this.pms.getCurrentProject();
     project.config.TAL_PROBLEM = this.selectedProblem.getKey();
     project.saveConfig(this.pms.getCurrentDriver());
-    
+    */
+    this.updateServiceInfo(this.selectedProblem)
+
+    this.onProblemSelected.emit(this.selectedProblem)
+  }
+
+  updateServiceInfo(selectedProblem: ProblemDescriptor) {
     let servicesMenu = new Array<ServiceDescriptor>();
-    this.selectedProblem.services.forEach((serviceDesc) => {
+    selectedProblem.services.forEach((serviceDesc) => {
       servicesMenu.push(serviceDesc)
     })
     this.servicesMenu = servicesMenu.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 0)
     console.log('didSelectProblem:servicesMenu:', this.servicesMenu)
 
-    this.onProblemSelected.emit(this.selectedProblem)
+    for (let service of this.servicesMenu)
+      if (service.name == this.pms.getCurrentProject().config.TAL_SERVICE) {
+        this.selectedService = service
+        break
+      }
   }
+
 
   async didSelectService() {
     console.log('didSelectService:', this.selectedService)
