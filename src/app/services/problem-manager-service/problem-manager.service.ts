@@ -80,13 +80,12 @@ export class ProblemManagerService {
     this.onProblemSelected.emit(selectedProblem);
   }
 
-  getProblem(problemName: string) {
+  private getProblem(problemName: string) {
     return this.problems.get(problemName);
   }
 
-  getCurrentProblem() {
-    let project = this.pms.getCurrentProject();
-    return this.getProblem(project.config.TAL_PROBLEM || "");
+  public getCurrentProblem() {
+    return this.getProblem(this.pms.getCurrentProject().config.TAL_PROBLEM || "");
   }
 
   selectService(selectedService: ServiceDescriptor){

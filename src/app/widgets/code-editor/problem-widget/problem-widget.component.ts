@@ -185,24 +185,24 @@ export class ProblemWidgetComponent {
     if(this.lastUrl == this.url){return}
     this.stateIdle()
     let dot = this.statusDot!.nativeElement as HTMLElement
-    console.log("changeURL:dot:", dot)
+    console.log("ProblemWidgetComponent:changeURL:dot:", dot)
     let url = this.url;
-    console.log("changeURL:urlCache:before:",this.urlCache)
+    console.log("ProblemWidgetComponent:changeURL:urlCache:before:",this.urlCache)
     if( !this.api.setUrl(url) ){
       this.stateBad()
-      console.log("changeURL:setURL:failed")
+      console.log("ProblemWidgetComponent:changeURL:setURL:failed")
     }else{
       this.url = this.pms.getCurrentProject().config.TAL_SERVER
-      console.log("changeURL:setURL:success")
+      console.log("ProblemWidgetComponent:changeURL:setURL:success")
       this.stateMaybe()
       this.pm.updateProblems()
     }
-    console.log("changeURL:urlCache:after:", this.urlCache )
-    console.log("changeURL:url:", this.url )
+    console.log("ProblemWidgetComponent:changeURL:urlCache:after:", this.urlCache )
+    console.log("ProblemWidgetComponent:changeURL:url:", this.url )
     this.lastUrl = this.url + ""
 
-    console.log("changeURL:urlCache:after:", this.urlCache)
-    console.log("changeURL:url:", this.url)
+    console.log("ProblemWidgetComponent:changeURL:urlCache:after:", this.urlCache)
+    console.log("ProblemWidgetComponent:changeURL:url:", this.url)
     this.lastUrl = this.url + ""
   }
 
@@ -211,53 +211,46 @@ export class ProblemWidgetComponent {
   private updateProblemInfo(){
     let currentProject = this.pms.getCurrentProject();
     if (currentProject == null) return;
-    console.log("updateProblemInfo:url: url", this.url)
-    console.log("updateProblemInfo:url  TAL_SERVER", currentProject!.config.TAL_SERVER)
-
+    console.log("ProblemWidgetComponent:updateProblemInfo:url:", this.url)
+    console.log("ProblemWidgetComponent:updateProblemInfo:url:TAL_SERVER", currentProject!.config.TAL_SERVER)
     this.url = currentProject!.config.TAL_SERVER
+
     this.selectedProblem = this.pm.getCurrentProblem()
+    console.log("ProblemWidgetComponent:updateProblemInfo:selectedProblem", this.selectedProblem)
     if(this.selectedProblem != undefined){
-      console.log("updateProblemInfo:selectedProblem", this.selectedProblem)
       this.updateServiceInfo(this.selectedProblem)
     }
 
     //this.selectedService = this.pm.getCurrentService()
 
-    console.log("updateProblemInfo:TAL_SERVER ", currentProject!.config.TAL_SERVER)
-    console.log("updateProblemInfo:TAL_PROBLEM ", currentProject!.config.TAL_PROBLEM)
-    console.log("updateProblemInfo:TAL_SERVICE ", currentProject!.config.TAL_SERVICE)
-    console.log("updateProblemInfo:Service ", this.selectedService)
+    console.log("ProblemWidgetComponent:updateProblemInfo:TAL_SERVER ", currentProject!.config.TAL_SERVER)
+    console.log("ProblemWidgetComponent:updateProblemInfo:TAL_PROBLEM ", currentProject!.config.TAL_PROBLEM)
+    console.log("ProblemWidgetComponent:updateProblemInfo:TAL_SERVICE ", currentProject!.config.TAL_SERVICE)
+    console.log("ProblemWidgetComponent:updateProblemInfo:Service ", this.selectedService)
 
     this.changeURL()
-
   }
 
   private loadProblemServiceConfig() {
     let problems = this.pm.getProblems()
     let config = this.pms.getCurrentProject().config
-    config.TAL_PROBLEM = problems[0].getKey()
-    this.selectedProblem = problems[0]
+    this.pm.getCurrentProblem()
+    console.log("ProblemWidgetComponent:loadProblemServiceConfig:problems", problems)
+    console.log("ProblemWidgetComponent:loadProblemServiceConfig:currentProblem", this.selectedProblem)
+     
+    for (let problem of problems) {
+      if (problem.name == config.TAL_PROBLEM) {
+        this.selectedProblem = problem
+        this.updateServiceInfo(problem)
+        break
+      }
+    }
 
-    this.selectedProblem = this.pm.getCurrentProblem()
-    this.callDidSelectProblem();
-    this.selectedService = this.pm.getCurrentService()
-    this.callDidSelectService();
   }
 
-  public async callDidSelectProblem () {
-    this.didSelectProblem();
-  }
-
-  public async callDidSelectService () {
-    this.didSelectService();
-  }
-
-  
 
   private async updateProjectConfigProblemServiceProblem() {
     let project = this.pms.getCurrentProject();
-    // if (project == null) return;
-    // project.config.parseFile(project.config);
 
     if (this.selectedProblem == undefined) {
       project.config.TAL_PROBLEM = "";
@@ -385,13 +378,13 @@ export class ProblemWidgetComponent {
   //files
 
   async fileDidChange(file: FileDescriptor, event: { originalEvent: Event, value?: string }) {
-    console.log('fileDidChange:', file.key, event)
+    console.log('ProblemWidgetComponent:fileDidChange:', file.key, event)
     let path = event.value ?? ""
 
     let idDropdown = 'file-dropdown-' + file.key
     let dropdown = document.getElementById(idDropdown)
     if (!(dropdown instanceof HTMLElement)) { return }
-    console.log('fileDidChange:dropdown:found', dropdown)
+    console.log('fProblemWidgetComponent:ileDidChange:dropdown:found', dropdown)
 
     if (path == "") {
       dropdown.style.color = ""
@@ -399,7 +392,7 @@ export class ProblemWidgetComponent {
       return
     }
     let pathExist = await this.pms.getCurrentDriver().exists(path)
-    console.log('fileDidChange:pathExist:', pathExist)
+    console.log('ProblemWidgetComponent:fileDidChange:pathExist:', pathExist)
     if (!pathExist) {
       dropdown.style.color = "red"
       //file.value = ""
@@ -410,10 +403,10 @@ export class ProblemWidgetComponent {
   }
 
   async fileDidReset(file: FileDescriptor, event: Event) {
-    console.log('fileDidReset:', file.key, event)
+    console.log('ProblemWidgetComponent:fileDidReset:', file.key, event)
     let idDropdown = 'file-dropdown-' + file.key
     let dropdown = document.getElementById(idDropdown)
-    console.log('fileDidReset:', dropdown)
+    console.log('ProblemWidgetComponent:fileDidReset:', dropdown)
     if (!(dropdown instanceof Dropdown)) { return }
     dropdown.clear(event)
     file.value = ""
@@ -468,15 +461,13 @@ export class ProblemWidgetComponent {
       problemsMenu.push(problemDesc)
     })
     problemsMenu = problemsMenu.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 0)
-    console.log('updateProblemsUI:problemsMenu:', problemsMenu)
+    console.log('ProblemWidgetComponent:updateProblemsUI:problemsMenu:', problemsMenu)
 
     this.problemsMenu = problemsMenu
     this.loading = false
 
     this.onProblemListChanged.emit();
   }
-
-
 
   //API
   async onApiError(message: string) {
@@ -488,7 +479,7 @@ export class ProblemWidgetComponent {
     this.selectedArgs = undefined;
     this.selectedFiles = undefined;
 
-    console.log('didSelectProblem:', this.selectedProblem)
+    console.log('ProblemWidgetComponent:didSelectProblem:', this.selectedProblem)
     if (!this.selectedProblem) { return }
     this.pm.selectProblem(this.selectedProblem)
 
@@ -507,7 +498,7 @@ export class ProblemWidgetComponent {
       servicesMenu.push(serviceDesc)
     })
     this.servicesMenu = servicesMenu.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 0)
-    console.log('didSelectProblem:servicesMenu:', this.servicesMenu)
+    console.log('ProblemWidgetComponent:didSelectProblem:servicesMenu:', this.servicesMenu)
 
     for (let service of this.servicesMenu)
       if (service.name == this.pms.getCurrentProject().config.TAL_SERVICE) {
@@ -518,19 +509,19 @@ export class ProblemWidgetComponent {
 
 
   async didSelectService() {
-    console.log('didSelectService:', this.selectedService)
+    console.log('ProblemWidgetComponent:didSelectService:', this.selectedService)
     if (!this.selectedService) { return }
     this.pm.selectService(this.selectedService)
     this.selectedArgs = this.selectedService.args
     this.selectedFiles = this.selectedService.files
-    console.log('didSelectService:selectedArgs:', this.selectedArgs)
+    console.log('ProblemWidgetComponent:didSelectService:selectedArgs:', this.selectedArgs)
     this.onServiceSelected.emit(this.selectedService)
 
     this.refreshFilePathList()
   }
 
   async apiDownloadAttachment() {
-    console.log('apiDownloadAttachment:', this.selectedProblem)
+    console.log('ProblemWidgetComponent:apiDownloadAttachment:', this.selectedProblem)
     if (!this.selectedProblem) {
       this.messageService.add({
         key: 'br',
@@ -542,11 +533,11 @@ export class ProblemWidgetComponent {
       return
     }
 
-    let onAttachment = () => { console.log("Attachment packet received") };
-    let onAttachmentInfo = (info: any) => { console.log('apiDownloadAttachment:info:', info) };
+    let onAttachment = () => { console.log("ProblemWidgetComponent:Attachment packet received") };
+    let onAttachmentInfo = (info: any) => { console.log('ProblemWidgetComponent:apiDownloadAttachment:info:', info) };
 
     let onData = (data: ArrayBuffer) => {
-      console.log("apiDownloadAttachment:onData:", data);
+      console.log("ProblemWidgetComponent:apiDownloadAttachment:onData:", data);
       this.onAttachments.emit(data);
     };
 
@@ -554,5 +545,3 @@ export class ProblemWidgetComponent {
     req.onError = (error) => { this.onApiError(error) };
   }
 }
-
-
