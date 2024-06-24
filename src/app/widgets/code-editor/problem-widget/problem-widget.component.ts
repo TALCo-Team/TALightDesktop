@@ -144,7 +144,7 @@ export class ProblemWidgetComponent {
 
   private isTutorialShown(tutorial?: any) {
     console.log("ProblemWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "ProblemWidgetComponent")
+    if (typeof tutorial === 'undefined' || tutorial.componentName === this.constructor.name)
       this.isBlurred = false
     else
       this.isBlurred = true
