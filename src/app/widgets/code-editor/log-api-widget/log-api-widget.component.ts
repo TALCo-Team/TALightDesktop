@@ -33,7 +33,7 @@ export class LogApiWidgetComponent implements OnInit {
   private isTutorialShown(tutorial? : any){
 
     console.log("LogApiWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "LogApiWidgetComponent"){
+    if (typeof tutorial === 'undefined' || tutorial.componentName === this.constructor.name){
       this.isBlurred = false
     }
     else{
