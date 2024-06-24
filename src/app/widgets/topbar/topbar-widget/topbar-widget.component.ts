@@ -107,7 +107,7 @@ export class TopbarWidgetComponent implements OnInit {
   // controlla se mostrare questa parte oppure tenerla blurrata
   private isTutorialShown(tutorial?: any) {
     console.log("TopbarWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "TopbarWidgetComponent") {
+    if (typeof tutorial === 'undefined' || tutorial.componentName === this.constructor.name) {
       this.isBlurred = false
     }
     else {

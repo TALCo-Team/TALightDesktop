@@ -94,7 +94,7 @@ export class FileExplorerWidgetComponent implements OnInit {
   private isTutorialShown(tutorial?: any) {
 
     console.log("FileExplorerWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "FileExplorerWidgetComponent") {
+    if (typeof tutorial === 'undefined' || tutorial.componentName === this.constructor.name) {
       this.isBlurred = false
     }
     else {

@@ -177,7 +177,7 @@ export class FileEditorWidgetComponent implements OnInit {
   private isTutorialShown(tutorial? : any){
 
     console.log("FileEditorWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "FileEditorWidgetComponent"){
+    if (typeof tutorial === 'undefined' || tutorial.componentName === this.constructor.name ){
       this.isBlurred = false
     }
     else{

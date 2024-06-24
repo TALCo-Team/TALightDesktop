@@ -60,7 +60,7 @@ export class OutputWidgetComponent {
   private isTutorialShown(tutorial?: any) {
 
     console.log("OutputWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "OutputWidgetComponent") {
+    if (typeof tutorial === 'undefined' || tutorial.componentName === this.constructor.name) {
       this.isBlurred = false
     }
     else {
