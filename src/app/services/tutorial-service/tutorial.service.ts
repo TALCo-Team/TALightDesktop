@@ -41,10 +41,6 @@ export class TutorialService {
       text: "Seleziona il server, il problema ed il servizio",
     },
     {
-      componentName: "CodeEditorComponent",
-      text: "In questa sezione avrai 3 strumenti importanti: output, Log API ed un terminale",
-    },
-    {
       componentName: "OutputWidgetComponent",
       text: "OutputWidgetComponent",
     },
