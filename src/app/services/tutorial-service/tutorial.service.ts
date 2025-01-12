@@ -21,8 +21,7 @@ export class TutorialService {
     },
     {
       componentName: "TopbarWidgetComponent",
-      text: `Nella topbar potrai trovare la disponibilitá del server,
-              l'URL del server a cui ti sei connesso e potrai passare anche alla dark mode!`,
+      text: `Nella topbar potrai trovare le tabs dei progetti vari, il tasto per visualizzare il tutorial nuovamente e potrai passare anche alla dark mode!`,
     },
     {
       componentName: "FileExplorerWidgetComponent",
@@ -39,11 +38,7 @@ export class TutorialService {
     },
     {
       componentName: "ProblemWidgetComponent",
-      text: "Seleziona il problema",
-    },
-    {
-      componentName: "CodeEditorComponent",
-      text: "In questa sezione avrai 3 strumenti importanti: output, Log API ed un terminale",
+      text: "Seleziona il server, il problema ed il servizio",
     },
     {
       componentName: "OutputWidgetComponent",

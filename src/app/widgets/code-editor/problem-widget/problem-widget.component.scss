@@ -30,6 +30,11 @@
 }
 
 ::ng-deep {
+  //modifica solamente il pallino a fianco dell'URL
+  .tal-square-button {
+    padding-left: 5px;
+    padding-top: 5px;
+  }
   ::ng-deep {
     .p-scrollpanel-wrapper,
     .p-scrollpanel-content,

@@ -1,6 +1,6 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
-import { ProjectEnvironment } from '../project-manager-service/project-manager.types';
+import { ProjectManagerService } from '../project-manager-service/project-manager.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,8 +13,7 @@ export class HotkeysService {
   public onHotkeysReceived = new EventEmitter<any>();
   public configModified = false;
 
-  constructor(
-  ) {
+  constructor(private pms: ProjectManagerService ) {
     // register keyboard event listener when the service is initialized
     this.registerHotkeysEvents();
   }
@@ -29,9 +28,11 @@ export class HotkeysService {
     return this.hotkeysSubject.asObservable();
   }
 
-  public getCorrectHotkey(event:KeyboardEvent, project: ProjectEnvironment | null) {
+  public getCorrectHotkey(event:KeyboardEvent) {
+    let project = this.pms.getCurrentProject();
+    if (!project) { return; }
     
-  let config = project?.config
+    let config = project.config
 
   // avoid repetition, you can perform the action only once at a time
   if(event.repeat === false){

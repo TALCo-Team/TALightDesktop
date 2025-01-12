@@ -1,15 +1,12 @@
-import { Component, ElementRef, NgZone, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
-import { AutoComplete } from 'primeng/autocomplete';
-import { ApiService, ApiState } from 'src/app/services/api-service/api.service';
+import { Component, ElementRef, NgZone, OnInit, ViewChild, HostListener } from '@angular/core';
 import { NotificationManagerService, NotificationMessage, NotificationType } from 'src/app/services/notification-mananger-service/notification-manager.service';
 import { ProblemManagerService } from 'src/app/services/problem-manager-service/problem-manager.service';
 import { AppTheme, ThemeService } from 'src/app/services/theme-service/theme.service';
-import { ProjectConfig, ProjectEnvironment } from 'src/app/services/project-manager-service/project-manager.types';
-import { FsNodeFile, FsNodeFolder, FsNodeList, FsServiceDriver as FsDriver, FsServiceDriver } from "src/app/services/fs-service/fs.service.types"
-import { switchMap } from 'rxjs';
-import { take } from 'rxjs';
+import { ProjectConfig } from 'src/app/services/project-manager-service/project-manager.types';
 import { TutorialService } from 'src/app/services/tutorial-service/tutorial.service';
 import { MenuItem } from 'primeng/api';
+import { FsService } from 'src/app/services/fs-service/fs.service';
+import { ConfigService } from 'src/app/services/config-service/config.service';
 import { ProjectManagerService } from 'src/app/services/project-manager-service/project-manager.service';
 
 @Component({
@@ -18,8 +15,6 @@ import { ProjectManagerService } from 'src/app/services/project-manager-service/
   styleUrls: ['./topbar-widget.component.scss']
 })
 export class TopbarWidgetComponent implements OnInit {
-
-  @ViewChild("urlInput") public urlInput?: AutoComplete;
   @ViewChild("statusDot") public statusDot?: ElementRef;
   @ViewChild("messageBox") public messageBox?: ElementRef;
 
@@ -27,107 +22,92 @@ export class TopbarWidgetComponent implements OnInit {
   items!: MenuItem[];
   activeItem: any = undefined;
 
-  url;
-  lastUrl;
-  urlCache: string[] = []
-  escapeRegEx = /[.*+?^${}()|[\]\\]/g
   urlInputClass = ""
-  subApiState
-  subProblemError
+
   subOnNotify
   currentNotification?: NotificationMessage
   isBlurred: boolean = false;
   isTutorialButtonVisible: boolean = false;
+  scrollable_prop = false;
+  disabilita_bottone = false;
 
-  projectConfig = new ProjectConfig;
+  larghezzaFinestra: number | undefined;
 
-  constructor( public readonly themeService: ThemeService, 
-               public api: ApiService,
+  constructor( public readonly themeService: ThemeService,
                public zone: NgZone,
                public pm: ProblemManagerService,
                public nm: NotificationManagerService,
-               public prj: ProjectManagerService,
+               private fsService: FsService,
+               private configService: ConfigService,
                private tutorialService: TutorialService,
-             ) 
-{
-    this.url = api.url;
-    this.lastUrl = this.url + "";
-    this.urlCache = [...this.api.urlCache]
-    this.subApiState = this.api.onApiStateChange.subscribe((state:ApiState)=>{this.updateState(state)})
-    this.subProblemError = this.pm.onError.subscribe((_)=>{this.stateBad()})
+               public pms: ProjectManagerService,
+             )
+  {
+    // prendi le dimensioni della finestra
+    this.getDimensions();
+
     this.subOnNotify = this.nm.onNotification.subscribe((msg:NotificationMessage): void=>{this.showNotification(msg)})
-    this.prj.onProjectChanged.subscribe((_) => {
-        let project = this.prj.getCurrentProject()
-        project?.onProjectConfigChanged.subscribe((_) => {
-          //alert('config pronto in topbar');
-          this.writeTofile(project);
-        })
+
+    this.pms.projectManagerServiceListChanged.subscribe(() => {
+      this.setTabsNumber();
     })
+
+    this.pms.currentProjectChanged.subscribe(() => {
+      let id = this.pms.getCurrentProjectId()
+      console.log("TopbarWidgetComponent:setCurrentTab:id:", id)
+      this.activeItem = this.items[id]
+    });
+
+    // roba per il tutorial
     this.tutorialService.onTutorialChange.subscribe((tutorial) => { this.isTutorialShown(tutorial) }),
     this.tutorialService.onTutorialClose.subscribe(() => { this.isTutorialShown() })
-    this.prj.onProjectListChanged.subscribe(() => this.setTabsNumber())
   }
 
+  //Old ngOnInit
   ngOnInit(): void {
+    // all'inizio deve essere blurrato per via del tutorial
     this.isBlurred = true;
-
-    this.setTabsNumber()
-    this.activeItem = this.items[0]
-
-    this.lastUrl = this.api.getLastInsertedUrl();
-    this.url = this.lastUrl;
-    this.projectConfig.TAL_SERVER = this.url;
-    
-    //this.pm.updateProblems();
-
-    // controllare prima che esista
-    /*let project = this.prj.getCurrentProject()
-    if (project != null) {
-      alert('non è null');
-      if (project != null && project.config != null) {
-        project.config.TAL_SERVER = 'ciao';
-        project.config.save(project.driver);
-      }
-    }*/
-    if (this.urlInput) {
-      this.urlInput.writeValue(this.url);
-      this.projectConfig.TAL_SERVER = this.url;
-    }
   }
 
-  ngAfterViewInit(): void {
-    let project = this.prj.getCurrentProject()
-    //console.log(project);
-    /*if (project != null && project.config != null) {
-      project.config.TAL_SERVER = 'ciao';
-      project.config.save(project.driver);
-    }*/
+  // calcola la lunghezza delle tab
+  totalTabsCalc():number{
+    return this.getDimensions()-this.pms.getProjectsId().length*101;
   }
 
-  public async writeTofile(project: ProjectEnvironment | null) {
-    //alert('write to file')
-    if (project != null && project.config != null) {
-      //alert(str);
-      project.config.TAL_SERVER = this.url;
-      //alert(project.config.TAL_SERVER);
-      await project.config.save(project.driver);
-    }
+  // aggiorna le dimensioni della finestra quando viene ridimensionata in modo da gestire lo scrollable per via delle tabs
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.getDimensions();
+    //se le tab sono piú larghe della dimensione della finestra-400-18.58, allora attiva lo scrollable.
+    this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
   }
 
-
+  // semplice funzione per il calcolo della larghezza della finestra per vedere quante tab ci stanno
+  getDimensions(): number {
+    this.larghezzaFinestra = window.innerWidth;
+    console.log('Larghezza finestra:', this.larghezzaFinestra-400-18.58);
+    return this.larghezzaFinestra-400-18.58;
+  }
 
   showTutorial() {
     localStorage.setItem("tutorialCached", "false")
     this.tutorialService.nextTutorial(-1)
   }
 
+  // cambia l'icona del bottone per cambiare il tema
   public get changeThemIcon(): string {
     return this.themeService.currentTheme == AppTheme.dark ? 'pi-sun' : 'pi-moon';
   }
 
+  // switcha il tema
+  public toggleTheme() {
+    this.themeService.toggleTheme();
+  }
+
+  // controlla se mostrare questa parte oppure tenerla blurrata
   private isTutorialShown(tutorial?: any) {
     console.log("TopbarWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "TopbarWidgetComponent") {
+    if (typeof tutorial === 'undefined' || tutorial.componentName === this.constructor.name) {
       this.isBlurred = false
     }
     else {
@@ -141,10 +121,6 @@ export class TopbarWidgetComponent implements OnInit {
     else {
       this.isTutorialButtonVisible = true;
     }
-  }
-
-  public toggleTheme() {
-    this.themeService.toggleTheme();
   }
 
   public iconForNotification() {
@@ -176,107 +152,36 @@ export class TopbarWidgetComponent implements OnInit {
     this.currentNotification = undefined
   }
 
-setTabsNumber(){
-  let tmp : MenuItem[] = [];
-  for (let i = 0; i < this.prj.listProject().length; i++){
-    tmp.push({ label: 'TAB-' + i, icon: 'pi pi-fw pi-times' , id : i.toString()})
+  // imposta il numero della tab appena creata e crea una nuova tab
+  setTabsNumber(){
+    let tmp : MenuItem[] = [];
+    let projectName, ids = this.pms.getProjectsId()
 
-    this.activeItem = tmp
-  }
+    console.log("TopbarWidgetComponent:setTabs:ids:", ids)
 
-  this.items = tmp
-  this.disableDelete = (this.prj.listProject().length <= 1)
-  this.activeItem = this.items[0];
-}
+    for (let i = 0; i < ids.length; i++){
+      projectName = ProjectConfig.defaultConfig.PROJECT_NAME + ' ' + i; //default name
 
-addProject() {
-  this.prj.addProject()
-}
-
-deleteProject(id : string) {
-  this.prj.closeProject(parseInt(id))
-}
-
-setCurrentTab(item : any) {
-  this.activeItem = item;
-  console.log("current active : id ", item)
-  console.log("current active : tab ", this.activeItem)
-
-  this.prj.setCurrentProject(parseInt(item.id))
-}
-
-
-  filterSuggestions(event: any) {
-    let query = event.query.replace(this.escapeRegEx, '\\$&')
-    let filter = new RegExp(".*" + query + ".*")
-    let urlCache: string[] = []
-    this.api.urlCache.forEach((url: string) => {
-      if (url.match(filter)) {
-        urlCache.push(url)
-      }
-    });
-    this.urlCache = urlCache
-  }
-
-  public updateState(state: ApiState) {
-    let dot = this.statusDot!.nativeElement as HTMLElement
-    switch (state) {
-      case ApiState.Idle: dot.style.color = ""; break;
-      case ApiState.Good: dot.style.color = "green"; break;
-      case ApiState.Maybe: dot.style.color = "orange"; break;
-      case ApiState.Bad: dot.style.color = "darkred"; break;
+      tmp.push({ label: projectName , icon: 'pi pi-fw pi-times' , id : i.toString()})
     }
+
+    this.items = tmp
+    this.disableDelete = (ids.length <= 1)
   }
 
-  public stateIdle() { this.updateState(ApiState.Idle); }
-  public stateGood() { this.updateState(ApiState.Good); }
-  public stateMaybe() { this.updateState(ApiState.Maybe); }
-  public stateBad() { this.updateState(ApiState.Bad); }
+  // aggiungi un progetto controllando ed in caso le schede fossero troppe, attiva lo scrollable
+  addProject() {
+    this.pms.addProject()
+    this.disabilita_bottone = true;
 
-  public changeURL(event:Event) {
-    if(this.lastUrl == this.url){return}
-    this.stateIdle()
-    let dot = this.statusDot!.nativeElement as HTMLElement
-    console.log("changeURL:dot:", dot)
-    console.log("changeURL:event:", event)
-    let url = this.url;
-    console.log("changeURL:urlCache:before:",this.urlCache)
-    if( !this.api.setUrl(url) ){
-      this.stateBad()
-      console.log("changeURL:setURL:failed")
-    }else{
-      this.url = this.api.url;
-      console.log("changeURL:setURL:success")
-      this.urlCache = this.api.urlCache
-      this.stateMaybe()
-      this.pm.updateProblems()
-    }
-    console.log("changeURL:urlCache:after:", this.urlCache )
-    console.log("changeURL:url:", this.url )
-    this.lastUrl = this.url + ""
-    let project = this.prj.getCurrentProject();
-    //alert('hai cambiato url!');
-    this.writeTofile(project);
-    //alert("il server ora è: " + project?.config?.TAL_SERVER);
+    this.pms.currentProjectChanged.subscribe(() => this.disabilita_bottone = false )
 
-    console.log("changeURL:urlCache:after:", this.urlCache)
-    console.log("changeURL:url:", this.url)
-    this.lastUrl = this.url + ""
-
-
+    this.totalTabsCalc()<=0? this.scrollable_prop=true : this.scrollable_prop=false;
   }
 
-  public removeURL(url: string, event: Event) {
-    if (event) { event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation(); }
-
-    console.log("changeURL:urlCache:before:", this.urlCache)
-    if (!this.api.removeFromCache(url)) {
-      console.log("changeURL:removeURL:done")
-    }
-    this.urlCache = this.api.urlCache
-
-    console.log("changeURL:urlCache:after:", this.urlCache)
-    console.log("changeURL:url:", url)
+  // Set current tab of an exsisting project
+  setCurrentTab(item : any) {
+    this.pms.setCurrent(parseInt(item.id))
+    this.activeItem = item;
   }
-
 }

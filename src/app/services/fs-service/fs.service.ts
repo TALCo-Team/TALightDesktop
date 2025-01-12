@@ -12,6 +12,7 @@ export class FsService {
   public static EmptyFile = {name:"", path: "/", content:""} as FsNodeFile
   
   constructor(){
+    console.log('FsService:constructor')
      //TODO: Remove test driver FS from constructor
     //this.registerDriver('example', new IndexeddbFsDriver());   
   }
