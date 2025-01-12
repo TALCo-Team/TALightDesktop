@@ -33,28 +33,15 @@ export class MonacoEditorWidgetComponent implements ControlValueAccessor, OnInit
     private tutorialService : TutorialService,
 
   ) {
-      this.tutorialService.onTutorialChange.subscribe( (tutorial)=>{this.isTutorialShown(tutorial)} ),
-      this.tutorialService.onTutorialClose.subscribe( ()=>{this.isTutorialShown()} )
   }
 
   ngOnInit(): void {
     this.themeService.themeChanged.subscribe((theme) => {
       this.updateEditorOptions();
     });
-    this.isBlurred = true;
+    this.isBlurred = false;
 
     this.updateEditorOptions();
-  }
-
-  private isTutorialShown(tutorial? : any){
-
-    console.log("LogApiWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "LogApiWidgetComponent"){
-      this.isBlurred = false
-    }
-    else{
-      this.isBlurred = true
-    }
   }
 
 

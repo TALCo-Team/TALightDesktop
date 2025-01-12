@@ -8,14 +8,8 @@
   display: flex;
   width: 100%;
   height: 100%;
-}
-
-div.tal-topbar {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: row;
-  padding: 5px;
+  margin-left: 8px;
+  margin-bottom: 2px;
 }
 
 .tal-brand {
@@ -24,6 +18,9 @@ div.tal-topbar {
     font-size: 25px;
   }
   display: flex;
+  position: fixed;
+  top : 0;
+  left: 0;
   flex-grow: 1;
   //background-color: aqua;
 }
@@ -51,6 +48,7 @@ div.tal-topbar {
   }
 }
 
+// comprende l'url ed il tasto per il cambio tema
 .tal-bar-url {
   //background-color: green;
   height: 30px;
@@ -59,6 +57,10 @@ div.tal-topbar {
   align-items: center;
   justify-content: flex-end;
   flex-grow: 1;
+  position: fixed;
+  top : 0;
+  right: 35px;
+  padding-top: 5px;
 }
 
 ::ng-deep {
@@ -73,43 +75,68 @@ div.tal-topbar {
       padding: 5px !important;
       margin: 5px !important;
     }
-
-    button {
-      width: 30px;
-      max-width: 30px;
-    }
   }
 }
 
-.top-bar-url-input {
-  margin: 5px;
-  height: 30px;
 
-  .url-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 16px !important;
 
-    button {
-      width: 16px !important;
-      height: 16px !important;
-      max-height: 16px !important;
-      min-height: 16px !important;
-      margin: 0;
-      display: none;
-      background-color: darkred;
-      color: white;
-    }
-  }
-
-  .url-item:hover {
-    .p-button {
-      display: flex;
-    }
-  }
-}
-.tutorial{
+// tasto del tutorial
+.tutorial button {
+  position: fixed;
   width: auto;
   height: auto;
+  padding: 4px;
+  top: 3px;
+  right: 0;
+  margin-right: 5px;
 }
+
+:host ::ng-deep{
+  //il contenitore delle tabMenu
+  .tabMenu {
+    position: fixed;
+    display: flex;
+    // flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0px;
+    flex-grow: 1;
+    top: 0; /* Allinea il p-tabMenu all'inizio del contenitore */
+    left: 45px; /* Lascia spazio a sinistra per il bottone */
+    //bisogna mettere a -380px
+    width: calc(100% - 400px); /* Larghezza del p-tabMenu */
+    height: 30px;
+  }
+
+  //bottone per aggiungere una tab
+  .addTabButton {
+    /* Stili per il bottone */
+    position: fixed;
+    width: 15px;
+    height: 20px;
+  }
+  /* Stili per il bottone per chiudere le tabs*/
+  // .buttonClose
+  // {
+  //   margin-left: 3px;
+  //   width: 20px;
+  //   height: 15px;
+  //   vertical-align: middle;
+  //   background-color: red;
+  // }
+
+  //singola tab
+  .tab {
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  a {
+    font-size: 14px;
+    height: 40px;
+    white-space: nowrap; /* Impedisce il testo di andare a capo */
+    padding: 0px!important;
+  }
+}
+

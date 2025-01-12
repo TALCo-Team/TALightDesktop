@@ -1,11 +1,16 @@
 <div class="tal-topbar" [class.blur]="isBlurred">
-    <div class="tal-brand">
-        <h1>TALight Desktop</h1>
-    </div>
-
-    <div>
-      <button pButton class="tutorial" pTooltip="Mostra il tutorial" (click)="showTutorial()" label="Mostra il tutorial" *ngIf=isTutorialButtonVisible></button>
-    </div>
+  <div>
+    <button [disabled]="disabilita_bottone" type="button" class="tal-square-button" icon="pi pi-plus" pButton pRipple pTooltip="Aggiungi una scheda" (click)="addProject()" styleClass="addTabButton"></button>
+    <p-tabMenu [scrollable]="scrollable_prop" [model]="items" [activeItem]="activeItem" styleClass="tabMenu" >
+        <ng-template pTemplate="item" let-item >
+          <div (click)="setCurrentTab(item)" class="tab">
+              {{ item.label }}
+              <!-- Ho sostituito il [disabled]="disableDelete" con l'hidden-->
+              <!-- <button class="buttonClose" type="button" pButton pRipple icon="pi pi-times" (click)="deleteProject(item.id)" *ngIf="!disableDelete"> </button> -->
+            </div>
+          </ng-template>
+    </p-tabMenu>
+  </div>
 
     <div class="tal-message-box">
         <div #messageBox *ngIf="!!currentNotification" class="tal-message-box-main tal-message-box-{{currentNotification.type}}" >
@@ -21,21 +26,12 @@
 
     <div class="tal-bar-url">
 
-        <i #statusDot class="pi pi-circle-fill" pTooltip="Status" tooltipPosition="left"></i>
 
-        <p-autoComplete #urlInput class="top-bar-url-input p-inputtext-sm"
-            (placeholder)="urlCache"  [(ngModel)]="url" pTooltip="Change URL" tooltipPosition="bottom"
-            (change)="changeURL($event)" (onSelect)="changeURL($event)" (onBlur)="changeURL($event)" [suggestions]="urlCache"
-            (completeMethod)="filterSuggestions($event)" [dropdown]="true">
-
-            <ng-template let-url pTemplate="item">
-                <div class="url-item">
-                    <div class="url-item-label">{{url}}</div>
-                    <button pButton icon="pi pi-trash" class="tal-square-button" pTooltip="Remove URL" (click)="removeURL(url, $event)"></button>
-                </div>
-            </ng-template>
-        </p-autoComplete>
 
         <button pButton icon="pi {{changeThemIcon}}" class="tal-square-button" pTooltip="Change theme" (click)="toggleTheme()"></button>
     </div>
+    <div class='tutorial'>
+      <button pButton pTooltip="Mostra il tutorial" (click)="showTutorial()" class="tal-square-button" icon="pi pi-question-circle" *ngIf=isTutorialButtonVisible></button>
+    </div>
 </div>
+

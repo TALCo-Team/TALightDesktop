@@ -1,36 +1,49 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { ApiService, } from '../api-service/api.service';
 import { ArgDescriptor, ParamsMap, ProblemDescriptor, ProblemList, ProblemMap, ServiceDescriptor, ServiceMap } from './problem-manager.types';
+import { ProjectManagerService } from '../project-manager-service/project-manager.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProblemManagerService {
-  
-  selectedProblem?: ProblemDescriptor
-  selectedService?: ServiceDescriptor
+
+  //selectedProblem?: ProblemDescriptor
+  //selectedService?: ServiceDescriptor
 
   problemList=new ProblemList();
   problems=new ProblemMap();
   services=new ServiceMap();
   savedParams=new ParamsMap();
-  
+
 
   public onProblemsChanged = new EventEmitter<boolean>();
   public onProblemSelected = new EventEmitter<ProblemDescriptor>();
   public onError = new EventEmitter<any>();
-  public onProblemsLoaded = new EventEmitter<any>();
-   
+  public onProblemsLoaded = new EventEmitter<void>();
+
   public onServiceSelected = new EventEmitter<ServiceDescriptor>();
 
   constructor(
-    public api:ApiService
+    public api:ApiService,
+    public pms: ProjectManagerService,
   ){}
 
 
-  updateProblems(){
-    this.selectedProblem=undefined;
-    this.selectedService=undefined;
+  public getProblems(){
+    return this.problemList;
+  }
+
+
+  public updateProblems(){
+    //this.selectedProblem=undefined;
+    //this.selectedService=undefined;
+    /*
+    let config = this.pms.getCurrentProject().config
+    config.TAL_PROBLEM = "";
+    config.TAL_SERVICE = "";
+    */
+
     this.problemList=[];
     this.problems.clear();
     this.services.clear();
@@ -47,44 +60,58 @@ export class ProblemManagerService {
         })
       })
       this.onProblemsChanged.emit(false)
-      this.onProblemsLoaded.emit(this.problemList)
+      this.onProblemsLoaded.emit()
     });
-    req.onError = (error) => { 
+    req.onError = (error) => {
       this.onProblemsChanged.emit(false)
-      this.onError.emit(error) 
+      this.onError.emit(error)
     };
   }
 
 
   selectProblem(selectedProblem: ProblemDescriptor){
-    this.selectedProblem = selectedProblem;
-    alert('hai selezionato il problema: ' + selectedProblem.name);
-    localStorage.setItem('problema', selectedProblem.name);
+    console.log('problem-manager-service:selectProblem:',selectedProblem.key)
+    let config = this.pms.getCurrentProject().config
+    config.TAL_PROBLEM = selectedProblem.key;
+    config.TAL_SERVICE = "";
+    
+    this.pms.getCurrentProject().saveConfig(this.pms.getCurrentDriver());
+
     this.onProblemSelected.emit(selectedProblem);
-    this.selectedService = undefined;
   }
 
-  getProblem(problemName: string) {
+  private getProblem(problemName: string) {
     return this.problems.get(problemName);
   }
-  
+
+  public getCurrentProblem() {
+    return this.getProblem(this.pms.getCurrentProject().config.TAL_PROBLEM || "");
+  }
+
   selectService(selectedService: ServiceDescriptor){
     let name = selectedService.key;
     if ( this.savedParams.has(name) ){
       //TODO: Deep copy param values from  to selectedProblem object, to account for changes in the problem structure.
-      this.selectedService = this.savedParams.get(name)
+      //this.selectedService = this.savedParams.get(name)
     }else{
       this.savedParams.set(name,selectedService);
-      this.selectedService = selectedService;
+      //this.selectedService = selectedService;
     }
 
-    alert('hai selezionato il servizio: ' + name);
-    localStorage.setItem('servizio', name);
+    let project = this.pms.getCurrentProject();
+    project.config.TAL_SERVICE = selectedService.getKey();
+    project.saveConfig(this.pms.getCurrentDriver());
+
     this.onServiceSelected.emit(selectedService);
   }
 
   getService(serviceName: string) {
     return this.services.get(serviceName);
+  }
+
+  getCurrentService() {
+    let project = this.pms.getCurrentProject();
+    return this.getService(project.config.TAL_SERVICE || "");
   }
 
   validateArgs(service: ServiceDescriptor){
@@ -107,7 +134,7 @@ export class ProblemManagerService {
       let pattern;
       try{
         pattern = new RegExp(arg.regex)
-      }catch(error:any) { 
+      }catch(error:any) {
         console.log("validateArg:regex:invalid")
         return null;
       }

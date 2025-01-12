@@ -3,26 +3,27 @@ export type UID = string; // should I ?
 
 export type PromiseResolver<T> = (value: T | PromiseLike<T>) => void;
 
-export type stdCallback = (data:string)=>void;
-export type stateCallback = (state:CompilerState, content?:string)=>void;
-export type notifyCallback = (title:string, msg:string, kind:string)=>void;
+export type stdCallback = (data: string) => void;
+export type stateCallback = (state: CompilerState, content?: string) => void;
+export type notifyCallback = (title: string, msg: string, kind: string) => void;
 
-export type CompilerMessageHandler = (message:CompilerRequest)=>CompilerResponse;
+export type CompilerMessageHandler = (message: CompilerRequest) => CompilerResponse;
 
-export interface CompilerDriver{
+export interface CompilerDriver {
   installPackages(packages: string[]): Promise<string>;
   executeCode(code: string): Promise<string>;
   executeFile(fullpath: string): Promise<string>;
   stopExecution(signal?: number): Promise<boolean>;
-  subscribeNotify(enable?:boolean, onNotify?:(title:string, msg:string, kind:string)=>void ): Promise<boolean>;
-  subscribeState(enable?:boolean, onState?:(state:CompilerState, content?:string)=>void ): Promise<boolean>;
-  subscribeStdout(enable?:boolean, onStdout?:(data:string)=>void): Promise<boolean>;
-  subscribeStderr(enable?:boolean, onStderr?:(data:string)=>void): Promise<boolean>;
-  sendStdin(msg:string): Promise<boolean> ;
+  subscribeNotify(enable?: boolean, onNotify?: (title: string, msg: string, kind: string) => void): Promise<boolean>;
+  subscribeState(enable?: boolean, onState?: (state: CompilerState, content?: string) => void): Promise<boolean>;
+  subscribeStdout(enable?: boolean, onStdout?: (data: string) => void): Promise<boolean>;
+  subscribeStderr(enable?: boolean, onStderr?: (data: string) => void): Promise<boolean>;
+  sendStdin(msg: string): Promise<boolean>;
 }
 
 export enum CompilerState {
   Unknown = 'Unknown',
+  Init = 'Init',
   Loading = 'Loading',
   Ready = 'Ready',
   Run = 'Run',
@@ -63,7 +64,7 @@ export interface CompilerMessage {
   uid: UID;
   type: CompilerMessageType;
   args: string[];
-  contents: Array<string|ArrayBuffer>;
+  contents: Array<string | ArrayBuffer>;
 }
 
 export interface CompilerRequest {

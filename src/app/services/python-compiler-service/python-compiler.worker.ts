@@ -5,10 +5,6 @@ import { CompilerMessageHandler, CompilerMessageType, CompilerRequest, CompilerR
 
 import { FsNodeFolder } from "../fs-service/fs.service.types";
 
-
-let pyodideRoot = "/"
-let pyodideMount = "/TALight"
-
 // Bootstrap pyodide
 
 importScripts("assets/pyodide/pyodide.js");
@@ -16,7 +12,7 @@ declare var loadPyodide: any;
 
 //let worker: PyodideFsWorker;
 async function main() {
-  let worker = new PyodideWorker(pyodideRoot, pyodideMount);
+  let worker = new PyodideWorker();
 }
 
 class PyodideWorker{
@@ -33,8 +29,7 @@ class PyodideWorker{
   fs: any;
   loadPyodide: any;
   micropip: any;
-  root:string;
-  mount:string;
+  mountPoint?:string;
   isReady = false;
   readyPromise: Promise<boolean>;
   readyResolver: PromiseResolver<boolean>;
@@ -48,13 +43,12 @@ class PyodideWorker{
   interruptBuffer = new Uint8Array(1);
   interruptTimer:any
   
-  constructor(root:string, mount:string ){
-    this.root = root;
-    this.mount = mount;
+  constructor(){
+    addEventListener("message", async ( payload:any ) => { this.onData(payload.data) })
 
     this.requestQueueStdout = new Map();
     this.requestQueueStderr = new Map();
-    
+
     //onReady
     let readyResolver: PromiseResolver<boolean>;
     this.readyPromise =  new Promise<boolean>((resolve, reject) => {
@@ -62,34 +56,25 @@ class PyodideWorker{
     })
     this.readyResolver = (value)=>{ readyResolver(value) }
 
-    
-    addEventListener("message", async ( payload:any ) => { this.onData(payload.data) })
-    
     //Send Init event, but outside the constructor
     setTimeout(()=>{this.sendState(CompilerState.Loading)})
 
-  
-    this.initPydiode().then(()=>{
-      this.load(this.root, this.mount);
-      this.fs.syncfs(true,()=>{
-        
-        this.interruptBuffer[0]=0
-        this.pyodide.setInterruptBuffer(this.interruptBuffer)
-        this.isReady = true;
-        this.sendState(CompilerState.Ready)
-        this.readyResolver(this.isReady);
-        
-      });
+    this.init().then(()=>{
+      //this.load(this.mountPoint);
+      this.interruptBuffer[0]=0
+      this.pyodide.setInterruptBuffer(this.interruptBuffer)
+      this.sendState(CompilerState.Init)
+      // Send Init state to the driver
+      
+      console.log("PyodideWorker:ready")
     }).catch( (error:any)=>{
       this.sendState(CompilerState.Error, error)
     });
-
-
   }
 
-  async initPydiode(){
+  async init(){
     
-    console.log("loadPyodide: ...")
+    console.log("PyodideFsWorker:init:")
     
     let options = {
       stdin: ()=>{return this.onStdin()},
@@ -97,22 +82,21 @@ class PyodideWorker{
       stderr: (msg:string)=>{this.sendStderr(msg)},
     }
 
-    //console.log(loadPyodide)
+    console.log("PyodideFsWorker:init:load:")
     
     this.pyodide = await loadPyodide(options);
     this.fs = this.pyodide.FS;
     await this.pyodide.loadPackage(["micropip"]);
     this.micropip = this.pyodide.pyimport("micropip");
     
-    console.log("loadPyodide: done")
-    //console.log(pyodide)
+    console.log("PyodideFsWorker:init:load:done")
 
     this.setCustomHooks()
   }
 
   async setCustomHooks(){
     let oldInput = this.pyodide.globals.input;
-    console.log("setCustomHooks:oldInput:",oldInput)
+    console.log("PyodideFsWorker:setCustomHooks:oldInput:",oldInput)
 
 
     //Globals: Input
@@ -121,7 +105,7 @@ class PyodideWorker{
       if (prompt && prompt.trim().length>0){localThis.sendStdout(prompt)}
 
       localThis.sendState(CompilerState.Stdin)
-      console.log("setCustomHooks:scrivo sulla consolle!!!!")
+      console.log("PyodideFsWorker:setCustomHooks:scrivo sulla consolle!!!!")
       let stdinResolver: PromiseResolver<string>;      
       let promise =  new Promise<string>((resolve, reject) => {
         stdinResolver = resolve;
@@ -148,21 +132,21 @@ class PyodideWorker{
 
 
   }
-
-  async load(root:string, mount:string)
+  /*
+  async load(mountPoint:string)
   {
-    this.root = root;
-    this.mount = mount;
+    this.mountPoint = mountPoint;
     console.log("PyodideFsWorker: load")
-    this.fs.mkdir(this.mount);
-    this.fs.mount(this.fs.filesystems.IDBFS, { root: root }, this.mount);
+    this.fs.mkdir(this.mountPoint);
+    this.fs.mount(this.fs.filesystems.IDBFS, { root: '/' }, this.mountPoint);
     console.log("PyodideFsWorker: load: done")
 
-    
-    console.log(this.fs.mounts)
-    console.log(this.fs.root)
-    console.log(this.fs.root.mount)
+    console.log("PyodideFsWorker: load: fs",this.fs)
+    console.log("PyodideFsWorker: load: mounts",this.fs.mounts)
+    console.log("PyodideFsWorker: load: root",this.fs.root)
+    console.log("PyodideFsWorker: load: root mount",this.fs.root.mount)
   }
+  */
 
   toString(data:string|ArrayBuffer){
     if(data instanceof ArrayBuffer) { return this.binDecoder.decode(data) }
@@ -235,7 +219,7 @@ class PyodideWorker{
   }
 
   execCodeAsync(code:string){
-    console.log("execCode:",code)
+    console.log("PyodideFsWorker:execCode:",code)
     this.interruptBuffer[0]=0
     this.pyodide.setInterruptBuffer(this.interruptBuffer)
     this.interruptTimer = setInterval(()=>{
@@ -266,13 +250,8 @@ class PyodideWorker{
     this.stdinBuffer = []
     this.pyodide.loadPackagesFromImports(code,options)
 
-
-    
-
-
-
     this.pyodide.runPythonAsync(code).then( (result:any)=>{
-      console.log("execCode: result:\n",result)
+      console.log("PyodideFsWorker:execCode:result:\n",result)
       this.sendState(CompilerState.Success, result)
     }).catch( (error:any)=>{
       this.handleExecError(error)
@@ -317,14 +296,12 @@ class PyodideWorker{
     //throw error;
   }
 
-
-
   sendNotify(title: string, msg:string, kind:string=""){
-    console.log("sendNotify: ",msg)
+    console.log("PyodideFsWorker:sendNotify: ",msg)
     this.requestQueueNotify.forEach(( request:CompilerRequest, uid:string )=>{
       let response = this.responseFromRequest(request); 
       response.message.contents = [title, msg, kind]
-      console.log("sendNotify:uid:\n",response)//,res)
+      console.log("PyodideFsWorker:sendNotify:uid:\n",response)//,res)
       postMessage(response)
     })
   }
@@ -340,33 +317,33 @@ class PyodideWorker{
       if(content){
         response.message.contents.push(content)
       }
-      console.log("sendState:uid:\n",response)
+      console.log("PyodideFsWorker:sendState:uid:\n",response)
       postMessage(response)
     })
   }
 
   sendStdout(msg:string){
-    console.log("sendStdout: "+msg)
+    console.log("PyodideFsWorker:sendStdout: "+msg)
     this.requestQueueStdout.forEach(( request:CompilerRequest, uid:string )=>{
       let response = this.responseFromRequest(request); 
       response.message.contents = [msg]
-      console.log("sendStdout:uid:\n",response)//,res)
+      console.log("PyodideFsWorker:sendStdout:uid:\n",response)//,res)
       postMessage(response)
     })
   }
 
   sendStderr(msg:string){
-    console.log("sendStderr: "+msg)
+    console.log("PyodideFsWorker:sendStderr: "+msg)
     this.requestQueueStderr.forEach(( request:CompilerRequest, uid:string )=>{
       let response = this.responseFromRequest(request); 
       response.message.contents = [msg]
-      console.log("sendStderr:uid:\n",response)//,res)
+      console.log("PyodideFsWorker:sendStderr:uid:\n",response)//,res)
       postMessage(response)
     })
   }
 
   onData(request:CompilerRequest) {
-    console.log('PyodideFsWorker:onData:',request);
+    //console.log('PyodideFsWorker:onData:',request);
     let action: CompilerMessageHandler | null = null;
 
     switch (request.message.type) {
@@ -399,6 +376,12 @@ class PyodideWorker{
         break;
       case CompilerMessageType.StopExecution:
         action=(request)=>{return this.stopExecution(request)};
+        break;
+      case CompilerMessageType.Mount:
+        action=(request)=>{return this.mount(request)};
+        break;
+      case CompilerMessageType.Unmount:
+        action=(request)=>{return this.unmount(request)};
         break;
       case CompilerMessageType.CreateDirectory:
         action=(request)=>{return this.createDirectory(request)};
@@ -448,10 +431,10 @@ class PyodideWorker{
   installPackages(request:CompilerRequest){
     let response = this.responseFromRequest(request); 
     let packages = request.message.args;
-    console.log("installPackages:\n",packages)//,res)
+    console.log("PyodideFsWorker:installPackages:\n",packages)//,res)
     let res = this.micropip.install(packages)
     this.syncFS()
-    console.log("installPackages: DONE!\n",res)
+    console.log("PyodideFsWorker:installPackages: DONE!\n",res)
     response.message.contents.push("")//res+": "+res)
     
     return response;
@@ -466,9 +449,8 @@ class PyodideWorker{
     }else{
       code = rawContent
     }
-    console.log("executeCode:\n",code)//,res)
+    console.log("PyodideFsWorker:executeCode:\n",code)//,res)
     this.execCodeAsync(code)
-
 
     response.message.contents = ["true"]
     
@@ -492,7 +474,7 @@ class PyodideWorker{
   executeFile(request:CompilerRequest){
     let response = this.responseFromRequest(request); 
     let fullpath = request.message.args[0];
-    let path = this.mount +"/"+ fullpath
+    let path = this.mountPoint +"/"+ fullpath
     console.log("executeFile:",path)//,res)
     
     let rawContent = this.fs.readFile(path) as Uint8Array
@@ -574,22 +556,82 @@ class PyodideWorker{
     return response;
   }
 
-  createDirectory(request:CompilerRequest):CompilerResponse{
+  mount(request:CompilerRequest):CompilerResponse{
+    let response = this.responseFromRequest(request); 
+    if ( request.message.args.length < 1 ){ 
+      return this.responseError(response,"createDirectory: Requires at least 1 path as argument");
+    }
+    let mountPoint = request.message.args[0];
+    
+    this.mountPoint = mountPoint;
+    console.log("PyodideFsWorker:mount:",mountPoint)
+    
+    this.sendState(CompilerState.Loading)
+    console.log("PyodideFsWorker:mount:loading")
 
-    console.log("PYTHON CREATE DIRECTORY")
+    if(!this.internal_exists(this.mountPoint))
+      this.fs.mkdir(this.mountPoint)
+    
+    
+    this.fs.mount(this.fs.filesystems.IDBFS, { root: '/' }, this.mountPoint);
+    this.fs.syncfs(true,()=>{
+      if(!this.isReady){
+        console.log("PyodideFsWorker:mount:ready")
+        this.sendState(CompilerState.Ready)
+        console.log("PyodideFsWorker:mount:ready:done")
+      }
+        ////Send it just after the execution of this.initPydiode(), not the first mount
+      this.isReady = true;
+      this.readyResolver(this.isReady);
+    });
+    
+    console.log("PyodideFsWorker:mount:done")
+    
+    response.message.args = [mountPoint];
+    return response;
+  }
+
+  unmount(request:CompilerRequest):CompilerResponse{
+    let response = this.responseFromRequest(request); 
+    if ( request.message.args.length < 1 ){ 
+      return this.responseError(response,"createDirectory: Requires at least 1 path as argument");
+    }
+    let mountPoint = request.message.args[0];
+    
+    console.log("PyodideFsWorker:unmount:",mountPoint)
+
+    this.sendState(CompilerState.Loading)
+
+    this.fs.unmount(mountPoint);
+    this.mountPoint = ""
+    this.isReady=false
+    this.fs.syncfs(true,()=>{
+      this.isReady = false;
+      this.sendState(CompilerState.Ready)
+      this.readyResolver(this.isReady);
+    });
+    
+    console.log("PyodideFsWorker:unmount:done")
+    
+    response.message.args = [mountPoint];
+    return response;
+  }
+
+  createDirectory(request:CompilerRequest):CompilerResponse{
+    console.log("PyodideFsWorker:createDirectory:")
     let response = this.responseFromRequest(request); 
     if ( request.message.args.length < 1 ){ 
       return this.responseError(response,"createDirectory: Requires at least 1 path as argument");
     }
     //TODO: allow for multiple queries;
     let fullpath = request.message.args[0];
-    if(!this.internal_exists(this.mount + fullpath)){
+    if(!this.internal_exists(this.mountPoint + fullpath)){
       console.log("CI ENTRO")
-      console.log("ABC: ", this.mount + " " + fullpath) 
+      console.log("ABC: ", this.mountPoint + " " + fullpath) 
       //var str = this.mount + fullpath.replace('.', '')
       //console.log(str)
-      let res = this.fs.mkdir(this.mount + fullpath);
-      console.log('pydiode:mkdir:',res)
+      let res = this.fs.mkdir(this.mountPoint + fullpath);
+      console.log('pydiode:createDirectory:',res)
       this.syncFS()
     }
     
@@ -600,7 +642,7 @@ class PyodideWorker{
   getPath(node:any){
     //any: https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.getPath
     let path = this.fs.getPath(node)
-    let pattern =  new RegExp("^"+this.mount); 
+    let pattern =  new RegExp("^"+this.mountPoint); 
     return path.replace(pattern,"/").replace(/\/\/+/,"/");
   }
 
@@ -616,14 +658,13 @@ class PyodideWorker{
     return response;
   }
 
-
   scanDirectory(request:CompilerRequest):CompilerResponse{
     let response = this.responseFromRequest(request); 
     if ( request.message.args.length < 1 ){
       return this.responseError(response,"readDirectory: Requires at least 1 path as argument and 1 content");
     }
     let fullpath = request.message.args[0];
-    console.log("scanDirectory: ", fullpath)
+    console.log("PyodideFsWorker:scanDirectory:", fullpath)
     let curDir = this.scanDirectory_recursive(fullpath, true)
     response.message.args = [fullpath];
     response.message.contents = [JSON.stringify(curDir,this.jsonReplacer)]
@@ -643,20 +684,13 @@ class PyodideWorker{
   }
 
   renameItem(request:CompilerRequest):CompilerResponse {
-    console.log("PYTHON RENAME ITEM");
+    console.log("PyodideFsWorker:renameItem:");
 
     let response = this.responseFromRequest(request);
 
-    console.log("RENAME REQUEST: ", request)
-    console.log("RENAME RESPONSE: ", response)
+    const oldpath = this.mountPoint + request.message.args[0];
+    const newpath = this.mountPoint + request.message.args[1];
 
-    const oldpath = this.mount + request.message.args[0];
-    const newpath = this.mount + request.message.args[1];
-
-    console.log("OLDPATH: ", oldpath)
-    console.log("NEWPATH: ", newpath)
-
-    console.log("OLD FS: ", this.fs)
     //var res = this.fs.rename(oldpath, newpath);
     this.fs.rename(oldpath, newpath);
     this.syncFS();
@@ -668,9 +702,9 @@ class PyodideWorker{
 
 
   scanDirectory_recursive(fullpath:string, recursive=false):FsNodeFolder{
-    let res = this.fs.lookupPath(this.mount + fullpath);
-    console.log("scanDirectory_recursive: ", res)
-    console.log("scanDirectory_recursive:contents: ", res.node.contents);
+    let res = this.fs.lookupPath(this.mountPoint + fullpath);
+    console.log("PyodideFsWorker:scanDirectory_recursive: ", res)
+    console.log("PyodideFsWorker:scanDirectory_recursive:contents: ", res.node.contents);
     let curDir:FsNodeFolder = {
       folders: [],
       files: [],
@@ -696,7 +730,7 @@ class PyodideWorker{
         }
         curDir.folders.push(childDir);
       }else{
-        let content = this.fs.readFile(this.mount + path)
+        let content = this.fs.readFile(this.mountPoint + path)
         curDir.files.push({
           name: name,
           path: path,
@@ -709,7 +743,6 @@ class PyodideWorker{
   }
 
   writeFile(request:CompilerRequest):CompilerResponse{
-    
     let response = this.responseFromRequest(request);
     let nargs = request.message.args.length;
     let ncont = request.message.contents.length
@@ -728,10 +761,10 @@ class PyodideWorker{
       content = data
     }
 
-    console.log("writeFile: ", fullpath)
-    console.log("writeFile:content: ", content)
-    let res = this.fs.writeFile(this.mount + fullpath, content, options);
-    console.log("writeFile:res: ", res)
+    console.log("PyodideFsWorker:writeFile: ", fullpath)
+    //console.log("PyodideFsWorker:writeFile:content: ", content)
+    let res = this.fs.writeFile(this.mountPoint + fullpath, content, options);
+    console.log("PyodideFsWorker:writeFile:res: ", res)
     this.syncFS()
     return response;
   }
@@ -749,15 +782,15 @@ class PyodideWorker{
       opts = {encoding: 'binary'} 
     }
 
-    console.log("readFile: ", fullpath)
-    let content = this.fs.readFile(this.mount + fullpath, opts);
-    console.log('readFile:content:\n', content.length)
+    console.log("PyodideFsWorker:readFile: ", fullpath)
+    let content = this.fs.readFile(this.mountPoint + fullpath, opts);
+    console.log('PyodideFsWorker:readFile:content:\n', content.length)
     if(content instanceof Uint8Array){
-      console.log('readFile:content: BUFFER',content)
+      console.log('PyodideFsWorker:readFile:content: BUFFER',content)
       response.message.contents = [content.buffer];
     }
     else{
-      console.log('readFile:content: STRING')
+      console.log('PyodideFsWorker:readFile:content: STRING')
       response.message.contents = [content];
     }
     return response;
@@ -773,12 +806,12 @@ class PyodideWorker{
 
     
     let fullpath = request.message.args[0];
-    console.log("delete: ", fullpath)
+    console.log("PyodideFsWorker:delete: ", fullpath)
     //TODO: use lookupPath and isDir/isFile
     // https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.lookupPath
     //TODO: do it recursive
-    try{this.fs.rmdir(this.mount + fullpath)}catch(_){}
-    try{this.fs.unlink(this.mount + fullpath)}catch(_){}
+    try{this.fs.rmdir(this.mountPoint + fullpath)}catch(_){}
+    try{this.fs.unlink(this.mountPoint + fullpath)}catch(_){}
     this.syncFS()
     response.message.args = ["true"]
     return response;
@@ -791,23 +824,20 @@ class PyodideWorker{
       return response;  
     }
     let fullpath = request.message.args[0];
-    console.log("exists: ", this.mount + fullpath)
+    console.log("PyodideFsWorker:exists:", this.mountPoint + fullpath)
     // https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.analyzePath
-    let exists = this.internal_exists(this.mount + fullpath)
-    console.log("exists:", exists)
+    let exists = this.internal_exists(this.mountPoint + fullpath)
+    console.log("PyodideFsWorker:exists:", exists)
     response.message.args = [exists?'true':'false']
     return response;
   }
 
   internal_exists(path:string){
-    console.log("internal_file_exists:internal_exists", path)
+    console.log("PyodideFsWorker:internal_file_exists:internal_exists", path)
     let res = this.fs.analyzePath(path)
-    console.log("internal_file_exists:analyzePath", res)
+    console.log("PyodideFsWorker:internal_file_exists:analyzePath", res)
     return res["exists"]
   }
 }
-  
-
-
 
 main()

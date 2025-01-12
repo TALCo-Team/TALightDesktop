@@ -30,7 +30,7 @@ export class ExecbarWidgetComponent implements OnInit {
 
   private isTutorialShown(tutorial?: any) {
     console.log("ExecbarWidgetComponent:isTutorialShown")
-    if (typeof tutorial === 'undefined' || tutorial.componentName === "ExecbarWidgetComponent") {
+    if (typeof tutorial === 'undefined' || tutorial.componentName === this.constructor.name) {
       this.isBlurred = false
     }
     else {
